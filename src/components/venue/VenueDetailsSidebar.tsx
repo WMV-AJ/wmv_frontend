@@ -717,20 +717,26 @@ const VenueDetailsSidebar: React.FC<VenueDetailsSidebarProps> = ({
                     </div>
 
                     {/* Contact & Social */}
-                        {(event.website_social || event.instagram_id) && (
+                        {((event.website_social && !event.website_social.startsWith('@')) || event.instagram_id) && (
                       <>
                         <Separator className={isDarkMode ? 'bg-purple-500/20' : 'bg-gray-300'} />
                         <div className="space-y-1">
-                            {event.website_social && (
+                            {event.website_social && !event.website_social.startsWith('@') && (
                             <div className="flex items-center gap-2">
                               <MessageCircle className="h-5 w-5 text-blue-400" />
                               <div>
                                 <p className={`text-sm ${
                                   isDarkMode ? 'text-purple-300/70' : 'text-gray-600'
                                 }`}>Contact</p>
-                                <p className={`text-base ${
-                                  isDarkMode ? 'text-blue-300' : 'text-blue-700'
-                                }`}>{event.website_social}</p>
+                                {/^[\d\s\+\-\(\)]+$/.test(event.website_social.trim()) ? (
+                                  <a href={`tel:${event.website_social.replace(/\s+/g, '')}`} className={`text-base ${
+                                    isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                                  } hover:underline`}>{event.website_social}</a>
+                                ) : (
+                                  <a href={event.website_social} target="_blank" rel="noopener noreferrer" className={`text-base ${
+                                    isDarkMode ? 'text-blue-300' : 'text-blue-700'
+                                  } hover:underline`}>{event.website_social}</a>
+                                )}
                               </div>
                             </div>
                           )}

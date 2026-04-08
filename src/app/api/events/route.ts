@@ -240,6 +240,7 @@ export async function GET(request: Request) {
       website_social: Array.isArray(record.website_social) ? record.website_social.join(', ') : record.website_social,
       confidence_score: record.confidence_score,
       analysis_notes: record.analysis_notes,
+      event_details: record.event_details || null,
       instagram_id: record.instagram_id,
       event_categories: record.event_categories,
       attributes: record.attributes,

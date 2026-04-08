@@ -596,20 +596,24 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                   )}
                 </div>
 
-                {(venue.venue_website || event.website_social) && (
-                  <button
-                    className="flex items-center gap-2 mt-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 active:scale-95 w-full justify-center"
-                    style={{
-                      background: 'rgba(59, 130, 246, 0.12)',
-                      color: 'rgb(96, 165, 250)',
-                      border: '1px solid rgba(59, 130, 246, 0.2)',
-                    }}
-                    onClick={(e) => { e.stopPropagation(); window.open(venue.venue_website || event.website_social, '_blank'); }}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Visit Website
-                  </button>
-                )}
+                {(venue.venue_website || (event.website_social && !event.website_social.startsWith('@'))) && (() => {
+                  const contactValue = venue.venue_website || event.website_social || '';
+                  const isPhone = /^[\d\s\+\-\(\)]+$/.test(contactValue.trim());
+                  return (
+                    <button
+                      className="flex items-center gap-2 mt-3 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 active:scale-95 w-full justify-center"
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.12)',
+                        color: 'rgb(96, 165, 250)',
+                        border: '1px solid rgba(59, 130, 246, 0.2)',
+                      }}
+                      onClick={(e) => { e.stopPropagation(); isPhone ? window.open(`tel:${contactValue.replace(/\s+/g, '')}`) : window.open(contactValue, '_blank'); }}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {isPhone ? 'Call to Book' : 'Visit Website'}
+                    </button>
+                  );
+                })()}
               </div>
             </>
           )}

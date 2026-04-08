@@ -862,18 +862,22 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                         )}
 
                         {/* Visit Website Button */}
-                        {(venue.website || currentEvent?.website_social) && (
-                          <a
-                            href={venue.website || currentEvent?.website_social}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="venue-panel-website-btn"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <ExternalLink size={18} />
-                            <span>Visit Website</span>
-                          </a>
-                        )}
+                        {(venue.website || (currentEvent?.website_social && !currentEvent.website_social.startsWith('@'))) && (() => {
+                          const contactValue = venue.website || currentEvent?.website_social || '';
+                          const isPhone = /^[\d\s\+\-\(\)]+$/.test(contactValue.trim());
+                          return (
+                            <a
+                              href={isPhone ? `tel:${contactValue.replace(/\s+/g, '')}` : contactValue}
+                              target={isPhone ? undefined : '_blank'}
+                              rel={isPhone ? undefined : 'noopener noreferrer'}
+                              className="venue-panel-website-btn"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <ExternalLink size={18} />
+                              <span>{isPhone ? 'Call to Book' : 'Visit Website'}</span>
+                            </a>
+                          );
+                        })()}
                       </div>
                     )}
 
