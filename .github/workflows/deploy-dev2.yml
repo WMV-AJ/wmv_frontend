@@ -1,0 +1,44 @@
+name: Deploy Frontend Dev2 (Port 2312)
+
+on:
+  push:
+    branches:
+      - dev_branch_2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 91.99.102.124
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            cd /opt/wmv-frontend-dev2
+
+            # Pull latest code
+            git pull origin dev_branch_2
+
+            # Install dependencies
+            npm install
+
+            # Build Next.js
+            npm run build
+
+            # Copy static files for standalone mode
+            cp -r public .next/standalone/ 2>/dev/null || true
+            cp -r .next/static .next/standalone/.next/
+
+            # Restart with PM2
+            pm2 restart wmv-frontend-dev2 || PORT=2312 pm2 start .next/standalone/server.js --name wmv-frontend-dev2
+
+            echo "Frontend Dev2 deploy complete — $(date)"
