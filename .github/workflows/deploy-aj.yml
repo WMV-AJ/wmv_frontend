@@ -1,0 +1,32 @@
+name: Deploy Frontend AJ (Port 2313)
+
+on:
+  push:
+    branches:
+      - aj_branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 91.99.102.124
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd /opt/wmv-frontend-aj
+            git pull origin aj_branch
+            npm install
+            npm run build
+            cp -r public .next/standalone/ 2>/dev/null || true
+            cp -r .next/static .next/standalone/.next/
+            pm2 restart wmv-frontend-aj || PORT=2313 pm2 start .next/standalone/server.js --name wmv-frontend-aj
+            echo "Frontend AJ deploy complete — $(date)"
