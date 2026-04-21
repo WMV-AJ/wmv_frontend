@@ -113,21 +113,27 @@
     height: -webkit-fill-available;
     overflow: hidden;
   }
-  
+
   /* Custom retro map theme utilities */
   .retro-surface {
     @apply bg-card border border-border rounded-lg;
   }
-  
+
   .retro-button {
     @apply bg-primary text-primary-foreground hover:bg-primary/90 
            px-4 py-2 rounded-md font-medium transition-colors;
   }
-  
+
   .retro-input {
     @apply bg-input border border-border rounded-md px-3 py-2 
            text-foreground placeholder:text-muted-foreground
            focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+  .maplibregl-popup-content {
+    @apply bg-transparent! shadow-none! p-0! rounded-none!;
+  }
+  .maplibregl-popup-tip {
+    @apply hidden!;
   }
 }
 
@@ -170,7 +176,7 @@
   .bg-venue-rooftop { background-color: hsl(var(--venue-rooftop)); }
   .bg-venue-hotel { background-color: hsl(var(--venue-hotel)); }
   .bg-venue-default { background-color: hsl(var(--venue-default)); }
-  
+
   .border-venue-nightclub\/30 { border-color: hsl(var(--venue-nightclub) / 0.3); }
   .border-venue-restaurant\/30 { border-color: hsl(var(--venue-restaurant) / 0.3); }
   .border-venue-bar\/30 { border-color: hsl(var(--venue-bar) / 0.3); }
