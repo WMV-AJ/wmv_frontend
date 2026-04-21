@@ -118,34 +118,9 @@ function OfferBanner({
       offset={32}
       closeOnClick={false}
       focusAfterOpen={false}
+      className="bg-white text-gray-800 border-gray-200 shadow-lg max-w-[60vw] p-2.5 rounded-lg"
     >
-      <div
-        className="flex items-start gap-1.5 max-w-[50vw] rounded-none p-0 border-0 shadow-none"
-        style={{
-          background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
-          color: '#fff',
-          padding: '6px 12px 6px 9px',
-          borderRadius: '6px',
-          font: '600 11px/1.4 system-ui, sans-serif',
-          boxShadow: '0 3px 12px rgba(124,58,237,0.45)',
-        }}
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="flex-shrink-0 mt-[1px]"
-        >
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
-          <line x1="7" y1="7" x2="7.01" y2="7" />
-        </svg>
-        <span className="break-words whitespace-normal">{offer.trim()}</span>
-      </div>
+      <p className="text-xs font-medium leading-snug">{offer.trim()}</p>
     </MapPopup>
   );
 }
