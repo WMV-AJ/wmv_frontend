@@ -24,11 +24,8 @@ interface CategoryPillsProps {
 
 const SHORT_DISPLAY_NAMES: Record<string, string> = {
   'Food & Dining': 'Food',
-  'Happy Hour': 'HH',
   'Club Night': 'Clubs',
 };
-
-const HIDE_ICON_CATEGORIES = new Set(['Food & Dining', 'Happy Hour', 'Club Night']);
 
 // Icon mapping for primary categories — keys match DB event_categories[].primary exactly
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -162,7 +159,6 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
           const label = isOutlined ? (SHORT_DISPLAY_NAMES[category] || displayName) : displayName;
           const count = getCategoryCount(category);
           const IconComponent = CATEGORY_ICONS[category];
-          const showIcon = IconComponent && !(isOutlined && HIDE_ICON_CATEGORIES.has(category));
 
           return (
             <button
@@ -181,7 +177,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                 border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
               }}
             >
-              {showIcon && <IconComponent className="w-3 h-3" />}
+              {IconComponent && <IconComponent className="w-3 h-3" />}
               {label} ({count})
               {isExpanded && ' ↓'}
             </button>

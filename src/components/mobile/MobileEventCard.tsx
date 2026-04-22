@@ -906,7 +906,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       onClick={onToggle}
     >
       {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
-      <div className="flex gap-3 px-3.5 pt-3.5 pb-3">
+      <div className="flex gap-3 px-3.5 pt-3 pb-2">
         {/* Left Column */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3 className="text-gray-900 font-bold text-[15px] leading-tight tracking-tight line-clamp-2">
@@ -1035,65 +1035,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         return <AutoScrollPills tags={tags} isActive={isFocused && !isFullScreen} />;
       })()}
 
-      {/* === SECTION 2: Dates + Expand — grows to fill remaining space === */}
-      <div className="px-3 py-2 flex items-center gap-2 flex-1">
-        <div
-          className="flex-1 flex items-center gap-1.5 overflow-x-auto"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {dateOptions.length > 0 ? (
-            dateOptions.map((opt) => {
-              const isClicked = selectedDates.includes(opt.dateKey);
-              const isInRange = presetRangeDates.includes(opt.dateKey);
-              const isFullSelected = isClicked && (!isInRange || selectedDates.length < presetRangeDates.length);
-              return (
-                <button
-                  key={opt.dateKey}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onDateChange) {
-                      onDateChange([opt.dateKey]);
-                    }
-                  }}
-                  className="flex flex-col items-center px-2.5 py-1 rounded-xl whitespace-nowrap flex-shrink-0 transition-all duration-200"
-                  style={{
-                    background: isFullSelected
-                      ? 'rgba(0, 0, 0, 0.45)'
-                      : 'rgba(0,0,0,0.04)',
-                    border: !isFullSelected && isInRange
-                      ? '2px solid rgba(59, 130, 246, 0.6)'
-                      : `1px solid ${isFullSelected ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.06)'}`,
-                  }}
-                >
-                  <span className={`flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${isFullSelected ? 'text-white' : 'text-gray-400'}`}>
-                    {opt.day}
-                    {opt.hasSameDaySibling && opt.timeOfDay && (() => {
-                      const iconClass = `w-2.5 h-2.5 ${isFullSelected ? 'text-white' : 'text-gray-400'}`;
-                      if (opt.timeOfDay === 'morning' || opt.timeOfDay === 'afternoon') return <Sun className={iconClass} />;
-                      if (opt.timeOfDay === 'evening') return <Sunset className={iconClass} />;
-                      return <Moon className={iconClass} />;
-                    })()}
-                  </span>
-                  <span className={`text-[11px] font-semibold ${isFullSelected ? 'text-white' : 'text-gray-600'}`}>
-                    {opt.date}
-                  </span>
-                </button>
-              );
-            })
-          ) : (
-            <div
-              className="flex items-center gap-2 px-2.5 py-1 rounded-xl"
-              style={{ background: 'rgba(0, 0, 0, 0.45)' }}
-            >
-              <Calendar className="w-3 h-3 text-white" />
-              <span className="text-[10px] text-white font-bold uppercase">{datePill.day}</span>
-              <span className="text-[11px] text-white font-semibold">{datePill.date}</span>
-            </div>
-          )}
-        </div>
+      {/* === Expand button row === */}
+      <div className="px-3 py-1.5 flex items-center justify-end">
         <button
-          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
           style={{
             background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0, 0, 0, 0.06)',
             border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
