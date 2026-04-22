@@ -22,6 +22,9 @@ import {
   Tag,
   ChevronLeft,
   ChevronRight,
+  Sun,
+  Sunset,
+  Moon,
 } from 'lucide-react';
 
 interface EventCardData {
@@ -73,6 +76,8 @@ interface DateOption {
   date: string;
   dateKey: string;
   isToday: boolean;
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+  hasSameDaySibling?: boolean;
 }
 
 interface MobileEventCardProps {
@@ -900,17 +905,30 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       }}
       onClick={onToggle}
     >
-      {/* === SECTION 1: Header — Name + Subtitle + Venue + Rating | Image === */}
-      <div className="flex gap-3 px-3.5 pt-3 pb-2.5">
+      {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
+      <div className="flex gap-3 px-3.5 pt-3.5 pb-3">
         {/* Left Column */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3 className="text-gray-900 font-bold text-[15px] leading-tight tracking-tight line-clamp-2">
             {event.event_name}
           </h3>
-          {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <p className="text-gray-500 text-[10px] mt-0.5 truncate leading-snug uppercase tracking-wide font-semibold">
-              {event.event_subtitle}
-            </p>
+          {(event.event_subtitle || event.event_time_start) && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {event.event_subtitle && event.event_subtitle !== event.event_name && (
+                <span className="text-gray-500 text-[10px] truncate leading-snug uppercase tracking-wide font-semibold">
+                  {event.event_subtitle}
+                </span>
+              )}
+              {event.event_subtitle && event.event_subtitle !== event.event_name && event.event_time_start && (
+                <span className="text-gray-300 text-[10px]">·</span>
+              )}
+              {event.event_time_start && (
+                <span className="text-gray-400 text-[10px] font-medium flex items-center gap-0.5 flex-shrink-0">
+                  <Clock className="w-2.5 h-2.5" />
+                  {event.event_time_start}{event.event_time_end && `–${event.event_time_end}`}
+                </span>
+              )}
+            </div>
           )}
           <p className="text-gray-800 text-[12px] font-semibold truncate mt-1.5">{venue.venue_name}</p>
           <div className="flex items-center gap-1 mt-0.5">
@@ -966,9 +984,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Divider */}
-      <div className="mx-3.5" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }} />
 
       {/* === SECTION 1.5: Compact data tags === */}
       {(() => {
@@ -1051,8 +1066,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                       : `1px solid ${isFullSelected ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.06)'}`,
                   }}
                 >
-                  <span className={`text-[9px] font-bold uppercase tracking-wider ${isFullSelected ? 'text-white' : 'text-gray-400'}`}>
+                  <span className={`flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${isFullSelected ? 'text-white' : 'text-gray-400'}`}>
                     {opt.day}
+                    {opt.hasSameDaySibling && opt.timeOfDay && (() => {
+                      const iconClass = `w-2.5 h-2.5 ${isFullSelected ? 'text-white' : 'text-gray-400'}`;
+                      if (opt.timeOfDay === 'morning' || opt.timeOfDay === 'afternoon') return <Sun className={iconClass} />;
+                      if (opt.timeOfDay === 'evening') return <Sunset className={iconClass} />;
+                      return <Moon className={iconClass} />;
+                    })()}
                   </span>
                   <span className={`text-[11px] font-semibold ${isFullSelected ? 'text-white' : 'text-gray-600'}`}>
                     {opt.date}
@@ -1091,40 +1112,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         </button>
       </div>
 
-      {/* === SECTION 3: Timing + Artists (bottom, compact) === */}
-      {(event.event_time_start || (event.artist && event.artist.trim())) && (
-        <div className="px-3.5 pb-2.5 pt-0">
-          <div className="mx-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }} />
-
-          {/* Timing */}
-          {event.event_time_start && (
-            <div className="flex justify-center items-center gap-1.5 pt-2 pb-1">
-              <Clock className="w-3 h-3 text-gray-400 flex-shrink-0" />
-              <span className="text-gray-500 text-[11px] font-medium">
-                {event.event_time_start}
-                {event.event_time_end && ` — ${event.event_time_end}`}
-              </span>
-            </div>
-          )}
-
-          {/* Artists */}
-          {event.artist && event.artist.trim() && (() => {
-            const isArtistCategory = ['Music Events', 'Nightlife'].some(
-              cat => event.category?.includes(cat) || event.event_categories?.some(c => c.primary === cat)
-            );
-            return (
-              <div className="flex items-center justify-center gap-1.5 overflow-hidden pt-0.5 pb-0.5">
-                {isArtistCategory && (
-                  <span className="text-[9px] text-gray-400 uppercase tracking-wider font-bold flex-shrink-0">Artists</span>
-                )}
-                <span className="text-gray-500 text-[11px] font-medium truncate">
-                  {event.artist.split(/[|,]/).map(a => a.trim()).filter(Boolean).join(' | ')}
-                </span>
-              </div>
-            );
-          })()}
-        </div>
-      )}
 
     </div>
   );

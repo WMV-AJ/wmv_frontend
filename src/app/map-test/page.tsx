@@ -203,33 +203,86 @@ export default function MapTestPage() {
   const { filterOptions } = useFilterOptions();
 
   const venueDateMap = useMemo(() => {
-    const map = new Map<string, { day: string; date: string; dateKey: string; isToday: boolean }[]>();
+    type DateEntry = {
+      day: string; date: string; dateKey: string; isToday: boolean;
+      timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+      hasSameDaySibling?: boolean;
+    };
+    const map = new Map<string, DateEntry[]>();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const parseStartHour = (timeStr: string): number => {
+      const match = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)/i);
+      if (!match) return -1;
+      let h = parseInt(match[1], 10);
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && h !== 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      return h;
+    };
+    const classifyTime = (h: number): 'morning' | 'afternoon' | 'evening' | 'night' => {
+      if (h >= 6 && h < 12) return 'morning';
+      if (h >= 12 && h < 18) return 'afternoon';
+      if (h >= 18 && h < 22) return 'evening';
+      return 'night';
+    };
+
+    // Collect raw entries per venue, keyed by date+time combo
+    const rawMap = new Map<string, Array<{ dateKey: string; d: Date; eventTime: string }>>();
     allVenues.forEach((venue) => {
       if (!venue.event_date || !venue.venue_id) return;
       const venueKey = String(venue.venue_id);
+      const eventTime = venue.event_time || '';
       try {
         const d = new Date(venue.event_date);
         if (isNaN(d.getTime())) return;
         const dateKey = d.toDateString();
-        if (!map.has(venueKey)) map.set(venueKey, []);
-        const existing = map.get(venueKey)!;
-        if (!existing.some((e) => e.dateKey === dateKey)) {
-          existing.push({
-            day: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-            date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            dateKey,
-            isToday: d.toDateString() === today.toDateString(),
-          });
+        if (!rawMap.has(venueKey)) rawMap.set(venueKey, []);
+        const existing = rawMap.get(venueKey)!;
+        const combo = `${dateKey}|${eventTime}`;
+        if (!existing.some(e => `${e.dateKey}|${e.eventTime}` === combo)) {
+          existing.push({ dateKey, d, eventTime });
         }
       } catch { /* skip */ }
     });
 
-    map.forEach((dates) => {
-      dates.sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());
+    rawMap.forEach((entries, venueKey) => {
+      const byDate = new Map<string, typeof entries>();
+      entries.forEach(e => {
+        if (!byDate.has(e.dateKey)) byDate.set(e.dateKey, []);
+        byDate.get(e.dateKey)!.push(e);
+      });
+
+      const dateOptions: DateEntry[] = [];
+      byDate.forEach((dateEntries, dateKey) => {
+        const first = dateEntries[0];
+        if (dateEntries.length === 1) {
+          dateOptions.push({
+            day: first.d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
+            date: first.d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            dateKey,
+            isToday: first.d.toDateString() === today.toDateString(),
+          });
+        } else {
+          dateEntries.forEach(e => {
+            const h = parseStartHour(e.eventTime);
+            dateOptions.push({
+              day: first.d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
+              date: first.d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              dateKey,
+              isToday: first.d.toDateString() === today.toDateString(),
+              timeOfDay: h >= 0 ? classifyTime(h) : undefined,
+              hasSameDaySibling: true,
+            });
+          });
+        }
+      });
+
+      dateOptions.sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());
+      map.set(venueKey, dateOptions);
     });
+
     return map;
   }, [allVenues]);
 
@@ -370,6 +423,7 @@ export default function MapTestPage() {
               onFiltersChange={handleFiltersChange}
               venues={dateFilteredVenues}
               inlineMode={true}
+              variant="outlined"
             />
           }
           onListToggle={() => router.push('/list')}

@@ -50,6 +50,8 @@ interface DateOption {
   date: string;
   dateKey: string;
   isToday: boolean;
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+  hasSameDaySibling?: boolean;
 }
 
 interface MobileEventListProps {
@@ -422,7 +424,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
             <div
               className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto px-3"
               style={{
-                paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
                 transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
               }}
@@ -489,7 +491,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                   WebkitScrollSnapType: 'x mandatory',
                   scrollSnapType: 'x mandatory',
                   gap: '12px',
-                  padding: '0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px',
+                  padding: '0 12px env(safe-area-inset-bottom, 0px) 12px',
                 } as React.CSSProperties}
                 onScroll={handleCarouselScroll}
               >
@@ -549,7 +551,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
 
               {/* Dot indicators */}
               {displayCards.length > 1 && (
-                <div className="flex justify-center gap-1.5 py-1.5">
+                <div className="flex justify-center gap-1.5 pt-1 pb-0.5">
                   {displayCards.map((_, index) => (
                     <div
                       key={index}

@@ -19,7 +19,16 @@ interface CategoryPillsProps {
   onFiltersChange: (filters: HierarchicalFilterState) => void;
   venues: Venue[];
   inlineMode?: boolean;
+  variant?: 'filled' | 'outlined';
 }
+
+const SHORT_DISPLAY_NAMES: Record<string, string> = {
+  'Food & Dining': 'Food',
+  'Happy Hour': 'HH',
+  'Club Night': 'Clubs',
+};
+
+const HIDE_ICON_CATEGORIES = new Set(['Food & Dining', 'Happy Hour', 'Club Night']);
 
 // Icon mapping for primary categories — keys match DB event_categories[].primary exactly
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -39,8 +48,10 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   filters,
   onFiltersChange,
   venues,
-  inlineMode = false
+  inlineMode = false,
+  variant = 'filled',
 }) => {
+  const isOutlined = variant === 'outlined';
   const eventCategories: EventCategoryFilterState = filters.eventCategories || {
     selectedPrimaries: [],
     selectedSecondaries: {},
@@ -148,8 +159,10 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
           const isExpanded = eventCategories.expandedPrimaries.includes(category);
           const hexColor = getHexColor(getCategoryColor(category));
           const displayName = getDisplayName(category);
+          const label = isOutlined ? (SHORT_DISPLAY_NAMES[category] || displayName) : displayName;
           const count = getCategoryCount(category);
           const IconComponent = CATEGORY_ICONS[category];
+          const showIcon = IconComponent && !(isOutlined && HIDE_ICON_CATEGORIES.has(category));
 
           return (
             <button
@@ -158,14 +171,18 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
                 isSelected ? 'shadow-md' : 'hover:shadow-sm'
               }`}
-              style={{
+              style={isOutlined ? {
+                color: isSelected ? '#ffffff' : hexColor,
+                background: isSelected ? hexColor : 'rgba(255,255,255,0.9)',
+                border: `1.5px solid ${hexColor}`,
+              } : {
                 color: '#ffffff',
                 background: isSelected ? hexColor : `${hexColor}CC`,
                 border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
               }}
             >
-              {IconComponent && <IconComponent className="w-3 h-3" />}
-              {displayName} ({count})
+              {showIcon && <IconComponent className="w-3 h-3" />}
+              {label} ({count})
               {isExpanded && ' ↓'}
             </button>
           );
@@ -193,7 +210,11 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                     className={`px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
                       isSelected ? 'shadow-lg scale-105' : ''
                     }`}
-                    style={{
+                    style={isOutlined ? {
+                      color: isSelected ? '#ffffff' : hexColor,
+                      background: isSelected ? hexColor : 'rgba(255,255,255,0.9)',
+                      border: `1.5px solid ${hexColor}`,
+                    } : {
                       color: '#ffffff',
                       background: isSelected ? hexColor : `${hexColor}99`,
                       border: `1px solid ${isSelected ? hexColor : hexColor + '60'}`,
