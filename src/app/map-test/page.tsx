@@ -48,8 +48,8 @@ function GlowingMarker({
   isActive: boolean;
   dimmed: boolean;
 }) {
-  const size = isHighlighted || isActive ? 20 : 14;
-  const glowSize = isHighlighted ? 44 : isActive ? 36 : 28;
+  const size = isHighlighted ? 22 : isActive ? 24 : 12;
+  const glowSize = isHighlighted ? 44 : isActive ? 48 : 24;
 
   return (
     <div
@@ -69,34 +69,44 @@ function GlowingMarker({
           width: glowSize,
           height: glowSize,
           backgroundColor: color,
-          opacity: isHighlighted ? 0.25 : 0.15,
+          opacity: isHighlighted ? 0.25 : isActive ? 0.2 : 0.15,
           transition: 'all 0.3s ease',
         }}
       />
       {/* Pulsing ring for highlighted marker */}
       {isHighlighted && (
-        <>
-          <div
-            className="absolute rounded-full animate-ping"
-            style={{
-              width: glowSize + 8,
-              height: glowSize + 8,
-              border: `2px solid ${color}`,
-              opacity: 0.4,
-              animationDuration: '1.5s',
-            }}
-          />
-        </>
+        <div
+          className="absolute rounded-full animate-ping"
+          style={{
+            width: glowSize + 8,
+            height: glowSize + 8,
+            border: `2px solid ${color}`,
+            opacity: 0.4,
+            animationDuration: '1.5s',
+          }}
+        />
+      )}
+      {/* Selection ring for active marker */}
+      {isActive && !isHighlighted && (
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: size + 12,
+            height: size + 12,
+            border: `2.5px solid ${color}`,
+            opacity: 0.7,
+            transition: 'all 0.3s ease',
+          }}
+        />
       )}
       {/* Inner dot */}
       <div
-        className="relative rounded-full shadow-lg"
+        className="relative rounded-full"
         style={{
           width: size,
           height: size,
           backgroundColor: color,
-          border: `2.5px solid rgba(255,255,255,0.9)`,
-          boxShadow: `0 0 ${isHighlighted ? 12 : 6}px ${color}80`,
+          boxShadow: `0 0 ${isHighlighted ? 14 : isActive ? 10 : 6}px ${color}80`,
           transition: 'all 0.3s ease',
         }}
       />
@@ -406,8 +416,17 @@ export default function MapTestPage() {
                   </MarkerContent>
 
                   {showLabels && (
-                    <MarkerLabel position="bottom" className="text-gray-700 font-semibold drop-shadow-sm text-[10px]">
-                      {venue.name}
+                    <MarkerLabel position="bottom" className="mt-0.5">
+                      <span
+                        className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
+                        style={{
+                          color: '#1a1a1a',
+                          backgroundColor: 'rgba(255,255,255,0.85)',
+                          textShadow: '0 0 3px rgba(255,255,255,0.8)',
+                        }}
+                      >
+                        {venue.name}
+                      </span>
                     </MarkerLabel>
                   )}
                 </MapMarker>
