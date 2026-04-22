@@ -183,7 +183,7 @@ function AutoScrollPills({ tags, isActive }: { tags: Array<{ label: string; bg: 
   const displayTags = hasOverflow ? [...tags, ...tags] : tags;
 
   return (
-    <div className="mx-3.5 pt-1.5 pb-1">
+    <div className="py-0.5">
       <div
         ref={scrollRef}
         className="flex items-center gap-1.5 overflow-x-auto"
@@ -906,55 +906,22 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       onClick={onToggle}
     >
       {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
-      <div className="flex gap-3 px-3.5 pt-3 pb-2">
+      <div className="flex gap-3 px-3.5 pt-3 pb-1">
         {/* Left Column */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3 className="text-gray-900 font-bold text-[15px] leading-tight tracking-tight line-clamp-2">
             {event.event_name}
           </h3>
-          {(event.event_subtitle || event.event_time_start) && (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {event.event_subtitle && event.event_subtitle !== event.event_name && (
-                <span className="text-gray-500 text-[10px] truncate leading-snug uppercase tracking-wide font-semibold">
-                  {event.event_subtitle}
-                </span>
-              )}
-              {event.event_subtitle && event.event_subtitle !== event.event_name && event.event_time_start && (
-                <span className="text-gray-300 text-[10px]">·</span>
-              )}
-              {event.event_time_start && (
-                <span className="text-gray-400 text-[10px] font-medium flex items-center gap-0.5 flex-shrink-0">
-                  <Clock className="w-2.5 h-2.5" />
-                  {event.event_time_start}{event.event_time_end && `–${event.event_time_end}`}
-                </span>
-              )}
-            </div>
+          {event.event_subtitle && event.event_subtitle !== event.event_name && (
+            <span className="text-gray-500 text-[10px] truncate leading-snug uppercase tracking-wide font-semibold mt-0.5 block">
+              {event.event_subtitle}
+            </span>
           )}
-          <p className="text-gray-800 text-[12px] font-semibold truncate mt-1.5">{venue.venue_name}</p>
-          <div className="flex items-center gap-1 mt-0.5">
-            <Star className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
-            <span className="text-amber-600 text-[11px] font-bold">{venue.venue_rating}</span>
-            <span className="text-gray-400 text-[9px]">({venue.venue_review_count?.toLocaleString()})</span>
-            <span className="text-gray-300 text-[9px] mx-0.5">|</span>
-            <MapPin className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-500 text-[10px] truncate">{venue.venue_location}</span>
-          </div>
-          {event.event_entry_price && !event.event_entry_price.toLowerCase().includes('contact') && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <DollarSign className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-              <span className="text-emerald-600 text-[11px] font-semibold truncate">
-                {(() => {
-                  const words = event.event_entry_price.split(/\s+/);
-                  const seen = new Set<string>();
-                  return words.filter(w => {
-                    const lower = w.toLowerCase();
-                    if (seen.has(lower)) return false;
-                    seen.add(lower);
-                    return true;
-                  }).join(' ');
-                })()}
-              </span>
-            </div>
+          {event.event_time_start && (
+            <span className="text-gray-400 text-[10px] font-medium flex items-center gap-0.5 mt-0.5">
+              <Clock className="w-2.5 h-2.5" />
+              {event.event_time_start}{event.event_time_end && ` – ${event.event_time_end}`}
+            </span>
           )}
         </div>
         {/* Right Column: Image */}
@@ -985,60 +952,68 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         </div>
       </div>
 
-      {/* === SECTION 1.5: Compact data tags === */}
-      {(() => {
-        const tags: Array<{ label: string; bg: string; text: string }> = [];
+      {/* === Venue info — full width === */}
+      <div className="px-3.5 pb-1">
+        <p className="text-gray-800 text-[12px] font-semibold truncate">{venue.venue_name}</p>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Star className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
+          <span className="text-amber-600 text-[11px] font-bold">{venue.venue_rating}</span>
+          <span className="text-gray-400 text-[9px]">({venue.venue_review_count?.toLocaleString()})</span>
+          <span className="text-gray-300 text-[9px] mx-0.5">|</span>
+          <MapPin className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
+          <span className="text-gray-500 text-[10px] truncate">{venue.venue_location}</span>
+        </div>
+      </div>
 
-        // Deal type badge (first deal only)
-        if (event.deals && event.deals.length > 0) {
-          const dealLabels: Record<string, { label: string; bg: string; text: string }> = {
-            ladies_night: { label: 'Ladies Night', bg: 'rgba(236, 72, 153, 0.12)', text: 'rgb(190, 24, 93)' },
-            '2for1': { label: 'BOGO', bg: 'rgba(16, 185, 129, 0.12)', text: 'rgb(5, 150, 105)' },
-            happy_hour: { label: 'Happy Hour', bg: 'rgba(251, 191, 36, 0.12)', text: 'rgb(180, 130, 20)' },
-            discount: { label: 'Discount', bg: 'rgba(59, 130, 246, 0.12)', text: 'rgb(37, 99, 235)' },
-            free_entry: { label: 'Free Entry', bg: 'rgba(34, 197, 94, 0.12)', text: 'rgb(22, 163, 74)' },
-            special_offer: { label: 'Special Offer', bg: 'rgba(249, 115, 22, 0.12)', text: 'rgb(194, 80, 10)' },
-          };
-          const d = event.deals[0];
-          const cfg = dealLabels[d.type] || dealLabels.special_offer;
-          tags.push(cfg);
-        }
+      {/* === Bottom: Tags + Expand button === */}
+      <div className="flex items-center pb-1.5">
+        <div className="flex-1 min-w-0 pl-2.5">
+          {(() => {
+            const tags: Array<{ label: string; bg: string; text: string }> = [];
 
-        // Event type (each secondary as separate pill)
-        if (event.event_categories && event.event_categories.length > 0) {
-          event.event_categories.forEach(c => {
-            if (c.secondary) tags.push({ label: c.secondary, bg: 'rgba(20, 184, 166, 0.1)', text: 'rgb(13, 148, 136)' });
-          });
-        }
+            if (event.deals && event.deals.length > 0) {
+              const dealLabels: Record<string, { label: string; bg: string; text: string }> = {
+                ladies_night: { label: 'Ladies Night', bg: 'rgba(236, 72, 153, 0.12)', text: 'rgb(190, 24, 93)' },
+                '2for1': { label: 'BOGO', bg: 'rgba(16, 185, 129, 0.12)', text: 'rgb(5, 150, 105)' },
+                happy_hour: { label: 'Happy Hour', bg: 'rgba(251, 191, 36, 0.12)', text: 'rgb(180, 130, 20)' },
+                discount: { label: 'Discount', bg: 'rgba(59, 130, 246, 0.12)', text: 'rgb(37, 99, 235)' },
+                free_entry: { label: 'Free Entry', bg: 'rgba(34, 197, 94, 0.12)', text: 'rgb(22, 163, 74)' },
+                special_offer: { label: 'Special Offer', bg: 'rgba(249, 115, 22, 0.12)', text: 'rgb(194, 80, 10)' },
+              };
+              const d = event.deals[0];
+              const cfg = dealLabels[d.type] || dealLabels.special_offer;
+              tags.push(cfg);
+            }
 
-        // Music genre (each genre as separate pill)
-        if (event.music_genre) {
-          event.music_genre.split(',').map(g => g.trim()).filter(Boolean).forEach(genre => {
-            tags.push({ label: genre, bg: 'rgba(59, 130, 246, 0.1)', text: 'rgb(37, 99, 235)' });
-          });
-        }
+            if (event.event_categories && event.event_categories.length > 0) {
+              event.event_categories.forEach(c => {
+                if (c.secondary) tags.push({ label: c.secondary, bg: 'rgba(20, 184, 166, 0.1)', text: 'rgb(13, 148, 136)' });
+              });
+            }
 
-        // Venue category (each category as separate pill)
-        if (venue.venue_category) {
-          parseToArray(venue.venue_category).forEach(cat => {
-            tags.push({ label: cat, bg: 'rgba(107, 114, 128, 0.1)', text: 'rgb(107, 114, 128)' });
-          });
-        }
+            if (event.music_genre) {
+              event.music_genre.split(',').map(g => g.trim()).filter(Boolean).forEach(genre => {
+                tags.push({ label: genre, bg: 'rgba(59, 130, 246, 0.1)', text: 'rgb(37, 99, 235)' });
+              });
+            }
 
-        // Special offer (only if no deals and not "no special offers")
-        if (!event.deals?.length && event.event_offers && !event.event_offers.toLowerCase().includes('no special')) {
-          tags.push({ label: event.event_offers, bg: 'rgba(249, 115, 22, 0.1)', text: 'rgb(194, 80, 10)' });
-        }
+            if (venue.venue_category) {
+              parseToArray(venue.venue_category).forEach(cat => {
+                tags.push({ label: cat, bg: 'rgba(107, 114, 128, 0.1)', text: 'rgb(107, 114, 128)' });
+              });
+            }
 
-        if (tags.length === 0) return null;
+            if (!event.deals?.length && event.event_offers && !event.event_offers.toLowerCase().includes('no special')) {
+              tags.push({ label: event.event_offers, bg: 'rgba(249, 115, 22, 0.1)', text: 'rgb(194, 80, 10)' });
+            }
 
-        return <AutoScrollPills tags={tags} isActive={isFocused && !isFullScreen} />;
-      })()}
+            if (tags.length === 0) return null;
 
-      {/* === Expand button row === */}
-      <div className="px-3 py-1.5 flex items-center justify-end">
+            return <AutoScrollPills tags={tags} isActive={isFocused && !isFullScreen} />;
+          })()}
+        </div>
         <button
-          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2"
           style={{
             background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0, 0, 0, 0.06)',
             border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,

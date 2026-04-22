@@ -116,6 +116,7 @@ const TopNav: React.FC<TopNavProps> = ({
   const filterOptions = { dates: sharedFilterOptions.dates };
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileDateScrollRef = useRef<HTMLDivElement>(null);
   const todayPillRef = useRef<HTMLButtonElement>(null);
@@ -225,6 +226,28 @@ const TopNav: React.FC<TopNavProps> = ({
       }
     });
   }, [dateOptions, selectedPreset]);
+
+  // Track visible month for sticky vertical label
+  useEffect(() => {
+    if (dateOptions.length > 0) {
+      setVisibleMonth(dateOptions[0].date.split(' ')[0].toUpperCase());
+    }
+  }, [dateOptions]);
+
+  const handleDateScroll = () => {
+    const container = mobileDateScrollRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const buttons = container.querySelectorAll<HTMLButtonElement>('button[data-month]');
+    for (const btn of buttons) {
+      const rect = btn.getBoundingClientRect();
+      if (rect.right > containerRect.left) {
+        const month = btn.getAttribute('data-month');
+        if (month) setVisibleMonth(month);
+        break;
+      }
+    }
+  };
 
   // Compute the full preset range dates (independent of what's clicked)
   const presetRangeDates = useMemo(() => {
@@ -471,29 +494,30 @@ const TopNav: React.FC<TopNavProps> = ({
         <div className="flex flex-col gap-1.5">
           {/* ROW 1: Date pills with inline month labels + Dropdown + Search + List toggle */}
           <div className="flex items-center gap-1.5">
-            {/* Scrollable date pills with inline month separators */}
+            {/* Sticky vertical month label + Scrollable date pills */}
             {showDatePicker && datePickerProps && (
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div ref={mobileDateScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
-                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {dateOptions.map((dateOption, index) => {
-                  const isClicked = isDateSelected(dateOption.dateKey);
-                  const isToday = dateOption.isToday;
-                  const isWeekend = dateOption.isSaturday || dateOption.isSunday;
-                  const isInRange = presetRangeDates.includes(dateOption.dateKey);
-                  const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
-                  const currentMonth = dateOption.date.split(' ')[0];
-                  const prevMonth = index > 0 ? dateOptions[index - 1].date.split(' ')[0] : null;
-                  const showMonthLabel = index === 0 || currentMonth !== prevMonth;
-                  return (
-                    <React.Fragment key={index}>
-                      {showMonthLabel && (
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex-shrink-0 select-none px-1">
-                          {currentMonth}
-                        </span>
-                      )}
+              <>
+                <div className="flex-shrink-0 flex items-center justify-center rounded-lg px-1 py-2"
+                     style={{ background: 'rgba(0, 0, 0, 0.04)', border: '1px solid rgba(0, 0, 0, 0.08)', minHeight: '44px' }}>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest select-none"
+                        style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
+                    {visibleMonth}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
+                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {dateOptions.map((dateOption, index) => {
+                    const isClicked = isDateSelected(dateOption.dateKey);
+                    const isToday = dateOption.isToday;
+                    const isWeekend = dateOption.isSaturday || dateOption.isSunday;
+                    const isInRange = presetRangeDates.includes(dateOption.dateKey);
+                    const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
+                    return (
                       <button
+                        key={index}
                         ref={isToday ? todayPillRef : undefined}
+                        data-month={dateOption.date.split(' ')[0].toUpperCase()}
                         onClick={() => handleDateClick(dateOption.dateKey)}
                         className="flex flex-col items-center px-2.5 py-1 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
                         style={{
@@ -525,11 +549,11 @@ const TopNav: React.FC<TopNavProps> = ({
                           {dateOption.date.split(' ')[1]}
                         </span>
                       </button>
-                    </React.Fragment>
-                  );
-                })}
+                    );
+                  })}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             {/* Date range dropdown (arrow only) */}
