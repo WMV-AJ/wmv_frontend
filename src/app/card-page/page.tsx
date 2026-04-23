@@ -20,29 +20,11 @@ export default function CardPage() {
   const router = useRouter();
 
   const [filters, setFilters] = useState<HierarchicalFilterState>({
-    selectedPrimaries: {
-      genres: [],
-      vibes: []
-    },
-    selectedSecondaries: {
-      genres: {},
-      vibes: {}
-    },
-    expandedPrimaries: {
-      genres: [],
-      vibes: []
-    },
-    eventCategories: {
-      selectedPrimaries: [],
-      selectedSecondaries: {},
-      expandedPrimaries: []
-    },
-    attributes: {
-      venue: [],
-      energy: [],
-      timing: [],
-      status: []
-    },
+    selectedPrimaries: { genres: [], vibes: [] },
+    selectedSecondaries: { genres: {}, vibes: {} },
+    expandedPrimaries: { genres: [], vibes: [] },
+    eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
+    attributes: { venue: [], energy: [], timing: [], status: [] },
     selectedAreas: ['All Dubai'],
     activeDates: [],
     activeOffers: [],
@@ -52,8 +34,7 @@ export default function CardPage() {
   const { allVenues, filteredVenues, isLoading } = useClientSideVenues(filters);
 
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const [navHeight, setNavHeight] = useState(130);
-  const handleNavHeightChange = useCallback((h: number) => setNavHeight(h), []);
+  const [navHeight, setNavHeight] = useState(140);
 
   const { filterOptions } = useFilterOptions();
 
@@ -76,20 +57,9 @@ export default function CardPage() {
     return Array.from(eventMap.values());
   }, [filteredVenues]);
 
-  const viewToggleButtons = (
-    <button
-      onClick={() => router.push('/')}
-      className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90"
-      style={{ background: 'rgba(59, 130, 246, 0.9)' }}
-      title="Map View"
-    >
-      <MapIcon className="w-[18px] h-[18px] text-white" />
-    </button>
-  );
-
   if (isLoading) {
     return (
-      <main className="h-screen w-full flex items-center justify-center bg-gray-900">
+      <main className="h-screen w-full flex items-center justify-center" style={{ background: '#0a0a1a' }}>
         <div className="p-8 max-w-md text-center">
           <h3 className="text-lg font-semibold mb-2 text-white">Loading Venues...</h3>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mt-4"></div>
@@ -100,32 +70,44 @@ export default function CardPage() {
 
   return (
     <ThemeProvider>
-      <main className="min-h-screen w-full" style={{ backgroundColor: '#1a1917' }}>
+      <main className="min-h-screen w-full" style={{ background: '#0a0a1a' }}>
+        {/* Dark TopNav — same as map page */}
         <TopNav
-          navButtons={viewToggleButtons}
+          embedded={false}
+          hideProfile={true}
           onSearchClick={() => setIsFilterSheetOpen(true)}
           showDatePicker={true}
           datePickerProps={{
             venues: filteredVenues,
             selectedDates: filters.activeDates,
-            onDateChange: handleDateChange
+            onDateChange: handleDateChange,
           }}
-          showCategoryPills={true}
-          categoryPillsContent={
-            <CategoryPills
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              venues={allVenues}
-              inlineMode={true}
-            />
-          }
-          onHeightChange={handleNavHeightChange}
+          onListToggle={() => router.push('/')}
+          isListView={false}
+          onHeightChange={setNavHeight}
+          darkMode={true}
         />
 
-        {/* Stacked Event Cards — scroll area below navbar */}
+        {/* Floating category pills — below TopNav, no background */}
+        <div
+          className="fixed left-0 right-0 z-30 px-2"
+          style={{ top: navHeight + 6 }}
+        >
+          <CategoryPills
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            venues={allVenues}
+            inlineMode={true}
+            variant="outlined"
+            wrapPills={true}
+            darkMode={true}
+          />
+        </div>
+
+        {/* Stacked Event Cards — scrollable area below nav + pills */}
         <div
           className="fixed left-1.5 md:left-2 right-1.5 md:right-2 bottom-0 z-10 overflow-y-auto rounded-2xl"
-          style={{ backgroundColor: '#1a1917', top: `${navHeight + 8}px` }}
+          style={{ background: '#0a0a1a', top: `${navHeight + 90}px` }}
         >
           <StackedEventCards
             cards={cards}

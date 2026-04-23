@@ -91,6 +91,7 @@ interface TopNavProps {
   isListView?: boolean; // Current view mode
   onPresetRangeDatesChange?: (dates: string[]) => void; // Notify parent of preset range dates
   onHeightChange?: (height: number) => void; // Notify parent of nav height (mobile only)
+  darkMode?: boolean;
 }
 
 const TopNav: React.FC<TopNavProps> = ({
@@ -106,6 +107,7 @@ const TopNav: React.FC<TopNavProps> = ({
   isListView = false,
   onPresetRangeDatesChange,
   onHeightChange,
+  darkMode = false,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -116,6 +118,7 @@ const TopNav: React.FC<TopNavProps> = ({
   const filterOptions = { dates: sharedFilterOptions.dates };
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileDateScrollRef = useRef<HTMLDivElement>(null);
   const todayPillRef = useRef<HTMLButtonElement>(null);
@@ -225,6 +228,28 @@ const TopNav: React.FC<TopNavProps> = ({
       }
     });
   }, [dateOptions, selectedPreset]);
+
+  // Track visible month for sticky vertical label
+  useEffect(() => {
+    if (dateOptions.length > 0) {
+      setVisibleMonth(dateOptions[0].date.split(' ')[0].toUpperCase());
+    }
+  }, [dateOptions]);
+
+  const handleDateScroll = () => {
+    const container = mobileDateScrollRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const buttons = container.querySelectorAll<HTMLButtonElement>('button[data-month]');
+    for (const btn of buttons) {
+      const rect = btn.getBoundingClientRect();
+      if (rect.left + rect.width / 2 >= containerRect.left) {
+        const month = btn.getAttribute('data-month');
+        if (month) setVisibleMonth(month);
+        break;
+      }
+    }
+  };
 
   // Compute the full preset range dates (independent of what's clicked)
   const presetRangeDates = useMemo(() => {
@@ -460,7 +485,13 @@ const TopNav: React.FC<TopNavProps> = ({
         className={`px-3 md:px-4 rounded-2xl relative ${
           showDatePicker ? 'py-2 md:py-3' : 'py-2 md:py-3.5'
         }`}
-        style={{
+        style={darkMode ? {
+          background: 'rgba(10, 10, 26, 0.88)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.10)',
+          boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255,255,255,0.05) inset',
+        } : {
           background: 'rgba(255, 255, 255, 0.97)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
@@ -468,93 +499,105 @@ const TopNav: React.FC<TopNavProps> = ({
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <div className="flex flex-col gap-1">
-          {/* ROW 1: Logo, Search, Buttons */}
-          <div className="flex items-center justify-between">
-            <img
-              src="/logo_clean.svg"
-              alt="Where's My Vibe"
-              className="flex-shrink-0"
-              style={{
-                width: '40px',
-                height: '40px',
-                objectFit: 'contain',
-              }}
-            />
-
-            <div className="flex-1 max-w-md mx-2 md:mx-4">
-              <div className="relative cursor-pointer group" onClick={onSearchClick}>
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 stroke-[2.5] pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Search for your Vibe?"
-                  className="w-full pl-10 pr-4 py-1.5 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none cursor-pointer transition-all duration-200"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.04)',
-                    border: '1px solid rgba(0, 0, 0, 0.08)',
-                  }}
-                  readOnly
-                  onClick={onSearchClick}
-                />
-              </div>
-            </div>
-
-            {hideProfile ? (
-              <button
-                onClick={() => {
-                  if (onListToggle) {
-                    onListToggle();
-                  } else {
-                    router.push(pathname === '/list' ? '/' : '/list');
-                  }
-                }}
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
-                style={{
-                  background: 'rgba(59, 130, 246, 0.9)',
-                }}
-                aria-label={isListView ? 'Show map' : 'Show event list'}
-              >
-                {isListView ? (
-                  <MapIcon className="w-5 h-5 text-white" />
-                ) : (
-                  <List className="w-5 h-5 text-white" />
-                )}
-              </button>
-            ) : (
-              <div className="flex items-center gap-1.5 md:gap-2">
-                {navButtons}
-                {user && (
-                  <button
-                    onClick={signOut}
-                    className="p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-500/15 transition-all duration-200"
-                    title="Sign out"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                )}
+        <div className="flex flex-col gap-1.5">
+          {/* ROW 1: Date pills with inline month labels + Dropdown + Search + List toggle */}
+          <div className="flex items-center gap-1.5">
+            {/* Date pills with inline month separators */}
+            {showDatePicker && datePickerProps && (
+              <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow: 'visible' }}>
+                {/* Sticky frozen month label — always visible on left */}
+                <span
+                  className={`text-[14px] font-black uppercase flex-shrink-0 select-none ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}
+                  style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
+                >
+                  {visibleMonth}
+                </span>
+                <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pt-3 pb-1"
+                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {dateOptions.map((dateOption, index) => {
+                  const isClicked = isDateSelected(dateOption.dateKey);
+                  const isToday = dateOption.isToday;
+                  const isWeekend = dateOption.isSaturday || dateOption.isSunday;
+                  const isInRange = presetRangeDates.includes(dateOption.dateKey);
+                  const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
+                  const currentMonth = dateOption.date.split(' ')[0].toUpperCase();
+                  const prevMonth = index > 0 ? dateOptions[index - 1].date.split(' ')[0].toUpperCase() : null;
+                  const showMonthLabel = index > 0 && currentMonth !== prevMonth;
+                  return (
+                    <React.Fragment key={index}>
+                      {showMonthLabel && (
+                        <span
+                          className={`text-[9px] font-bold uppercase tracking-wider flex-shrink-0 select-none px-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                          style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
+                        >
+                          {currentMonth}
+                        </span>
+                      )}
+                      <button
+                        ref={isToday ? todayPillRef : undefined}
+                        data-month={currentMonth}
+                        onClick={() => handleDateClick(dateOption.dateKey)}
+                        className="flex flex-col items-center px-2.5 py-1 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
+                        style={{
+                          ...(isFullSelected
+                            ? { background: darkMode ? 'rgba(255,255,255,0.18)' : 'rgba(0, 0, 0, 0.45)', color: '#fff' }
+                            : {}),
+                          ...(!isFullSelected && isInRange
+                            ? { border: '2px solid rgba(59, 130, 246, 0.6)' }
+                            : {}),
+                        }}
+                      >
+                        {isToday && (
+                          <span
+                            className="absolute -top-1.5 -right-1.5 text-[6px] font-bold px-1 py-px rounded z-10"
+                            style={darkMode ? {
+                              background: 'rgba(255,255,255,0.18)',
+                              color: 'rgba(255,255,255,0.9)',
+                              border: '1px solid rgba(255,255,255,0.25)',
+                            } : {
+                              background: '#7c3aed',
+                              color: '#fff',
+                            }}
+                          >
+                            TODAY
+                          </span>
+                        )}
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider leading-tight ${
+                          isFullSelected ? 'text-white'
+                            : isWeekend ? 'text-red-400'
+                            : darkMode ? 'text-gray-400' : 'text-gray-400'
+                        }`}>
+                          {dateOption.day}
+                        </span>
+                        <span className={`text-[14px] font-bold leading-tight ${
+                          isFullSelected ? 'text-white'
+                            : isWeekend ? 'text-red-400'
+                            : darkMode ? 'text-gray-200' : 'text-gray-600'
+                        }`}>
+                          {dateOption.date.split(' ')[1]}
+                        </span>
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+                </div>
               </div>
             )}
-          </div>
 
-          {/* ROW 2: Date Picker */}
-          {showDatePicker && datePickerProps && (
-            <div className="flex items-end gap-2 pt-0 pb-0 -mx-1 px-1">
-              {/* Date Range Dropdown — outside scroll area so it's not clipped */}
-              <div ref={dropdownRef} className="relative flex-shrink-0 z-10 mb-0.5">
+            {/* Date range dropdown (arrow only) */}
+            {showDatePicker && datePickerProps && (
+              <div ref={dropdownRef} className="relative flex-shrink-0 z-10">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="text-[10px] font-semibold px-2.5 py-1.5 rounded-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.45)',
-                    color: '#fff',
-                  }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90"
+                  style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
+                  aria-label="Date range"
                 >
-                  {PRESET_LABELS[selectedPreset]}
-                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${darkMode ? 'text-gray-300' : 'text-gray-500'} ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isDropdownOpen && (
                   <div
-                    className="absolute top-full left-0 mt-2 rounded-xl overflow-hidden z-[60]"
+                    className="absolute top-full right-0 mt-2 rounded-xl overflow-hidden z-[60]"
                     style={{
                       background: 'rgba(30, 30, 30, 0.97)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -580,59 +623,40 @@ const TopNav: React.FC<TopNavProps> = ({
                   </div>
                 )}
               </div>
-              {/* Scrollable date pills — wrapper clips content so pills never bleed behind dropdown */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div ref={mobileDateScrollRef} className="flex items-center gap-2 overflow-x-auto scrollbar-hide pt-3 pb-0.5"
-                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {dateOptions.map((dateOption, index) => {
-                  const isClicked = isDateSelected(dateOption.dateKey);
-                  const isToday = dateOption.isToday;
-                  const isWeekend = dateOption.isSaturday || dateOption.isSunday;
-                  const isInRange = presetRangeDates.includes(dateOption.dateKey);
-                  const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
-                  return (
-                    <button
-                      key={index}
-                      ref={isToday ? todayPillRef : undefined}
-                      onClick={() => handleDateClick(dateOption.dateKey)}
-                      className="flex flex-col items-center px-2.5 py-0.5 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
-                      style={{
-                        ...(isFullSelected
-                          ? { background: 'rgba(0, 0, 0, 0.45)', color: '#fff' }
-                          : {}),
-                        ...(!isFullSelected && isInRange
-                          ? { border: '2px solid rgba(59, 130, 246, 0.6)' }
-                          : {}),
-                      }}
-                    >
-                      {isToday && (
-                        <span className="absolute -top-1.5 -right-1.5 text-[6px] font-bold px-1 py-px rounded bg-purple-600 text-white">
-                          TODAY
-                        </span>
-                      )}
-                      <span className={`text-[9px] font-semibold uppercase tracking-wider leading-tight ${
-                        isFullSelected ? 'text-white'
-                          : isWeekend ? 'text-red-500'
-                          : 'text-gray-400'
-                      }`}>
-                        {dateOption.day}
-                      </span>
-                      <span className={`text-[13px] font-bold leading-tight ${
-                        isFullSelected ? 'text-white'
-                          : isWeekend ? 'text-red-500'
-                          : 'text-gray-600'
-                      }`}>
-                        {dateOption.date}
-                      </span>
-                    </button>
-                  );
-                })}
-                </div>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* ROW 4: Category Pills (only when explicitly provided) */}
+            {/* Search icon */}
+            <button
+              onClick={onSearchClick}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
+              style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
+              aria-label="Search"
+            >
+              <Search className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
+            </button>
+
+            {/* List/Map toggle */}
+            <button
+              onClick={() => {
+                if (onListToggle) {
+                  onListToggle();
+                } else {
+                  router.push(pathname === '/list' ? '/' : '/list');
+                }
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
+              style={{ background: 'rgba(59, 130, 246, 0.9)' }}
+              aria-label={isListView ? 'Show map' : 'Show event list'}
+            >
+              {isListView ? (
+                <MapIcon className="w-4 h-4 text-white" />
+              ) : (
+                <List className="w-4 h-4 text-white" />
+              )}
+            </button>
+          </div>
+
+          {/* ROW 2: Category Pills */}
           {showCategoryPills && categoryPillsContent && (
             <div className="-mx-1 px-1">
               {categoryPillsContent}

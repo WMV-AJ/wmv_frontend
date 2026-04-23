@@ -98,18 +98,18 @@ export const SECONDARY_CATEGORIES_MAP: Record<string, string[]> = {
   ]
 };
 
-// Hex color mapping for UI
+// Hex color mapping for UI — brightened palette for dark theme visibility
 export const COLOR_HEX_MAP: Record<string, string> = {
-  purple: "#9333EA",
-  red: "#EF4444",
-  yellow: "#F59E0B",
-  orange: "#F97316",
-  pink: "#EC4899",
-  indigo: "#6366F1",
-  blue: "#3B82F6",
-  green: "#10B981",
-  teal: "#14B8A6",
-  gray: "#6B7280"
+  purple: "#E060A8",   // Ladies Night — bright magenta
+  red: "#8FD14F",      // Sports Viewing — bright lime green
+  yellow: "#FF6B4A",   // Day Party — bright coral-red
+  orange: "#FFB020",   // Food & Dining — bright amber
+  pink: "#9B72D0",     // Club Night — bright purple
+  indigo: "#4BAEE8",   // Brunch — bright sky blue
+  blue: "#2EC495",     // Pool Party — bright emerald
+  green: "#3ECFCC",    // Live Performance — bright cyan-teal
+  teal: "#FFD600",     // Happy Hour — bright yellow
+  gray: "#AAAAAA"      // Comedy Night — lighter gray
 };
 
 // Google Maps marker color mapping
