@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Map as MapIcon } from 'lucide-react';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
@@ -46,6 +45,18 @@ export default function CardPage() {
     setFilters(prev => ({ ...prev, activeDates: dates }));
   };
 
+  // Venues filtered by date only — so pill counts update when a date is selected
+  const dateFilteredVenues = useMemo(() => {
+    if (filters.activeDates.length === 0) return allVenues;
+    return allVenues.filter(venue => {
+      if (!venue.event_date) return false;
+      try {
+        const venueDate = new Date(venue.event_date).toDateString();
+        return filters.activeDates.includes(venueDate);
+      } catch { return false; }
+    });
+  }, [allVenues, filters.activeDates]);
+
   const cards = useMemo(() => {
     const allCards = transformSupabaseDataToStackedCards(filteredVenues);
     const eventMap = new Map<string, typeof allCards[0]>();
@@ -78,7 +89,7 @@ export default function CardPage() {
           onSearchClick={() => setIsFilterSheetOpen(true)}
           showDatePicker={true}
           datePickerProps={{
-            venues: filteredVenues,
+            venues: dateFilteredVenues,
             selectedDates: filters.activeDates,
             onDateChange: handleDateChange,
           }}
@@ -88,7 +99,7 @@ export default function CardPage() {
           darkMode={true}
         />
 
-        {/* Floating category pills — below TopNav, no background */}
+        {/* Floating category pills — counts reflect selected date */}
         <div
           className="fixed left-0 right-0 z-30 px-2"
           style={{ top: navHeight + 6 }}
@@ -96,7 +107,7 @@ export default function CardPage() {
           <CategoryPills
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            venues={allVenues}
+            venues={dateFilteredVenues}
             inlineMode={true}
             variant="outlined"
             wrapPills={true}

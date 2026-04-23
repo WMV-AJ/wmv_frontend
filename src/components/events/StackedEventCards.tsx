@@ -321,12 +321,31 @@ const EventCard: React.FC<EventCardProps> = ({
       {/* HEADER */}
       <div className="stacked-card-header" style={{ alignItems: 'flex-start', gap: '12px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Line 1 — Event name */}
           <h2 className="stacked-card-event-title">
             {event.event_name}
           </h2>
 
-          <span className="stacked-card-venue-name" style={{ display: 'block', marginTop: '4px' }}>{venue.venue_name}</span>
+          {/* Line 2 — Date & Time */}
+          <div className="stacked-card-time-row" style={{ marginTop: '5px' }}>
+            <CalendarIcon />
+            <span style={{ marginRight: '6px' }}>{dateDisplay}</span>
+            {(event.event_time_start || event.event_time_end) && (
+              <>
+                <span style={{ color: 'rgba(144,238,144,0.4)', marginRight: '6px' }}>·</span>
+                <ClockIcon />
+                <span>
+                  {formatTime(event.event_time_start)}
+                  {event.event_time_end && ` - ${formatTime(event.event_time_end)}`}
+                </span>
+              </>
+            )}
+          </div>
 
+          {/* Line 3 — Venue name */}
+          <span className="stacked-card-venue-name" style={{ display: 'block', marginTop: '5px' }}>{venue.venue_name}</span>
+
+          {/* Line 4 — Rating + Area */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px', flexWrap: 'wrap' }}>
             <span className="stacked-card-star">★</span>
             <span className="stacked-card-rating-value">{venue.venue_rating}</span>
@@ -334,30 +353,6 @@ const EventCard: React.FC<EventCardProps> = ({
             <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 2px' }}>|</span>
             <span style={{ color: 'rgba(200, 200, 220, 0.7)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{venue.venue_location}</span>
           </div>
-
-          {(event.event_time_start || event.event_time_end) && (
-            <div className="stacked-card-time-row" style={{ marginTop: '5px' }}>
-              <ClockIcon />
-              <span>
-                {formatTime(event.event_time_start)}
-                {event.event_time_end && ` - ${formatTime(event.event_time_end)}`}
-              </span>
-            </div>
-          )}
-
-          {(() => {
-            const smartSubtitle = generateSmartSubtitle(
-              event.event_name,
-              venue.venue_name,
-              event.event_subtitle
-            );
-            if (!smartSubtitle) return null;
-            return (
-              <p className="stacked-card-event-subtitle" style={{ marginTop: '6px' }}>
-                {smartSubtitle.toUpperCase()}
-              </p>
-            );
-          })()}
         </div>
 
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch' }}>
