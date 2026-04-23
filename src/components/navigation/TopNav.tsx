@@ -241,7 +241,7 @@ const TopNav: React.FC<TopNavProps> = ({
     const buttons = container.querySelectorAll<HTMLButtonElement>('button[data-month]');
     for (const btn of buttons) {
       const rect = btn.getBoundingClientRect();
-      if (rect.right > containerRect.left) {
+      if (rect.left + rect.width / 2 >= containerRect.left) {
         const month = btn.getAttribute('data-month');
         if (month) setVisibleMonth(month);
         break;
@@ -497,9 +497,9 @@ const TopNav: React.FC<TopNavProps> = ({
             {/* Sticky vertical month label + Scrollable date pills */}
             {showDatePicker && datePickerProps && (
               <>
-                <div className="flex-shrink-0 flex items-center justify-center rounded-lg px-1 py-2"
-                     style={{ background: 'rgba(0, 0, 0, 0.04)', border: '1px solid rgba(0, 0, 0, 0.08)', minHeight: '44px' }}>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest select-none"
+                <div className="flex-shrink-0 flex items-center justify-center px-2 py-1.5"
+                     style={{ background: 'rgba(255,255,255,0.95)', border: '1.5px solid rgba(0,0,0,0.18)', borderRadius: '10px' }}>
+                  <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest select-none"
                         style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
                     {visibleMonth}
                   </span>

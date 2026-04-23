@@ -198,7 +198,7 @@ function AutoScrollPills({ tags, isActive }: { tags: Array<{ label: string; bg: 
         {displayTags.map((tag, i) => (
           <span
             key={i}
-            className="text-[9px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
+            className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
             style={{ background: tag.bg, color: tag.text }}
           >
             {tag.label}
@@ -954,14 +954,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
       {/* === Venue info — full width === */}
       <div className="px-3.5 pb-1">
-        <p className="text-gray-800 text-[12px] font-semibold truncate">{venue.venue_name}</p>
+        <p className="text-gray-800 text-[13px] font-semibold truncate">{venue.venue_name}</p>
         <div className="flex items-center gap-1 mt-0.5">
           <Star className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
-          <span className="text-amber-600 text-[11px] font-bold">{venue.venue_rating}</span>
-          <span className="text-gray-400 text-[9px]">({venue.venue_review_count?.toLocaleString()})</span>
-          <span className="text-gray-300 text-[9px] mx-0.5">|</span>
+          <span className="text-amber-600 text-[12px] font-bold">{venue.venue_rating}</span>
+          <span className="text-gray-400 text-[10px]">({venue.venue_review_count?.toLocaleString()})</span>
+          <span className="text-gray-300 text-[10px] mx-0.5">|</span>
           <MapPin className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
-          <span className="text-gray-500 text-[10px] truncate">{venue.venue_location}</span>
+          <span className="text-gray-500 text-[11px] truncate">{venue.venue_location}</span>
         </div>
       </div>
 
@@ -1013,10 +1013,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           })()}
         </div>
         <button
-          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2"
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2"
           style={{
-            background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0, 0, 0, 0.06)',
-            border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
+            background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.12)',
+            border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.3)'}`,
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -1025,9 +1025,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           aria-label={isFullScreen ? 'Close' : 'Expand'}
         >
           {isFullScreen ? (
-            <X className="w-3.5 h-3.5 text-red-500" />
+            <X className="w-4 h-4 text-red-500" />
           ) : (
-            <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+            <ChevronUp className="w-4 h-4 text-indigo-500" />
           )}
         </button>
       </div>

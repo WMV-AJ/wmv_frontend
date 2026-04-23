@@ -62,17 +62,19 @@ function GlowingMarker({
         transition: 'opacity 0.3s ease',
       }}
     >
-      {/* Outer glow / halo */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          width: glowSize,
-          height: glowSize,
-          backgroundColor: color,
-          opacity: isHighlighted ? 0.25 : isActive ? 0.2 : 0.15,
-          transition: 'all 0.3s ease',
-        }}
-      />
+      {/* Outer glow / halo — only for active/highlighted */}
+      {(isHighlighted || isActive) && (
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: glowSize,
+            height: glowSize,
+            backgroundColor: color,
+            opacity: isHighlighted ? 0.25 : 0.2,
+            transition: 'all 0.3s ease',
+          }}
+        />
+      )}
       {/* Pulsing ring for highlighted marker */}
       {isHighlighted && (
         <div
@@ -91,10 +93,22 @@ function GlowingMarker({
         <div
           className="absolute rounded-full"
           style={{
-            width: size + 12,
-            height: size + 12,
-            border: `2.5px solid ${color}`,
-            opacity: 0.7,
+            width: size + 14,
+            height: size + 14,
+            border: `3px solid ${color}`,
+            opacity: 1,
+            transition: 'all 0.3s ease',
+          }}
+        />
+      )}
+      {/* White inner ring for active marker — creates contrast between ring and dot */}
+      {isActive && !isHighlighted && (
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: size + 6,
+            height: size + 6,
+            border: '2px solid white',
             transition: 'all 0.3s ease',
           }}
         />
@@ -106,7 +120,7 @@ function GlowingMarker({
           width: size,
           height: size,
           backgroundColor: color,
-          boxShadow: `0 0 ${isHighlighted ? 14 : isActive ? 10 : 6}px ${color}80`,
+          boxShadow: (isHighlighted || isActive) ? `0 0 ${isHighlighted ? 14 : 10}px ${color}80` : 'none',
           transition: 'all 0.3s ease',
         }}
       />
@@ -416,21 +430,26 @@ export default function MapTestPage() {
             selectedDates: filters.activeDates,
             onDateChange: handleDateChange,
           }}
-          showCategoryPills={true}
-          categoryPillsContent={
-            <CategoryPills
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              venues={dateFilteredVenues}
-              inlineMode={true}
-              variant="outlined"
-            />
-          }
           onListToggle={() => router.push('/list')}
           isListView={false}
           onPresetRangeDatesChange={handlePresetRangeDatesChange}
           onHeightChange={setNavHeight}
         />
+
+        {/* Floating category pills — over map, no background */}
+        <div
+          className="fixed left-0 right-0 z-30 px-2"
+          style={{ top: navHeight + 6 }}
+        >
+          <CategoryPills
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            venues={dateFilteredVenues}
+            inlineMode={true}
+            variant="outlined"
+            wrapPills={true}
+          />
+        </div>
 
         {/* Full-screen MapCN Map (light mode) */}
         <div className="absolute inset-0">

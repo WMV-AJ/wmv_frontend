@@ -20,6 +20,7 @@ interface CategoryPillsProps {
   venues: Venue[];
   inlineMode?: boolean;
   variant?: 'filled' | 'outlined';
+  wrapPills?: boolean;
 }
 
 const SHORT_DISPLAY_NAMES: Record<string, string> = {
@@ -47,6 +48,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   venues,
   inlineMode = false,
   variant = 'filled',
+  wrapPills = false,
 }) => {
   const isOutlined = variant === 'outlined';
   const eventCategories: EventCategoryFilterState = filters.eventCategories || {
@@ -146,7 +148,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   const pillsContent = (
     <div className="flex flex-col gap-2">
       {/* Primary Category Row with Icons */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div className={`flex gap-1.5 pb-0.5 ${wrapPills ? 'flex-wrap' : 'overflow-x-auto scrollbar-hide'}`} style={wrapPills ? {} : { scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {Object.keys(PRIMARY_CATEGORY_MAP)
           .map(category => ({ category, count: getCategoryCount(category) }))
           .filter(({ count }) => count > 0)
