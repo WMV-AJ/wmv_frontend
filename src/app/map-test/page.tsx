@@ -434,6 +434,7 @@ export default function MapTestPage() {
           isListView={false}
           onPresetRangeDatesChange={handlePresetRangeDatesChange}
           onHeightChange={setNavHeight}
+          darkMode={true}
         />
 
         {/* Floating category pills — over map, no background */}
@@ -448,10 +449,11 @@ export default function MapTestPage() {
             inlineMode={true}
             variant="outlined"
             wrapPills={true}
+            darkMode={true}
           />
         </div>
 
-        {/* Full-screen MapCN Map (light mode) */}
+        {/* Full-screen MapCN Map (dark mode) */}
         <div className="absolute inset-0">
           <MapView
             center={MAPCN_CENTER}
@@ -459,7 +461,7 @@ export default function MapTestPage() {
             minZoom={MAPCN_MIN_ZOOM}
             maxZoom={MAPCN_MAX_ZOOM}
             maxBounds={MAPCN_BOUNDS}
-            theme="light"
+            theme="dark"
             className="w-full h-full"
           >
             <ZoomTracker onZoomChange={handleZoomChange} />
@@ -534,6 +536,7 @@ export default function MapTestPage() {
           onActiveOfferChange={setHighlightedOffer}
           presetRangeDates={presetRangeDates}
           navHeight={navHeight}
+          darkMode={true}
         />
 
         {/* Filter Bottom Sheet */}

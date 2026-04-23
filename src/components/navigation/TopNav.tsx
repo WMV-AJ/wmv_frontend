@@ -91,6 +91,7 @@ interface TopNavProps {
   isListView?: boolean; // Current view mode
   onPresetRangeDatesChange?: (dates: string[]) => void; // Notify parent of preset range dates
   onHeightChange?: (height: number) => void; // Notify parent of nav height (mobile only)
+  darkMode?: boolean;
 }
 
 const TopNav: React.FC<TopNavProps> = ({
@@ -106,6 +107,7 @@ const TopNav: React.FC<TopNavProps> = ({
   isListView = false,
   onPresetRangeDatesChange,
   onHeightChange,
+  darkMode = false,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -483,7 +485,13 @@ const TopNav: React.FC<TopNavProps> = ({
         className={`px-3 md:px-4 rounded-2xl relative ${
           showDatePicker ? 'py-2 md:py-3' : 'py-2 md:py-3.5'
         }`}
-        style={{
+        style={darkMode ? {
+          background: 'rgba(10, 10, 26, 0.88)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.10)',
+          boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255,255,255,0.05) inset',
+        } : {
           background: 'rgba(255, 255, 255, 0.97)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
@@ -499,7 +507,7 @@ const TopNav: React.FC<TopNavProps> = ({
               <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow: 'visible' }}>
                 {/* Sticky frozen month label — always visible on left */}
                 <span
-                  className="text-[14px] font-black text-gray-500 uppercase flex-shrink-0 select-none"
+                  className={`text-[14px] font-black uppercase flex-shrink-0 select-none ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}
                   style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
                 >
                   {visibleMonth}
@@ -519,7 +527,7 @@ const TopNav: React.FC<TopNavProps> = ({
                     <React.Fragment key={index}>
                       {showMonthLabel && (
                         <span
-                          className="text-[9px] font-bold text-gray-500 uppercase tracking-wider flex-shrink-0 select-none px-0.5"
+                          className={`text-[9px] font-bold uppercase tracking-wider flex-shrink-0 select-none px-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
                           style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
                         >
                           {currentMonth}
@@ -532,7 +540,7 @@ const TopNav: React.FC<TopNavProps> = ({
                         className="flex flex-col items-center px-2.5 py-1 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
                         style={{
                           ...(isFullSelected
-                            ? { background: 'rgba(0, 0, 0, 0.45)', color: '#fff' }
+                            ? { background: darkMode ? 'rgba(255,255,255,0.18)' : 'rgba(0, 0, 0, 0.45)', color: '#fff' }
                             : {}),
                           ...(!isFullSelected && isInRange
                             ? { border: '2px solid rgba(59, 130, 246, 0.6)' }
@@ -546,15 +554,15 @@ const TopNav: React.FC<TopNavProps> = ({
                         )}
                         <span className={`text-[10px] font-semibold uppercase tracking-wider leading-tight ${
                           isFullSelected ? 'text-white'
-                            : isWeekend ? 'text-red-500'
-                            : 'text-gray-400'
+                            : isWeekend ? 'text-red-400'
+                            : darkMode ? 'text-gray-400' : 'text-gray-400'
                         }`}>
                           {dateOption.day}
                         </span>
                         <span className={`text-[14px] font-bold leading-tight ${
                           isFullSelected ? 'text-white'
-                            : isWeekend ? 'text-red-500'
-                            : 'text-gray-600'
+                            : isWeekend ? 'text-red-400'
+                            : darkMode ? 'text-gray-200' : 'text-gray-600'
                         }`}>
                           {dateOption.date.split(' ')[1]}
                         </span>
@@ -572,10 +580,10 @@ const TopNav: React.FC<TopNavProps> = ({
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90"
-                  style={{ background: 'rgba(0, 0, 0, 0.06)' }}
+                  style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
                   aria-label="Date range"
                 >
-                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${darkMode ? 'text-gray-300' : 'text-gray-500'} ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isDropdownOpen && (
                   <div
@@ -611,10 +619,10 @@ const TopNav: React.FC<TopNavProps> = ({
             <button
               onClick={onSearchClick}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
-              style={{ background: 'rgba(0, 0, 0, 0.06)' }}
+              style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
               aria-label="Search"
             >
-              <Search className="w-4 h-4 text-gray-500" />
+              <Search className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
             </button>
 
             {/* List/Map toggle */}

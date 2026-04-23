@@ -21,6 +21,7 @@ interface CategoryPillsProps {
   inlineMode?: boolean;
   variant?: 'filled' | 'outlined';
   wrapPills?: boolean;
+  darkMode?: boolean;
 }
 
 const SHORT_DISPLAY_NAMES: Record<string, string> = {
@@ -49,6 +50,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   inlineMode = false,
   variant = 'filled',
   wrapPills = false,
+  darkMode = false,
 }) => {
   const isOutlined = variant === 'outlined';
   const eventCategories: EventCategoryFilterState = filters.eventCategories || {
@@ -168,7 +170,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
         }`}
         style={isOutlined ? {
           color: isSelected ? '#ffffff' : hexColor,
-          background: isSelected ? hexColor : 'rgba(255,255,255,0.9)',
+          background: isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
           border: `1.5px solid ${hexColor}`,
         } : {
           color: '#ffffff',
@@ -226,7 +228,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                     }`}
                     style={isOutlined ? {
                       color: isSelected ? '#ffffff' : hexColor,
-                      background: isSelected ? hexColor : 'rgba(255,255,255,0.9)',
+                      background: isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
                       border: `1.5px solid ${hexColor}`,
                     } : {
                       color: '#ffffff',

@@ -68,6 +68,7 @@ interface MobileEventListProps {
   onActiveOfferChange?: (offer: string | null) => void;
   presetRangeDates?: string[];
   navHeight?: number;
+  darkMode?: boolean;
 }
 
 // Two modes: 'list' shows all cards, 'marker' shows single venue card
@@ -87,6 +88,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   onActiveOfferChange,
   presetRangeDates = [],
   navHeight = 140,
+  darkMode = false,
 }) => {
   const [mode, setMode] = useState<PanelMode>('list');
   const [markerVenueId, setMarkerVenueId] = useState<string | null>(null);
@@ -416,6 +418,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
               isPresetRange={isPresetRange}
               presetRangeDates={presetRangeDates}
               navHeight={navHeight}
+              darkMode={darkMode}
             />
           )}
 
@@ -442,6 +445,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                 onDateChange={onDateChange}
                 isPresetRange={isPresetRange}
                 presetRangeDates={presetRangeDates}
+                darkMode={darkMode}
               />
             </div>
           )}
@@ -469,6 +473,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
               isPresetRange={isPresetRange}
               presetRangeDates={presetRangeDates}
               navHeight={navHeight}
+              darkMode={darkMode}
             />
           )}
 
@@ -543,6 +548,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                         isPresetRange={isPresetRange}
                         presetRangeDates={presetRangeDates}
                         isFocused={cardIndex === activeCardIndex}
+                        darkMode={darkMode}
                       />
                     </div>
                   );
@@ -560,8 +566,8 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                         width: index === activeCardIndex ? '16px' : '6px',
                         height: '6px',
                         background: index === activeCardIndex
-                          ? 'rgba(0, 0, 0, 0.6)'
-                          : 'rgba(0, 0, 0, 0.2)',
+                          ? (darkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0, 0, 0, 0.6)')
+                          : (darkMode ? 'rgba(255,255,255,0.25)' : 'rgba(0, 0, 0, 0.2)'),
                       }}
                     />
                   ))}

@@ -95,6 +95,7 @@ interface MobileEventCardProps {
   presetRangeDates?: string[];
   navHeight?: number;
   isFocused?: boolean;
+  darkMode?: boolean;
 }
 
 const PLACEHOLDER_IMAGES = [
@@ -224,6 +225,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   presetRangeDates = [],
   navHeight = 140,
   isFocused = false,
+  darkMode = false,
 }) => {
   const { event, venue } = card;
   const expandedRef = useRef<HTMLDivElement>(null);
@@ -898,7 +900,13 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     <div
       ref={expandedRef}
       className="rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
-      style={{
+      style={darkMode ? {
+        background: 'rgba(12, 12, 28, 0.92)',
+        border: '1px solid rgba(255, 255, 255, 0.10)',
+        boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+      } : {
         background: 'rgba(255, 255, 255, 0.97)',
         border: '1px solid rgba(0, 0, 0, 0.08)',
         boxShadow: '0 2px 16px rgba(0, 0, 0, 0.12)',
@@ -909,16 +917,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       <div className="flex gap-3 px-3.5 pt-3 pb-1">
         {/* Left Column */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <h3 className="text-gray-900 font-bold text-[15px] leading-tight tracking-tight line-clamp-2">
+          <h3 className={`font-bold text-[15px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {event.event_name}
           </h3>
           {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <span className="text-gray-500 text-[10px] truncate leading-snug uppercase tracking-wide font-semibold mt-0.5 block">
+            <span className={`text-[10px] truncate leading-snug uppercase tracking-wide font-semibold mt-0.5 block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {event.event_subtitle}
             </span>
           )}
           {event.event_time_start && (
-            <span className="text-gray-400 text-[10px] font-medium flex items-center gap-0.5 mt-0.5">
+            <span className={`text-[10px] font-medium flex items-center gap-0.5 mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
               <Clock className="w-2.5 h-2.5" />
               {event.event_time_start}{event.event_time_end && ` – ${event.event_time_end}`}
             </span>
@@ -927,7 +935,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         {/* Right Column: Image */}
         <div className="flex flex-col items-center flex-shrink-0" style={{ width: '100px' }}>
           <div className="w-[96px] h-[96px] rounded-xl overflow-hidden"
-               style={{ border: '2px solid rgba(0,0,0,0.06)' }}>
+               style={{ border: darkMode ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.06)' }}>
             {(() => {
               const u1 = (event as any).media_url_1 as string | undefined;
               const u2 = (event as any).media_url_2 as string | undefined;
@@ -954,14 +962,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
       {/* === Venue info — full width === */}
       <div className="px-3.5 pb-1">
-        <p className="text-gray-800 text-[13px] font-semibold truncate">{venue.venue_name}</p>
+        <p className={`text-[13px] font-semibold truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{venue.venue_name}</p>
         <div className="flex items-center gap-1 mt-0.5">
           <Star className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
-          <span className="text-amber-600 text-[12px] font-bold">{venue.venue_rating}</span>
-          <span className="text-gray-400 text-[10px]">({venue.venue_review_count?.toLocaleString()})</span>
-          <span className="text-gray-300 text-[10px] mx-0.5">|</span>
-          <MapPin className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
-          <span className="text-gray-500 text-[11px] truncate">{venue.venue_location}</span>
+          <span className="text-amber-500 text-[12px] font-bold">{venue.venue_rating}</span>
+          <span className={`text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+          <span className={`text-[10px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+          <MapPin className={`w-2.5 h-2.5 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+          <span className={`text-[11px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{venue.venue_location}</span>
         </div>
       </div>
 
