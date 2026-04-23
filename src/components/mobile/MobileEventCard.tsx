@@ -335,7 +335,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     return (
       <div
         className="fixed z-[60] flex flex-col rounded-2xl overflow-hidden"
-        style={{
+        style={darkMode ? {
+          background: 'rgba(12, 12, 28, 0.96)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          top: `${navHeight + 8}px`,
+          left: '6px',
+          right: '6px',
+          bottom: '12px',
+          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+        } : {
           background: 'rgba(255, 255, 255, 0.99)',
           top: `${navHeight + 8}px`,
           left: '6px',
@@ -348,7 +358,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       >
         {/* Header + Close Button */}
         <div className="flex items-center px-4 pt-5 pb-2 flex-shrink-0">
-          <h2 className="font-bold text-[20px] flex-1 leading-snug text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+          <h2 className={`font-bold text-[20px] flex-1 leading-snug ${darkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: '-0.02em' }}>
             {event.event_name}
           </h2>
           <button
@@ -366,14 +376,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
         {/* Venue info (fixed with header) */}
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className="font-semibold text-[15px] text-gray-800">{venue.venue_name}</p>
+          <p className={`font-semibold text-[15px] ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{venue.venue_name}</p>
           <div className="flex items-center gap-1.5 mt-1">
             <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-            <span className="text-amber-600 text-[12px] font-bold">{venue.venue_rating}</span>
-            <span className="text-[11px] text-gray-500">({venue.venue_review_count?.toLocaleString()})</span>
-            <span className="text-[10px] mx-0.5 text-gray-300">|</span>
-            <MapPin className="w-3 h-3 text-gray-400" />
-            <span className="text-[11px] truncate text-gray-600">{venue.venue_location}</span>
+            <span className="text-amber-500 text-[12px] font-bold">{venue.venue_rating}</span>
+            <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+            <span className={`text-[10px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+            <MapPin className={`w-3 h-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <span className={`text-[11px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{venue.venue_location}</span>
           </div>
         </div>
 
@@ -383,11 +393,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           style={{ scrollbarWidth: 'thin' }}
         >
           {/* Divider + Images side by side */}
-          <div style={{ borderTop: '1px solid rgba(0, 0, 0, 0.06)' }} />
+          <div style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
           <div className="my-3">
             <div
               className="flex gap-1.5 rounded-2xl overflow-hidden"
-              style={{ border: '1px solid rgba(0, 0, 0, 0.08)' }}
+              style={{ border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.08)' }}
             >
               {activeImages.map((src, idx) => (
                 <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
@@ -424,18 +434,18 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                       className="flex flex-col items-center px-3 py-1.5 rounded-xl whitespace-nowrap flex-shrink-0 transition-all duration-200"
                       style={{
                         background: isFullSelected
-                          ? 'rgba(0, 0, 0, 0.45)'
-                          : 'rgba(0, 0, 0, 0.04)',
+                          ? (darkMode ? 'rgba(255,255,255,0.20)' : 'rgba(0, 0, 0, 0.45)')
+                          : (darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0, 0, 0, 0.04)'),
                         border: !isFullSelected && isInRange
                           ? '2px solid rgba(59, 130, 246, 0.6)'
-                          : `1px solid ${isFullSelected ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.06)'}`,
+                          : `1px solid ${isFullSelected ? (darkMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.1)') : (darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.06)')}`,
                         boxShadow: isFullSelected ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
                       }}
                     >
-                      <span className={`text-[9px] font-bold uppercase tracking-wider ${isFullSelected ? 'text-white' : 'text-gray-400'}`}>
+                      <span className={`text-[9px] font-bold uppercase tracking-wider ${isFullSelected ? 'text-white' : (darkMode ? 'text-gray-400' : 'text-gray-400')}`}>
                         {opt.day}
                       </span>
-                      <span className={`text-[12px] font-semibold ${isFullSelected ? 'text-white' : 'text-gray-600'}`}>
+                      <span className={`text-[12px] font-semibold ${isFullSelected ? 'text-white' : (darkMode ? 'text-gray-200' : 'text-gray-600')}`}>
                         {opt.date}
                       </span>
                     </button>
@@ -464,10 +474,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <Tag className="w-4 h-4 text-teal-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">
+                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     {event.event_categories.map(cat => cat.primary).join(', ')}
                   </p>
-                  <p className="text-[14px] font-medium mt-0.5 text-gray-900">
+                  <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {event.event_categories.map(cat => cat.secondary).filter(Boolean).join(', ') || '—'}
                   </p>
                 </div>
@@ -481,8 +491,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <Calendar className="w-4 h-4 text-purple-500" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">Date</p>
-                <p className="text-[14px] font-medium mt-0.5 text-gray-900">{formatDisplayDate(event.event_date) || 'TBA'}</p>
+                <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Date</p>
+                <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{formatDisplayDate(event.event_date) || 'TBA'}</p>
               </div>
             </div>
 
@@ -494,10 +504,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <Clock className="w-4 h-4 text-indigo-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">Time</p>
-                  <p className="text-[14px] font-medium mt-0.5 text-gray-900">
+                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Time</p>
+                  <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                     {event.event_time_start}
-                    {event.event_time_end && <span className="text-gray-400"> — </span>}
+                    {event.event_time_end && <span className={darkMode ? 'text-gray-500' : 'text-gray-400'}> — </span>}
                     {event.event_time_end && event.event_time_end}
                   </p>
                 </div>
@@ -511,8 +521,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <DollarSign className="w-4 h-4 text-emerald-500" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">Entry</p>
-                <p className="text-[14px] font-medium mt-0.5 text-gray-900">{event.event_entry_price || 'TBA'}</p>
+                <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Entry</p>
+                <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{event.event_entry_price || 'TBA'}</p>
               </div>
             </div>
 
@@ -524,20 +534,20 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <Gift className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">Deals & Offers</p>
+                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Deals & Offers</p>
                   <div className="mt-1.5 space-y-2">
                     {event.deals.map((deal, idx) => {
                       const dealConfig: Record<string, { label: string; bg: string; text: string; border: string }> = {
-                        ladies_night: { label: 'Ladies Night', bg: 'rgba(236, 72, 153, 0.12)', text: 'rgb(190, 24, 93)', border: 'rgba(236, 72, 153, 0.2)' },
-                        '2for1': { label: 'Buy 1 Get 1', bg: 'rgba(16, 185, 129, 0.12)', text: 'rgb(5, 150, 105)', border: 'rgba(16, 185, 129, 0.2)' },
-                        happy_hour: { label: 'Happy Hour', bg: 'rgba(251, 191, 36, 0.12)', text: 'rgb(180, 130, 20)', border: 'rgba(251, 191, 36, 0.2)' },
-                        discount: { label: 'Discount', bg: 'rgba(59, 130, 246, 0.12)', text: 'rgb(37, 99, 235)', border: 'rgba(59, 130, 246, 0.2)' },
-                        free_entry: { label: 'Free Entry', bg: 'rgba(34, 197, 94, 0.12)', text: 'rgb(22, 163, 74)', border: 'rgba(34, 197, 94, 0.2)' },
-                        special_offer: { label: 'Special Offer', bg: 'rgba(249, 115, 22, 0.12)', text: 'rgb(194, 80, 10)', border: 'rgba(249, 115, 22, 0.2)' },
+                        ladies_night: { label: 'Ladies Night', bg: 'rgba(236, 72, 153, 0.15)', text: darkMode ? 'rgb(249, 168, 212)' : 'rgb(190, 24, 93)', border: 'rgba(236, 72, 153, 0.25)' },
+                        '2for1': { label: 'Buy 1 Get 1', bg: 'rgba(16, 185, 129, 0.15)', text: darkMode ? 'rgb(110, 231, 183)' : 'rgb(5, 150, 105)', border: 'rgba(16, 185, 129, 0.25)' },
+                        happy_hour: { label: 'Happy Hour', bg: 'rgba(251, 191, 36, 0.15)', text: darkMode ? 'rgb(253, 224, 71)' : 'rgb(180, 130, 20)', border: 'rgba(251, 191, 36, 0.25)' },
+                        discount: { label: 'Discount', bg: 'rgba(59, 130, 246, 0.15)', text: darkMode ? 'rgb(147, 197, 253)' : 'rgb(37, 99, 235)', border: 'rgba(59, 130, 246, 0.25)' },
+                        free_entry: { label: 'Free Entry', bg: 'rgba(34, 197, 94, 0.15)', text: darkMode ? 'rgb(134, 239, 172)' : 'rgb(22, 163, 74)', border: 'rgba(34, 197, 94, 0.25)' },
+                        special_offer: { label: 'Special Offer', bg: 'rgba(249, 115, 22, 0.15)', text: darkMode ? 'rgb(253, 186, 116)' : 'rgb(194, 80, 10)', border: 'rgba(249, 115, 22, 0.25)' },
                       };
                       const config = dealConfig[deal.type] || dealConfig.special_offer;
                       return (
-                        <div key={idx} className="rounded-lg px-2.5 py-2" style={{ background: 'rgba(0, 0, 0, 0.02)', border: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                        <div key={idx} className="rounded-lg px-2.5 py-2" style={{ background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0, 0, 0, 0.02)', border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.05)' }}>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span
                               className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
@@ -546,10 +556,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                               {config.label}
                             </span>
                             {deal.timing && (
-                              <span className="text-[10px] text-gray-500 font-medium">{deal.timing}</span>
+                              <span className={`text-[10px] font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{deal.timing}</span>
                             )}
                           </div>
-                          <p className="text-[12px] text-gray-700 mt-1 leading-relaxed">{deal.description}</p>
+                          <p className={`text-[12px] mt-1 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{deal.description}</p>
                         </div>
                       );
                     })}
@@ -563,8 +573,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <Gift className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">Offers</p>
-                  <p className="text-[14px] font-medium mt-0.5 text-gray-900">{event.event_offers}</p>
+                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Offers</p>
+                  <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{event.event_offers}</p>
                 </div>
               </div>
             ) : null}
@@ -577,9 +587,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <Target className="w-4 h-4" style={{ color: getScoreColor(event.confidence_score).text }} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">AI Confidence</p>
+                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>AI Confidence</p>
                   <div className="flex items-center gap-2.5 mt-1">
-                    <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(0, 0, 0, 0.06)' }}>
+                    <div className="flex-1 h-2 rounded-full" style={{ background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0, 0, 0, 0.06)' }}>
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -604,11 +614,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <FileText className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-gray-500">Details</p>
+                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Details</p>
                   <p
                     className="text-[12px] mt-1 leading-relaxed"
                     style={{
-                      color: 'rgb(120, 100, 50)',
+                      color: darkMode ? 'rgba(253, 224, 71, 0.85)' : 'rgb(120, 100, 50)',
                       fontStyle: 'italic',
                       display: '-webkit-box',
                       WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
@@ -621,7 +631,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   {event.analysis_notes.length > 120 && (
                     <button
                       className="text-[10px] font-semibold mt-1.5 transition-colors"
-                      style={{ color: 'rgb(140, 120, 60)' }}
+                      style={{ color: darkMode ? 'rgba(253, 224, 71, 0.7)' : 'rgb(140, 120, 60)' }}
                       onClick={(e) => { e.stopPropagation(); setIsDetailsExpanded(prev => !prev); }}
                     >
                       {isDetailsExpanded ? 'Show less' : 'Show more'}
@@ -635,7 +645,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
           {/* Artists, Genres & Vibes */}
           {(event.artist || event.music_genre || event.event_vibe) && (
-            <div className="my-4" style={{ borderTop: '1px solid rgba(0, 0, 0, 0.06)' }} />
+            <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
           )}
           <div className="space-y-3">
             {/* Artists */}
@@ -643,16 +653,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               <div className="flex items-start gap-3">
                 <Music className="w-4 h-4 text-purple-500 flex-shrink-0 mt-1" />
                 <div className="flex-1">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Artists</p>
+                  <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Artists</p>
                   <div className="flex flex-wrap gap-1.5">
                     {event.artist.split(/[|,]/).map((artist, idx) => (
                       <span
                         key={idx}
                         className="text-[11px] px-2.5 py-1 rounded-full font-medium"
                         style={{
-                          background: 'rgba(147, 51, 234, 0.12)',
-                          color: 'rgb(109, 40, 217)',
-                          border: '1px solid rgba(147, 51, 234, 0.2)',
+                          background: 'rgba(147, 51, 234, 0.15)',
+                          color: darkMode ? 'rgb(196, 167, 255)' : 'rgb(109, 40, 217)',
+                          border: '1px solid rgba(147, 51, 234, 0.25)',
                         }}
                       >
                         {artist.trim()}
@@ -668,16 +678,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               <div className="flex items-start gap-3">
                 <Music className="w-4 h-4 text-blue-500 flex-shrink-0 mt-1" />
                 <div className="flex-1">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Music Genres</p>
+                  <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Music Genres</p>
                   <div className="flex flex-wrap gap-1.5">
                     {event.music_genre.split(',').map((genre, idx) => (
                       <span
                         key={idx}
                         className="text-[11px] px-2.5 py-1 rounded-full font-medium"
                         style={{
-                          background: 'rgba(59, 130, 246, 0.12)',
-                          color: 'rgb(37, 99, 235)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)',
+                          background: 'rgba(59, 130, 246, 0.15)',
+                          color: darkMode ? 'rgb(147, 197, 253)' : 'rgb(37, 99, 235)',
+                          border: '1px solid rgba(59, 130, 246, 0.25)',
                         }}
                       >
                         {genre.trim()}
@@ -693,16 +703,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               <div className="flex items-start gap-3">
                 <Sparkles className="w-4 h-4 text-pink-500 flex-shrink-0 mt-1" />
                 <div className="flex-1">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Vibes</p>
+                  <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Vibes</p>
                   <div className="flex flex-wrap gap-1.5">
                     {event.event_vibe.split('|').map((vibe, idx) => (
                       <span
                         key={idx}
                         className="text-[11px] px-2.5 py-1 rounded-full font-medium"
                         style={{
-                          background: 'rgba(236, 72, 153, 0.12)',
-                          color: 'rgb(190, 24, 93)',
-                          border: '1px solid rgba(236, 72, 153, 0.2)',
+                          background: 'rgba(236, 72, 153, 0.15)',
+                          color: darkMode ? 'rgb(249, 168, 212)' : 'rgb(190, 24, 93)',
+                          border: '1px solid rgba(236, 72, 153, 0.25)',
                         }}
                       >
                         {vibe.trim()}
@@ -717,49 +727,49 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           {/* Venue Details Section */}
           {(venue.venue_category || venue.venue_address || highlightTags.length > 0 || atmosphereTags.length > 0 || venue.venue_phone || venue.venue_website) && (
             <>
-              <div className="my-4" style={{ borderTop: '1px solid rgba(0, 0, 0, 0.06)' }} />
+              <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
               <div>
-                <p className="text-[11px] text-gray-500 uppercase tracking-wider font-bold mb-3">Venue Details</p>
+                <p className={`text-[11px] uppercase tracking-wider font-bold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Venue Details</p>
 
                 <div className="space-y-2.5">
                   {venue.venue_category && (
                     <div className="flex items-center gap-2.5">
-                      <Tag className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className="text-gray-700 text-[13px]">{parseToArray(venue.venue_category).join(', ')}</span>
+                      <Tag className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{parseToArray(venue.venue_category).join(', ')}</span>
                     </div>
                   )}
                   {highlightTags.length > 0 && (
                     <div className="flex items-center gap-2.5">
-                      <Star className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className="text-gray-700 text-[13px]">{highlightTags.join(', ')}</span>
+                      <Star className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{highlightTags.join(', ')}</span>
                     </div>
                   )}
                   {atmosphereTags.length > 0 && (
                     <div className="flex items-center gap-2.5">
-                      <Sparkles className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className="text-gray-700 text-[13px]">{atmosphereTags.join(', ')}</span>
+                      <Sparkles className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{atmosphereTags.join(', ')}</span>
                     </div>
                   )}
                   {venue.venue_phone && (
                     <div className="flex items-center gap-2.5">
-                      <Phone className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className="text-gray-700 text-[13px]">{venue.venue_phone}</span>
+                      <Phone className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_phone}</span>
                     </div>
                   )}
                   {venue.venue_address && (
                     <div className="flex items-start gap-2.5">
-                      <MapPin className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" style={{ color: 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className="text-gray-700 text-[13px] leading-relaxed">{venue.venue_address}</span>
+                      <MapPin className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_address}</span>
                     </div>
                   )}
                   {venue.venue_website && (
                     <div className="flex items-center gap-2.5">
-                      <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'rgba(156, 163, 175, 0.8)' }} />
+                      <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
                       <a
                         href={venue.venue_website.startsWith('http') ? venue.venue_website : `https://${venue.venue_website}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 text-[13px] font-medium truncate"
+                        className={`text-[13px] font-medium truncate ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {venue.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
@@ -775,7 +785,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         {/* Fixed Action Buttons at bottom */}
         <div
           className="flex-shrink-0 px-4 py-3 flex items-center gap-3 rounded-b-2xl"
-          style={{
+          style={darkMode ? {
+            background: 'rgba(8, 8, 22, 0.95)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          } : {
             background: 'rgba(255, 255, 255, 0.98)',
             borderTop: '1px solid rgba(0, 0, 0, 0.08)',
           }}
