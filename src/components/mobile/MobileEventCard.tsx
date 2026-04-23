@@ -901,8 +901,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       ref={expandedRef}
       className="rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
       style={darkMode ? {
-        background: 'rgba(12, 12, 28, 0.92)',
-        border: '1px solid rgba(255, 255, 255, 0.10)',
+        background: 'rgba(12, 12, 28, 0.90)',
+        border: '1px solid rgba(255, 255, 255, 0.18)',
         boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
