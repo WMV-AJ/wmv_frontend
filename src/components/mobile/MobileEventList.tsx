@@ -484,15 +484,6 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
               style={{
                 transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
                 transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
-                ...(darkMode ? {
-                  borderTop: '1px solid rgba(255,255,255,0.15)',
-                  borderLeft: '1px solid rgba(255,255,255,0.10)',
-                  borderRight: '1px solid rgba(255,255,255,0.10)',
-                  borderRadius: '16px 16px 0 0',
-                  background: 'rgba(10,10,26,0.55)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                } : {}),
               }}
             >
               {/* Horizontal carousel */}

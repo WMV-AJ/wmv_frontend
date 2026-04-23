@@ -131,9 +131,11 @@ function GlowingMarker({
 function OfferBanner({
   venue,
   offer,
+  color,
 }: {
   venue: Venue;
   offer: string;
+  color: string;
 }) {
   return (
     <MapPopup
@@ -142,9 +144,22 @@ function OfferBanner({
       offset={32}
       closeOnClick={false}
       focusAfterOpen={false}
-      className="bg-white text-gray-800 border-gray-200 shadow-lg max-w-[60vw] p-2.5 rounded-lg"
+      className="wmv-dark-popup max-w-[60vw] p-0 rounded-xl border-0 shadow-none bg-transparent"
     >
-      <p className="text-xs font-medium leading-snug">{offer.trim()}</p>
+      <div
+        style={{
+          background: 'rgba(10,10,26,0.88)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          border: `1px solid ${color}55`,
+          borderLeft: `3px solid ${color}`,
+          borderRadius: '10px',
+          padding: '7px 11px',
+          boxShadow: `0 4px 20px rgba(0,0,0,0.55), 0 0 12px ${color}22`,
+        }}
+      >
+        <p className="text-[11px] font-semibold leading-snug" style={{ color: '#f0f0ff' }}>{offer.trim()}</p>
+      </div>
     </MapPopup>
   );
 }
@@ -416,6 +431,18 @@ export default function MapTestPage() {
 
   return (
     <ThemeProvider>
+      <style>{`
+        .maplibregl-popup-content:has(.wmv-dark-popup) {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+        }
+        .maplibregl-popup:has(.wmv-dark-popup) .maplibregl-popup-tip {
+          display: none !important;
+        }
+      `}</style>
       <main className="h-screen w-full relative overflow-hidden" style={{ height: '100dvh' }}>
         <h1 className="sr-only">Dubai Event Discovery - MapCN Test</h1>
 
@@ -510,7 +537,7 @@ export default function MapTestPage() {
 
             {/* Offer banner for highlighted venue */}
             {highlightedVenue && highlightedOffer && (
-              <OfferBanner venue={highlightedVenue} offer={highlightedOffer} />
+              <OfferBanner venue={highlightedVenue} offer={highlightedOffer} color={getVenueColor(highlightedVenue)} />
             )}
 
             <MapControls position="bottom-right" showZoom={false} showCompass={false} />

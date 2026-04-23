@@ -548,7 +548,17 @@ const TopNav: React.FC<TopNavProps> = ({
                         }}
                       >
                         {isToday && (
-                          <span className="absolute -top-1.5 -right-1.5 text-[6px] font-bold px-1 py-px rounded bg-purple-600 text-white z-10">
+                          <span
+                            className="absolute -top-1.5 -right-1.5 text-[6px] font-bold px-1 py-px rounded z-10"
+                            style={darkMode ? {
+                              background: 'rgba(255,255,255,0.18)',
+                              color: 'rgba(255,255,255,0.9)',
+                              border: '1px solid rgba(255,255,255,0.25)',
+                            } : {
+                              background: '#7c3aed',
+                              color: '#fff',
+                            }}
+                          >
                             TODAY
                           </span>
                         )}
