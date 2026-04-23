@@ -511,7 +511,7 @@ export default function MapTestPage() {
               <OfferBanner venue={highlightedVenue} offer={highlightedOffer} />
             )}
 
-            <MapControls position="bottom-right" showZoom showCompass />
+            <MapControls position="bottom-right" showZoom={false} showCompass={false} />
           </MapView>
 
           <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-xs text-gray-600 border border-gray-200 shadow-sm z-10">
