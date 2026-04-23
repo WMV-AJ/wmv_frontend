@@ -1,281 +1,804 @@
 /* ===========================================
-   MINIMAL EVENT CARDS — todo.today inspired
-   White cards on dark background
+   STACKED EVENT CARDS - GLASSMORPHISM STYLE
    =========================================== */
 
 /* Container */
-.minimal-cards-container {
-  padding: 8px 0 100px;
+.stacked-cards-container {
+  height: 800px;
+  overflow-y: auto;
+  padding: 40px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(167, 139, 250, 0.6) rgba(0, 0, 0, 0.2);
+  scroll-behavior: smooth;
 }
 
-/* Section wrapper */
-.minimal-section {
-  margin-bottom: 24px;
+/* Mobile: flow naturally, let parent handle scrolling */
+@media (max-width: 1023px) {
+  .stacked-cards-container {
+    height: auto;
+    overflow-y: visible;
+    padding-top: 8px;
+  }
 }
 
-/* ===========================================
-   SECTION HEADER
-   =========================================== */
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px 8px;
+.stacked-cards-container::-webkit-scrollbar {
+  width: 8px;
 }
 
-.section-header-emoji {
-  font-size: 18px;
-  line-height: 1;
+.stacked-cards-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
 }
 
-.section-header-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
-  letter-spacing: -0.01em;
-  margin: 0;
+.stacked-cards-container::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.6);
+  border-radius: 4px;
 }
 
-.section-header-count {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
-  margin-left: auto;
+.stacked-cards-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.8);
 }
 
-/* ===========================================
-   CARDS LIST
-   =========================================== */
-
-.minimal-cards-list {
+/* Card Stack */
+.stacked-cards-stack {
+  position: relative;
+  width: 100%;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 0 12px;
+  padding-bottom: 100px;
 }
 
 /* ===========================================
    INDIVIDUAL CARD
    =========================================== */
 
-.minimal-event-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: 14px;
+.stacked-card {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  padding: 28px;
+  padding-bottom: 32px;
+  border-radius: 24px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  margin-bottom: 8px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: -60px;
+
+  backdrop-filter: blur(80px) saturate(220%) brightness(1.08);
+  -webkit-backdrop-filter: blur(80px) saturate(220%) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 12px 25px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.15);
 }
 
-.minimal-event-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+.stacked-cards-stack > div:first-child .stacked-card {
+  margin-top: 0;
 }
 
-.minimal-event-card:active {
-  transform: scale(0.99);
+/* Expanded cards grow naturally with content */
+.stacked-card.expanded {
+  height: auto;
+  overflow: visible;
+}
+
+/* Hover */
+.stacked-card:hover {
+  transform: translateY(-3px);
+  backdrop-filter: blur(90px) saturate(240%) brightness(1.12);
+  -webkit-backdrop-filter: blur(90px) saturate(240%) brightness(1.12);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.7),
+    0 14px 30px rgba(0, 0, 0, 0.5),
+    inset 0 2px 2px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Expanded State */
+.stacked-card.expanded {
+  z-index: 20 !important;
+  transform: translateY(0);
+  backdrop-filter: blur(85px) saturate(230%) brightness(1.10);
+  -webkit-backdrop-filter: blur(85px) saturate(230%) brightness(1.10);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.75),
+    0 16px 35px rgba(0, 0, 0, 0.55),
+    inset 0 2px 2px rgba(255, 255, 255, 0.28),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 60px;
 }
 
 /* ===========================================
-   CARD IMAGE
+   HEADER SECTION
    =========================================== */
 
-.minimal-card-image {
-  width: 70px;
-  height: 70px;
-  border-radius: 12px;
-  overflow: hidden;
+.stacked-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stacked-card.expanded .stacked-card-header {
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stacked-card-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 60%;
+}
+
+.stacked-card-event-title {
+  font-size: 22px;
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.25;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin: 0;
+}
+
+.stacked-card-venue-bold {
+  font-weight: 700;
+}
+
+/* Time Row */
+.stacked-card-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  color: rgba(144, 238, 144, 0.95);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stacked-card-time-row svg {
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
-  background: rgba(0, 0, 0, 0.04);
 }
 
-.minimal-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.stacked-card-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 150px;
+  max-width: 50%;
 }
 
-.minimal-card-image-placeholder {
+/* Rating Badge */
+.stacked-card-rating-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  padding: 4px 10px;
+  border-radius: 16px;
+}
+
+.stacked-card-star {
+  color: #f4c430;
+  font-size: 13px;
+}
+
+.stacked-card-rating-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.stacked-card-review-count {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Venue Name */
+.stacked-card-venue-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 200, 100, 0.95);
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
   width: 100%;
-  height: 100%;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stacked-card-location-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  color: rgba(255, 200, 100, 0.85);
+  font-size: 15px;
+  text-align: right;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  width: 100%;
+  line-height: 1.3;
+}
+
+.stacked-card-location-row span {
+  max-width: 100%;
+}
+
+/* ===========================================
+   EVENT SECTION
+   =========================================== */
+
+.stacked-card-event-section {
+  margin-top: 8px;
+}
+
+.stacked-card-event-subtitle {
+  font-size: 11px;
+  color: rgba(120, 200, 230, 0.95);
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.stacked-card-event-subtitle:empty {
+  display: none;
+}
+
+.stacked-card-time-row:empty,
+.stacked-card-artists-section:empty,
+.stacked-card-event-section:empty {
+  display: none;
+  margin: 0;
+}
+
+/* ===========================================
+   EXPANDABLE CONTENT
+   =========================================== */
+
+.stacked-card-content {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease-in-out 0.1s;
+  margin-top: 0;
+}
+
+.stacked-card.expanded .stacked-card-content {
+  max-height: var(--content-height, 1200px);
+  opacity: 1;
+  margin-top: 16px;
+}
+
+.stacked-card-image-wrapper {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.stacked-card-image {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  display: block;
+}
+
+/* Info Rows */
+.stacked-card-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stacked-card-info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.stacked-card-info-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Icon Colors */
+.stacked-card-date-icon {
+  color: rgba(135, 206, 250, 0.95);
+}
+
+.stacked-card-entry-icon {
+  color: rgba(255, 150, 180, 0.95);
+}
+
+.stacked-card-offers-icon {
+  color: rgba(255, 150, 180, 0.95);
+}
+
+.stacked-card-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.stacked-card-info-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(120, 200, 230, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stacked-card-info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.stacked-card-offers-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.4;
 }
 
 /* ===========================================
-   CARD CONTENT
+   FOOTER - ACTION BUTTONS
    =========================================== */
 
-.minimal-card-content {
-  flex: 1;
-  min-width: 0;
+.stacked-card-footer {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 40px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 20px;
+  margin-top: 0;
+  transition: all 0.4s ease;
 }
 
-/* Price + Entry Type Row */
-.minimal-card-meta {
+.stacked-card.expanded .stacked-card-footer {
+  max-height: 70px;
+  opacity: 1;
+  padding: 10px 14px;
+  margin-top: 16px;
+}
+
+.stacked-card-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stacked-card-action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stacked-card-action-btn:hover {
+  background: rgba(0, 0, 0, 0.6);
+  transform: scale(1.05);
+}
+
+.stacked-card-action-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.stacked-card-instagram svg {
+  stroke: #E1306C;
+}
+
+.stacked-card-call svg {
+  stroke: #4CAF50;
+}
+
+.stacked-card-share svg {
+  stroke: #ffffff;
+}
+
+.stacked-card-directions-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 30px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.minimal-card-price {
-  font-size: 11px;
-  font-weight: 700;
-  color: #16a34a;
+.stacked-card-directions-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.02);
 }
 
-.minimal-card-entry-type {
-  font-size: 11px;
+.stacked-card-directions-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: #4CAF50;
+}
+
+.stacked-card-directions-btn span {
+  font-size: 13px;
   font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
-.minimal-card-meta-dot {
-  font-size: 10px;
-  color: rgba(0, 0, 0, 0.25);
+/* ===========================================
+   RESPONSIVE ADJUSTMENTS
+   =========================================== */
+
+@media (max-width: 500px) {
+  .stacked-cards-stack {
+    padding: 0;
+  }
+
+  .stacked-card {
+    padding: 18px;
+    padding-bottom: 22px;
+  }
+
+  .stacked-card-event-title {
+    font-size: 18px;
+  }
+
+  .stacked-card-venue-name {
+    font-size: 16px;
+  }
+
+  .stacked-card-location-row {
+    font-size: 13px;
+  }
+
+  .stacked-card-action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stacked-card-action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .stacked-card-directions-btn {
+    padding: 9px 14px;
+  }
+
+  .stacked-card-directions-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .stacked-card-directions-btn span {
+    font-size: 12px;
+  }
+
+  .stacked-card-image {
+    border-radius: 12px;
+  }
+
+  .stacked-card-image-wrapper {
+    border-radius: 12px;
+  }
 }
 
-/* Event Name */
-.minimal-card-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1a1a1a;
-  line-height: 1.3;
-  margin: 0;
+/* Mobile: extra bottom padding for floating toggle button */
+@media (max-width: 1023px) {
+  .stacked-cards-stack {
+    padding-bottom: 120px;
+  }
+}
+
+/* ===========================================
+   MOBILE RESPONSIVE STACKING
+   =========================================== */
+
+@media (max-width: 500px) {
+  .stacked-card-header {
+    gap: 8px;
+  }
+
+  .stacked-card-header-left {
+    max-width: 55%;
+    gap: 6px;
+  }
+
+  .stacked-card-header-right {
+    min-width: 140px;
+    max-width: 45%;
+    gap: 6px;
+  }
+
+  .stacked-card-event-title {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .stacked-card-time-row {
+    font-size: 13px;
+  }
+
+  .stacked-card-time-row svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .stacked-card-venue-name {
+    font-size: 14px;
+    -webkit-line-clamp: 2;
+  }
+
+  .stacked-card-location-row {
+    font-size: 13px;
+  }
+
+  .stacked-card-event-subtitle {
+    font-size: 10px;
+  }
+
+  .stacked-card-rating-badge {
+    padding: 3px 8px;
+  }
+
+  .stacked-card-rating-value {
+    font-size: 12px;
+  }
+
+  .stacked-card-review-count {
+    font-size: 10px;
+  }
+}
+
+/* ===========================================
+   NEW SECTIONS - Artists, Genres, Vibes, etc.
+   =========================================== */
+
+/* Artists Section */
+.stacked-card-artists-section {
+  margin-top: 8px;
+}
+
+.stacked-card-artists-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stacked-card-artist-badge {
+  padding: 6px 12px;
+  background: rgba(147, 51, 234, 0.2);
+  border: 1px solid rgba(147, 51, 234, 0.4);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(196, 181, 253, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Music Genres */
+.stacked-card-genre-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.stacked-card-genre-badge {
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(147, 197, 253, 0.95);
+}
+
+.stacked-card-genre-icon {
+  color: rgba(59, 130, 246, 0.95);
+}
+
+/* Event Vibes */
+.stacked-card-vibe-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.stacked-card-vibe-badge {
+  padding: 6px 12px;
+  background: rgba(236, 72, 153, 0.2);
+  border: 1px solid rgba(236, 72, 153, 0.4);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(251, 207, 232, 0.95);
+}
+
+.stacked-card-vibe-icon {
+  color: rgba(236, 72, 153, 0.95);
+}
+
+/* Analysis Notes */
+.stacked-card-analysis-notes {
+  font-size: 11px;
+  color: rgba(251, 191, 36, 0.95);
+  line-height: 1.5;
+  margin-top: 4px;
+  font-style: italic;
+  transition: all 0.3s ease;
+}
+
+.stacked-card-analysis-notes.collapsed {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: -0.01em;
 }
 
-/* Info rows (time, venue) */
-.minimal-card-info-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.stacked-card-analysis-notes.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
 }
 
-.minimal-card-time {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.minimal-card-venue {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ===========================================
-   LIVE BADGE
-   =========================================== */
-
-.minimal-card-live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ef4444;
-  flex-shrink: 0;
-  animation: live-pulse 1.5s ease-in-out infinite;
-}
-
-.minimal-card-live-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ef4444;
-  white-space: nowrap;
-}
-
-@keyframes live-pulse {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
-  }
-  50% {
-    opacity: 0.7;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
-  }
-}
-
-/* ===========================================
-   EMPTY STATE
-   =========================================== */
-
-.minimal-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.minimal-empty-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 8px;
-}
-
-.minimal-empty-subtitle {
+.stacked-card-details-toggle {
+  margin-top: 8px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
-  margin: 0;
+  color: rgba(251, 191, 36, 0.95);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  padding: 0;
+  background: none;
+  border: none;
+  display: inline;
+  font-weight: 700;
 }
 
-/* ===========================================
-   RESPONSIVE
-   =========================================== */
+.stacked-card-details-toggle:hover {
+  opacity: 0.8;
+}
+
+.stacked-card-details-toggle strong {
+  text-decoration: underline;
+  text-decoration-color: rgba(251, 191, 36, 0.5);
+  text-underline-offset: 2px;
+}
+
+.stacked-card-notes-icon {
+  color: rgba(251, 191, 36, 0.95);
+}
+
+/* Venue Details Section */
+.stacked-card-venue-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stacked-card-venue-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: rgba(229, 231, 235, 0.9);
+}
+
+.stacked-card-venue-detail-row svg {
+  width: 18px;
+  height: 18px;
+  color: rgba(156, 163, 175, 0.8);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Venue Website Button */
+.stacked-card-website-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1.5px solid rgba(59, 130, 246, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.stacked-card-website-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: scale(1.02);
+}
+
+.stacked-card-website-btn svg {
+  width: 18px;
+  height: 18px;
+  color: rgba(147, 197, 253, 0.95);
+}
+
+.stacked-card-website-btn span {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(147, 197, 253, 0.95);
+}
+
+@media (max-width: 768px) {
+  .stacked-card:not(.expanded) {
+    padding: 16px;
+    height: 230px;
+  }
+
+  .stacked-card-header {
+    gap: 6px;
+  }
+}
 
 @media (max-width: 500px) {
-  .minimal-cards-list {
-    padding: 0 8px;
+  .stacked-card-artist-badge {
+    font-size: 12px;
+    padding: 5px 10px;
   }
 
-  .minimal-event-card {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .minimal-card-image {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-  }
-
-  .minimal-card-title {
-    font-size: 14px;
-  }
-
-  .minimal-card-time,
-  .minimal-card-venue {
+  .stacked-card-genre-badge,
+  .stacked-card-vibe-badge {
     font-size: 11px;
+    padding: 5px 10px;
   }
 
-  .section-header {
-    padding: 10px 12px 6px;
-  }
-
-  .section-header-title {
-    font-size: 14px;
+  .stacked-card-venue-detail-row {
+    font-size: 13px;
   }
 }
