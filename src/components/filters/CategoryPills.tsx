@@ -145,48 +145,62 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
 
   const expandedSecondaries = getExpandedSecondaries();
 
+  const sortedCategories = Object.keys(PRIMARY_CATEGORY_MAP)
+    .map(category => ({ category, count: getCategoryCount(category) }))
+    .filter(({ count }) => count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const renderPill = (category: string) => {
+    const isSelected = eventCategories.selectedPrimaries.includes(category);
+    const isExpanded = eventCategories.expandedPrimaries.includes(category);
+    const hexColor = getHexColor(getCategoryColor(category));
+    const displayName = getDisplayName(category);
+    const label = isOutlined ? (SHORT_DISPLAY_NAMES[category] || displayName) : displayName;
+    const count = getCategoryCount(category);
+    const IconComponent = CATEGORY_ICONS[category];
+
+    return (
+      <button
+        key={`category-${category}`}
+        onClick={() => handlePrimaryClick(category)}
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
+          isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        }`}
+        style={isOutlined ? {
+          color: isSelected ? '#ffffff' : hexColor,
+          background: isSelected ? hexColor : 'rgba(255,255,255,0.9)',
+          border: `1.5px solid ${hexColor}`,
+        } : {
+          color: '#ffffff',
+          background: isSelected ? hexColor : `${hexColor}CC`,
+          border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
+        }}
+      >
+        {IconComponent && <IconComponent className="w-3 h-3" />}
+        {label} ({count})
+        {isExpanded && ' ↓'}
+      </button>
+    );
+  };
+
+  const midpoint = Math.ceil(sortedCategories.length / 2);
+  const row1 = sortedCategories.slice(0, midpoint).map(({ category }) => category);
+  const row2 = sortedCategories.slice(midpoint).map(({ category }) => category);
+
   const pillsContent = (
     <div className="flex flex-col gap-2">
       {/* Primary Category Row with Icons */}
       <div className="overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <div className={wrapPills ? '' : 'flex gap-1.5'} style={wrapPills ? { display: 'grid', gridTemplateRows: 'auto auto', gridAutoFlow: 'column', gridAutoColumns: 'max-content', gap: '6px' } : {}}>
-        {Object.keys(PRIMARY_CATEGORY_MAP)
-          .map(category => ({ category, count: getCategoryCount(category) }))
-          .filter(({ count }) => count > 0)
-          .sort((a, b) => b.count - a.count)
-          .map(({ category }) => {
-          const isSelected = eventCategories.selectedPrimaries.includes(category);
-          const isExpanded = eventCategories.expandedPrimaries.includes(category);
-          const hexColor = getHexColor(getCategoryColor(category));
-          const displayName = getDisplayName(category);
-          const label = isOutlined ? (SHORT_DISPLAY_NAMES[category] || displayName) : displayName;
-          const count = getCategoryCount(category);
-          const IconComponent = CATEGORY_ICONS[category];
-
-          return (
-            <button
-              key={`category-${category}`}
-              onClick={() => handlePrimaryClick(category)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
-                isSelected ? 'shadow-md' : 'hover:shadow-sm'
-              }`}
-              style={isOutlined ? {
-                color: isSelected ? '#ffffff' : hexColor,
-                background: isSelected ? hexColor : 'rgba(255,255,255,0.9)',
-                border: `1.5px solid ${hexColor}`,
-              } : {
-                color: '#ffffff',
-                background: isSelected ? hexColor : `${hexColor}CC`,
-                border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
-              }}
-            >
-              {IconComponent && <IconComponent className="w-3 h-3" />}
-              {label} ({count})
-              {isExpanded && ' ↓'}
-            </button>
-          );
-        })}
-        </div>
+        {wrapPills ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex gap-1.5">{row1.map(renderPill)}</div>
+            <div className="flex gap-1.5">{row2.map(renderPill)}</div>
+          </div>
+        ) : (
+          <div className="flex gap-1.5">
+            {sortedCategories.map(({ category }) => renderPill(category))}
+          </div>
+        )}
       </div>
 
       {/* Secondary Category Row - Animated */}

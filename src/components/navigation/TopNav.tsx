@@ -496,8 +496,15 @@ const TopNav: React.FC<TopNavProps> = ({
           <div className="flex items-center gap-1.5">
             {/* Date pills with inline month separators */}
             {showDatePicker && datePickerProps && (
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div ref={mobileDateScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
+              <div className="flex-1 min-w-0 overflow-hidden flex items-center gap-1">
+                {/* Sticky frozen month label — always visible on left */}
+                <span
+                  className="text-[14px] font-black text-gray-500 uppercase flex-shrink-0 select-none"
+                  style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
+                >
+                  {visibleMonth}
+                </span>
+                <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {dateOptions.map((dateOption, index) => {
                   const isClicked = isDateSelected(dateOption.dateKey);
@@ -507,7 +514,7 @@ const TopNav: React.FC<TopNavProps> = ({
                   const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
                   const currentMonth = dateOption.date.split(' ')[0].toUpperCase();
                   const prevMonth = index > 0 ? dateOptions[index - 1].date.split(' ')[0].toUpperCase() : null;
-                  const showMonthLabel = index === 0 || currentMonth !== prevMonth;
+                  const showMonthLabel = index > 0 && currentMonth !== prevMonth;
                   return (
                     <React.Fragment key={index}>
                       {showMonthLabel && (
@@ -520,6 +527,7 @@ const TopNav: React.FC<TopNavProps> = ({
                       )}
                       <button
                         ref={isToday ? todayPillRef : undefined}
+                        data-month={currentMonth}
                         onClick={() => handleDateClick(dateOption.dateKey)}
                         className="flex flex-col items-center px-2.5 py-1 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
                         style={{
