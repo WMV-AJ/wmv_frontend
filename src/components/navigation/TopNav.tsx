@@ -494,30 +494,32 @@ const TopNav: React.FC<TopNavProps> = ({
         <div className="flex flex-col gap-1.5">
           {/* ROW 1: Date pills with inline month labels + Dropdown + Search + List toggle */}
           <div className="flex items-center gap-1.5">
-            {/* Sticky vertical month label + Scrollable date pills */}
+            {/* Date pills with inline month separators */}
             {showDatePicker && datePickerProps && (
-              <>
-                <div className="flex-shrink-0 flex items-center justify-center px-2 py-1.5"
-                     style={{ background: 'rgba(255,255,255,0.95)', border: '1.5px solid rgba(0,0,0,0.18)', borderRadius: '10px' }}>
-                  <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest select-none"
-                        style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
-                    {visibleMonth}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
-                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {dateOptions.map((dateOption, index) => {
-                    const isClicked = isDateSelected(dateOption.dateKey);
-                    const isToday = dateOption.isToday;
-                    const isWeekend = dateOption.isSaturday || dateOption.isSunday;
-                    const isInRange = presetRangeDates.includes(dateOption.dateKey);
-                    const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
-                    return (
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div ref={mobileDateScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
+                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {dateOptions.map((dateOption, index) => {
+                  const isClicked = isDateSelected(dateOption.dateKey);
+                  const isToday = dateOption.isToday;
+                  const isWeekend = dateOption.isSaturday || dateOption.isSunday;
+                  const isInRange = presetRangeDates.includes(dateOption.dateKey);
+                  const isFullSelected = isClicked && (!isInRange || datePickerProps!.selectedDates.length < presetRangeDates.length);
+                  const currentMonth = dateOption.date.split(' ')[0].toUpperCase();
+                  const prevMonth = index > 0 ? dateOptions[index - 1].date.split(' ')[0].toUpperCase() : null;
+                  const showMonthLabel = index === 0 || currentMonth !== prevMonth;
+                  return (
+                    <React.Fragment key={index}>
+                      {showMonthLabel && (
+                        <span
+                          className="text-[9px] font-bold text-gray-500 uppercase tracking-wider flex-shrink-0 select-none px-0.5"
+                          style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
+                        >
+                          {currentMonth}
+                        </span>
+                      )}
                       <button
-                        key={index}
                         ref={isToday ? todayPillRef : undefined}
-                        data-month={dateOption.date.split(' ')[0].toUpperCase()}
                         onClick={() => handleDateClick(dateOption.dateKey)}
                         className="flex flex-col items-center px-2.5 py-1 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
                         style={{
@@ -549,11 +551,11 @@ const TopNav: React.FC<TopNavProps> = ({
                           {dateOption.date.split(' ')[1]}
                         </span>
                       </button>
-                    );
-                  })}
-                  </div>
+                    </React.Fragment>
+                  );
+                })}
                 </div>
-              </>
+              </div>
             )}
 
             {/* Date range dropdown (arrow only) */}
