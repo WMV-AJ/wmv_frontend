@@ -484,7 +484,7 @@ export default function MapTestPage() {
                       color={color}
                       isHighlighted={isHighlighted}
                       isActive={selectedVenue?.venue_id === venue.venue_id}
-                      dimmed={hasDimming && !isHighlighted}
+                      dimmed={hasDimming && !isHighlighted && selectedVenue?.venue_id !== venue.venue_id}
                     />
                   </MarkerContent>
 

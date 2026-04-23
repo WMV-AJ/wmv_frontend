@@ -496,7 +496,7 @@ const TopNav: React.FC<TopNavProps> = ({
           <div className="flex items-center gap-1.5">
             {/* Date pills with inline month separators */}
             {showDatePicker && datePickerProps && (
-              <div className="flex-1 min-w-0 overflow-hidden flex items-center gap-1">
+              <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow: 'visible' }}>
                 {/* Sticky frozen month label — always visible on left */}
                 <span
                   className="text-[14px] font-black text-gray-500 uppercase flex-shrink-0 select-none"
@@ -504,7 +504,7 @@ const TopNav: React.FC<TopNavProps> = ({
                 >
                   {visibleMonth}
                 </span>
-                <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
+                <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pt-3 pb-1"
                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {dateOptions.map((dateOption, index) => {
                   const isClicked = isDateSelected(dateOption.dateKey);
