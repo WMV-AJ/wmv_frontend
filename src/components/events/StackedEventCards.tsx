@@ -353,6 +353,21 @@ const EventCard: React.FC<EventCardProps> = ({
             <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 2px' }}>|</span>
             <span style={{ color: 'rgba(200, 200, 220, 0.7)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{venue.venue_location}</span>
           </div>
+
+          {/* Line 5 — Smart subtitle (category tags / attributes) */}
+          {(() => {
+            const smartSubtitle = generateSmartSubtitle(
+              event.event_name,
+              venue.venue_name,
+              event.event_subtitle
+            );
+            if (!smartSubtitle) return null;
+            return (
+              <p className="stacked-card-event-subtitle" style={{ marginTop: '6px' }}>
+                {smartSubtitle.toUpperCase()}
+              </p>
+            );
+          })()}
         </div>
 
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch' }}>
