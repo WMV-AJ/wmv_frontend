@@ -145,7 +145,8 @@ const attrColors: Record<string, { bg: string; text: string }> = {
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = params.id as string;
+  const eventId = params.eventId as string;
+  const city = (params.city as string) || 'dubai';
 
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [related, setRelated] = useState<RelatedEvent[]>([]);
@@ -919,7 +920,7 @@ export default function EventDetailPage() {
                     key={r.event_id}
                     className="flex items-center gap-3 py-3 px-3 rounded-xl cursor-pointer transition-colors"
                     style={{ background: 'rgba(0,0,0,0.03)' }}
-                    onClick={() => router.push(`/event/${r.event_id}`)}
+                    onClick={() => router.push(`/${city}/${r.event_id}`)}
                   >
                     {/* Thumbnail */}
                     <div className="w-[55px] h-[55px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
