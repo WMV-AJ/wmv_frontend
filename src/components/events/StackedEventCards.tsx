@@ -313,7 +313,7 @@ const EventCard: React.FC<EventCardProps> = ({
       className={`stacked-card ${isExpanded ? 'expanded' : ''}`}
       style={{
         backgroundColor: cardColor,
-        zIndex: isExpanded ? 100 : index + 1,
+        zIndex: isExpanded ? 9999 : index + 1,
         '--content-height': `${contentHeight}px`,
       } as React.CSSProperties}
       onClick={() => onCardClick(event.id)}
@@ -638,11 +638,28 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
     }
     setExpandedId(id);
     setTimeout(() => {
-      document.getElementById(`card-${id}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }, 150);
+      const card = document.getElementById(`card-${id}`);
+      if (!card) return;
+
+      const namedContainer = document.getElementById('cards-scroll-container');
+      const container: HTMLElement | null = namedContainer ?? (() => {
+        let p: HTMLElement | null = card.parentElement;
+        while (p) {
+          const ov = window.getComputedStyle(p).overflowY;
+          if (ov === 'auto' || ov === 'scroll') return p;
+          p = p.parentElement;
+        }
+        return null;
+      })();
+
+      if (container) {
+        const cardRect = card.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        container.scrollTop = container.scrollTop + (cardRect.top - containerRect.top);
+      } else {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 450);
   };
 
   const getCardColor = (category: string, rating: number): string => {

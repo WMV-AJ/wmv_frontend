@@ -117,8 +117,14 @@ export default function CardPage() {
 
         {/* Stacked Event Cards — scrollable area below nav + pills */}
         <div
+          id="cards-scroll-container"
           className="fixed left-1.5 md:left-2 right-1.5 md:right-2 bottom-0 z-10 overflow-y-auto rounded-2xl"
-          style={{ background: '#0a0a1a', top: `${navHeight + 90}px` }}
+          style={{
+            background: '#0a0a1a',
+            top: `${navHeight + 90}px`,
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
           <StackedEventCards
             cards={cards}
