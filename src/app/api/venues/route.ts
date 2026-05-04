@@ -1,6 +1,9 @@
-// Venues API route - fetching from Supabase final_1 table
+// Venues API route - thin proxy to the WMV backend at :2302/api/events.
+// The backend serves events joined with venue data from `final_1`.
+// This route preserves the legacy field-renaming contract the frontend
+// adapter depends on (venue_name_original → name, venue_rating → rating, etc.)
+// and rewires media from the new `media_urls[]` array.
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 interface VenueResponse {
   venue_id: number;
@@ -20,9 +23,7 @@ interface VenueResponse {
   rating_count: number;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
 
 export async function GET() {
   try {
@@ -34,95 +35,48 @@ export async function GET() {
     const activeDates: string[] = [];
     const activeGenres: string[] = [];
 
-    // Base query to get venue data from final_1 table - only with processed genres
-    let query = supabase
-      .from('final_1')
-      .select(`
-        venue_id,
-        venue_name,
-        venue_name_original,
-        venue_area,
-        venue_address,
-        venue_country,
-        venue_lat,
-        venue_lng,
-        venue_phone,
-        venue_website,
-        venue_category,
-        venue_rating,
-        venue_rating_count,
-        venue_highlights,
-        venue_atmosphere,
-        venue_created_at,
-        venue_final_instagram,
-        event_id,
-        event_date,
-        event_name,
-        event_time,
-        artist,
-        music_genre,
-        event_vibe,
-        ticket_price,
-        special_offers,
-        website_social,
-        confidence_score,
-        analysis_notes,
-        music_genre_processed,
-        event_vibe_processed,
-        event_categories,
-        attributes,
-        metadata,
-        media_url_1,
-        media_type_1,
-        media_url_2,
-        media_type_2,
-        deals
-      `)
-      .not('venue_id', 'is', null) // Only get records with venue data
-      .not('venue_lat', 'is', null) // Must have coordinates for map
-      .not('venue_lng', 'is', null)
-      .order('venue_name', { ascending: true }) // Order by venue_name to match the name field
-      .limit(1000); // Fetch up to 1000 records (Supabase default is often 1000)
-
-    // Apply area filter
-    if (selectedAreas.length > 0) {
-      const areaConditions = selectedAreas.map(area => {
-        // Handle JBR special case
-        if (area === 'JBR') {
-          return `venue_area.ilike.*Jumeirah Beach Residence*,venue_area.ilike.*JBR*`;
-        }
-        return `venue_area.ilike.*${area}*`;
-      }).join(',');
-      query = query.or(areaConditions);
-    }
-
-    // Apply vibes filter (event_vibe is an array column with combined tags)
-    // We'll fetch all data first and filter in memory for complex tag matching
-    if (activeVibes.length > 0) {
-      // Will apply filtering after data fetch for complex string matching
-    }
-
-    // Apply dates filter (event_date column)
-    // We'll also filter dates in memory to handle date format matching
-    if (activeDates.length > 0) {
-      // Will apply filtering after data fetch for date format matching
-    }
-
-    // Apply genre filter (music_genre is an array column)
-    if (activeGenres.length > 0) {
-      // Will apply filtering after data fetch for complex array matching
-    }
-    
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Supabase error:', error);
+    // Fetch from upstream WMV backend (joins events + venues from final_1 already).
+    // Upstream records have 40+ fields; we keep loose typing here since this route
+    // acts as a translation layer that strictly shapes the response at the bottom.
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    let upstreamData: any[] = [];
+    try {
+      const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+      if (!upstream.ok) {
+        console.error('Upstream error:', upstream.status, upstream.statusText);
+        return NextResponse.json({
+          success: false,
+          data: [],
+          error: `Upstream ${upstream.status}: ${upstream.statusText}`,
+        }, { status: 502 });
+      }
+      const payload = await upstream.json();
+      upstreamData = Array.isArray(payload?.data) ? payload.data : [];
+    } catch (err) {
+      console.error('Upstream fetch failed:', err);
       return NextResponse.json({
         success: false,
         data: [],
-        error: error.message
-      }, { status: 500 });
+        error: err instanceof Error ? err.message : 'Upstream fetch failed',
+      }, { status: 502 });
     }
+
+    // Keep only records with venue_id and coordinates (map markers need lat/lng).
+    // Sort by venue_name to preserve legacy ordering.
+    const data: any[] = upstreamData
+      .filter(r =>
+        r.venue_id != null && r.venue_lat != null && r.venue_lng != null
+      )
+      .sort((a, b) => {
+        const an: string = a.venue_name || a.venue_name_original || '';
+        const bn: string = b.venue_name || b.venue_name_original || '';
+        return an.localeCompare(bn);
+      });
+
+    // Server-side filter params are currently unused; filtering happens in
+    // `useClientSideVenues`. Keep the variables in scope to not break the
+    // in-memory filter blocks below.
+    void selectedAreas; void activeVibes; void activeDates; void activeGenres;
 
     // Helper function to transform event_vibe string into hierarchical structure
     const transformEventVibeToProcessed = (eventVibeArray: string[] | null | undefined) => {
@@ -180,7 +134,10 @@ export async function GET() {
     };
 
     // Transform data but don't deduplicate yet - we need to filter first
-    let venues = data?.map(record => ({
+    let venues = data?.map((record: any) => {
+      const mediaUrls: string[]  = Array.isArray(record.media_urls)  ? record.media_urls  : [];
+      const mediaTypes: string[] = Array.isArray(record.media_types) ? record.media_types : [];
+      return {
       venue_id: record.venue_id,
       name: record.venue_name || record.venue_name_original, // Use venue_name (matches events-bulk API), fallback to venue_name_original
       area: record.venue_area,
@@ -214,12 +171,15 @@ export async function GET() {
       event_categories: record.event_categories,
       attributes: record.attributes,
       metadata: record.metadata,
-      media_url_1: record.media_url_1 || null,
-      media_type_1: record.media_type_1 || null,
-      media_url_2: record.media_url_2 || null,
-      media_type_2: record.media_type_2 || null,
+      // Only pass the two media URLs we actually render. Dropping the full
+      // arrays saves ~180 KB on the wire per response.
+      media_url_1: mediaUrls[0] ?? record.media_url_1 ?? null,
+      media_type_1: mediaTypes[0] ?? record.media_type_1 ?? null,
+      media_url_2: mediaUrls[1] ?? record.media_url_2 ?? null,
+      media_type_2: mediaTypes[1] ?? record.media_type_2 ?? null,
       deals: record.deals || null
-    })) || [];
+      };
+    }) || [];
 
     // Apply vibes filtering in memory for complex string matching
     if (activeVibes.length > 0) {
@@ -322,11 +282,19 @@ export async function GET() {
       return venue as VenueResponse;
     });
 
-    return NextResponse.json({
-      success: true,
-      data: venueResponse,
-      message: `Retrieved ${venues.length} venues from Supabase final_1`
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: venueResponse,
+        message: `Retrieved ${venues.length} venues from upstream`,
+      },
+      {
+        headers: {
+          // 30s fresh, then up to 5 min serve-stale-while-revalidate.
+          'Cache-Control': 'public, max-age=30, stale-while-revalidate=300',
+        },
+      }
+    );
   } catch (error) {
     console.error('API Error:', error);
     

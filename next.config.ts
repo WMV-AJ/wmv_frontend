@@ -2,7 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    unoptimized: true
+    // Built-in Sharp-based optimizer. Images get resized to display size,
+    // converted to WebP/AVIF, and cached on disk by Next.
+    remotePatterns: [
+      { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '/wmv-ig-images/**' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
+    formats: ['image/webp'],
+    minimumCacheTTL: 60 * 60 * 24, // 24h on-disk cache
+    // Only generate two sizes for thumbnails — fewer Sharp jobs per image.
+    imageSizes: [128, 256],
+    deviceSizes: [640, 1080],
   },
   output: 'standalone',
   serverExternalPackages: [

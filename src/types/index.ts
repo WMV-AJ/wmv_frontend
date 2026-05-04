@@ -58,6 +58,8 @@ export interface Venue {
   media_type_1?: string;
   media_url_2?: string;
   media_type_2?: string;
+  media_urls?: string[];
+  media_types?: string[];
 }
 
 // Map Types
@@ -282,6 +284,8 @@ export interface Event {
   media_type_1?: string;
   media_url_2?: string;
   media_type_2?: string;
+  media_urls?: string[];
+  media_types?: string[];
 }
 
 // Instagram Story Types (for compatibility)

@@ -243,7 +243,9 @@ export function transformSupabaseDataToStackedCards(
         website_social: venue.website_social,
         event_categories: venue.event_categories,
         media_url_1: venue.media_url_1,
+        media_type_1: venue.media_type_1,
         media_url_2: venue.media_url_2,
+        media_type_2: venue.media_type_2,
         deals: venue.deals,
       },
       venue: {

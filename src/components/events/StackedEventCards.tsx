@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import Image from 'next/image';
 import './StackedEventCards.css';
 
 // ===========================================
@@ -45,6 +46,10 @@ interface Event {
   analysis_notes?: string;
   website_social?: string;
   event_categories?: any[];
+  media_url_1?: string;
+  media_type_1?: string;
+  media_url_2?: string;
+  media_type_2?: string;
 }
 
 interface EventCardData {
@@ -371,17 +376,49 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
 
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch' }}>
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVW-pbYSH_W9UliC5eEBX7oWNcsAJN9LETGg&s"
-            alt={event.event_name}
-            style={{
+          {(() => {
+            const url = event.media_url_1 || event.media_url_2;
+            const type = event.media_url_1 ? event.media_type_1 : event.media_type_2;
+            const thumbStyle: React.CSSProperties = {
               width: '88px',
               minHeight: '110px',
               borderRadius: '12px',
               objectFit: 'cover',
               border: '1.5px solid rgba(255,255,255,0.1)',
-            }}
-          />
+              background: 'rgba(255,255,255,0.04)',
+            };
+            if (!url) {
+              return <div style={{ ...thumbStyle, height: '110px' }} />;
+            }
+            if (type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url)) {
+              return (
+                <video
+                  src={url}
+                  style={thumbStyle}
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              );
+            }
+            return (
+              <Image
+                src={url}
+                alt={event.event_name}
+                width={200}
+                height={250}
+                quality={50}
+                style={thumbStyle}
+                // eager: batch system already gates rendering. next/image's lazy
+                // observer watches the document viewport, which never scrolls
+                // here (scroll happens inside #cards-scroll-container), so lazy
+                // would never fire for cards below the initial fold.
+                loading="eager"
+                sizes="(max-width: 500px) 96px, 128px"
+                onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }}
+              />
+            );
+          })()}
         </div>
       </div>
 
@@ -596,6 +633,11 @@ const EventCard: React.FC<EventCardProps> = ({
 // MAIN STACKED CARDS COMPONENT
 // ===========================================
 
+// Render-batching: only paint this many cards initially, load more on scroll.
+const INITIAL_BATCH = 15;
+const BATCH_INCREMENT = 15;
+const LOAD_TRIGGER_MARGIN = '400px'; // start loading next batch 400px before sentinel
+
 const StackedEventCards: React.FC<StackedEventCardsProps> = ({
   cards,
   getCategoryColor,
@@ -605,11 +647,31 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
   );
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setExpandedId(null);
     setContentHeight(0);
+    setVisibleCount(INITIAL_BATCH);
   }, [cards]);
+
+  useEffect(() => {
+    if (visibleCount >= cards.length) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const root = document.getElementById('cards-scroll-container');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount(c => Math.min(c + BATCH_INCREMENT, cards.length));
+        }
+      },
+      { root, rootMargin: LOAD_TRIGGER_MARGIN, threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, cards.length]);
 
   useLayoutEffect(() => {
     if (expandedId && contentRef.current) {
@@ -667,10 +729,12 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
     return generateCardColor(categoryColor, rating);
   };
 
+  const visibleCards = cards.slice(0, visibleCount);
+
   return (
     <div className="stacked-cards-container">
       <div className="stacked-cards-stack">
-        {cards.map((cardData, index) => {
+        {visibleCards.map((cardData, index) => {
           const isExpanded = expandedId === cardData.event.id;
           return (
             <div key={cardData.event.id} data-card-id={cardData.event.id}>
@@ -687,6 +751,9 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
             </div>
           );
         })}
+        {visibleCount < cards.length && (
+          <div ref={sentinelRef} style={{ height: 1, width: '100%' }} aria-hidden />
+        )}
       </div>
     </div>
   );

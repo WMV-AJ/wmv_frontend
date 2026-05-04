@@ -246,6 +246,19 @@
     animation: popup-in 0.3s ease-out forwards;
   }
 
+  /* Home page radar animations */
+  @keyframes wmv-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.15); }
+  }
+  @keyframes wmv-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes wmv-pulse-dot {
+    0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.15); }
+  }
+
   /* Skeleton Pulse */
   @keyframes skeleton-pulse {
     0%, 100% { opacity: 1; }
