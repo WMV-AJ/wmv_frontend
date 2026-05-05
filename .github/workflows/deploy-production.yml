@@ -32,6 +32,6 @@ jobs:
             sudo npm run build
 
             # Restart with PM2
-            sudo pm2 restart wmv-frontend
+            sudo pm2 restart wmv-frontend || sudo PORT=2310 pm2 start /opt/wmv-frontend/.next/standalone/server.js --name wmv-frontend
 
             echo "Production frontend deploy complete — $(date)"
