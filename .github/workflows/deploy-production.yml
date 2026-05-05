@@ -3,7 +3,7 @@ name: Deploy Frontend to Production (Port 2310)
 on:
   push:
     branches:
-      - production
+      - main
 
 jobs:
   deploy:
@@ -30,6 +30,10 @@ jobs:
 
             # Build Next.js
             sudo npm run build
+
+            # Copy static assets into standalone build
+            sudo cp -r public .next/standalone/ 2>/dev/null || true
+            sudo cp -r .next/static .next/standalone/.next/static
 
             # Restart with PM2
             sudo pm2 restart wmv-frontend || sudo PORT=2310 pm2 start /opt/wmv-frontend/.next/standalone/server.js --name wmv-frontend
