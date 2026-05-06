@@ -1,6 +1,5 @@
-// Filter Options API route - areas from Supabase with hierarchical genre/vibe structure
+// Filter Options API route - areas from WMV backend with hierarchical genre/vibe structure
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 interface FilterRecord {
   venue_area?: string;
@@ -16,17 +15,10 @@ interface FilterRecord {
   venue_name?: string;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Dummy filter options data (vibes, dates, genres still dummy) - removed unused constant
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
 
 export async function GET() {
   try {
-
-    // TEMPORARY: Ignore all parameters for client-side filtering
-    // TODO: Remove this once all old API calls are eliminated
 
     // Force parameters to empty for client-side filtering
     const selectedAreas: string[] = [];
@@ -34,17 +26,39 @@ export async function GET() {
     const activeDates: string[] = [];
     const activeGenres: string[] = [];
 
-    // Get ALL data without strict filters - we'll extract filter options from all records
-    const { data, error } = await supabase
-      .from('final_1')
-      .select('venue_area, event_vibe, event_date, event_time, music_genre_processed, venue_category, special_offers, ticket_price, venue_price, event_categories, attributes');
-
-    if (error) {
-      console.error('Supabase error:', error);
+    // Fetch from upstream WMV backend
+    let data: any[] = [];
+    try {
+      const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+      if (!upstream.ok) {
+        console.error('Upstream error:', upstream.status, upstream.statusText);
+        return NextResponse.json({
+          success: true,
+          data: { areas: [], vibes: [], dates: [], genres: [] },
+          message: `Retrieved 0 areas/vibes/dates/genres (upstream error)`
+        });
+      }
+      const payload = await upstream.json();
+      const raw: any[] = Array.isArray(payload?.data) ? payload.data : [];
+      data = raw.map((r: any) => ({
+        venue_area: r.venue_area,
+        event_vibe: r.event_vibe,
+        event_date: r.event_date,
+        event_time: r.event_time,
+        music_genre_processed: r.music_genre_processed,
+        venue_category: r.venue_category,
+        special_offers: r.special_offers,
+        ticket_price: r.ticket_price,
+        venue_price: r.venue_price,
+        event_categories: r.event_categories,
+        attributes: r.attributes,
+      }));
+    } catch (err) {
+      console.error('Upstream fetch failed:', err);
       return NextResponse.json({
         success: true,
         data: { areas: [], vibes: [], dates: [], genres: [] },
-        message: `Retrieved 0 areas/vibes/dates/genres (Supabase error)`
+        message: `Retrieved 0 areas/vibes/dates/genres (upstream fetch failed)`
       });
     }
 
@@ -275,7 +289,7 @@ export async function GET() {
 
     // Extract unique venue categories by parsing JSON arrays
     const allVenueCategories: string[] = [];
-    data?.forEach((record: any) => {
+    data.forEach((record: any) => {
       if (record.venue_category) {
         try {
           // venue_category is stored as JSON array string, parse it
@@ -299,7 +313,7 @@ export async function GET() {
     const venueCategories = [...new Set(allVenueCategories)].filter(cat => cat && cat.trim()).sort();
 
     // Extract unique special offers from special_offers array field
-    const allOffers = data?.flatMap((record: any) => {
+    const allOffers = data.flatMap((record: any) => {
       if (!record.special_offers) return [];
       if (Array.isArray(record.special_offers)) return record.special_offers;
       // If it's a string, split by common delimiters
@@ -378,7 +392,7 @@ export async function GET() {
 
     // Extract and categorize event times into Morning/Afternoon/Evening/Night
     const timeCategories: Set<string> = new Set();
-    data?.forEach((record: any) => {
+    data.forEach((record: any) => {
       if (record.event_time) {
         const categories = categorizeTime(record.event_time);
         categories.forEach(cat => timeCategories.add(cat));
@@ -389,12 +403,12 @@ export async function GET() {
     const orderedTimes = ['Morning', 'Afternoon', 'Evening', 'Night'].filter(t => timeCategories.has(t));
 
     // Extract and categorize ticket prices into AED ranges
-    const allTicketPrices = data?.map((record: any) => record.ticket_price).filter(price => price !== null && price !== undefined) || [];
+    const allTicketPrices = data.map((record: any) => record.ticket_price).filter(price => price !== null && price !== undefined);
     const ticketPriceRanges = ['Free', 'AED 0-50', 'AED 50-100', 'AED 100-200', 'AED 200+'];
 
     // Extract unique atmospheres from attributes.energy and attributes.venue
     const allAtmospheres: string[] = [];
-    data?.forEach((record: any) => {
+    data.forEach((record: any) => {
       if (record.attributes?.energy) {
         allAtmospheres.push(...record.attributes.energy);
       }
@@ -406,7 +420,7 @@ export async function GET() {
 
     // Extract unique event categories (primaries only for filter options)
     const allEventCategories: string[] = [];
-    data?.forEach((record: any) => {
+    data.forEach((record: any) => {
       if (record.event_categories && Array.isArray(record.event_categories)) {
         record.event_categories.forEach((cat: any) => {
           if (cat.primary) {
@@ -418,9 +432,9 @@ export async function GET() {
     const uniqueEventCategories = [...new Set(allEventCategories)].sort();
 
     // Extract unique venue prices from database (actual values)
-    const allVenuePrices = data?.map((record: any) => record.venue_price)
+    const allVenuePrices = data.map((record: any) => record.venue_price)
       .filter(price => price !== null && price !== undefined && price.toString().trim())
-      .map(price => price.toString().trim()) || [];
+      .map((price: any) => price.toString().trim());
     const uniqueVenuePrices = [...new Set(allVenuePrices)].sort();
 
     return NextResponse.json({

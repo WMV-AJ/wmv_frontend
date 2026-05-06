@@ -457,7 +457,7 @@ export default function MapTestPage() {
             selectedDates: filters.activeDates,
             onDateChange: handleDateChange,
           }}
-          onListToggle={() => router.push('/list')}
+          onListToggle={() => router.push('/cards')}
           isListView={false}
           onPresetRangeDatesChange={handlePresetRangeDatesChange}
           onHeightChange={setNavHeight}

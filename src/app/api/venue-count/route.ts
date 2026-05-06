@@ -1,0 +1,14 @@
+import { NextResponse } from 'next/server';
+
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
+
+export async function GET() {
+  try {
+    const res = await fetch(`${WMV_API_BASE}/api/admin/venues/list?limit=1`, { cache: 'no-store' });
+    if (!res.ok) return NextResponse.json({ count: 0 });
+    const data = await res.json();
+    return NextResponse.json({ count: data.total ?? 0 });
+  } catch {
+    return NextResponse.json({ count: 0 });
+  }
+}

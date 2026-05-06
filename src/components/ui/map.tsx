@@ -220,14 +220,23 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       resolvedTheme === "dark" ? mapStyles.dark : mapStyles.light;
     currentStyleRef.current = initialStyle;
 
-    const map = new MapLibreGL.Map({
-      container: containerRef.current,
-      style: initialStyle,
-      renderWorldCopies: false,
-      attributionControl: false,
-      ...props,
-      ...viewport,
-    });
+    let map: MapLibreGL.Map;
+    try {
+      map = new MapLibreGL.Map({
+        container: containerRef.current,
+        style: initialStyle,
+        renderWorldCopies: false,
+        attributionControl: false,
+        ...props,
+        ...viewport,
+      });
+    } catch (e) {
+      console.error('MapLibre GL failed to initialize (WebGL unavailable?):', e);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0a0a14;color:#a8a2b8;font-family:monospace;font-size:12px;text-align:center;padding:20px">Map unavailable — WebGL not supported in this browser</div>';
+      }
+      return;
+    }
 
     const styleDataHandler = () => {
       clearStyleTimeout();

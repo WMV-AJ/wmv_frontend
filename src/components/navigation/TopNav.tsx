@@ -3,7 +3,7 @@
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, Search, List, Map as MapIcon, ChevronDown } from 'lucide-react';
+import { LogOut, Search, List, Map as MapIcon, ChevronDown, Home } from 'lucide-react';
 import { Venue } from '@/types';
 import { parseDateFromFormat } from '@/lib/filters/date-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
@@ -635,13 +635,23 @@ const TopNav: React.FC<TopNavProps> = ({
               <Search className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
             </button>
 
+            {/* Home */}
+            <button
+              onClick={() => router.push('/')}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
+              style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
+              aria-label="Home"
+            >
+              <Home className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
+            </button>
+
             {/* List/Map toggle */}
             <button
               onClick={() => {
                 if (onListToggle) {
                   onListToggle();
                 } else {
-                  router.push(pathname === '/list' ? '/' : '/list');
+                  router.push(pathname === '/cards' ? '/' : '/cards');
                 }
               }}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
