@@ -22,8 +22,8 @@ jobs:
 
             cd /opt/wmv-frontend
 
-            # Pull latest production branch
-            sudo git pull origin production
+            # Pull latest main branch
+            sudo git pull origin main
 
             # Install dependencies
             sudo npm install
