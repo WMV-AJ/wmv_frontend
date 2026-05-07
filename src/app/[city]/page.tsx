@@ -209,6 +209,7 @@ export default function CityHome() {
       .slice(0, 8)
       .map(v => ({
         id: String(v.venue_id ?? v.event_id ?? Math.random()),
+        event_id: v.event_id,
         venue: v.name || 'Venue',
         user: v.final_instagram ? v.final_instagram.replace(/^@/, '') : (v.name || 'venue').toLowerCase().replace(/\s+/g, ''),
         color: '#a78bfa',
@@ -467,7 +468,8 @@ export default function CityHome() {
                     ? T.bg
                     : `linear-gradient(${135 + i * 20}deg, ${s.color}, ${s.color}66, ${T.bg})`,
                   border: `1px solid ${T.line}`,
-                }}>
+                  cursor: s.event_id ? 'pointer' : 'default',
+                }} onClick={() => s.event_id && router.push(`/${city}/event/${s.event_id}`)}>
                   {s.mediaUrl && s.mediaType === 'video' ? (
                     <video
                       src={s.mediaUrl}
@@ -538,7 +540,7 @@ export default function CityHome() {
                 const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
                 const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
                 return (
-                  <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)` }}>
+                  <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => e.event_id && router.push(`/${city}/event/${e.event_id}`)}>
                     {hasVideo ? (
                       <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
                     ) : hasImage ? (
@@ -552,7 +554,7 @@ export default function CityHome() {
                       <span style={{ background: T.chipLight, color: T.inkInverse, fontFamily: mono, fontSize: 9, fontWeight: 700, padding: '3px 6px', letterSpacing: '0.8px' }}>FEATURED</span>
                     </div>
                     <button
-                      onClick={() => toggle(String(e.venue_id))}
+                      onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
                       style={{
                         position: 'absolute', top: 8, right: 8, width: 32, height: 32, borderRadius: 0,
                         background: T.surface, border: `1.5px solid ${T.line}`, cursor: 'pointer',
@@ -582,7 +584,7 @@ export default function CityHome() {
                         {tonightEvents.map((_, idx) => (
                           <div
                             key={idx}
-                            onClick={() => setFeaturedIndex(idx)}
+                            onClick={(ev) => { ev.stopPropagation(); setFeaturedIndex(idx); }}
                             style={{
                               width: idx === fi ? 16 : 4, height: 4,
                               background: idx === fi ? T.accent : 'rgba(255,255,255,0.3)',
@@ -613,7 +615,8 @@ export default function CityHome() {
                 <div key={e.event_id || e.venue_id || i} style={{
                   display: 'grid', gridTemplateColumns: '22px 64px 1fr auto', gap: 10,
                   padding: '12px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'start',
-                }}>
+                  cursor: e.event_id ? 'pointer' : 'default',
+                }} onClick={() => e.event_id && router.push(`/${city}/event/${e.event_id}`)}>
                   {/* Number */}
                   <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent, paddingTop: 2 }}>
                     {String(i + 1).padStart(2, '0')}
@@ -652,7 +655,7 @@ export default function CityHome() {
                   </div>
                   {/* Like — top right */}
                   <button
-                    onClick={() => toggle(String(e.venue_id))}
+                    onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
                     style={{ width: 28, height: 28, border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
                     aria-label="Like"
                   >
@@ -767,7 +770,7 @@ export default function CityHome() {
                   const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
                   const color = ['#a78bfa', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
                   return (
-                    <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180 }}>
+                    <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => e.event_id && router.push(`/${city}/event/${e.event_id}`)}>
                       <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
                         {hasVideo ? (
                           <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
