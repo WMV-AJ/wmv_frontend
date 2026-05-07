@@ -144,9 +144,10 @@ function OfferBanner({
       offset={32}
       closeOnClick={false}
       focusAfterOpen={false}
-      className="wmv-dark-popup max-w-[60vw] p-0 rounded-xl border-0 shadow-none bg-transparent"
+      className="wmv-dark-popup max-w-[200px] p-0 rounded-xl border-0 shadow-none bg-transparent"
     >
       <div
+        className="px-[11px] py-[7px] md:px-[8px] md:py-[5px]"
         style={{
           background: 'rgba(10,10,26,0.88)',
           backdropFilter: 'blur(14px)',
@@ -154,11 +155,10 @@ function OfferBanner({
           border: `1px solid ${color}55`,
           borderLeft: `3px solid ${color}`,
           borderRadius: '10px',
-          padding: '7px 11px',
           boxShadow: `0 4px 20px rgba(0,0,0,0.55), 0 0 12px ${color}22`,
         }}
       >
-        <p className="text-[11px] font-semibold leading-snug" style={{ color: '#f0f0ff' }}>{offer.trim()}</p>
+        <p className="text-[11px] md:text-[9px] font-semibold leading-snug" style={{ color: '#f0f0ff' }}>{offer.trim()}</p>
       </div>
     </MapPopup>
   );
@@ -221,7 +221,7 @@ export default function MapTestPage() {
     },
     attributes: { venue: [], energy: [], timing: [], status: [] },
     selectedAreas: ['All Dubai'],
-    activeDates: [],
+    activeDates: [new Date().toDateString()],
     activeOffers: [],
     searchQuery: '',
   });
@@ -443,7 +443,18 @@ export default function MapTestPage() {
           display: none !important;
         }
       `}</style>
-      <main className="h-screen w-full relative overflow-hidden" style={{ height: '100dvh' }}>
+      {/* Outer wrapper — constrains to 430px like home page, centered on desktop.
+          transform: translateZ(0) makes fixed children position relative to this
+          container instead of the viewport. */}
+      <div className="wmv-phone-frame" style={{
+        maxWidth: 430,
+        margin: '0 auto',
+        height: '100dvh',
+        overflow: 'hidden',
+        transform: 'translateZ(0)',
+        background: '#0a0a14',
+      }}>
+      <main className="h-full w-full relative overflow-hidden">
         <h1 className="sr-only">Dubai Event Discovery - MapCN Test</h1>
 
         {/* Mobile TopNav (fixed overlay) */}
@@ -575,6 +586,7 @@ export default function MapTestPage() {
           filterOptions={filterOptions}
         />
       </main>
+      </div>
     </ThemeProvider>
   );
 }

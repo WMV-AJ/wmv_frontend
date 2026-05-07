@@ -2,41 +2,11 @@
    STACKED EVENT CARDS - GLASSMORPHISM STYLE
    =========================================== */
 
-/* Container */
+/* Container — always let the parent handle scrolling */
 .stacked-cards-container {
-  height: 800px;
-  overflow-y: auto;
-  padding: 40px 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(167, 139, 250, 0.6) rgba(0, 0, 0, 0.2);
-  scroll-behavior: smooth;
-}
-
-/* Mobile: flow naturally, let parent handle scrolling */
-@media (max-width: 1023px) {
-  .stacked-cards-container {
-    height: auto;
-    overflow-y: visible;
-    padding-top: 8px;
-  }
-}
-
-.stacked-cards-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.stacked-cards-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-.stacked-cards-container::-webkit-scrollbar-thumb {
-  background: rgba(167, 139, 250, 0.6);
-  border-radius: 4px;
-}
-
-.stacked-cards-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(167, 139, 250, 0.8);
+  height: auto;
+  overflow-y: visible;
+  padding-top: 8px;
 }
 
 /* Card Stack */
@@ -46,7 +16,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  padding-bottom: 75vh;
+  padding-bottom: 16px;
 }
 
 /* ===========================================
@@ -239,6 +209,76 @@
 
 .stacked-card-location-row span {
   max-width: 100%;
+}
+
+/* Thumbnail — base size (mobile) */
+.stacked-card-thumb {
+  width: 88px;
+  min-height: 110px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+}
+
+/* Desktop shrink — all sizes reduced for 430px phone-frame on large viewport */
+@media (min-width: 768px) {
+  .stacked-card {
+    height: 160px;
+    padding: 16px;
+    padding-bottom: 18px;
+    margin-top: -44px;
+    border-radius: 18px;
+  }
+
+  .stacked-cards-stack > div:first-child .stacked-card {
+    margin-top: 0;
+  }
+
+  .stacked-card.expanded {
+    height: auto;
+    margin-bottom: 44px;
+  }
+
+  .stacked-card-event-title {
+    font-size: 15px;
+  }
+
+  .stacked-card-venue-name {
+    font-size: 12px;
+  }
+
+  .stacked-card-time-row {
+    font-size: 11px;
+  }
+
+  .stacked-card-time-row svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .stacked-card-star {
+    font-size: 11px;
+  }
+
+  .stacked-card-rating-value {
+    font-size: 11px;
+  }
+
+  .stacked-card-review-count {
+    font-size: 9px;
+  }
+
+  .stacked-card-thumb {
+    width: 66px;
+    min-height: 82px;
+    border-radius: 9px;
+  }
+
+  .stacked-card-header {
+    margin-bottom: 10px;
+    gap: 10px;
+  }
 }
 
 /* ===========================================

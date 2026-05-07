@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
@@ -25,7 +25,7 @@ export default function CardPage() {
     eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
     attributes: { venue: [], energy: [], timing: [], status: [] },
     selectedAreas: ['All Dubai'],
-    activeDates: [],
+    activeDates: [new Date().toDateString()],
     activeOffers: [],
     searchQuery: ''
   });
@@ -34,6 +34,20 @@ export default function CardPage() {
 
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [navHeight, setNavHeight] = useState(140);
+  const [pillsHeight, setPillsHeight] = useState(70);
+  const pillsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = pillsRef.current;
+    if (!el) return;
+    const update = () => setPillsHeight(el.offsetHeight);
+    update();
+    if (typeof ResizeObserver !== 'undefined') {
+      const obs = new ResizeObserver(update);
+      obs.observe(el);
+      return () => obs.disconnect();
+    }
+  }, []);
 
   const { filterOptions } = useFilterOptions();
 
@@ -81,7 +95,16 @@ export default function CardPage() {
 
   return (
     <ThemeProvider>
-      <main className="min-h-screen w-full" style={{ background: '#0a0a1a' }}>
+      <style>{`#cards-scroll-container::-webkit-scrollbar { display: none; }`}</style>
+      <div className="wmv-phone-frame" style={{
+        maxWidth: 430,
+        margin: '0 auto',
+        height: '100dvh',
+        overflow: 'hidden',
+        transform: 'translateZ(0)',
+        background: '#0a0a1a',
+      }}>
+      <main className="h-full w-full" style={{ background: '#0a0a1a' }}>
         {/* Dark TopNav — same as map page */}
         <TopNav
           embedded={false}
@@ -101,6 +124,7 @@ export default function CardPage() {
 
         {/* Floating category pills — counts reflect selected date */}
         <div
+          ref={pillsRef}
           className="fixed left-0 right-0 z-30 px-2"
           style={{ top: navHeight + 6 }}
         >
@@ -118,12 +142,14 @@ export default function CardPage() {
         {/* Stacked Event Cards — scrollable area below nav + pills */}
         <div
           id="cards-scroll-container"
-          className="fixed left-1.5 md:left-2 right-1.5 md:right-2 bottom-0 z-10 overflow-y-auto rounded-2xl"
+          className="fixed left-2 right-2 bottom-0 z-10 overflow-y-auto rounded-2xl"
           style={{
             background: '#0a0a1a',
-            top: `${navHeight + 90}px`,
+            top: `${navHeight + 6 + pillsHeight + 6}px`,
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none' as const,
+            msOverflowStyle: 'none' as any,
           }}
         >
           <StackedEventCards
@@ -140,6 +166,7 @@ export default function CardPage() {
           filterOptions={filterOptions}
         />
       </main>
+      </div>
     </ThemeProvider>
   );
 }

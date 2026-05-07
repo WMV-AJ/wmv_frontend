@@ -380,20 +380,19 @@ const EventCard: React.FC<EventCardProps> = ({
             const url = event.media_url_1 || event.media_url_2;
             const type = event.media_url_1 ? event.media_type_1 : event.media_type_2;
             const thumbStyle: React.CSSProperties = {
-              width: '88px',
-              minHeight: '110px',
               borderRadius: '12px',
               objectFit: 'cover',
               border: '1.5px solid rgba(255,255,255,0.1)',
               background: 'rgba(255,255,255,0.04)',
             };
             if (!url) {
-              return <div style={{ ...thumbStyle, height: '110px' }} />;
+              return <div className="stacked-card-thumb" style={{ ...thumbStyle, height: '110px' }} />;
             }
             if (type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url)) {
               return (
                 <video
                   src={url}
+                  className="stacked-card-thumb"
                   style={thumbStyle}
                   muted
                   playsInline
@@ -408,11 +407,8 @@ const EventCard: React.FC<EventCardProps> = ({
                 width={200}
                 height={250}
                 quality={50}
+                className="stacked-card-thumb"
                 style={thumbStyle}
-                // eager: batch system already gates rendering. next/image's lazy
-                // observer watches the document viewport, which never scrolls
-                // here (scroll happens inside #cards-scroll-container), so lazy
-                // would never fire for cards below the initial fold.
                 loading="eager"
                 sizes="(max-width: 500px) 96px, 128px"
                 onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }}
