@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: '/', destination: '/dubai', permanent: false },
+      { source: '/map', destination: '/dubai/map', permanent: false },
+      { source: '/cards', destination: '/dubai/cards', permanent: false },
+    ];
+  },
   images: {
     // Built-in Sharp-based optimizer. Images get resized to display size,
     // converted to WebP/AVIF, and cached on disk by Next.
