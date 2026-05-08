@@ -22,6 +22,7 @@ import {
   Copy,
   Link2,
   Check,
+  Maximize2,
 } from 'lucide-react';
 import { formatDateLabel, formatTimeClean, isEventHappeningNow } from '@/lib/time-utils';
 
@@ -153,7 +154,6 @@ export default function EventDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; isVideo: boolean } | null>(null);
-  const [showFullNotes, setShowFullNotes] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
   // Scroll to top on mount (fixed container doesn't auto-scroll)
@@ -326,7 +326,7 @@ export default function EventDetailPage() {
     // Skeleton loading state
     return (
       <main ref={mainRef} className="fixed inset-0 overflow-y-auto" style={{ backgroundColor: '#0a0a14' }}>
-        <div className="min-h-full w-full pb-8">
+        <div style={{ maxWidth: 430, margin: '0 auto', minHeight: '100%', paddingBottom: 40 }}>
           {/* Hero skeleton */}
           <div className="relative w-full" style={{ height: '280px' }}>
             <div className="w-full h-full skeleton-pulse" style={{ background: 'rgba(0,0,0,0.06)' }} />
@@ -525,6 +525,17 @@ export default function EventDetailPage() {
           </button>
         </div>
 
+        {/* Expand button */}
+        {heroImage && (
+          <button
+            onClick={() => setLightboxMedia({ url: heroImage, isVideo: event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(heroImage) })}
+            className="absolute bottom-4 right-4 w-9 h-9 rounded-full flex items-center justify-center z-10 backdrop-blur-md"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+          >
+            <Maximize2 className="w-4 h-4 text-white" />
+          </button>
+        )}
+
         {/* LIVE badge */}
         {isLive && (
           <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full z-10" style={{ background: 'rgba(239,68,68,0.9)' }}>
@@ -555,32 +566,34 @@ export default function EventDetailPage() {
           {/* Venue */}
           <div className="flex items-center gap-3">
             <MapPin className="w-[18px] h-[18px] flex-shrink-0" style={{ color: iconColor }} />
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[15px] text-[#a8a2b8]">
-                {venueName}{event.venue_area ? `, ${event.venue_area}` : ''}
-              </span>
-              {event.venue_rating > 0 && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'rgba(234, 179, 8, 0.15)' }}>
-                  <Star className="w-3 h-3 text-yellow-500" fill="#EAB308" />
-                  <span className="text-[12px] font-bold text-yellow-500">{event.venue_rating.toFixed(1)}</span>
-                  {event.venue_rating_count > 0 && (
-                    <span className="text-[11px] text-[#5f5a70]">({event.venue_rating_count.toLocaleString()})</span>
-                  )}
-                </span>
-              )}
-            </div>
+            <span className="text-[15px] text-[#a8a2b8]">
+              {venueName}{event.venue_area ? `, ${event.venue_area}` : ''}
+            </span>
           </div>
+
+          {/* Rating */}
+          {event.venue_rating > 0 && (
+            <div className="flex items-center gap-3">
+              <Star className="w-[18px] h-[18px] flex-shrink-0 text-yellow-500" fill="#EAB308" />
+              <span className="text-[15px] text-[#a8a2b8]">
+                {event.venue_rating.toFixed(1)}
+                {event.venue_rating_count > 0 && (
+                  <span className="text-[#5f5a70]"> ({event.venue_rating_count.toLocaleString()} reviews)</span>
+                )}
+              </span>
+            </div>
+          )}
 
           {/* Price */}
           {event.ticket_price && (
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-[18px] h-[18px] flex-shrink-0" style={{ color: iconColor }} />
-              <span className="text-[15px] text-[#a8a2b8]">
-                <span className="text-[#6ee7b7] font-semibold">AED {event.ticket_price}</span>
+            <div className="flex items-start gap-3">
+              <DollarSign className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" style={{ color: iconColor }} />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[15px] text-[#6ee7b7] font-semibold">AED {event.ticket_price}</span>
                 {event.special_offers && !event.special_offers.toLowerCase().includes('no special') && (
-                  <span className="text-[#fcd34d] ml-2">· {event.special_offers}</span>
+                  <span className="text-[13px] text-[#a8a2b8]">{event.special_offers}</span>
                 )}
-              </span>
+              </div>
             </div>
           )}
 
@@ -622,34 +635,12 @@ export default function EventDetailPage() {
           )}
         </div>
 
-        {/* Description / Analysis Notes */}
-        {event.analysis_notes && (
-          <div className="mt-6">
-            <p className={`text-[14px] text-[#a8a2b8] leading-relaxed ${!showFullNotes ? 'line-clamp-3' : ''}`}>
-              {event.analysis_notes}
-            </p>
-            {event.analysis_notes.length > 150 && (
-              <button
-                onClick={() => setShowFullNotes(!showFullNotes)}
-                className="text-[#93c5fd] text-[13px] font-medium mt-1"
-              >
-                {showFullNotes ? 'View less' : 'View more'}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Genre + Vibe Pills (outlined) */}
-        {(genres.length > 0 || vibes.length > 0) && (
+        {/* Genre Pills (outlined) */}
+        {genres.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-5">
             {genres.map((g, i) => (
               <span key={`g-${i}`} className="px-3 py-1 rounded-full text-[13px] text-[#a8a2b8] border border-[rgba(255,255,255,0.15)]">
                 {g}
-              </span>
-            ))}
-            {vibes.map((v, i) => (
-              <span key={`v-${i}`} className="px-3 py-1 rounded-full text-[13px] text-[#a8a2b8] border border-[rgba(255,255,255,0.15)]">
-                {v}
               </span>
             ))}
           </div>
@@ -962,18 +953,23 @@ export default function EventDetailPage() {
           style={{ background: 'rgba(0,0,0,0.95)' }}
           onClick={() => setLightboxMedia(null)}
         >
-          <button
-            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10"
-            style={{ background: 'rgba(255,255,255,0.15)' }}
-            onClick={(e) => { e.stopPropagation(); setLightboxMedia(null); }}
+          <div
+            className="relative flex flex-col items-center"
+            style={{ width: '100%', maxWidth: 430, padding: '0 16px' }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <X className="w-5 h-5 text-white" />
-          </button>
-          <div onClick={(e) => e.stopPropagation()}>
+            {/* Close button inside the 430px column */}
+            <button
+              className="absolute right-4 w-10 h-10 rounded-full flex items-center justify-center z-10"
+              style={{ background: 'rgba(255,255,255,0.15)', top: '-48px' }}
+              onClick={() => setLightboxMedia(null)}
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
             {lightboxMedia.isVideo ? (
               <video
                 src={lightboxMedia.url}
-                className="max-w-full max-h-[85vh] rounded-lg"
+                className="w-full max-h-[85vh] rounded-lg"
                 controls
                 autoPlay
                 loop
@@ -983,7 +979,7 @@ export default function EventDetailPage() {
               <img
                 src={lightboxMedia.url}
                 alt={event.event_name}
-                className="max-w-full max-h-[90vh] object-contain"
+                className="w-full max-h-[90vh] object-contain rounded-lg"
                 style={{ touchAction: 'pinch-zoom' }}
               />
             )}
