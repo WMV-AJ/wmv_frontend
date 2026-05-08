@@ -45,14 +45,14 @@ const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
 const VIBES = [
-  { id: 'clubs', label: 'Clubs', color: '#a78bfa', Icon: Music, keywords: ['nightclub', 'club', 'dance'] },
-  { id: 'brunch', label: 'Brunch', color: '#34d399', Icon: UtensilsCrossed, keywords: ['brunch'] },
-  { id: 'rooftops', label: 'Rooftops', color: '#f472b6', Icon: Sparkles, keywords: ['rooftop', 'terrace'] },
-  { id: 'ladies', label: 'Ladies Night', color: '#ec4899', Icon: Heart, keywords: ['ladies night', 'ladies'] },
-  { id: 'beach', label: 'Beach Clubs', color: '#22d3ee', Icon: Waves, keywords: ['beach', 'pool'] },
-  { id: 'happy', label: 'Happy Hour', color: '#f59e0b', Icon: GlassWater, keywords: ['happy hour'] },
-  { id: 'pool', label: 'Pool Party', color: '#06b6d4', Icon: Droplet, keywords: ['pool party'] },
-  { id: 'live', label: 'Live Music', color: '#84cc16', Icon: MicVocal, keywords: ['live music', 'live'] },
+  { id: 'clubs',  label: 'Clubs',        color: '#a78bfa', Icon: Music,          keywords: ['nightclub', 'club', 'dance'],  categories: ['Club Night'] },
+  { id: 'brunch', label: 'Brunch',        color: '#34d399', Icon: UtensilsCrossed,keywords: ['brunch'],                      categories: ['Brunch'] },
+  { id: 'rooftops',label: 'Rooftops',     color: '#f472b6', Icon: Sparkles,       keywords: ['rooftop', 'terrace'],          categories: [] },
+  { id: 'ladies', label: 'Ladies Night',  color: '#ec4899', Icon: Heart,          keywords: ['ladies night', 'ladies'],      categories: ['Ladies Night'] },
+  { id: 'beach',  label: 'Beach Clubs',   color: '#22d3ee', Icon: Waves,          keywords: ['beach', 'pool'],               categories: ['Pool Party'] },
+  { id: 'happy',  label: 'Happy Hour',    color: '#f59e0b', Icon: GlassWater,     keywords: ['happy hour'],                  categories: ['Happy Hour'] },
+  { id: 'pool',   label: 'Pool Party',    color: '#06b6d4', Icon: Droplet,        keywords: ['pool party'],                  categories: ['Pool Party', 'Day Party & Afterwork'] },
+  { id: 'live',   label: 'Live Music',    color: '#84cc16', Icon: MicVocal,       keywords: ['live music', 'live'],          categories: ['Live Performance'] },
 ];
 
 const RADAR_DOTS = [
@@ -240,7 +240,7 @@ export default function CityHome() {
   const now = new Date();
   const dubaiNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
   const weekendDays: string[] = [];
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 0; i <= 7; i++) {
     const d = new Date(dubaiNow);
     d.setUTCDate(d.getUTCDate() + i);
     const dow = d.getUTCDay();
@@ -259,7 +259,12 @@ export default function CityHome() {
     const key = `${v.venue_id}-${ds}`;
     if (!weekendMap.has(key)) weekendMap.set(key, { ...v, _ds: ds });
   });
-  const weekendEvents = Array.from(weekendMap.values()).slice(0, 4);
+  const weekendEvents = Array.from(weekendMap.values()).sort((a, b) => {
+    if (a._ds !== b._ds) return a._ds < b._ds ? -1 : 1;
+    const at = a.event_time || '';
+    const bt = b.event_time || '';
+    return at.localeCompare(bt);
+  });
 
   const areaMap = new Map<string, number>();
   venues.forEach(v => {
@@ -272,11 +277,22 @@ export default function CityHome() {
 
   const vibeGrid = VIBES.map(v => {
     const count = venues.filter(venue => {
+      // keyword match against event_vibe + venue_category
       const vibeArr: string[] = Array.isArray(venue.event_vibe) ? venue.event_vibe : [];
       const catArr: string[] = Array.isArray(venue.venue_category) ? venue.venue_category
         : typeof venue.category === 'string' ? [venue.category] : [];
       const haystack = [...vibeArr, ...catArr].join(' ').toLowerCase();
-      return v.keywords.some(kw => haystack.includes(kw));
+      const keywordMatch = v.keywords.some(kw => haystack.includes(kw));
+      // event_categories primary match
+      const evCats = (() => {
+        try {
+          const raw = venue.event_categories;
+          const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          return Array.isArray(parsed) ? parsed.map((c: any) => c?.primary || '').filter(Boolean) : [];
+        } catch { return []; }
+      })();
+      const categoryMatch = v.categories.length > 0 && evCats.some((p: string) => v.categories.includes(p));
+      return keywordMatch || categoryMatch;
     }).length;
     return { ...v, count };
   });
@@ -399,10 +415,39 @@ export default function CityHome() {
               letterSpacing: '-0.035em', color: T.ink,
             }}>
               Where&rsquo;s<br />
-              <span style={{ color: T.accent }}>the city&rsquo;s on</span>
+              <span style={{ color: T.accent }}>my vibe</span>
             </h1>
             <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 220, lineHeight: 1.5 }}>
               Dubai&rsquo;s nightlife, pulled live from Instagram &amp; the web.
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button
+                onClick={() => router.push(`/${city}/map`)}
+                style={{
+                  fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
+                  textTransform: 'uppercase', cursor: 'pointer', border: 'none',
+                  padding: '7px 11px', borderRadius: 7, lineHeight: 1,
+                  background: T.accent, color: '#0a0a14',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}
+              >
+                Explore on Maps
+                <ArrowUpRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+              </button>
+              <button
+                onClick={() => router.push(`/${city}/cards`)}
+                style={{
+                  fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
+                  textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1,
+                  padding: '7px 11px', borderRadius: 7,
+                  background: 'transparent', color: T.accent,
+                  border: `1px solid ${T.accent}`,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}
+              >
+                Today&rsquo;s Vibe
+                <ArrowUpRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+              </button>
             </div>
           </div>
         </div>
@@ -710,46 +755,44 @@ export default function CityHome() {
               § C — Pick your vibe
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, border: `1px solid ${T.line}`, background: T.line }}>
-            {vibeGrid.map((v, i) => {
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
+            {vibeGrid.map((v) => {
               const Icon = v.Icon;
               return (
                 <div key={v.id} style={{
-                  background: T.surface, padding: '12px 8px 10px',
-                  borderRight: i % 4 !== 3 ? `1px solid ${T.line}` : 'none',
-                  borderBottom: i < 4 ? `1px solid ${T.line}` : 'none',
-                  aspectRatio: '1',
-                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 12px', borderRadius: 999,
+                  border: `1px solid ${T.line}`, background: T.surface,
+                  cursor: 'pointer',
                 }}>
                   <div style={{
-                    width: 22, height: 22, borderRadius: '50%', background: v.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 26, height: 26, borderRadius: '50%', background: v.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <Icon style={{ width: 12, height: 12, color: T.ink }} />
+                    <Icon style={{ width: 13, height: 13, color: '#0a0a14' }} />
                   </div>
-                  <div>
-                    <div style={{
-                      fontFamily: serif, fontStyle: 'italic', fontSize: 14, fontWeight: 400,
-                      color: T.ink, lineHeight: 1, letterSpacing: '-0.01em',
-                    }}>{v.label}</div>
-                    <div style={{ fontFamily: mono, fontSize: 9, color: v.color, marginTop: 3, fontWeight: 600 }}>
-                      {loading ? '—' : String(v.count).padStart(2, '0')}
-                    </div>
-                  </div>
+                  <span style={{
+                    fontFamily: serif, fontStyle: 'italic', fontSize: 14, fontWeight: 400,
+                    color: T.ink, letterSpacing: '-0.01em', lineHeight: 1, flex: 1,
+                  }}>{v.label}</span>
+                  <span style={{
+                    fontFamily: mono, fontSize: 10, fontWeight: 700,
+                    color: v.color, lineHeight: 1, flexShrink: 0,
+                  }}>{loading ? '—' : v.count}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* § D — This weekend */}
+        {/* § D — Weekend Vibes */}
         <div style={{ padding: '28px 18px 0' }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 12,
           }}>
             <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § D — This weekend
+              § D — Weekend Vibes
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}>
