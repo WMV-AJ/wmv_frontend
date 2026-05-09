@@ -1,51 +1,38 @@
-// Venue Names API route - fetching distinct venue names from Supabase final_1 table
+// Venue Names API route — distinct venue names for autocomplete.
+// Proxies to the WMV backend at /api/events; data is sourced from the
+// production Postgres `final_1` table (no Supabase).
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const WMV_API_BASE = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.WMV_API_BASE || 'http://91.99.102.124:2302').replace(/\/$/, '');
 
 export async function GET() {
   try {
-    console.log('🔍 Fetching distinct venue names from Supabase final_1.venue_name_original...');
-    
-    // Fetch distinct venue names from Supabase final_1 table
-    const { data: venueData, error: venueError } = await supabase
-      .from('final_1')
-      .select('venue_name_original')
-      .not('venue_name_original', 'is', null)
-      .not('venue_name_original', 'eq', '');
-    
-    if (venueError) {
-      console.error('Supabase error:', venueError);
-      return NextResponse.json({
-        success: false,
-        data: [],
-        error: venueError.message
-      }, { status: 500 });
+    const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+    if (!upstream.ok) {
+      return NextResponse.json(
+        { success: false, data: [], error: `Upstream ${upstream.status}: ${upstream.statusText}` },
+        { status: 502 },
+      );
     }
+    const payload = await upstream.json();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const records: any[] = Array.isArray(payload?.data) ? payload.data : [];
 
-    // Extract unique venue names and sort them alphabetically
-    const uniqueVenueNames = [...new Set(
-      venueData?.map(record => record.venue_name_original)
-        .filter(name => name && name.trim())
-    )].sort();
+    const names = records
+      .map((r) => r.venue_name_original ?? r.venue_name)
+      .filter((n: unknown): n is string => typeof n === 'string' && n.trim().length > 0);
 
-    console.log('✅ Found distinct venue names from Supabase:', uniqueVenueNames.length, 'venues');
+    const uniqueVenueNames = Array.from(new Set(names)).sort();
 
     return NextResponse.json({
       success: true,
       data: uniqueVenueNames,
-      message: `Retrieved ${uniqueVenueNames.length} distinct venue names from Supabase final_1`
+      message: `Retrieved ${uniqueVenueNames.length} distinct venue names`,
     });
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      data: [],
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, data: [], error: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 },
+    );
   }
 }

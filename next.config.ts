@@ -24,9 +24,6 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: [
     '@react-google-maps/api',
-    '@supabase/auth-helpers-nextjs',
-    '@supabase/supabase-js',
-    '@supabase/ssr'
   ],
   eslint: {
     // Warning: This allows production builds to successfully complete even if

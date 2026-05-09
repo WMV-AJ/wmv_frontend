@@ -10,6 +10,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getVenuePrimaryEventCategory } from '@/lib/map/marker-colors';
 import { getCategoryColor, getHexColor } from '@/lib/category-mappings';
+import { trackEvent } from '@/lib/analytics/track';
 import type { Venue, InstagramStory, HierarchicalFilterState, FilterState } from '@/types';
 
 interface VenueDetailsSidebarProps {
@@ -117,6 +118,17 @@ const VenueDetailsSidebar: React.FC<VenueDetailsSidebarProps> = ({
       setSelectedDateKey(uniqueDates[0]);
     }
   }, [uniqueDates, selectedDateKey]);
+
+  // Fire a view_venue event each time the sidebar opens for a (new) venue.
+  React.useEffect(() => {
+    if (!isOpen || !venue?.venue_id) return;
+    trackEvent('view_venue', {
+      venue_id: venue.venue_id,
+      venue_name: venue.name,
+      venue_area: venue.area,
+      source: 'sidebar',
+    });
+  }, [isOpen, venue?.venue_id, venue?.name, venue?.area]);
   const selectedDateEvents = selectedDateKey ? eventsByDate[selectedDateKey] || [] : [];
 
   // Deduplicate events by ID to prevent duplicate cards
@@ -293,6 +305,11 @@ const VenueDetailsSidebar: React.FC<VenueDetailsSidebarProps> = ({
                         href={`https://instagram.com/${venue.final_instagram}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackEvent('click_instagram', {
+                          venue_id: venue.venue_id,
+                          instagram_handle: venue.final_instagram,
+                          source: 'sidebar',
+                        })}
                         className={`p-2 rounded-full transition-colors duration-200 ${
                           isDarkMode
                             ? 'bg-purple-900/40 hover:bg-pink-600 border border-purple-500/20'

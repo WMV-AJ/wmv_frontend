@@ -5,6 +5,7 @@ import { Marker, InfoWindow } from '@react-google-maps/api';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Instagram, Clock } from 'lucide-react';
 import type { VenuePinProps } from '@/types';
+import { trackEvent } from '@/lib/analytics/track';
 
 const VenuePin: React.FC<VenuePinProps> = ({
   venue,
@@ -37,12 +38,19 @@ const VenuePin: React.FC<VenuePinProps> = ({
   // Handle click with BOUNCE animation
   const handleClick = useCallback(() => {
     console.log('🔥 VENUE PIN CLICKED:', venue.name);
-    
+
+    trackEvent('view_venue', {
+      venue_id: venue.venue_id,
+      venue_name: venue.name,
+      venue_area: venue.area,
+      source: 'map_pin',
+    });
+
     // Add bounce animation on click
     if (markerRef && typeof window !== 'undefined' && window.google?.maps) {
       setIsAnimating(true);
       markerRef.setAnimation(google.maps.Animation.BOUNCE);
-      
+
       // Stop bouncing after 1.5 seconds
       setTimeout(() => {
         if (markerRef.getAnimation()) {
@@ -51,9 +59,9 @@ const VenuePin: React.FC<VenuePinProps> = ({
         setIsAnimating(false);
       }, 1500);
     }
-    
+
     onClick();
-  }, [onClick, venue.name, markerRef]);
+  }, [onClick, venue.name, venue.venue_id, venue.area, markerRef]);
 
   // Add pulsing animation for venues with active stories
   useEffect(() => {

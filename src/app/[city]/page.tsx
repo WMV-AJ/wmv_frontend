@@ -15,6 +15,7 @@ import {
   Mic as MicVocal,
   List,
 } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics/track';
 
 // ── THEME TOKENS ─────────────────────────────────────────────────────
 const T = {
@@ -349,14 +350,20 @@ export default function CityHome() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <button
-              onClick={() => router.push(`/${city}/map`)}
+              onClick={() => {
+                trackEvent('nav_view_change', { from: 'home', to: 'map', source: 'header' });
+                router.push(`/${city}/map`);
+              }}
               style={{ width: 30, height: 30, borderRadius: '50%', border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
               aria-label="Map"
             >
               <MapIcon style={{ width: 14, height: 14, color: T.inkMuted }} />
             </button>
             <button
-              onClick={() => router.push(`/${city}/cards`)}
+              onClick={() => {
+                trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'header' });
+                router.push(`/${city}/cards`);
+              }}
               style={{ width: 30, height: 30, borderRadius: '50%', border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
               aria-label="Cards"
             >
@@ -422,7 +429,10 @@ export default function CityHome() {
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button
-                onClick={() => router.push(`/${city}/map`)}
+                onClick={() => {
+                  trackEvent('nav_view_change', { from: 'home', to: 'map', source: 'hero_cta' });
+                  router.push(`/${city}/map`);
+                }}
                 style={{
                   fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
                   textTransform: 'uppercase', cursor: 'pointer', border: 'none',
@@ -435,7 +445,10 @@ export default function CityHome() {
                 <ArrowUpRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />
               </button>
               <button
-                onClick={() => router.push(`/${city}/cards`)}
+                onClick={() => {
+                  trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'hero_cta' });
+                  router.push(`/${city}/cards`);
+                }}
                 style={{
                   fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
                   textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1,
@@ -514,7 +527,11 @@ export default function CityHome() {
                     : `linear-gradient(${135 + i * 20}deg, ${s.color}, ${s.color}66, ${T.bg})`,
                   border: `1px solid ${T.line}`,
                   cursor: s.event_id ? 'pointer' : 'default',
-                }} onClick={() => s.event_id && router.push(`/${city}/event/${s.event_id}`)}>
+                }} onClick={() => {
+                  if (!s.event_id) return;
+                  trackEvent('view_event', { event_id: s.event_id, venue_id: s.venue_id, source: 'stories_grid' });
+                  router.push(`/${city}/event/${s.event_id}`);
+                }}>
                   {s.mediaUrl && s.mediaType === 'video' ? (
                     <video
                       src={s.mediaUrl}
@@ -585,7 +602,11 @@ export default function CityHome() {
                 const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
                 const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
                 return (
-                  <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => e.event_id && router.push(`/${city}/event/${e.event_id}`)}>
+                  <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
+                    if (!e.event_id) return;
+                    trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, source: 'tonight_featured' });
+                    router.push(`/${city}/event/${e.event_id}`);
+                  }}>
                     {hasVideo ? (
                       <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
                     ) : hasImage ? (
@@ -661,7 +682,11 @@ export default function CityHome() {
                   display: 'grid', gridTemplateColumns: '22px 64px 1fr auto', gap: 10,
                   padding: '12px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'start',
                   cursor: e.event_id ? 'pointer' : 'default',
-                }} onClick={() => e.event_id && router.push(`/${city}/event/${e.event_id}`)}>
+                }} onClick={() => {
+                  if (!e.event_id) return;
+                  trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, source: 'tonight_list' });
+                  router.push(`/${city}/event/${e.event_id}`);
+                }}>
                   {/* Number */}
                   <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent, paddingTop: 2 }}>
                     {String(i + 1).padStart(2, '0')}
@@ -813,7 +838,11 @@ export default function CityHome() {
                   const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
                   const color = ['#a78bfa', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
                   return (
-                    <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => e.event_id && router.push(`/${city}/event/${e.event_id}`)}>
+                    <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
+                      if (!e.event_id) return;
+                      trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, source: 'weekend_carousel' });
+                      router.push(`/${city}/event/${e.event_id}`);
+                    }}>
                       <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
                         {hasVideo ? (
                           <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />

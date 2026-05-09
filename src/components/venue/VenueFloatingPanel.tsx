@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Clock, Instagram, ExternalLink, Phone, Share2, Navigation, Calendar, DollarSign, Gift, FileText, Music, Sparkles, Target } from 'lucide-react';
 import { useEvents } from '@/hooks/useEvents';
 import { useTheme } from '@/contexts/ThemeContext';
+import { trackEvent } from '@/lib/analytics/track';
 import type { Venue, HierarchicalFilterState, InstagramStory } from '@/types';
 import './VenueFloatingPanel.css';
 
@@ -932,10 +933,20 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                     <button
                       onClick={() => {
                         if (navigator.share) {
+                          trackEvent('share_venue', {
+                            venue_id: venue.venue_id,
+                            method: 'native_share',
+                          });
                           navigator.share({
                             title: venue.name,
                             url: window.location.href
                           });
+                        } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                          trackEvent('share_venue', {
+                            venue_id: venue.venue_id,
+                            method: 'copy_link',
+                          });
+                          navigator.clipboard.writeText(window.location.href).catch(() => {});
                         }
                       }}
                       style={{
@@ -962,6 +973,11 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                         href={`https://instagram.com/${venue.final_instagram}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackEvent('click_instagram', {
+                          venue_id: venue.venue_id,
+                          instagram_handle: venue.final_instagram,
+                          source: 'floating_panel',
+                        })}
                         style={{
                           width: '50px',
                           padding: '14px',

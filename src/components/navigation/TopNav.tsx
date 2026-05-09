@@ -3,10 +3,12 @@
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, Search, List, Map as MapIcon, ChevronDown, Home } from 'lucide-react';
+import { Search, List, Map as MapIcon, ChevronDown, Home } from 'lucide-react';
 import { Venue } from '@/types';
 import { parseDateFromFormat } from '@/lib/filters/date-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
+import SignInButton from '@/components/auth/SignInButton';
+import UserMenu from '@/components/auth/UserMenu';
 
 // ===========================================
 // DATE RANGE PRESET LOGIC
@@ -111,7 +113,7 @@ const TopNav: React.FC<TopNavProps> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   // Use shared filter options from context — no duplicate fetch
   const { filterOptions: sharedFilterOptions } = useVenueData();
@@ -466,6 +468,9 @@ const TopNav: React.FC<TopNavProps> = ({
               )}
             </button>
           )}
+
+          {/* Auth slot */}
+          {!hideProfile && (user ? <UserMenu variant="desktop" /> : <SignInButton variant="desktop" />)}
         </div>
 
         {/* === ROW 2: Category Pills === */}
@@ -668,6 +673,9 @@ const TopNav: React.FC<TopNavProps> = ({
                 <List className="w-4 h-4 md:w-3 md:h-3 text-white" />
               )}
             </button>
+
+            {/* Auth slot */}
+            {!hideProfile && (user ? <UserMenu variant="compact" /> : <SignInButton variant="compact" />)}
           </div>
 
           {/* ROW 2: Category Pills */}

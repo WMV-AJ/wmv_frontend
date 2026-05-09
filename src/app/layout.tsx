@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import Script from "next/script";
 import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
+import AnalyticsProvider from "@/lib/analytics/AnalyticsProvider";
+import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -91,10 +97,38 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfairDisplay.variable} antialiased`}
       >
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                // Default to denied; CookieConsentBanner flips this on Accept.
+                gtag('consent', 'default', {
+                  analytics_storage: 'denied',
+                  ad_storage: 'denied',
+                });
+                // send_page_view: false because AnalyticsProvider fires page_view on route change.
+                gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });
+              `}
+            </Script>
+          </>
+        )}
         <AuthProvider>
-          <VenueDataProvider>
-            {children}
-          </VenueDataProvider>
+          <Suspense fallback={null}>
+            <AnalyticsProvider>
+              <VenueDataProvider>
+                {children}
+              </VenueDataProvider>
+            </AnalyticsProvider>
+          </Suspense>
+          <CookieConsentBanner />
         </AuthProvider>
       </body>
     </html>

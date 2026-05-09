@@ -6,6 +6,7 @@ import { X, Search } from 'lucide-react';
 import { HierarchicalFilterState } from '@/types';
 import FilterSection from './FilterSection';
 import FilterActionBar from './FilterActionBar';
+import { trackEvent } from '@/lib/analytics/track';
 
 interface FilterBottomSheetProps {
   isOpen: boolean;
@@ -206,6 +207,22 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   };
 
   const handleApply = () => {
+    const primaryGenres = tempFilters.selectedPrimaries?.genres ?? [];
+    const primaryVibes = tempFilters.selectedPrimaries?.vibes ?? [];
+    const secondaryGenres = Object.values(tempFilters.selectedSecondaries?.genres ?? {}).flat();
+    const secondaryVibes = Object.values(tempFilters.selectedSecondaries?.vibes ?? {}).flat();
+    trackEvent('filter_applied', {
+      primary_genres: primaryGenres,
+      secondary_genres: secondaryGenres,
+      primary_vibes: primaryVibes,
+      secondary_vibes: secondaryVibes,
+      total_active_filters:
+        primaryGenres.length + secondaryGenres.length + primaryVibes.length + secondaryVibes.length,
+    });
+    const q = (tempFilters.searchQuery || '').trim();
+    if (q.length > 0) {
+      trackEvent('search_performed', { query: q, source: 'filter_sheet' });
+    }
     onFiltersChange(tempFilters);
     setHasUnsavedChanges(false);
     onClose();

@@ -1,279 +1,244 @@
-// Events API route - now using final_1 table (with special character cleaning)
+// Events API route — proxies to the WMV backend (`final_1` table) and applies
+// per-venue / genre / vibe / offers / category / attribute / date filtering.
+// No Supabase — all data lives in production Postgres on 91.99.102.124:2400.
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 interface EventRecord {
-  event_vibe?: string[];
-  event_date?: string;
+  event_vibe?: string[] | string | null;
+  event_date?: string | null;
   id?: number;
-  venue_name?: string;
-  special_offers?: string;
+  event_id?: number | string | null;
+  venue_id?: number | null;
+  venue_name?: string | null;
+  venue_name_original?: string | null;
+  event_name?: string | null;
+  event_time?: string | null;
+  event_created_at?: string | null;
+  artist?: string | string[] | null;
+  music_genre?: string | string[] | null;
   music_genre_processed?: {
     primaries: string[];
     secondariesByPrimary: Record<string, string[]>;
-  };
-  event_categories?: Array<{
-    primary: string;
-    secondary: string;
-    confidence: number;
-  }>;
+  } | null;
+  ticket_price?: number | string | null;
+  special_offers?: string | string[] | null;
+  website_social?: string | string[] | null;
+  confidence_score?: number | null;
+  analysis_notes?: string | null;
+  instagram_id?: string | null;
+  event_categories?: Array<{ primary: string; secondary?: string; confidence?: number }> | null;
   attributes?: {
-    venue: string[];
-    energy: string[];
-    status: string[];
-    timing: string[];
-  };
-  venue_id?: number;
+    venue?: string[];
+    energy?: string[];
+    status?: string[];
+    timing?: string[];
+  } | null;
+  media_url_1?: string | null;
+  media_type_1?: string | null;
+  media_url_2?: string | null;
+  media_type_2?: string | null;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const WMV_API_BASE = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.WMV_API_BASE || 'http://91.99.102.124:2302').replace(/\/$/, '');
+
+function parseSelectedDate(raw: string): Date | null {
+  const s = raw.trim();
+  try {
+    if (s.includes('/')) {
+      const [day, monthName, year] = s.split('/');
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
+      ];
+      const idx = monthNames.findIndex((m) => m.toLowerCase() === monthName.toLowerCase());
+      if (idx === -1) return null;
+      return new Date(parseInt(year), idx, parseInt(day));
+    }
+    const [day, monthPart, year] = s.split(' ');
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec',
+    ];
+    const idx = monthNames.findIndex((m) => m.toLowerCase() === monthPart.toLowerCase());
+    if (idx === -1) return null;
+    const fullYear = parseInt(year) < 50 ? 2000 + parseInt(year) : 1900 + parseInt(year);
+    return new Date(fullYear, idx, parseInt(day));
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const venue_id = searchParams.get('venue_id'); // Use venue_id (place_id) as the primary identifier
-    const limit = searchParams.get('limit') || '50';
-    const genres = searchParams.get('genres'); // comma-separated list
-    const vibes = searchParams.get('vibes'); // comma-separated list
-    const offers = searchParams.get('offers'); // comma-separated list
-    const dates = searchParams.get('dates'); // comma-separated list
-    const eventCategories = searchParams.get('eventCategories'); // comma-separated list of "primary|secondary" pairs
-    const attributes = searchParams.get('attributes'); // comma-separated list of "type:value" pairs
+    const venue_id = searchParams.get('venue_id');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const genres = searchParams.get('genres');
+    const vibes = searchParams.get('vibes');
+    const offers = searchParams.get('offers');
+    const dates = searchParams.get('dates');
+    const eventCategories = searchParams.get('eventCategories');
+    const attributes = searchParams.get('attributes');
 
-    let query = supabase
-      .from('final_1')
-      .select('*')
-      .not('event_id', 'is', null) // Only get records with event data
-      .order('event_date', { ascending: false }) // Show newest dates first
-      .limit(parseInt(limit));
+    const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+    if (!upstream.ok) {
+      return NextResponse.json(
+        { success: false, data: [], error: `Upstream ${upstream.status}: ${upstream.statusText}` },
+        { status: 502 },
+      );
+    }
+    const payload = await upstream.json();
+    let records: EventRecord[] = Array.isArray(payload?.data) ? payload.data : [];
 
-    // Filter by venue_id (place_id) if specified - this is the distinct identifier for venues
+    // Only events
+    records = records.filter((r) => r.event_id != null);
+
+    // Filter by venue_id if specified
     if (venue_id) {
-      query = query.eq('venue_id', parseInt(venue_id));
+      const wanted = parseInt(venue_id, 10);
+      records = records.filter((r) => r.venue_id === wanted);
     }
 
-    // Filter by genres - will apply in JS after fetching since music_genre_processed is JSONB
-    let genreFilterToApply = null;
+    // Newest first
+    records.sort((a, b) => {
+      const ad = a.event_date ? new Date(a.event_date).getTime() : 0;
+      const bd = b.event_date ? new Date(b.event_date).getTime() : 0;
+      return bd - ad;
+    });
+
+    // Genre filter — primaries match
     if (genres) {
-      genreFilterToApply = genres.split(',').map(g => g.trim());
+      const wanted = genres.split(',').map((g) => g.trim());
+      records = records.filter((r) => {
+        const primaries = r.music_genre_processed?.primaries;
+        if (!primaries || primaries.length === 0) return false;
+        return wanted.some((g) => primaries.includes(g));
+      });
     }
 
-    // Apply vibes filter after getting initial data since array substring search is complex
-    let vibeFilterToApply = null;
+    // Vibes filter — substring match against any vibe entry
     if (vibes) {
-      vibeFilterToApply = vibes.split(',').map(v => v.trim());
+      const wanted = vibes.split(',').map((v) => v.trim().toLowerCase());
+      records = records.filter((r) => {
+        const ev = Array.isArray(r.event_vibe) ? r.event_vibe : [];
+        return wanted.some((w) =>
+          ev.some((entry) => typeof entry === 'string' && entry.toLowerCase().includes(w)),
+        );
+      });
     }
 
-    // Parse event categories filter - format: "primary|secondary,primary|secondary"
-    let eventCategoriesFilterToApply = null;
+    // Offers filter — substring match against special_offers (string or array)
+    if (offers) {
+      const wanted = offers.split(',').map((o) => o.trim().toLowerCase());
+      records = records.filter((r) => {
+        const so = r.special_offers;
+        const text = Array.isArray(so) ? so.join(' ') : (so || '');
+        const lower = text.toLowerCase();
+        return wanted.some((o) => lower.includes(o));
+      });
+    }
+
+    // Event categories — `primary|secondary,primary|secondary`
     if (eventCategories) {
-      eventCategoriesFilterToApply = eventCategories.split(',').map(cat => {
+      const filters = eventCategories.split(',').map((cat) => {
         const [primary, secondary] = cat.split('|');
         return { primary, secondary };
       });
+      records = records.filter((r) => {
+        const cats = r.event_categories;
+        if (!cats || cats.length === 0) return false;
+        return filters.some((f) =>
+          cats.some((c) => c.primary === f.primary && (!f.secondary || c.secondary === f.secondary)),
+        );
+      });
     }
 
-    // Parse attributes filter - format: "venue:Indoor,energy:High Energy,timing:Night Event"
-    let attributesFilterToApply = null;
+    // Attributes — `type:value,type:value` (AND across types, OR within a type)
     if (attributes) {
-      attributesFilterToApply = attributes.split(',').reduce((acc, attr) => {
+      const grouped = attributes.split(',').reduce<Record<string, string[]>>((acc, attr) => {
         const [type, value] = attr.split(':');
-        if (!acc[type]) acc[type] = [];
-        acc[type].push(value);
+        if (!type || !value) return acc;
+        (acc[type] ||= []).push(value);
         return acc;
-      }, {} as Record<string, string[]>);
-    }
-
-    // Filter by offers if specified (using string matching for pipe-separated values)
-    if (offers) {
-      const offerList = offers.split(',').map(o => o.trim());
-      const offerConditions = offerList.map(offer => `special_offers.ilike.%${offer}%`).join(',');
-      query = query.or(offerConditions);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return NextResponse.json({
-        success: false,
-        data: [],
-        error: error.message
-      }, { status: 500 });
-    }
-
-    // Apply vibes filter in JavaScript since Supabase array substring search is complex
-    let filteredData = data;
-    if (vibeFilterToApply && vibeFilterToApply.length > 0) {
-      filteredData = data?.filter((record: EventRecord) => {
-        if (!record.event_vibe || !Array.isArray(record.event_vibe)) return false;
-
-        // Check if any of the requested vibes matches any element in the event_vibe array
-        return vibeFilterToApply.some((requestedVibe: string) =>
-          record.event_vibe!.some((eventVibeElement: string) =>
-            eventVibeElement && eventVibeElement.toLowerCase().includes(requestedVibe.toLowerCase())
-          )
-        );
-      });
-    }
-
-    // Apply genre filter in JavaScript
-    if (genreFilterToApply && genreFilterToApply.length > 0) {
-      filteredData = filteredData?.filter((record: EventRecord) => {
-        if (!record.music_genre_processed?.primaries) return false;
-        return genreFilterToApply.some((requestedGenre: string) =>
-          record.music_genre_processed!.primaries.includes(requestedGenre)
-        );
-      });
-    }
-
-    // Apply event categories filter in JavaScript
-    if (eventCategoriesFilterToApply && eventCategoriesFilterToApply.length > 0) {
-      filteredData = filteredData?.filter((record: EventRecord) => {
-        if (!record.event_categories || record.event_categories.length === 0) return false;
-
-        // Event matches if ANY of its categories match the filter (OR logic for multi-category events)
-        return eventCategoriesFilterToApply.some(filterCat => {
-          return record.event_categories!.some(eventCat => {
-            // Check if primary matches
-            if (eventCat.primary !== filterCat.primary) return false;
-
-            // If no secondary specified in filter, primary match is enough
-            if (!filterCat.secondary) return true;
-
-            // Check if secondary matches
-            return eventCat.secondary === filterCat.secondary;
-          });
-        });
-      });
-    }
-
-    // Apply attributes filter in JavaScript (AND logic - all selected attributes must match)
-    if (attributesFilterToApply) {
-      filteredData = filteredData?.filter((record: EventRecord) => {
-        if (!record.attributes) return false;
-
-        // Check each attribute type
-        for (const [type, requiredValues] of Object.entries(attributesFilterToApply)) {
-          const eventValues = record.attributes[type as keyof typeof record.attributes] || [];
-
-          // Check if ANY of the required values for this type match (OR within same type)
-          const hasMatch = requiredValues.some(requiredValue =>
-            eventValues.includes(requiredValue)
-          );
-
-          // If this attribute type doesn't match, exclude the event (AND across types)
-          if (!hasMatch) return false;
+      }, {});
+      records = records.filter((r) => {
+        if (!r.attributes) return false;
+        for (const [type, requiredValues] of Object.entries(grouped)) {
+          const eventValues = (r.attributes as Record<string, string[] | undefined>)[type] || [];
+          if (!requiredValues.some((rv) => eventValues.includes(rv))) return false;
         }
-
         return true;
       });
     }
 
-    // Apply dates filter if specified
-    if (dates && filteredData) {
-      const dateList = dates.split(',').map(d => d.trim());
-      filteredData = filteredData.filter((record: EventRecord) => {
-        if (!record.event_date) return false;
-
-        const eventDate = new Date(record.event_date);
-        if (isNaN(eventDate.getTime())) return false;
-
-        return dateList.some((selectedDate: string) => {
-          try {
-            // Handle both date formats: "17 Sept 25" and "17/September/2025"
-            let selectedDateObj: Date;
-
-            if (selectedDate.includes('/')) {
-              // Old format: "17/September/2025"
-              const [day, monthName, year] = selectedDate.split('/');
-              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                                'July', 'August', 'September', 'October', 'November', 'December'];
-              const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
-              if (monthIndex === -1) return false;
-              selectedDateObj = new Date(parseInt(year), monthIndex, parseInt(day));
-            } else {
-              // New format: "17 Sept 25"
-              const [day, monthPart, year] = selectedDate.split(' ');
-              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-              const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthPart.toLowerCase());
-              if (monthIndex === -1) return false;
-              const fullYear = parseInt(year) < 50 ? 2000 + parseInt(year) : 1900 + parseInt(year);
-              selectedDateObj = new Date(fullYear, monthIndex, parseInt(day));
-            }
-            if (isNaN(selectedDateObj.getTime())) return false;
-
-            // Compare dates (ignoring time) - use UTC to avoid timezone issues
-            const eventDateOnly = new Date(eventDate.getUTCFullYear(), eventDate.getUTCMonth(), eventDate.getUTCDate());
-            const selectedDateOnly = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate());
-
-            return eventDateOnly.getTime() === selectedDateOnly.getTime();
-          } catch {
-            return false;
-          }
+    // Dates filter
+    if (dates) {
+      const list = dates.split(',').map((d) => d.trim());
+      records = records.filter((r) => {
+        if (!r.event_date) return false;
+        const ed = new Date(r.event_date);
+        if (isNaN(ed.getTime())) return false;
+        return list.some((selected) => {
+          const sd = parseSelectedDate(selected);
+          if (!sd || isNaN(sd.getTime())) return false;
+          const a = new Date(ed.getUTCFullYear(), ed.getUTCMonth(), ed.getUTCDate());
+          const b = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate());
+          return a.getTime() === b.getTime();
         });
       });
     }
 
-    // Transform to expected frontend format
-    const transformedData = filteredData?.map(record => ({
-      id: record.id,
-      created_at: record.event_created_at,
-      // Ensure event_date is always in ISO format (YYYY-MM-DD)
-      event_date: record.event_date
-        ? (typeof record.event_date === 'string'
-            ? record.event_date
-            : new Date(record.event_date).toISOString().split('T')[0])
-        : null,
-      event_time: record.event_time,
-      venue_id: record.venue_id, // Include venue_id for grouping
-      venue_name: record.venue_name,
-      artist: Array.isArray(record.artist) ? record.artist.join(', ') : record.artist,
-      music_genre: record.music_genre_processed?.primaries?.join(', ') || '',
-      event_vibe: Array.isArray(record.event_vibe) ? record.event_vibe.join(', ') : record.event_vibe,
-      event_name: record.event_name,
-      ticket_price: record.ticket_price,
-      special_offers: Array.isArray(record.special_offers) ? record.special_offers.join(', ') : record.special_offers,
-      website_social: Array.isArray(record.website_social) ? record.website_social.join(', ') : record.website_social,
-      confidence_score: record.confidence_score,
-      analysis_notes: record.analysis_notes,
-      instagram_id: record.instagram_id,
-      event_categories: record.event_categories,
-      attributes: record.attributes,
-      media_url_1: record.media_url_1 || null,
-      media_type_1: record.media_type_1 || null,
-      media_url_2: record.media_url_2 || null,
-      media_type_2: record.media_type_2 || null
-    })) || [];
+    // Cap to requested limit
+    records = records.slice(0, limit);
 
-    // Deduplicate events based on event.id (preferred) or fallback to event_name + event_date + venue_name
-    // This prevents the same event from appearing multiple times due to OR query matching multiple rows
-    const eventMap = new Map();
-    transformedData.forEach(event => {
-      // Prioritize event.id for deduplication, fallback to composite key
-      const eventKey = event.id?.toString() ||
-        `${event.event_name || event.artist}_${event.event_date}_${event.venue_name}`.toLowerCase().trim();
-      if (!eventMap.has(eventKey)) {
-        eventMap.set(eventKey, event);
-      }
+    // Transform to frontend shape
+    const transformed = records.map((r) => ({
+      id: r.id,
+      created_at: r.event_created_at,
+      event_date: r.event_date
+        ? (typeof r.event_date === 'string'
+            ? r.event_date
+            : new Date(r.event_date).toISOString().split('T')[0])
+        : null,
+      event_time: r.event_time,
+      venue_id: r.venue_id,
+      venue_name: r.venue_name,
+      artist: Array.isArray(r.artist) ? r.artist.join(', ') : r.artist,
+      music_genre: r.music_genre_processed?.primaries?.join(', ') || '',
+      event_vibe: Array.isArray(r.event_vibe) ? r.event_vibe.join(', ') : r.event_vibe,
+      event_name: r.event_name,
+      ticket_price: r.ticket_price,
+      special_offers: Array.isArray(r.special_offers) ? r.special_offers.join(', ') : r.special_offers,
+      website_social: Array.isArray(r.website_social) ? r.website_social.join(', ') : r.website_social,
+      confidence_score: r.confidence_score,
+      analysis_notes: r.analysis_notes,
+      instagram_id: r.instagram_id,
+      event_categories: r.event_categories,
+      attributes: r.attributes,
+      media_url_1: r.media_url_1 || null,
+      media_type_1: r.media_type_1 || null,
+      media_url_2: r.media_url_2 || null,
+      media_type_2: r.media_type_2 || null,
+    }));
+
+    // Dedup
+    const map = new Map<string, typeof transformed[number]>();
+    transformed.forEach((event) => {
+      const key = event.id?.toString()
+        || `${event.event_name || event.artist}_${event.event_date}_${event.venue_name}`.toLowerCase().trim();
+      if (!map.has(key)) map.set(key, event);
     });
-    const deduplicatedData = Array.from(eventMap.values());
+    const dedup = Array.from(map.values());
 
     return NextResponse.json({
       success: true,
-      data: deduplicatedData,
-      message: `Retrieved ${deduplicatedData.length} events from final_1`
+      data: dedup,
+      message: `Retrieved ${dedup.length} events`,
     });
   } catch (error) {
-    console.error('API Error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      data: [],
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      { success: false, data: [], error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 },
+    );
   }
 }

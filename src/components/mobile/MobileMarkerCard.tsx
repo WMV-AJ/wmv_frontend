@@ -20,6 +20,7 @@ import {
   X,
   Target,
 } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics/track';
 
 interface EventCardData {
   event: {
@@ -138,6 +139,11 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
     e.stopPropagation();
     if (venue.venue_instagram) {
       const handle = venue.venue_instagram.replace('@', '').trim();
+      trackEvent('click_instagram', {
+        venue_id: venue.id,
+        instagram_handle: handle,
+        source: 'mobile_card',
+      });
       window.open(`https://www.instagram.com/${handle}`, '_blank');
     }
   };
@@ -152,6 +158,11 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
   const handleShareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (navigator.share) {
+      trackEvent('share_venue', {
+        venue_id: venue.id,
+        event_id: event.id,
+        method: 'native_share',
+      });
       navigator.share({
         title: event.event_name,
         text: `${event.event_name} at ${venue.venue_name}`,

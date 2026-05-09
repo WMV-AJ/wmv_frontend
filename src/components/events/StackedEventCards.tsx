@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Image from 'next/image';
+import { trackEvent } from '@/lib/analytics/track';
 import './StackedEventCards.css';
 
 // ===========================================
@@ -309,6 +310,14 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const handleDetailsToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isDetailsExpanded) {
+      trackEvent('expand_event_card', {
+        event_id: event.id,
+        venue_id: venue.id,
+        event_name: event.event_name,
+        source: 'details_toggle',
+      });
+    }
     setIsDetailsExpanded(!isDetailsExpanded);
   };
 
@@ -693,6 +702,15 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
       setExpandedId(null);
       setContentHeight(0);
       return;
+    }
+    const cardData = cards.find(c => c.event.id === id);
+    if (cardData) {
+      trackEvent('expand_event_card', {
+        event_id: cardData.event.id,
+        venue_id: cardData.venue.id,
+        event_name: cardData.event.event_name,
+        source: 'card_click',
+      });
     }
     setExpandedId(id);
     setTimeout(() => {
