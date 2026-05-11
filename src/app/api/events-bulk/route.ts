@@ -26,7 +26,7 @@ interface EventRecord {
   instagram_id?: string | null;
 }
 
-const WMV_API_BASE = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.WMV_API_BASE || 'http://91.99.102.124:2302').replace(/\/$/, '');
+const WMV_API_BASE = (process.env.WMV_API_BASE || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://91.99.102.124:2302').replace(/\/$/, '');
 
 function parseSelectedDate(raw: string): Date | null {
   const s = raw.trim();
