@@ -15,7 +15,9 @@ interface FilterRecord {
   venue_name?: string;
 }
 
-const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
+// Defaults to prod backend (port 2300, multi-city aware). Override via
+// WMV_API_BASE env var on Vercel / VPS if needed.
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2300';
 
 export async function GET(request: Request) {
   try {

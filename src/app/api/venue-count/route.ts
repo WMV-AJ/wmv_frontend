@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
-const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
+// Defaults to prod backend (port 2300). Override via WMV_API_BASE env var.
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2300';
 
 export async function GET() {
   try {

@@ -3,7 +3,10 @@
 // production Postgres `final_1` table (no Supabase).
 import { NextResponse } from 'next/server';
 
-const WMV_API_BASE = (process.env.WMV_API_BASE || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://91.99.102.124:2302').replace(/\/$/, '');
+// Server-side only. Never read NEXT_PUBLIC_BACKEND_URL here — on Vercel that
+// resolves to the public site URL (wheresmyvibe.com) and causes an infinite
+// proxy loop. Use WMV_API_BASE in Vercel env, or fall back to prod backend.
+const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://91.99.102.124:2300').replace(/\/$/, '');
 
 export async function GET(request: Request) {
   try {
