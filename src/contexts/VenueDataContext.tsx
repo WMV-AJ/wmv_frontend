@@ -1,9 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import type { Venue, FilterOptions } from '@/types';
+import { DEFAULT_CITY, isValidCity, type CitySlug } from '@/config/cities.config';
 
 interface VenueDataContextType {
+  city: CitySlug;
   allVenues: Venue[];
   filterOptions: FilterOptions;
   isLoadingVenues: boolean;
@@ -29,6 +32,7 @@ const defaultFilterOptions: FilterOptions = {
 };
 
 const VenueDataContext = createContext<VenueDataContextType>({
+  city: DEFAULT_CITY,
   allVenues: [],
   filterOptions: defaultFilterOptions,
   isLoadingVenues: true,
@@ -41,7 +45,17 @@ export function useVenueData() {
   return useContext(VenueDataContext);
 }
 
+/** Pull the city slug out of the URL: `/dubai/...` → `dubai`. */
+function extractCityFromPath(pathname: string | null): CitySlug {
+  if (!pathname) return DEFAULT_CITY;
+  const firstSegment = pathname.split('/').filter(Boolean)[0]?.toLowerCase();
+  return isValidCity(firstSegment) ? firstSegment : DEFAULT_CITY;
+}
+
 export function VenueDataProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const city = extractCityFromPath(pathname);
+
   const [allVenues, setAllVenues] = useState<Venue[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>(defaultFilterOptions);
   const [isLoadingVenues, setIsLoadingVenues] = useState(true);
@@ -49,14 +63,14 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
   const [venueError, setVenueError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
 
-  // Fetch venues once on mount — shared across all pages
+  // Re-fetch when the city slug in the URL changes.
   useEffect(() => {
     const fetchVenues = async () => {
       try {
         setIsLoadingVenues(true);
         setVenueError(null);
 
-        const response = await fetch('/api/venues', {
+        const response = await fetch(`/api/venues?city=${encodeURIComponent(city)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -81,16 +95,15 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchVenues();
-  }, []);
+  }, [city]);
 
-  // Fetch filter options once on mount — shared across all pages
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
         setIsLoadingFilters(true);
         setFilterError(null);
 
-        const response = await fetch('/api/filter-options', {
+        const response = await fetch(`/api/filter-options?city=${encodeURIComponent(city)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -115,11 +128,12 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchFilterOptions();
-  }, []);
+  }, [city]);
 
   return (
     <VenueDataContext.Provider
       value={{
+        city,
         allVenues,
         filterOptions,
         isLoadingVenues,

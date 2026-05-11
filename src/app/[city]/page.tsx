@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { getCityConfig, type CitySlug } from '@/config/cities.config';
+import { getCityDateString } from '@/lib/city-date';
 import {
   Heart,
   Map as MapIcon,
@@ -68,20 +70,11 @@ const RADAR_DOTS = [
 
 // ── HELPERS ───────────────────────────────────────────────────────────
 
-function getDubaiDateString(): string {
+function getCityHour(city: CitySlug | string): number {
+  const offsetHours = getCityConfig(city).utcOffsetHours;
   const now = new Date();
-  const dubaiMs = now.getTime() + (4 * 60 * 60 * 1000);
-  const d = new Date(dubaiMs);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function getDubaiHour(): number {
-  const now = new Date();
-  const dubaiMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + 4 * 60) % (24 * 60);
-  return dubaiMinutes / 60;
+  const cityMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + offsetHours * 60) % (24 * 60);
+  return cityMinutes / 60;
 }
 
 function parseTimeHours(s: string): number | null {
@@ -171,8 +164,8 @@ export default function CityHome() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  const todayStr = getDubaiDateString();
-  const dubaiHour = getDubaiHour();
+  const todayStr = getCityDateString(city);
+  const dubaiHour = getCityHour(city);
 
   const todayVenues = venues.filter(v => {
     const d = v.event_date ? new Date(v.event_date) : null;
@@ -572,7 +565,7 @@ export default function CityHome() {
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 14,
           }}>
             <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § B — Tonight in Dubai
+              § B — Tonight in {getCityConfig(city).displayName}
             </div>
             <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
               {loading ? '—' : `${tonightEvents.length} EVENTS →`}

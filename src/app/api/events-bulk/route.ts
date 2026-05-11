@@ -58,8 +58,9 @@ function parseSelectedDate(raw: string): Date | null {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { venue_ids, limit = 10, genres, vibes, offers, dates } = body as {
+    const { venue_ids, city, limit = 10, genres, vibes, offers, dates } = body as {
       venue_ids?: number[];
+      city?: string;
       limit?: number;
       genres?: string[] | string;
       vibes?: string[] | string;
@@ -74,7 +75,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+    const upstreamUrl = city
+      ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
+      : `${WMV_API_BASE}/api/events`;
+    const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
     if (!upstream.ok) {
       return NextResponse.json(
         { success: false, data: {}, error: `Upstream ${upstream.status}: ${upstream.statusText}` },

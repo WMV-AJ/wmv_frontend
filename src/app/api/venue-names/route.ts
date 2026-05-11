@@ -5,9 +5,14 @@ import { NextResponse } from 'next/server';
 
 const WMV_API_BASE = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.WMV_API_BASE || 'http://91.99.102.124:2302').replace(/\/$/, '');
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+    const { searchParams } = new URL(request.url);
+    const city = searchParams.get('city');
+    const upstreamUrl = city
+      ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
+      : `${WMV_API_BASE}/api/events`;
+    const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
     if (!upstream.ok) {
       return NextResponse.json(
         { success: false, data: [], error: `Upstream ${upstream.status}: ${upstream.statusText}` },

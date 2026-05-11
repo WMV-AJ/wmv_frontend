@@ -17,7 +17,7 @@ interface FilterRecord {
 
 const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
 
     // Force parameters to empty for client-side filtering
@@ -26,10 +26,16 @@ export async function GET() {
     const activeDates: string[] = [];
     const activeGenres: string[] = [];
 
+    const { searchParams } = new URL(request.url);
+    const city = searchParams.get('city');
+    const upstreamUrl = city
+      ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
+      : `${WMV_API_BASE}/api/events`;
+
     // Fetch from upstream WMV backend
     let data: any[] = [];
     try {
-      const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+      const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
       if (!upstream.ok) {
         console.error('Upstream error:', upstream.status, upstream.statusText);
         return NextResponse.json({

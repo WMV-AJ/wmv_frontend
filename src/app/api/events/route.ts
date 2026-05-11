@@ -72,6 +72,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const venue_id = searchParams.get('venue_id');
+    const city = searchParams.get('city');
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const genres = searchParams.get('genres');
     const vibes = searchParams.get('vibes');
@@ -80,7 +81,10 @@ export async function GET(request: Request) {
     const eventCategories = searchParams.get('eventCategories');
     const attributes = searchParams.get('attributes');
 
-    const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+    const upstreamUrl = city
+      ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
+      : `${WMV_API_BASE}/api/events`;
+    const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
     if (!upstream.ok) {
       return NextResponse.json(
         { success: false, data: [], error: `Upstream ${upstream.status}: ${upstream.statusText}` },

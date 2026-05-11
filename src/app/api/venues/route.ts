@@ -23,9 +23,9 @@ interface VenueResponse {
   rating_count: number;
 }
 
-const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2302';
+const WMV_API_BASE = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.WMV_API_BASE || 'http://91.99.102.124:2302').replace(/\/$/, '');
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Force client-side filtering by ignoring all parameters
 
@@ -35,13 +35,21 @@ export async function GET() {
     const activeDates: string[] = [];
     const activeGenres: string[] = [];
 
+    // Multi-city: forward `?city=` to the backend so the venue list is scoped.
+    // Falls back to all-cities if omitted (back-compat with old callers).
+    const { searchParams } = new URL(request.url);
+    const city = searchParams.get('city');
+    const upstreamUrl = city
+      ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
+      : `${WMV_API_BASE}/api/events`;
+
     // Fetch from upstream WMV backend (joins events + venues from final_1 already).
     // Upstream records have 40+ fields; we keep loose typing here since this route
     // acts as a translation layer that strictly shapes the response at the bottom.
     /* eslint-disable @typescript-eslint/no-explicit-any */
     let upstreamData: any[] = [];
     try {
-      const upstream = await fetch(`${WMV_API_BASE}/api/events`, { cache: 'no-store' });
+      const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
       if (!upstream.ok) {
         console.error('Upstream error:', upstream.status, upstream.statusText);
         return NextResponse.json({

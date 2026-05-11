@@ -1,77 +1,73 @@
-// Google Maps Mobile Configuration for Dubai Event Discovery Mobile Web App
+// Google Maps Mobile Configuration — multi-city aware.
 
-import { DUBAI_CENTER, RETRO_MAP_STYLE, type LatLng } from '@/types';
+import { RETRO_MAP_STYLE, type LatLng } from '@/types';
+import { getCityConfig, DEFAULT_CITY, type CitySlug } from '@/config/cities.config';
 
 // Google Maps API Configuration
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-// Throw helpful error if API key is missing
 if (!apiKey && process.env.NODE_ENV === 'development') {
   console.error('❌ CRITICAL: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not defined!');
   console.error('Available env vars:', Object.keys(process.env).filter(k => k.startsWith('NEXT_PUBLIC')));
 }
 
-export const GOOGLE_MAPS_CONFIG = {
-  apiKey: apiKey || '',
-  libraries: ['places', 'geometry'] as never[],
-  language: 'en',
-  region: 'AE', // United Arab Emirates
+/**
+ * Google Maps loader config. `region` is now city-aware — it biases geocoding /
+ * autocomplete results toward the right country. Use `getGoogleMapsConfig(city)`
+ * when initializing the loader from a city-scoped page.
+ */
+export function getGoogleMapsConfig(city: CitySlug | string = DEFAULT_CITY) {
+  return {
+    apiKey: apiKey || '',
+    libraries: ['places', 'geometry'] as never[],
+    language: 'en',
+    region: getCityConfig(city).region,
+  };
+}
+
+// Backwards-compatible default — points at Dubai. Prefer `getGoogleMapsConfig(city)`.
+export const GOOGLE_MAPS_CONFIG = getGoogleMapsConfig('dubai');
+
+/** @deprecated — read from `getCityConfig(city).mapBounds`. */
+export const DUBAI_BOUNDS = getCityConfig('dubai').mapBounds;
+
+/**
+ * Map options factory. Pass the city slug from your page (extracted via
+ * `useParams()`) so the map centers / restricts on the right city.
+ */
+export const getMapOptions = (city: CitySlug | string = DEFAULT_CITY): google.maps.MapOptions => {
+  const cfg = getCityConfig(city);
+  return {
+    center: cfg.mapCenter,
+    zoom: cfg.defaultZoom,
+    styles: RETRO_MAP_STYLE,
+    disableDefaultUI: true,
+    gestureHandling: 'greedy', // Mobile-optimized: allows single-finger map interaction
+    mapTypeId: 'roadmap',
+    clickableIcons: false,
+    maxZoom: 18,
+    minZoom: 10,
+    restriction: {
+      latLngBounds: cfg.mapBounds,
+      strictBounds: false,
+    },
+    ...(typeof google !== 'undefined' && google.maps ? {
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT,
+      },
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_CENTER,
+      },
+      streetViewControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_CENTER,
+      },
+    } : {}),
+  };
 };
 
-// Dubai Map Bounds (approximate)
-export const DUBAI_BOUNDS = {
-  north: 25.4,
-  south: 24.8,
-  east: 55.6,
-  west: 54.8,
-};
-
-// Map Options Configuration - Using factory function to avoid SSR issues
-export const getMapOptions = (): google.maps.MapOptions => ({
-  center: DUBAI_CENTER,
-  zoom: 12,
-  styles: RETRO_MAP_STYLE,
-  disableDefaultUI: true,
-  gestureHandling: 'greedy', // Mobile-optimized: allows single-finger map interaction
-  mapTypeId: 'roadmap',
-  clickableIcons: false,
-  maxZoom: 18,
-  minZoom: 10,
-  restriction: {
-    latLngBounds: DUBAI_BOUNDS,
-    strictBounds: false,
-  },
-  ...(typeof google !== 'undefined' && google.maps ? {
-    // Custom map styling options - only when google is available
-    mapTypeControlOptions: {
-      style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-      position: google.maps.ControlPosition.TOP_RIGHT,
-    },
-    zoomControlOptions: {
-      position: google.maps.ControlPosition.RIGHT_CENTER,
-    },
-    streetViewControlOptions: {
-      position: google.maps.ControlPosition.RIGHT_CENTER,
-    },
-  } : {})
-});
-
-// Fallback for components that still expect MAP_OPTIONS
-export const MAP_OPTIONS = {
-  center: DUBAI_CENTER,
-  zoom: 12,
-  styles: RETRO_MAP_STYLE,
-  disableDefaultUI: true,
-  gestureHandling: 'greedy', // Mobile-optimized: allows single-finger map interaction
-  mapTypeId: 'roadmap',
-  clickableIcons: false,
-  maxZoom: 18,
-  minZoom: 10,
-  restriction: {
-    latLngBounds: DUBAI_BOUNDS,
-    strictBounds: false,
-  },
-} as google.maps.MapOptions;
+// Backwards-compatible default — points at Dubai. Prefer `getMapOptions(city)`.
+export const MAP_OPTIONS = getMapOptions('dubai');
 
 // Custom Map Controls Configuration
 export const MAP_CONTROLS = {
@@ -117,13 +113,12 @@ export const calculateDistance = (point1: LatLng, point2: LatLng): number => {
   return R * c; // Distance in kilometers
 };
 
-export const isPointInDubai = (point: LatLng): boolean => {
-  return (
-    point.lat >= DUBAI_BOUNDS.south &&
-    point.lat <= DUBAI_BOUNDS.north &&
-    point.lng >= DUBAI_BOUNDS.west &&
-    point.lng <= DUBAI_BOUNDS.east
-  );
+/** @deprecated — use `isPointInCity(point, citySlug)`. */
+export const isPointInDubai = (point: LatLng): boolean => isPointInCity(point, 'dubai');
+
+export const isPointInCity = (point: LatLng, city: CitySlug | string): boolean => {
+  const b = getCityConfig(city).mapBounds;
+  return point.lat >= b.south && point.lat <= b.north && point.lng >= b.west && point.lng <= b.east;
 };
 
 // Map Event Handlers
