@@ -26,12 +26,13 @@ import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/ma
 import { getDisplayName } from '@/lib/category-mappings';
 import { type Venue, type HierarchicalFilterState } from '@/types';
 import {
-  MAPCN_CENTER,
   MAPCN_ZOOM,
   MAPCN_MIN_ZOOM,
   MAPCN_MAX_ZOOM,
-  MAPCN_BOUNDS,
+  getMapCenter,
+  getMapBounds,
 } from '@/lib/mapcn-config';
+import { getCityConfig } from '@/config/cities.config';
 
 function getVenueColor(venue: Venue): string {
   return getMarkerColorScheme(venue).svgColor;
@@ -218,8 +219,8 @@ export default function CityMapPage() {
       expandedPrimaries: [],
     },
     attributes: { venue: [], energy: [], timing: [], status: [] },
-    selectedAreas: ['All Dubai'],
-    activeDates: [new Date().toDateString()],
+    selectedAreas: [getCityConfig(city).defaultAreaLabel],
+    activeDates: [], // No date filter by default — let the city's events surface regardless of "today"
     activeOffers: [],
     searchQuery: '',
   });
@@ -485,11 +486,11 @@ export default function CityMapPage() {
 
         <div className="absolute inset-0">
           <MapView
-            center={MAPCN_CENTER}
+            center={getMapCenter(city)}
             zoom={MAPCN_ZOOM}
             minZoom={MAPCN_MIN_ZOOM}
             maxZoom={MAPCN_MAX_ZOOM}
-            maxBounds={MAPCN_BOUNDS}
+            maxBounds={getMapBounds(city)}
             theme="dark"
             className="w-full h-full"
           >

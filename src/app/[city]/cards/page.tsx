@@ -14,11 +14,13 @@ import {
   getCategoryColorForStackedCards,
   transformSupabaseDataToStackedCards
 } from '@/lib/stacked-card-adapter';
+import { getCityConfig } from '@/config/cities.config';
 
 export default function CityCardsPage() {
   const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
+  const cityConfig = getCityConfig(city);
 
   const [filters, setFilters] = useState<HierarchicalFilterState>({
     selectedPrimaries: { genres: [], vibes: [] },
@@ -26,8 +28,8 @@ export default function CityCardsPage() {
     expandedPrimaries: { genres: [], vibes: [] },
     eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
     attributes: { venue: [], energy: [], timing: [], status: [] },
-    selectedAreas: ['All Dubai'],
-    activeDates: [new Date().toDateString()],
+    selectedAreas: [cityConfig.defaultAreaLabel], // "All Dubai" / "All Bangalore"
+    activeDates: [], // No date filter by default — show every available date for this city
     activeOffers: [],
     searchQuery: ''
   });

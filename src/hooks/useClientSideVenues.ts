@@ -62,9 +62,16 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
     // Convert hierarchical state to flat state for filtering
     const flatFilters = convertHierarchicalToFlat(filters);
 
+    // Recognise any "All <City>" sentinel as a no-op area filter. Per the
+    // city config, that's "All Dubai" / "All Bangalore" / etc.
+    const isAllCitySentinel = (s: string) => typeof s === 'string' && /^All\s+/i.test(s);
+
     return allVenues.filter(venue => {
-      // Apply area filter
-      if (flatFilters.selectedAreas?.length > 0 && !flatFilters.selectedAreas.includes('All Dubai')) {
+      // Apply area filter — bypassed when any selectedArea is the "All <City>" sentinel
+      if (
+        flatFilters.selectedAreas?.length > 0 &&
+        !flatFilters.selectedAreas.some(isAllCitySentinel)
+      ) {
         const venueArea = venue.area || venue.venue_area;
         if (!venueArea) return false;
 

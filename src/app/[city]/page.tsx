@@ -145,7 +145,7 @@ export default function CityHome() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/venues').then(r => r.json()),
+      fetch(`/api/venues?city=${encodeURIComponent(city)}`).then(r => r.json()),
       fetch('/api/venue-count').then(r => r.json()),
     ])
       .then(([venues, vc]) => {
@@ -154,7 +154,7 @@ export default function CityHome() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [city]);
 
   useEffect(() => {
     if (loading) return;
