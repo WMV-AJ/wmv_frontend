@@ -1,5 +1,6 @@
 import type { HierarchicalFilterState } from '@/types';
 import { COLOR_HEX_MAP, getCategoryColor, getHexColor } from '@/lib/category-mappings';
+import { hasAllCitySentinel } from '@/lib/city-helpers';
 
 export interface FilterColorScheme {
   hexColor: string;
@@ -28,7 +29,7 @@ function hasActiveFilters(filters: HierarchicalFilterState): boolean {
     // Areas filter (excluding "All Dubai")
     (filters.selectedAreas &&
      filters.selectedAreas.length > 0 &&
-     !filters.selectedAreas.includes('All Dubai')) ||
+     !hasAllCitySentinel(filters.selectedAreas)) ||
     // Offers filter
     (filters.activeOffers && filters.activeOffers.length > 0) ||
     // Attributes filters
@@ -132,7 +133,7 @@ export function getActiveFilterColorScheme(
   // Priority 5: Areas
   if (filters.selectedAreas &&
       filters.selectedAreas.length > 0 &&
-      !filters.selectedAreas.includes('All Dubai')) {
+      !hasAllCitySentinel(filters.selectedAreas)) {
     return {
       hexColor: COLOR_HEX_MAP.blue,
       colorName: 'blue',

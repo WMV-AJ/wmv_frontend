@@ -253,7 +253,9 @@ export function transformSupabaseDataToStackedCards(
         venue_name: venue.name || 'Venue',
         venue_rating: venue.rating || 4.0,
         venue_review_count: venue.rating_count || 0,
-        venue_location: venue.area || 'Dubai',
+        // Fallback when the venue doesn't have an area set — leave empty
+        // rather than hardcoding a city, since cards now span multiple cities.
+        venue_location: venue.area || '',
         venue_instagram: venue.final_instagram,
         venue_phone: venue.phone,
         venue_coordinates: (venue.venue_lat && venue.venue_lng) ? {

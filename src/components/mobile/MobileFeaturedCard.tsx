@@ -39,7 +39,11 @@ const MobileFeaturedCard: React.FC<MobileFeaturedCardProps> = ({ card, onClick }
   const { event, venue } = card;
 
   const priceDisplay = event.event_entry_price;
-  const isFree = priceDisplay === 'Free' || priceDisplay === 'AED 0' || priceDisplay?.toLowerCase().includes('free');
+  // "Free" / "AED 0" / "INR 0" / "₹ 0" — all considered "free".
+  const isFree =
+    priceDisplay === 'Free' ||
+    priceDisplay?.toLowerCase().includes('free') ||
+    /^(aed|inr|₹|\$|£)\s*0(\b|$)/i.test(priceDisplay || '');
 
   return (
     <div

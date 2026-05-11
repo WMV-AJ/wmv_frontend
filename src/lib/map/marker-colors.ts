@@ -1,10 +1,11 @@
 import type { HierarchicalFilterState } from '@/types';
-import { 
-  COLOR_HEX_MAP, 
-  getCategoryColor, 
-  getHexColor, 
-  getGoogleMapsColor 
+import {
+  COLOR_HEX_MAP,
+  getCategoryColor,
+  getHexColor,
+  getGoogleMapsColor
 } from '@/lib/category-mappings';
+import { hasAllCitySentinel, isAllCitySentinel } from '@/lib/city-helpers';
 
 export type MarkerColorScheme = {
   primary: string;
@@ -65,7 +66,7 @@ function hasActiveFilters(filters?: HierarchicalFilterState): boolean {
   return (
     (filters.activeVibes && filters.activeVibes.length > 0) ||
     (filters.activeGenres && filters.activeGenres.length > 0) ||
-    (filters.selectedAreas && filters.selectedAreas.length > 0 && !filters.selectedAreas.includes('All Dubai')) ||
+    (filters.selectedAreas && filters.selectedAreas.length > 0 && !hasAllCitySentinel(filters.selectedAreas)) ||
     (filters.activeOffers && filters.activeOffers.length > 0) ||
     (filters.eventCategories && filters.eventCategories.selectedPrimaries.length > 0)
   );
@@ -83,8 +84,8 @@ function getActiveFilterType(filters?: HierarchicalFilterState): string {
   }
   if (filters.activeVibes && filters.activeVibes.length > 0) return 'vibes';
   if (filters.activeGenres && filters.activeGenres.length > 0) return 'genres';
-  if (filters.selectedAreas && filters.selectedAreas.length > 0 && 
-      !filters.selectedAreas.includes('All Dubai')) return 'areas';
+  if (filters.selectedAreas && filters.selectedAreas.length > 0 &&
+      !hasAllCitySentinel(filters.selectedAreas)) return 'areas';
   if (filters.activeOffers && filters.activeOffers.length > 0) return 'offers';
   
   return 'default';
@@ -190,8 +191,8 @@ export function doesVenueMatchFilters(
       
     case 'areas':
       // Check if venue is in any of the selected areas
-      return filters.selectedAreas?.some(area => 
-        area === 'All Dubai' || 
+      return filters.selectedAreas?.some(area =>
+        isAllCitySentinel(area) ||
         venue.area?.toLowerCase().includes(area.toLowerCase())
       ) || false;
       

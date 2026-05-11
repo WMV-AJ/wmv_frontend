@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Venue, FilterState } from '@/types';
+import { hasAllCitySentinel } from '@/lib/city-helpers';
 
 export function useVenues(filters?: FilterState) {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -20,7 +21,7 @@ export function useVenues(filters?: FilterState) {
         const searchParams = new URLSearchParams();
         searchParams.set('t', Date.now().toString());
         
-        if (filters?.selectedAreas?.length && !filters.selectedAreas.includes('All Dubai')) {
+        if (filters?.selectedAreas?.length && !hasAllCitySentinel(filters.selectedAreas)) {
           searchParams.set('areas', filters.selectedAreas.join(','));
         }
         if (filters?.activeVibes?.length) {

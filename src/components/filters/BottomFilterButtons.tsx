@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, MapPin, Sparkles, Gift, ChevronUp, Music } from 'lucide-react';
 import type { FilterState } from '@/types';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
+import { isAllCitySentinel, hasAllCitySentinel } from '@/lib/city-helpers';
 
 interface BottomFilterButtonsProps {
   filters: FilterState;
@@ -21,14 +22,15 @@ const BottomFilterButtons: React.FC<BottomFilterButtonsProps> = ({
   const { filterOptions, isLoading, error } = useFilterOptions();
 
   const toggleArea = (area: string) => {
-    if (area === 'All Dubai') {
-      onFiltersChange({ ...filters, selectedAreas: ['All Dubai'] });
+    const existingAllSentinel = filters.selectedAreas.find(isAllCitySentinel) || 'All Dubai';
+    if (isAllCitySentinel(area)) {
+      onFiltersChange({ ...filters, selectedAreas: [area] });
     } else {
-      const currentAreas = filters.selectedAreas.filter(a => a !== 'All Dubai');
+      const currentAreas = filters.selectedAreas.filter(a => !isAllCitySentinel(a));
       const newAreas = currentAreas.includes(area)
         ? currentAreas.filter(a => a !== area)
         : [...currentAreas, area];
-      const finalAreas = newAreas.length === 0 ? ['All Dubai'] : newAreas;
+      const finalAreas = newAreas.length === 0 ? [existingAllSentinel] : newAreas;
       onFiltersChange({ ...filters, selectedAreas: finalAreas });
     }
   };
@@ -80,7 +82,7 @@ const BottomFilterButtons: React.FC<BottomFilterButtonsProps> = ({
           {/* Area Filter Button */}
           <button
             onClick={() => toggleFilter('area')}
-            className={getFilterButtonStyle('area', !filters.selectedAreas.includes('All Dubai') || filters.selectedAreas.length > 1)}
+            className={getFilterButtonStyle('area', !hasAllCitySentinel(filters.selectedAreas) || filters.selectedAreas.length > 1)}
           >
             <MapPin className="h-6 w-6 mb-1" />
             <span className="text-xs font-bold">Area</span>
@@ -159,15 +161,22 @@ const BottomFilterButtons: React.FC<BottomFilterButtonsProps> = ({
                     <h3 className="text-white font-semibold text-lg leading-none">Select Area</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-3 max-h-[30vh] overflow-y-auto scrollbar-thin">
-                    <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/50 cursor-pointer touch-manipulation transition-all duration-200 group">
-                      <input
-                        type="checkbox"
-                        checked={filters.selectedAreas.includes('All Dubai')}
-                        onChange={() => toggleArea('All Dubai')}
-                        className="w-5 h-5 text-yellow-500 focus:ring-yellow-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800"
-                      />
-                      <span className="text-white text-sm font-medium leading-none group-hover:text-yellow-100">All Dubai</span>
-                    </label>
+                    {(() => {
+                      // The "All <City>" sentinel for the current city (read from filters,
+                      // falls back to "All Dubai" for legacy state).
+                      const allSentinel = filters.selectedAreas.find(isAllCitySentinel) || 'All Dubai';
+                      return (
+                        <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/50 cursor-pointer touch-manipulation transition-all duration-200 group">
+                          <input
+                            type="checkbox"
+                            checked={hasAllCitySentinel(filters.selectedAreas)}
+                            onChange={() => toggleArea(allSentinel)}
+                            className="w-5 h-5 text-yellow-500 focus:ring-yellow-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800"
+                          />
+                          <span className="text-white text-sm font-medium leading-none group-hover:text-yellow-100">{allSentinel}</span>
+                        </label>
+                      );
+                    })()}
                     {isLoading ? (
                       <div className="text-center py-4">
                         <span className="text-gray-400 text-sm">Loading areas...</span>

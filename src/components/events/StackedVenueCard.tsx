@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Venue, Event } from '@/types';
 import { Clock, Calendar, DollarSign, Music, Gift, Instagram, Phone, Share2, Navigation } from 'lucide-react';
 import { getCardColor, formatDateDisplay, formatTimeDisplay } from '@/lib/card-color-utils';
+import { formatPrice } from '@/config/cities.config';
 
 interface StackedVenueCardProps {
   venue: Venue;
@@ -224,7 +225,7 @@ export const StackedVenueCard: React.FC<StackedVenueCardProps> = ({
                 </div>
                 <div className="info-content">
                   <div className="info-label">ENTRY</div>
-                  <div className="info-value">AED {firstEvent.ticket_price}</div>
+                  <div className="info-value">{formatPrice(firstEvent.ticket_price as any, (venue as any).city)}</div>
                 </div>
               </div>
             )}

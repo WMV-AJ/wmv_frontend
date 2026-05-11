@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import type { Venue, Event } from '@/types';
 import { MapPin, Clock, Calendar, DollarSign, Music, Gift } from 'lucide-react';
+import { formatPrice } from '@/config/cities.config';
 
 interface ExpandableVenueCardProps {
   venue: Venue;
@@ -256,7 +257,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
               ENTRY
             </div>
             <div style={{ fontSize: '14px', color: '#3d3a36', fontWeight: 500 }}>
-              AED {firstEvent.ticket_price}
+              {formatPrice(firstEvent.ticket_price as any, (venue as any).city)}
             </div>
           </div>
         </div>

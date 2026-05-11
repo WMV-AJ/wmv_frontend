@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import PillButton from './PillButton';
 import DatePresets from './DatePresets';
+import { isAllCitySentinel } from '@/lib/city-helpers';
 
 interface FilterSectionConfig {
   id: string;
@@ -30,18 +31,22 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   const handlePillClick = (option: string) => {
     const { selectedValues, id } = section;
 
-    // Special handling for areas - "All Dubai" logic
+    // Special handling for areas — "All <City>" sentinel logic
     if (id === 'selectedAreas') {
-      if (option === 'All Dubai') {
-        onSelectionChange(['All Dubai']);
+      // The current "All <City>" sentinel for this filter (e.g. "All Dubai",
+      // "All Bangalore"). Falls back to "All Dubai" if none is in state yet.
+      const existingAllSentinel = selectedValues.find(isAllCitySentinel) || 'All Dubai';
+
+      if (isAllCitySentinel(option)) {
+        onSelectionChange([option]);
       } else {
-        const currentAreas = selectedValues.filter(a => a !== 'All Dubai');
+        const currentAreas = selectedValues.filter(a => !isAllCitySentinel(a));
         const newAreas = currentAreas.includes(option)
           ? currentAreas.filter(a => a !== option)
           : [...currentAreas, option];
 
-        // If no specific areas selected, default to "All Dubai"
-        const finalAreas = newAreas.length === 0 ? ['All Dubai'] : newAreas;
+        // If no specific areas selected, snap back to the "All <City>" sentinel.
+        const finalAreas = newAreas.length === 0 ? [existingAllSentinel] : newAreas;
         onSelectionChange(finalAreas);
       }
     } else {
@@ -68,7 +73,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     }
   };
 
-  const selectedCount = section.selectedValues.filter(v => v !== 'All Dubai').length;
+  const selectedCount = section.selectedValues.filter(v => !isAllCitySentinel(v)).length;
 
   return (
     <div className={`filter-section ${section.isExpanded ? 'col-span-2' : ''}`}>

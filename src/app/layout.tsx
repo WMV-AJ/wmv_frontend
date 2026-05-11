@@ -41,14 +41,16 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Where's My Vibe - Dubai Event Discovery",
-  description: "Discover the hottest events, venues, and nightlife in Dubai through real-time Instagram stories and venue data.",
+  // Generic across cities. Per-city pages (e.g. /[city]/page.tsx) can override
+  // via their own `generateMetadata` for SEO-targeted titles.
+  title: "Where's My Vibe - Event Discovery",
+  description: "Discover the hottest events, venues, and nightlife through real-time Instagram stories and venue data.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Where's My Vibe",
   },
-  keywords: ["Dubai events", "Dubai nightlife", "Dubai venues", "Dubai clubs", "Dubai restaurants", "Dubai entertainment", "Where's My Vibe"],
+  keywords: ["events", "nightlife", "venues", "clubs", "restaurants", "entertainment", "Dubai", "Bangalore", "Where's My Vibe"],
   authors: [{ name: "Where's My Vibe Team" }],
   creator: "Where's My Vibe",
   publisher: "Where's My Vibe",
@@ -72,8 +74,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Where's My Vibe - Dubai Event Discovery",
-    description: "Discover the hottest events, venues, and nightlife in Dubai through real-time Instagram stories and venue data.",
+    title: "Where's My Vibe - Event Discovery",
+    description: "Discover the hottest events, venues, and nightlife through real-time Instagram stories and venue data.",
     url: "https://wheresmyvibe.com",
     siteName: "Where's My Vibe",
     locale: "en_US",
@@ -81,8 +83,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Where's My Vibe - Dubai Event Discovery",
-    description: "Discover the hottest events, venues, and nightlife in Dubai through real-time Instagram stories and venue data.",
+    title: "Where's My Vibe - Event Discovery",
+    description: "Discover the hottest events, venues, and nightlife through real-time Instagram stories and venue data.",
     creator: "@wheresmyvibe",
   },
 };

@@ -3,6 +3,7 @@
 import React from 'react';
 import { MapPin, Clock } from 'lucide-react';
 import type { Venue } from '@/types';
+import { formatPrice } from '@/config/cities.config';
 
 interface SplitViewEventCardProps {
   venue: Venue;
@@ -80,9 +81,7 @@ const SplitViewEventCard: React.FC<SplitViewEventCardProps> = ({
             <span className="text-gray-400 text-[11px] ml-auto">
               {ticketPrice === 0 || ticketPrice === '0' || ticketPrice === 'Free'
                 ? 'Free'
-                : typeof ticketPrice === 'number'
-                  ? `AED ${ticketPrice}`
-                  : ticketPrice}
+                : formatPrice(ticketPrice as any, (venue as any).city)}
             </span>
           )}
         </div>

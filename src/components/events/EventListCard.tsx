@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatPrice } from '@/config/cities.config';
 import {
   Calendar,
   Clock,
@@ -249,7 +250,7 @@ const EventListCard: React.FC<EventListCardProps> = ({
                         .filter(Boolean)
                     )).map((price, idx) => (
                       <Badge key={`price-${idx}`} variant="outline" className="bg-blue-50">
-                        AED {price}
+                        {formatPrice(price as any, (venue as any).city)}
                       </Badge>
                     ))}
 

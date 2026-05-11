@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatPrice } from '@/config/cities.config';
 import {
   ArrowLeft,
   Share2,
@@ -200,7 +201,7 @@ export default function EventDetailPage() {
     lines.push(event.event_name);
     lines.push(event.venue_name_original || event.venue_name || '');
     if (event.ticket_price) {
-      const priceText = `AED ${event.ticket_price}`;
+      const priceText = formatPrice(event.ticket_price as any, (event as any).city ?? (params?.city as string));
       lines.push(event.special_offers && !event.special_offers.toLowerCase().includes('no special')
         ? `${priceText} (${event.special_offers})`
         : priceText);
@@ -576,7 +577,7 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-3">
               <DollarSign className="w-[18px] h-[18px] flex-shrink-0" style={{ color: iconColor }} />
               <span className="text-[15px] text-gray-600">
-                <span className="text-emerald-600 font-semibold">AED {event.ticket_price}</span>
+                <span className="text-emerald-600 font-semibold">{formatPrice(event.ticket_price as any, (event as any).city ?? (params?.city as string))}</span>
                 {event.special_offers && !event.special_offers.toLowerCase().includes('no special') && (
                   <span className="text-amber-600 ml-2">· {event.special_offers}</span>
                 )}
@@ -1038,7 +1039,7 @@ export default function EventDetailPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-[14px]">🎟</span>
                   <span className="text-[13px] text-gray-700">
-                    AED {event.ticket_price}
+                    {formatPrice(event.ticket_price as any, (event as any).city ?? (params?.city as string))}
                     {event.special_offers && !event.special_offers.toLowerCase().includes('no special') && (
                       <span> ({event.special_offers})</span>
                     )}

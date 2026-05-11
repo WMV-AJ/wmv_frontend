@@ -7,6 +7,7 @@ import { HierarchicalFilterState } from '@/types';
 import FilterSection from './FilterSection';
 import FilterActionBar from './FilterActionBar';
 import { trackEvent } from '@/lib/analytics/track';
+import { isAllCitySentinel } from '@/lib/city-helpers';
 
 interface FilterBottomSheetProps {
   isOpen: boolean;
@@ -235,11 +236,14 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   };
 
   const handleClearAll = () => {
+    // Preserve the current city's "All <City>" sentinel on clear (so a
+    // Bangalore page clear doesn't reset to "All Dubai" and vice versa).
+    const existingAllSentinel = tempFilters.selectedAreas.find(isAllCitySentinel) || 'All Dubai';
     const clearedFilters: HierarchicalFilterState = {
       selectedPrimaries: { genres: [], vibes: [] },
       selectedSecondaries: { genres: {}, vibes: {} },
       expandedPrimaries: { genres: [], vibes: [] },
-      selectedAreas: ['All Dubai'],
+      selectedAreas: [existingAllSentinel],
       activeDates: [],
       activeOffers: [],
       searchQuery: '',
@@ -257,15 +261,17 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   const getAllSelectedFilters = () => {
     const selected: Array<{ label: string; type: string; color: string; onRemove: () => void }> = [];
 
-    // Areas (exclude "All Dubai")
-    tempFilters.selectedAreas.filter(area => area !== 'All Dubai').forEach(area => {
+    const existingAllSentinel = tempFilters.selectedAreas.find(isAllCitySentinel) || 'All Dubai';
+
+    // Areas (exclude the "All <City>" sentinel)
+    tempFilters.selectedAreas.filter(area => !isAllCitySentinel(area)).forEach(area => {
       selected.push({
         label: area,
         type: 'area',
         color: 'bg-[#B9D3C2]/80 border-[#B9D3C2]',
         onRemove: () => {
           const newAreas = tempFilters.selectedAreas.filter(a => a !== area);
-          const finalAreas = newAreas.length === 0 ? ['All Dubai'] : newAreas;
+          const finalAreas = newAreas.length === 0 ? [existingAllSentinel] : newAreas;
           handleFilterChange('selectedAreas', finalAreas);
         }
       });
@@ -515,7 +521,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                   onApply={handleApply}
                   hasUnsavedChanges={hasUnsavedChanges}
                   selectedCount={
-                    tempFilters.selectedAreas.filter(a => a !== 'All Dubai').length +
+                    tempFilters.selectedAreas.filter(a => !isAllCitySentinel(a)).length +
                     tempFilters.activeDates.length +
                     (tempFilters.selectedRatings || []).length +
                     (tempFilters.selectedTimes || []).length +
