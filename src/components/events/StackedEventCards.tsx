@@ -418,7 +418,11 @@ const EventCard: React.FC<EventCardProps> = ({
                 quality={50}
                 className="stacked-card-thumb"
                 style={thumbStyle}
-                loading="eager"
+                // Only the top card (index 0) is the LCP candidate; lazy-load
+                // the rest so they don't compete for download bandwidth on
+                // the initial paint.
+                loading={index === 0 ? 'eager' : 'lazy'}
+                priority={index === 0}
                 sizes="(max-width: 500px) 96px, 128px"
                 onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }}
               />
