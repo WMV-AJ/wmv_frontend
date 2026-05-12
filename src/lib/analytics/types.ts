@@ -38,6 +38,8 @@ export interface TrackPayload {
   language?: string;
   timezone?: string;
   screen_size?: string;
+  /** Active city slug — derived from the URL pathname. NULL on legacy paths. */
+  city?: string;
 }
 
 export type ConsentStatus = 'granted' | 'denied' | 'undecided';

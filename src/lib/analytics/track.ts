@@ -17,6 +17,16 @@ import type {
   ConsentStatus,
   TrackPayload,
 } from './types';
+import { ALL_CITIES } from '@/config/cities.config';
+
+/** Derive the city slug from the current URL. Returns null for non-city paths
+ *  (login, auth, etc.). The backend further validates against ALL_CITIES, but
+ *  doing it client-side keeps the wire format clean. */
+function extractCityFromPath(): string | null {
+  if (!isBrowser()) return null;
+  const first = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase();
+  return first && (ALL_CITIES as readonly string[]).includes(first) ? first : null;
+}
 
 const ANONYMOUS_ID_KEY = 'wmv_anonymous_id';
 const SESSION_ID_KEY = 'wmv_session_id';
@@ -169,6 +179,7 @@ function buildPayload(
     language: lang,
     timezone: tz,
     screen_size,
+    city: extractCityFromPath() ?? undefined,
   };
 }
 

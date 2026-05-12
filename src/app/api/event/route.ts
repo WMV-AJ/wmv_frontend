@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Defaults to prod backend (port 2300, multi-city aware). Override via
-// WMV_API_BASE env var on Vercel / VPS if needed.
-const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2300';
+// FE + BE are co-located on the VPS; loopback by default. Override via
+// WMV_API_BASE in the environment for local dev (e.g. http://localhost:4000).
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://localhost:2300';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get('id');
+    const city = searchParams.get('city');
 
     if (!eventId) {
       return NextResponse.json({ error: 'Missing event id parameter' }, { status: 400 });
     }
 
-    const upstream = await fetch(`${WMV_API_BASE}/api/event/${encodeURIComponent(eventId)}`, {
-      cache: 'no-store',
+    // City is forwarded so the backend's related-events query stays scoped to
+    // the same city. event_id is globally unique so the primary lookup works
+    // without it, but related events would otherwise leak across cities if
+    // two venues with shared place_ids exist — see backend/src/index.ts.
+    const upstreamUrl = city
+      ? `${WMV_API_BASE}/api/event/${encodeURIComponent(eventId)}?city=${encodeURIComponent(city)}`
+      : `${WMV_API_BASE}/api/event/${encodeURIComponent(eventId)}`;
+
+    const upstream = await fetch(upstreamUrl, {
+      next: { revalidate: 60 },
     });
 
     if (!upstream.ok) {
@@ -26,7 +35,11 @@ export async function GET(request: NextRequest) {
     }
 
     const body = await upstream.json();
-    return NextResponse.json({ event: body.event, related: body.related ?? [] });
+    const res = NextResponse.json({ event: body.event, related: body.related ?? [] });
+    // Event detail rarely changes; 60s browser cache + 5m SWR keeps the
+    // detail page snappy on repeat visits without serving stale forever.
+    res.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    return res;
   } catch (error) {
     console.error('Event API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
