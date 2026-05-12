@@ -39,11 +39,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
-          source: ".next/standalone/."
-          target: "/opt/wmv-frontend/.next/standalone"
+          source: ".next/standalone"
+          target: "/opt/wmv-frontend-deploy"
           overwrite: true
 
-      - name: Restart PM2
+      - name: Swap build and restart PM2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 91.99.102.124
@@ -52,5 +52,6 @@ jobs:
           port: 22
           script: |
             set -e
+            sudo rsync -a --delete /opt/wmv-frontend-deploy/.next/standalone/ /opt/wmv-frontend/.next/standalone/
             sudo pm2 restart wmv-frontend || sudo PORT=2310 pm2 start /opt/wmv-frontend/.next/standalone/server.js --name wmv-frontend
             echo "Production frontend deploy complete — $(date)"
