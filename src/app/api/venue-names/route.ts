@@ -3,10 +3,12 @@
 // production Postgres `final_1` table (no Supabase).
 import { NextResponse } from 'next/server';
 
-// Server-side only. Never read NEXT_PUBLIC_BACKEND_URL here — on Vercel that
-// resolves to the public site URL (wheresmyvibe.com) and causes an infinite
-// proxy loop. Use WMV_API_BASE in Vercel env, or fall back to prod backend.
-const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://91.99.102.124:2300').replace(/\/$/, '');
+// Server-side only. Never read NEXT_PUBLIC_BACKEND_URL here — the public URL
+// resolves to this same host (wheresmyvibe.com → VPS), so using it would
+// trigger an infinite proxy loop. Set WMV_API_BASE on the VPS to
+// `http://localhost:2300` (loopback to the backend); the literal public-IP
+// fallback is for emergency boot only.
+const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://localhost:2300').replace(/\/$/, '');
 
 export async function GET(request: Request) {
   try {
@@ -15,7 +17,8 @@ export async function GET(request: Request) {
     const upstreamUrl = city
       ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
       : `${WMV_API_BASE}/api/events`;
-    const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
+    // Venue names change rarely (only when a new venue is added).
+    const upstream = await fetch(upstreamUrl, { next: { revalidate: 1800 } });
     if (!upstream.ok) {
       return NextResponse.json(
         { success: false, data: [], error: `Upstream ${upstream.status}: ${upstream.statusText}` },

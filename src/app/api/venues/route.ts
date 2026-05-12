@@ -23,10 +23,12 @@ interface VenueResponse {
   rating_count: number;
 }
 
-// Server-side only. Never read NEXT_PUBLIC_BACKEND_URL here — on Vercel that
-// resolves to the public site URL (wheresmyvibe.com) and causes an infinite
-// proxy loop. Use WMV_API_BASE in Vercel env, or fall back to prod backend.
-const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://91.99.102.124:2300').replace(/\/$/, '');
+// Server-side only. Never read NEXT_PUBLIC_BACKEND_URL here — the public URL
+// resolves to this same host (wheresmyvibe.com → VPS), so using it would
+// trigger an infinite proxy loop. Set WMV_API_BASE in the VPS env (recommend
+// `http://localhost:2300` since FE+BE are co-located — saves TLS + a hop);
+// the literal public-IP fallback is for emergency boot only.
+const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://localhost:2300').replace(/\/$/, '');
 
 export async function GET(request: Request) {
   try {
@@ -52,7 +54,10 @@ export async function GET(request: Request) {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     let upstreamData: any[] = [];
     try {
-      const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
+      // Events update at most once per day after the pipeline runs; 5-min ISR
+      // is plenty fresh and saves ~300ms on repeat nav. Browser cache header
+      // is set on the response below.
+      const upstream = await fetch(upstreamUrl, { next: { revalidate: 300 } });
       if (!upstream.ok) {
         console.error('Upstream error:', upstream.status, upstream.statusText);
         return NextResponse.json({

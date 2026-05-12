@@ -15,9 +15,9 @@ interface FilterRecord {
   venue_name?: string;
 }
 
-// Defaults to prod backend (port 2300, multi-city aware). Override via
-// WMV_API_BASE env var on Vercel / VPS if needed.
-const WMV_API_BASE = process.env.WMV_API_BASE || 'http://91.99.102.124:2300';
+// FE + BE are co-located on the VPS; loopback by default. Override via
+// WMV_API_BASE in the environment for local dev (e.g. http://localhost:4000).
+const WMV_API_BASE = process.env.WMV_API_BASE || 'http://localhost:2300';
 
 export async function GET(request: Request) {
   try {
@@ -37,7 +37,9 @@ export async function GET(request: Request) {
     // Fetch from upstream WMV backend
     let data: any[] = [];
     try {
-      const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
+      // Filter options derive from the daily-refreshed event set; 30-min ISR
+      // is fine and slashes upstream load when many tabs open the same city.
+      const upstream = await fetch(upstreamUrl, { next: { revalidate: 1800 } });
       if (!upstream.ok) {
         console.error('Upstream error:', upstream.status, upstream.statusText);
         return NextResponse.json({
