@@ -6,6 +6,10 @@ import { LogOut } from 'lucide-react';
 
 interface UserMenuProps {
   variant?: 'desktop' | 'compact';
+  /** Suppress the sign-out button in the dropdown. Used on map/cards where
+   *  we want logged-in status visible (avatar + email) but no destructive
+   *  action one tap away. Sign out remains accessible from the home page. */
+  hideSignOut?: boolean;
 }
 
 function initialsFor(user: AuthUser): string {
@@ -17,7 +21,7 @@ function initialsFor(user: AuthUser): string {
   return '?';
 }
 
-export default function UserMenu({ variant = 'desktop' }: UserMenuProps) {
+export default function UserMenu({ variant = 'desktop', hideSignOut = false }: UserMenuProps) {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -65,20 +69,22 @@ export default function UserMenu({ variant = 'desktop' }: UserMenuProps) {
             boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
           }}
         >
-          <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="px-4 py-3" style={{ borderBottom: hideSignOut ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
             <div className="text-[11px] uppercase tracking-wider text-gray-500">Signed in as</div>
             <div className="text-sm font-medium text-white truncate">{user.email || 'User'}</div>
           </div>
-          <button
-            onClick={async () => {
-              setOpen(false);
-              await signOut();
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-200 hover:bg-white/5 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
+          {!hideSignOut && (
+            <button
+              onClick={async () => {
+                setOpen(false);
+                await signOut();
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-200 hover:bg-white/5 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </button>
+          )}
         </div>
       )}
     </div>

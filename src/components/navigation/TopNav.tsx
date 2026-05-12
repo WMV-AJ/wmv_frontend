@@ -89,6 +89,10 @@ interface TopNavProps {
   categoryPillsContent?: React.ReactNode;
   embedded?: boolean; // When true, renders as static (for desktop split-view)
   hideProfile?: boolean; // When true, hides user avatar/signout in mobile overlay
+  hideSignOut?: boolean; // When true, avatar stays visible but the sign-out
+                         // button in the dropdown is suppressed (used on
+                         // map + cards so the sign-out action lives only on
+                         // the home page).
   onListToggle?: () => void; // Toggle between map and list views
   isListView?: boolean; // Current view mode
   onPresetRangeDatesChange?: (dates: string[]) => void; // Notify parent of preset range dates
@@ -105,6 +109,7 @@ const TopNav: React.FC<TopNavProps> = ({
   categoryPillsContent,
   embedded = false,
   hideProfile = false,
+  hideSignOut = false,
   onListToggle,
   isListView = false,
   onPresetRangeDatesChange,
@@ -470,7 +475,7 @@ const TopNav: React.FC<TopNavProps> = ({
           )}
 
           {/* Auth slot */}
-          {!hideProfile && (user ? <UserMenu variant="desktop" /> : <SignInButton variant="desktop" />)}
+          {!hideProfile && (user ? <UserMenu variant="desktop" hideSignOut={hideSignOut} /> : <SignInButton variant="desktop" />)}
         </div>
 
         {/* === ROW 2: Category Pills === */}
@@ -675,7 +680,7 @@ const TopNav: React.FC<TopNavProps> = ({
             </button>
 
             {/* Auth slot */}
-            {!hideProfile && (user ? <UserMenu variant="compact" /> : <SignInButton variant="compact" />)}
+            {!hideProfile && (user ? <UserMenu variant="compact" hideSignOut={hideSignOut} /> : <SignInButton variant="compact" />)}
           </div>
 
           {/* ROW 2: Category Pills */}

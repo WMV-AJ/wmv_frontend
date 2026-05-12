@@ -110,6 +110,7 @@ export default function CityCardsPage() {
       <main className="h-full w-full" style={{ background: '#0a0a1a' }}>
         <TopNav
           embedded={false}
+          hideSignOut={true}
           onSearchClick={() => setIsFilterSheetOpen(true)}
           showDatePicker={true}
           datePickerProps={{
