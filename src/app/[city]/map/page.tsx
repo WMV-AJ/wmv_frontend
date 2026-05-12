@@ -421,7 +421,7 @@ export default function CityMapPage() {
       <main className="h-screen w-full flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500/20 border-t-purple-500 mx-auto mb-4" />
-          <p className="text-gray-400 text-sm font-medium tracking-wide">Discovering events in Dubai...</p>
+          <p className="text-gray-400 text-sm font-medium tracking-wide">Discovering events in {getCityConfig(city).displayName}...</p>
         </div>
       </main>
     );
@@ -450,7 +450,7 @@ export default function CityMapPage() {
         background: '#0a0a14',
       }}>
       <main className="h-full w-full relative overflow-hidden">
-        <h1 className="sr-only">Dubai Event Discovery - Map</h1>
+        <h1 className="sr-only">{getCityConfig(city).displayName} Event Discovery - Map</h1>
 
         <TopNav
           embedded={false}

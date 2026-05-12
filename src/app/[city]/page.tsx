@@ -146,7 +146,7 @@ export default function CityHome() {
   useEffect(() => {
     Promise.all([
       fetch(`/api/venues?city=${encodeURIComponent(city)}`).then(r => r.json()),
-      fetch('/api/venue-count').then(r => r.json()),
+      fetch(`/api/venue-count?city=${encodeURIComponent(city)}`).then(r => r.json()),
     ])
       .then(([venues, vc]) => {
         if (venues.success && Array.isArray(venues.data)) setVenues(venues.data);
@@ -418,7 +418,7 @@ export default function CityHome() {
               <span style={{ color: T.accent }}>my vibe</span>
             </h1>
             <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 220, lineHeight: 1.5 }}>
-              Dubai&rsquo;s nightlife, pulled live from Instagram &amp; the web.
+              {getCityConfig(city).displayName}&rsquo;s nightlife, pulled live from Instagram &amp; the web.
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button
