@@ -17,11 +17,31 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 
 const TOKEN_KEY = 'wmv_token';
 
+export type CitySlug = 'dubai' | 'bangalore';
+export type ThemePreference = 'dark' | 'light' | 'system';
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string | null;
   picture: string | null;
+  /** First name from Google (separate from `name` for personalised greetings). */
+  given_name: string | null;
+  family_name: string | null;
+  /** Google's email-ownership flag. */
+  email_verified: boolean | null;
+  /** User's preferred city — null means "use whatever city the URL says". */
+  default_city: CitySlug | null;
+  theme_preference: ThemePreference;
+  /** Venue ids the user has favourited (stable order). */
+  favorite_venue_ids: number[];
+}
+
+/** Subset of AuthUser that the user can update via PATCH /api/auth/me. */
+export interface UserPreferencesUpdate {
+  default_city?: CitySlug | null;
+  theme_preference?: ThemePreference;
+  favorite_venue_ids?: number[];
 }
 
 interface AuthContextType {
@@ -29,6 +49,10 @@ interface AuthContextType {
   loading: boolean;
   signIn: (returnTo?: string) => void;
   signOut: () => Promise<void>;
+  /** Update server-side preferences. Resolves to the new AuthUser, or null on failure. */
+  updatePreferences: (patch: UserPreferencesUpdate) => Promise<AuthUser | null>;
+  /** Add/remove a venue id from the user's favourites. Optimistic local update. */
+  toggleFavorite: (venueId: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -36,6 +60,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: () => {},
   signOut: async () => {},
+  updatePreferences: async () => null,
+  toggleFavorite: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -102,6 +128,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = url;
   }, []);
 
+  const updatePreferences = useCallback(async (patch: UserPreferencesUpdate): Promise<AuthUser | null> => {
+    const token = getAuthToken();
+    if (!token || !BACKEND_URL) return null;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { user: AuthUser };
+      setUser(data.user);
+      return data.user;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const toggleFavorite = useCallback(async (venueId: number): Promise<void> => {
+    if (!user) return;
+    const current = user.favorite_venue_ids ?? [];
+    const next = current.includes(venueId)
+      ? current.filter((id) => id !== venueId)
+      : [...current, venueId];
+    // Optimistic local update so the heart icon flips immediately.
+    setUser({ ...user, favorite_venue_ids: next });
+    const updated = await updatePreferences({ favorite_venue_ids: next });
+    // Revert on failure.
+    if (!updated) setUser({ ...user, favorite_venue_ids: current });
+  }, [user, updatePreferences]);
+
   const signOut = useCallback(async () => {
     const token = getAuthToken();
     setAuthToken(null);
@@ -120,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut, updatePreferences, toggleFavorite }}>
       {children}
     </AuthContext.Provider>
   );

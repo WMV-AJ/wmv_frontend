@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { formatPrice } from '@/config/cities.config';
+import AuthCornerWidget from '@/components/auth/AuthCornerWidget';
 import {
   ArrowLeft,
   Share2,
@@ -508,7 +509,7 @@ export default function EventDetailPage() {
         {/* Gradient overlay */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(245,245,240,1) 100%)' }} />
 
-        {/* Back + Share buttons */}
+        {/* Back + Auth + Share buttons */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 z-10" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
           <button
             onClick={() => router.back()}
@@ -517,13 +518,16 @@ export default function EventDetailPage() {
           >
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <button
-            onClick={handleShare}
-            className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
-            style={{ background: 'rgba(0,0,0,0.4)' }}
-          >
-            <Share2 className="w-5 h-5 text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            <AuthCornerWidget />
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
+              style={{ background: 'rgba(0,0,0,0.4)' }}
+            >
+              <Share2 className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
 
         {/* LIVE badge */}

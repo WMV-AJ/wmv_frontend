@@ -18,6 +18,7 @@ import {
   List,
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
+import AuthCornerWidget from '@/components/auth/AuthCornerWidget';
 
 // ── THEME TOKENS ─────────────────────────────────────────────────────
 const T = {
@@ -362,11 +363,8 @@ export default function CityHome() {
             >
               <List style={{ width: 14, height: 14, color: T.inkMuted }} />
             </button>
-            <div style={{
-              width: 30, height: 30, borderRadius: '50%', background: T.accent, color: T.inkInverse,
-              fontFamily: serif, fontStyle: 'italic', fontWeight: 700, fontSize: 13,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>A</div>
+            {/* Auth state: real avatar when signed in, sign-in icon otherwise. */}
+            <AuthCornerWidget />
           </div>
         </div>
 
