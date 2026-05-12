@@ -11,8 +11,9 @@ export default function GoogleLoginButton() {
   const handleGoogleLogin = () => {
     setLoading(true);
     trackEvent('login_started', { provider: 'google' });
-    // signIn() does a full-page redirect, so we won't return here.
-    signIn();
+    // signIn(returnTo) does a full-page redirect; pass an explicit destination
+    // so the user lands on the app (not back at /login) after OAuth completes.
+    signIn('/dubai');
   };
 
   return (
