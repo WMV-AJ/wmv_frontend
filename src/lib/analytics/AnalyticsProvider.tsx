@@ -5,6 +5,10 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { initAnalytics, setUserId, trackEvent, trackPageView } from './track';
 
+// Module-level — survives component remounts so login_completed fires exactly once
+// per user transition per JS bundle lifetime (not per component mount).
+let _syncedUserId: string | null = null;
+
 /**
  * Wires analytics into the app:
  *   - inits anonymous_id / session_id / UTM capture on mount
@@ -17,7 +21,6 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
-  const lastUserIdRef = useRef<string | null>(null);
   const initRanRef = useRef(false);
 
   useEffect(() => {
@@ -36,10 +39,10 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
   useEffect(() => {
     if (loading) return;
     const newId = user?.id ?? null;
-    const oldId = lastUserIdRef.current;
+    const oldId = _syncedUserId;
     if (newId === oldId) return;
 
-    lastUserIdRef.current = newId;
+    _syncedUserId = newId;
     setUserId(newId);
 
     if (oldId === null && newId !== null) {
