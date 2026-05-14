@@ -330,11 +330,14 @@ export default function CityHome() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 28, height: 28, background: T.ink, color: T.inkInverse,
-              fontFamily: serif, fontStyle: 'italic', fontWeight: 700, fontSize: 15,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>W</div>
+            <img
+              src="/wmv-logo.gif"
+              alt="Where's My Vibe"
+              style={{
+                width: 28, height: 28, objectFit: 'cover',
+                borderRadius: '50%', flexShrink: 0,
+              }}
+            />
             <div>
               <div style={{
                 fontFamily: serif, fontStyle: 'italic', fontWeight: 700, fontSize: 14,
