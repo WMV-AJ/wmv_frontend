@@ -6,9 +6,11 @@ import { LogOut } from 'lucide-react';
 
 interface UserMenuProps {
   variant?: 'desktop' | 'compact';
-  /** Suppress the sign-out button in the dropdown. Used on map/cards where
-   *  we want logged-in status visible (avatar + email) but no destructive
-   *  action one tap away. Sign out remains accessible from the home page. */
+  /** When true, the whole UserMenu (avatar + dropdown + sign-out button)
+   *  is hidden. Used on map/cards where we want zero auth surface for
+   *  signed-in users — no avatar, no dropdown, no logout. The SignInButton
+   *  for signed-out users is unaffected (the parent decides whether to
+   *  render that). Sign out remains accessible from the home page. */
   hideSignOut?: boolean;
 }
 
@@ -36,6 +38,9 @@ export default function UserMenu({ variant = 'desktop', hideSignOut = false }: U
   }, [open]);
 
   if (!user) return null;
+  // Pages that pass hideSignOut={true} want no auth surface at all for
+  // signed-in users — not even the avatar that opens the dropdown.
+  if (hideSignOut) return null;
 
   const avatarUrl = user.picture;
   const initials = initialsFor(user);
