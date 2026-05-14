@@ -83,12 +83,14 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
+                {/* Animated GIF logo — `unoptimized` so Next/Image serves it as-is and the GIF actually animates */}
                 <Image
-                  src="/logo_clean.svg"
+                  src="/wmv-logo.gif"
                   alt="WMV Logo"
                   width={120}
-                  height={60}
-                  className="w-30 h-15 object-contain mx-auto"
+                  height={120}
+                  unoptimized
+                  className="object-contain mx-auto rounded-full"
                 />
                 <h1 className="font-mono text-sm font-bold text-white mt-2 tracking-wide">
                   Where&apos;s My Vibe?

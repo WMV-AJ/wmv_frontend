@@ -55,12 +55,14 @@ export const metadata: Metadata = {
   creator: "Where's My Vibe",
   publisher: "Where's My Vibe",
   icons: {
+    // Animated GIF logo. Chrome/Firefox animate it; Safari shows the first frame.
+    // The favicon.ico in app/ is the static fallback for browsers without GIF favicon support.
     icon: [
-      { url: '/logo_clean.svg', type: 'image/svg+xml' },
-      { url: '/favicon.svg', type: 'image/svg+xml' }
+      { url: '/wmv-logo.gif', type: 'image/gif' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
-    shortcut: '/logo_clean.svg',
-    apple: '/logo_clean.svg',
+    shortcut: '/wmv-logo.gif',
+    apple: '/wmv-logo.gif',
   },
   robots: {
     index: true,

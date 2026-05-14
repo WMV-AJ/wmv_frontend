@@ -329,15 +329,16 @@ const TopNav: React.FC<TopNavProps> = ({
       >
         {/* === ROW 1: Logo + Date Pills + Search + Hamburger === */}
         <div className="flex items-center gap-3 px-5 py-3">
-          {/* WMV Logo */}
+          {/* WMV Logo — animated GIF; plain <img> so the browser plays it natively */}
           <img
-            src="/logo_clean.svg"
+            src="/wmv-logo.gif"
             alt="Where's My Vibe"
             className="flex-shrink-0"
             style={{
               width: '40px',
               height: '40px',
               objectFit: 'contain',
+              borderRadius: '50%',
             }}
           />
 
