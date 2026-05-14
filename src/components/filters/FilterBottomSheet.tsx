@@ -212,13 +212,39 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
     const primaryVibes = tempFilters.selectedPrimaries?.vibes ?? [];
     const secondaryGenres = Object.values(tempFilters.selectedSecondaries?.genres ?? {}).flat();
     const secondaryVibes = Object.values(tempFilters.selectedSecondaries?.vibes ?? {}).flat();
+    const areas = tempFilters.selectedAreas ?? [];
+    const dates = tempFilters.activeDates ?? [];
+    const offers = tempFilters.activeOffers ?? [];
+    const ratings = tempFilters.selectedRatings ?? [];
+    const times = tempFilters.selectedTimes ?? [];
+    const ticketPrices = tempFilters.selectedTicketPrices ?? [];
+    const venuePrices = tempFilters.selectedVenuePrices ?? [];
+    const atmospheres = tempFilters.selectedAtmospheres ?? [];
+    const venueCategories = tempFilters.selectedVenueCategories ?? [];
+    const eventCategories = tempFilters.selectedEventCategories ?? [];
     trackEvent('filter_applied', {
+      vibes: [...primaryVibes, ...secondaryVibes],
+      genres: [...primaryGenres, ...secondaryGenres],
+      areas,
+      dates,
+      offers,
+      atmospheres,
+      venue_categories: venueCategories,
+      event_categories: eventCategories,
+      times,
+      ticket_prices: ticketPrices,
+      venue_prices: venuePrices,
+      ratings,
       primary_genres: primaryGenres,
       secondary_genres: secondaryGenres,
       primary_vibes: primaryVibes,
       secondary_vibes: secondaryVibes,
       total_active_filters:
-        primaryGenres.length + secondaryGenres.length + primaryVibes.length + secondaryVibes.length,
+        primaryGenres.length + secondaryGenres.length +
+        primaryVibes.length + secondaryVibes.length +
+        areas.length + dates.length + offers.length + ratings.length +
+        times.length + ticketPrices.length + venuePrices.length +
+        atmospheres.length + venueCategories.length + eventCategories.length,
     });
     const q = (tempFilters.searchQuery || '').trim();
     if (q.length > 0) {
