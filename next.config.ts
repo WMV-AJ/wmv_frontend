@@ -8,6 +8,22 @@ const nextConfig: NextConfig = {
   },
   // Redirects for / → /dubai (plus every other non-city top-level path) are
   // handled in src/middleware.ts — broader matching, single source of truth.
+  //
+  // `/favicon.ico` rewrite — browsers auto-fetch this URL for tab icons. We
+  // want to serve the animated wmv-logo.gif there, but if we just copy the
+  // GIF to public/favicon.ico, Next.js sets content-type: image/x-icon (from
+  // the extension) and browsers refuse to render it because nginx also adds
+  // `x-content-type-options: nosniff`. A `beforeFiles` rewrite keeps the URL
+  // at /favicon.ico while the response body and content-type come from
+  // /wmv-logo.gif (image/gif). Chrome/Firefox animate it; Safari shows the
+  // first frame statically.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/favicon.ico', destination: '/wmv-logo.gif' }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   images: {
     // Built-in Sharp-based optimizer. Images get resized to display size,
     // converted to WebP/AVIF, and cached on disk by Next.
