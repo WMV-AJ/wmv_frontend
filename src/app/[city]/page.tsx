@@ -272,11 +272,17 @@ export default function CityHome() {
 
   const vibeGrid = VIBES.map(v => {
     const count = venues.filter(venue => {
-      // keyword match against event_vibe + venue_category
       const vibeArr: string[] = Array.isArray(venue.event_vibe) ? venue.event_vibe : [];
       const catArr: string[] = Array.isArray(venue.venue_category) ? venue.venue_category
         : typeof venue.category === 'string' ? [venue.category] : [];
-      const haystack = [...vibeArr, ...catArr].join(' ').toLowerCase();
+      const highlightsText = (() => {
+        try {
+          const raw = venue.venue_highlights;
+          const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          return Array.isArray(parsed) ? parsed.flatMap((o: any) => Object.keys(o)).join(' ') : '';
+        } catch { return ''; }
+      })();
+      const haystack = [...vibeArr, ...catArr, highlightsText].join(' ').toLowerCase();
       const keywordMatch = v.keywords.some(kw => haystack.includes(kw));
       // event_categories primary match
       const evCats = (() => {
@@ -372,7 +378,7 @@ export default function CityHome() {
         </div>
 
         {/* Hero — radar + title */}
-        <div style={{ position: 'relative', padding: '20px 18px 0', minHeight: 300 }}>
+        <div style={{ position: 'relative', padding: '20px 18px 0' }}>
           <div style={{
             position: 'absolute', top: 6, right: -70, width: 300, height: 300,
             pointerEvents: 'none', opacity: 0.9,
@@ -461,7 +467,7 @@ export default function CityHome() {
 
         {/* Stats strip */}
         <div style={{
-          margin: '22px 18px 0',
+          margin: '14px 18px 0',
           borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}`,
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
         }}>
@@ -499,12 +505,8 @@ export default function CityHome() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 10,
           }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § A — Fresh from instagram
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
-              <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1px' }}>LIVE</span>
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
+              Fresh from instagram
             </div>
           </div>
 
@@ -565,11 +567,11 @@ export default function CityHome() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 14,
           }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § B — Tonight in {getCityConfig(city).displayName}
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
+              Tonight in {getCityConfig(city).displayName}
             </div>
             <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
-              {loading ? '—' : `${tonightEvents.length} EVENTS →`}
+              {loading ? '—' : `${tonightEvents.length} EVENTS`}
             </span>
           </div>
 
@@ -673,8 +675,9 @@ export default function CityHome() {
                 })();
                 return (
                 <div key={e.event_id || e.venue_id || i} style={{
-                  display: 'grid', gridTemplateColumns: '22px 64px 1fr auto', gap: 10,
-                  padding: '12px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'start',
+                  display: 'grid', gridTemplateColumns: '22px 72px 1fr auto', gap: 10,
+                  padding: '10px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'center',
+                  minHeight: 88,
                   cursor: e.event_id ? 'pointer' : 'default',
                 }} onClick={() => {
                   if (!e.event_id) return;
@@ -682,11 +685,11 @@ export default function CityHome() {
                   router.push(`/${city}/event/${e.event_id}`);
                 }}>
                   {/* Number */}
-                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent, paddingTop: 2 }}>
+                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent }}>
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   {/* Thumbnail — left */}
-                  <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden' }}>
+                  <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden', borderRadius: 4 }}>
                     {hasVideo ? (
                       <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : hasImage ? (
@@ -702,17 +705,16 @@ export default function CityHome() {
                       {e.area || ''}{catLabel ? ` · ${catLabel}` : ''}
                     </div>
                     <div style={{
-                      fontFamily: serif, fontStyle: 'italic', fontSize: 20, fontWeight: 400,
-                      color: T.ink, letterSpacing: '-0.015em', lineHeight: 1.05, marginTop: 2,
+                      fontFamily: serif, fontStyle: 'italic', fontSize: 18, fontWeight: 400,
+                      color: T.ink, letterSpacing: '-0.015em', lineHeight: 1.1, marginTop: 2,
                     }}>
                       {e.name || e.venue}
                     </div>
-                    {e.event_name && (
-                      <div style={{ fontSize: 11, color: T.inkMuted, marginTop: 3 }}>
-                        {e.event_name}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 6, fontFamily: mono, fontSize: 9, color: T.inkMuted, fontWeight: 500, letterSpacing: '0.5px' }}>
+                    {/* Always reserve this row — keeps height consistent across cards */}
+                    <div style={{ fontSize: 11, color: T.inkMuted, marginTop: 3, minHeight: 16 }}>
+                      {e.event_name || ''}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 2, fontFamily: mono, fontSize: 9, color: T.inkMuted, fontWeight: 500, letterSpacing: '0.5px', minHeight: 13 }}>
                       {e.event_time && <span>{e.event_time}</span>}
                       {e.rating && <span>★ {e.rating}</span>}
                     </div>
@@ -770,8 +772,8 @@ export default function CityHome() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 10,
           }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § C — Pick your vibe
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
+              Pick your vibe
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
@@ -810,8 +812,8 @@ export default function CityHome() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 12,
           }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § D — Weekend Vibes
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
+              Weekend Vibes
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}>
@@ -881,8 +883,8 @@ export default function CityHome() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 4,
           }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-              § E — Areas
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
+              Areas
             </div>
           </div>
           {loading
@@ -896,7 +898,7 @@ export default function CityHome() {
             ))
             : areas.map((a, i) => (
               <div key={a.label} style={{
-                display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
+                display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 12,
                 padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`,
               }}>
                 <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
@@ -908,7 +910,6 @@ export default function CityHome() {
                 <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
                   {a.count} events
                 </span>
-                <ArrowUpRight style={{ width: 13, height: 13, color: T.ink }} />
               </div>
             ))
           }

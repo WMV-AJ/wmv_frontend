@@ -1,19 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, X } from 'lucide-react';
-import { format, parse, isValid } from 'date-fns';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDates: string[];
   onDatesSelect: (dates: string[]) => void;
-  availableDates?: string[]; // Available dates from API to show indicators
+  availableDates?: string[];
+}
+
+const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
+}
+function getFirstDayOfMonth(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
+}
+function toKey(d: Date) {
+  return d.toDateString();
 }
 
 export const DatePickerModal: React.FC<DatePickerModalProps> = ({
@@ -21,190 +28,184 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
   onClose,
   selectedDates,
   onDatesSelect,
-  availableDates = []
 }) => {
-  const [tempSelectedDates, setTempSelectedDates] = useState<Date[]>([]);
-  
-  // Convert string dates to Date objects when modal opens
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (isOpen) {
-      const dateObjects = selectedDates
-        .map(dateStr => {
-          try {
-            // Try different date formats
-            const formats = ['dd MMM yy', 'yyyy-MM-dd', 'MM/dd/yyyy'];
-            for (const fmt of formats) {
-              const parsed = parse(dateStr, fmt, new Date());
-              if (isValid(parsed)) return parsed;
-            }
-            // Fallback to Date constructor
-            const fallback = new Date(dateStr);
-            return isValid(fallback) ? fallback : null;
-          } catch {
-            return null;
-          }
-        })
-        .filter((date): date is Date => date !== null);
-      
-      setTempSelectedDates(dateObjects);
+      const s = new Set<string>();
+      selectedDates.forEach(ds => {
+        const d = new Date(ds);
+        if (!isNaN(d.getTime())) s.add(d.toDateString());
+      });
+      setSelected(s);
+      setViewYear(today.getFullYear());
+      setViewMonth(today.getMonth());
     }
-  }, [isOpen, selectedDates]);
-  
-  // Convert available dates to Date objects for calendar indicators
-  const availableDateObjects = availableDates
-    .map(dateStr => {
-      try {
-        const formats = ['dd MMM yy', 'yyyy-MM-dd', 'MM/dd/yyyy'];
-        for (const fmt of formats) {
-          const parsed = parse(dateStr, fmt, new Date());
-          if (isValid(parsed)) return parsed;
-        }
-        const fallback = new Date(dateStr);
-        return isValid(fallback) ? fallback : null;
-      } catch {
-        return null;
-      }
-    })
-    .filter((date): date is Date => date !== null);
-  
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
-    
-    setTempSelectedDates(prev => {
-      const isAlreadySelected = prev.some(d => 
-        d.getTime() === date.getTime()
-      );
-      
-      if (isAlreadySelected) {
-        return prev.filter(d => d.getTime() !== date.getTime());
-      } else {
-        return [...prev, date];
-      }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  const toggleDay = (day: number) => {
+    const d = new Date(viewYear, viewMonth, day);
+    const key = toKey(d);
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
     });
   };
-  
+
   const handleApply = () => {
-    const formattedDates = tempSelectedDates
-      .map(date => format(date, 'dd MMM yy'))
-      .sort();
-    
-    onDatesSelect(formattedDates);
+    onDatesSelect(Array.from(selected));
   };
-  
-  const handleCancel = () => {
-    onClose();
-  };
-  
-  const handleClearAll = () => {
-    setTempSelectedDates([]);
-  };
-  
-  // Custom day content to show indicators for available dates
-  const dayContent = (date: Date) => {
-    const hasEvents = availableDateObjects.some(d => 
-      d.getTime() === date.getTime()
-    );
-    
-    return (
-      <div className="relative w-full h-full flex items-center justify-center">
-        <span>{date.getDate()}</span>
-        {hasEvents && (
-          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
-        )}
-      </div>
-    );
-  };
-  
+
+  const todayKey = toKey(today);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md backdrop-blur-xl bg-white/95 border border-gray-200/50">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-gray-900">
-            <CalendarDays className="h-5 w-5" />
-            Select Custom Dates
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {/* Selected dates display */}
-          {tempSelectedDates.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700">
-                Selected Dates ({tempSelectedDates.length}):
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {tempSelectedDates
-                  .sort((a, b) => a.getTime() - b.getTime())
-                  .map((date, index) => (
-                    <Badge 
-                      key={index}
-                      variant="secondary"
-                      className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
-                      onClick={() => handleDateSelect(date)}
-                    >
-                      {format(date, 'MMM dd, yyyy')}
-                      <X className="h-3 w-3 ml-1" />
-                    </Badge>
-                  ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Calendar */}
-          <div className="flex justify-center">
-            <Calendar
-              mode="multiple"
-              selected={tempSelectedDates}
-              onSelect={(dates) => {
-                if (Array.isArray(dates)) {
-                  setTempSelectedDates(dates.filter((date): date is Date => date !== undefined));
-                }
-              }}
-              className="rounded-md border border-gray-200"
-              components={{
-                Day: ({ date, ...props }) => (
-                  <div {...props} className={props.className}>
-                    {dayContent(date)}
-                  </div>
-                )
-              }}
-            />
-          </div>
-          
-          {availableDates.length > 0 && (
-            <div className="text-xs text-gray-500 text-center">
-              • Dates with events have blue dots
-            </div>
-          )}
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 10000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: 320,
+          borderRadius: 20,
+          background: 'rgba(12,12,26,0.97)',
+          border: '1px solid rgba(212,175,55,0.2)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.8)',
+          padding: '20px 20px 16px',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: 15 }}>
+            Pick a date
+          </span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <X style={{ width: 16, height: 16, color: 'rgba(255,255,255,0.4)' }} />
+          </button>
         </div>
-        
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClearAll}
-            disabled={tempSelectedDates.length === 0}
-            className="text-gray-600 hover:text-gray-800"
+
+        {/* Month nav */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <button onClick={prevMonth} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer' }}>
+            <ChevronLeft style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.6)' }} />
+          </button>
+          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 600 }}>{monthLabel}</span>
+          <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer' }}>
+            <ChevronRight style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.6)' }} />
+          </button>
+        </div>
+
+        {/* Day labels */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+          {DAYS.map(d => (
+            <div key={d} style={{ textAlign: 'center', fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', padding: '2px 0' }}>
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+          {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const d = new Date(viewYear, viewMonth, day);
+            const key = toKey(d);
+            const isSelected = selected.has(key);
+            const isToday = key === todayKey;
+            const isPast = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+            return (
+              <button
+                key={day}
+                onClick={() => !isPast && toggleDay(day)}
+                disabled={isPast}
+                style={{
+                  aspectRatio: '1',
+                  borderRadius: 8,
+                  border: isToday && !isSelected ? '1px solid rgba(212,175,55,0.4)' : '1px solid transparent',
+                  background: isSelected
+                    ? 'linear-gradient(135deg, #d4af37, #b8952e)'
+                    : 'transparent',
+                  color: isSelected
+                    ? '#0a0a14'
+                    : isPast
+                    ? 'rgba(255,255,255,0.15)'
+                    : isToday
+                    ? '#d4af37'
+                    : 'rgba(255,255,255,0.8)',
+                  fontSize: 12,
+                  fontWeight: isSelected || isToday ? 700 : 400,
+                  cursor: isPast ? 'default' : 'pointer',
+                }}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected count */}
+        {selected.size > 0 && (
+          <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(212,175,55,0.7)', textAlign: 'center' }}>
+            {selected.size} date{selected.size > 1 ? 's' : ''} selected
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <button
+            onClick={() => setSelected(new Set())}
+            style={{
+              flex: 1, padding: '10px 0', borderRadius: 12,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.5)', fontSize: 13, cursor: 'pointer',
+            }}
           >
-            Clear All
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCancel}
-            className="text-gray-600 hover:text-gray-800"
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
+            Clear
+          </button>
+          <button
             onClick={handleApply}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            style={{
+              flex: 2, padding: '10px 0', borderRadius: 12,
+              background: selected.size > 0 ? 'linear-gradient(135deg, #d4af37, #b8952e)' : 'rgba(212,175,55,0.15)',
+              border: '1px solid rgba(212,175,55,0.3)',
+              color: selected.size > 0 ? '#0a0a14' : 'rgba(212,175,55,0.4)',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}
           >
-            Apply ({tempSelectedDates.length})
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            Apply{selected.size > 0 ? ` (${selected.size})` : ''}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };

@@ -227,6 +227,14 @@ export default function CityMapPage() {
 
   const { allVenues, filteredVenues, isLoading, error } = useClientSideVenues(filters);
 
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    if (!isLoading) {
+      const t = setTimeout(() => setIsReady(true), 50);
+      return () => clearTimeout(t);
+    }
+  }, [isLoading]);
+
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const { filterOptions } = useFilterOptions();
 
@@ -416,17 +424,6 @@ export default function CityMapPage() {
     );
   }
 
-  if (isLoading && venues.length === 0) {
-    return (
-      <main className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500/20 border-t-purple-500 mx-auto mb-4" />
-          <p className="text-gray-400 text-sm font-medium tracking-wide">Discovering events in {getCityConfig(city).displayName}...</p>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <ThemeProvider>
       <style>{`
@@ -448,6 +445,8 @@ export default function CityMapPage() {
         overflow: 'hidden',
         transform: 'translateZ(0)',
         background: '#0a0a14',
+        opacity: isReady ? 1 : 0,
+        transition: isReady ? 'opacity 0.3s ease' : 'none',
       }}>
       <main className="h-full w-full relative overflow-hidden">
         <h1 className="sr-only">{getCityConfig(city).displayName} Event Discovery - Map</h1>

@@ -84,16 +84,6 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       options: filterOptions.areas,
       selectedValues: tempFilters.selectedAreas
     },
-    // Note: Vibes and Genres are handled by CategoryPills on the map view
-    // {
-    //   id: 'activeVibes',
-    //   title: 'Vibes',
-    //   type: 'collapsible',
-    //   isCollapsible: true,
-    //   isExpanded: expandedSections.includes('activeVibes'),
-    //   options: filterOptions.vibes,
-    //   selectedValues: [] // TODO: Extract from hierarchical structure
-    // },
     {
       id: 'activeDates',
       title: 'Dates',
@@ -102,60 +92,6 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       isExpanded: expandedSections.includes('activeDates'),
       options: filterOptions.dates,
       selectedValues: tempFilters.activeDates
-    },
-    // {
-    //   id: 'activeGenres',
-    //   title: 'Music Genres',
-    //   type: 'collapsible',
-    //   isCollapsible: true,
-    //   isExpanded: expandedSections.includes('activeGenres'),
-    //   options: filterOptions.genres,
-    //   selectedValues: [] // TODO: Extract from hierarchical structure
-    // },
-    {
-      id: 'selectedRatings',
-      title: 'Minimum Rating',
-      type: 'pills',
-      isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedRatings'),
-      options: ['3+ Stars', '4+ Stars', '5 Stars'],
-      selectedValues: (tempFilters.selectedRatings || []).map(r => `${r}+ Stars`)
-    },
-    {
-      id: 'selectedTimes',
-      title: 'Event Time',
-      type: 'pills',
-      isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedTimes'),
-      options: ['Morning', 'Afternoon', 'Evening', 'Night'],
-      selectedValues: tempFilters.selectedTimes || []
-    },
-    {
-      id: 'selectedTicketPrices',
-      title: 'Ticket Price Range',
-      type: 'pills',
-      isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedTicketPrices'),
-      options: ['Free', 'AED 0-50', 'AED 50-100', 'AED 100-200', 'AED 200+'],
-      selectedValues: tempFilters.selectedTicketPrices || []
-    },
-    {
-      id: 'selectedVenuePrices',
-      title: 'Venue Price Range',
-      type: 'pills',
-      isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedVenuePrices'),
-      options: ['$', '$$', '$$$', 'AED', 'AED AED', 'AED AED AED', '£', '££', '£££'],
-      selectedValues: tempFilters.selectedVenuePrices || []
-    },
-    {
-      id: 'selectedAtmospheres',
-      title: 'Venue Atmosphere',
-      type: 'pills',
-      isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedAtmospheres'),
-      options: ['Beachfront', 'Chill', 'Garden', 'High Energy', 'Intimate', 'Open-air', 'Pool', 'Rooftop', 'Underground'],
-      selectedValues: tempFilters.selectedAtmospheres || []
     },
     {
       id: 'activeOffers',
@@ -167,23 +103,14 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       selectedValues: tempFilters.activeOffers || []
     },
     {
-      id: 'selectedVenueCategories',
-      title: 'Venue Categories',
-      type: 'collapsible',
-      isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedVenueCategories'),
-      options: filterOptions.venueCategories || [],
-      selectedValues: tempFilters.selectedVenueCategories || []
-    },
-    {
-      id: 'selectedEventCategories',
-      title: 'Event Categories',
+      id: 'selectedRatings',
+      title: 'Rating',
       type: 'pills',
       isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedEventCategories'),
-      options: filterOptions.eventCategories || [],
-      selectedValues: tempFilters.selectedEventCategories || []
-    }
+      isExpanded: expandedSections.includes('selectedRatings'),
+      options: ['3+ Stars', '4+ Stars', '5 Stars'],
+      selectedValues: (tempFilters.selectedRatings || []).map(r => `${r}+ Stars`)
+    },
   ];
 
   const handleSectionToggle = (sectionId: string) => {
@@ -328,50 +255,6 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       });
     });
 
-    (tempFilters.selectedTimes || []).forEach(time => {
-      selected.push({
-        label: time,
-        type: 'time',
-        color: 'bg-blue-500/80 border-blue-400',
-        onRemove: () => {
-          handleFilterChange('selectedTimes', (tempFilters.selectedTimes || []).filter(t => t !== time));
-        }
-      });
-    });
-
-    (tempFilters.selectedTicketPrices || []).forEach(price => {
-      selected.push({
-        label: price,
-        type: 'ticketPrice',
-        color: 'bg-green-500/80 border-green-400',
-        onRemove: () => {
-          handleFilterChange('selectedTicketPrices', (tempFilters.selectedTicketPrices || []).filter(p => p !== price));
-        }
-      });
-    });
-
-    (tempFilters.selectedVenuePrices || []).forEach(price => {
-      selected.push({
-        label: price,
-        type: 'venuePrice',
-        color: 'bg-green-600/80 border-green-500',
-        onRemove: () => {
-          handleFilterChange('selectedVenuePrices', (tempFilters.selectedVenuePrices || []).filter(p => p !== price));
-        }
-      });
-    });
-
-    (tempFilters.selectedAtmospheres || []).forEach(atmosphere => {
-      selected.push({
-        label: atmosphere,
-        type: 'atmosphere',
-        color: 'bg-purple-500/80 border-purple-400',
-        onRemove: () => {
-          handleFilterChange('selectedAtmospheres', (tempFilters.selectedAtmospheres || []).filter(a => a !== atmosphere));
-        }
-      });
-    });
-
     (tempFilters.activeOffers || []).forEach(offer => {
       selected.push({
         label: offer,
@@ -379,28 +262,6 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
         color: 'bg-orange-500/80 border-orange-400',
         onRemove: () => {
           handleFilterChange('activeOffers', (tempFilters.activeOffers || []).filter(o => o !== offer));
-        }
-      });
-    });
-
-    (tempFilters.selectedVenueCategories || []).forEach(category => {
-      selected.push({
-        label: category,
-        type: 'venueCategory',
-        color: 'bg-indigo-500/80 border-indigo-400',
-        onRemove: () => {
-          handleFilterChange('selectedVenueCategories', (tempFilters.selectedVenueCategories || []).filter(c => c !== category));
-        }
-      });
-    });
-
-    (tempFilters.selectedEventCategories || []).forEach(category => {
-      selected.push({
-        label: category,
-        type: 'eventCategory',
-        color: 'bg-pink-500/80 border-pink-400',
-        onRemove: () => {
-          handleFilterChange('selectedEventCategories', (tempFilters.selectedEventCategories || []).filter(c => c !== category));
         }
       });
     });
@@ -518,11 +379,10 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               )}
 
               {/* Filter Content */}
-              <div className="px-4 py-3 pb-32 flex-1 overflow-y-auto scrollbar-thin">
+              <div className="px-4 py-3 flex-1 overflow-y-auto scrollbar-thin">
                 <div className="grid grid-cols-2 gap-2">
                   {filterSections
                     .sort((a, b) => {
-                      // Put expanded sections first
                       if (a.isExpanded && !b.isExpanded) return -1;
                       if (!a.isExpanded && b.isExpanded) return 1;
                       return 0;
@@ -540,8 +400,8 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                 </div>
               </div>
 
-              {/* Fixed Action Bar */}
-              <div className="absolute bottom-0 left-0 right-0">
+              {/* Action Bar — flex child so it never overlaps scroll content */}
+              <div className="flex-shrink-0">
                 <FilterActionBar
                   onCancel={handleCancel}
                   onApply={handleApply}
@@ -549,14 +409,8 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                   selectedCount={
                     tempFilters.selectedAreas.filter(a => !isAllCitySentinel(a)).length +
                     tempFilters.activeDates.length +
-                    (tempFilters.selectedRatings || []).length +
-                    (tempFilters.selectedTimes || []).length +
-                    (tempFilters.selectedTicketPrices || []).length +
-                    (tempFilters.selectedVenuePrices || []).length +
-                    (tempFilters.selectedAtmospheres || []).length +
                     (tempFilters.activeOffers || []).length +
-                    (tempFilters.selectedVenueCategories || []).length +
-                    (tempFilters.selectedEventCategories || []).length
+                    (tempFilters.selectedRatings || []).length
                   }
                 />
               </div>

@@ -1,33 +1,34 @@
-import { format, addDays, startOfWeek, endOfWeek, isToday, isTomorrow, isThisWeek } from 'date-fns';
+import { addDays, startOfWeek, endOfWeek, isToday, isTomorrow, isThisWeek } from 'date-fns';
 
 export type DatePreset = 'today' | 'tomorrow' | 'this-week' | 'custom';
 
 /**
- * Convert date preset to actual date strings for API calls
+ * Convert date preset to date strings in JS toDateString() format
+ * ("Fri May 15 2026") — matches what useClientSideVenues uses for comparison.
  */
 export function getDatesByPreset(preset: DatePreset, customDates?: string[]): string[] {
   const now = new Date();
-  
+
   switch (preset) {
     case 'today':
-      return [format(now, 'dd MMM yy')];
-      
+      return [now.toDateString()];
+
     case 'tomorrow':
-      return [format(addDays(now, 1), 'dd MMM yy')];
-      
-    case 'this-week':
-      const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-      const weekEnd = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
+      return [addDays(now, 1).toDateString()];
+
+    case 'this-week': {
+      const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
       const dates: string[] = [];
-      
-      for (let date = weekStart; date <= weekEnd; date = addDays(date, 1)) {
-        dates.push(format(date, 'dd MMM yy'));
+      for (let d = new Date(weekStart); d <= weekEnd; d = addDays(d, 1)) {
+        dates.push(d.toDateString());
       }
       return dates;
-      
+    }
+
     case 'custom':
       return customDates || [];
-      
+
     default:
       return [];
   }
@@ -38,25 +39,20 @@ export function getDatesByPreset(preset: DatePreset, customDates?: string[]): st
  */
 export function getPresetFromDates(dates: string[]): DatePreset | null {
   if (dates.length === 0) return null;
-  
+
   const now = new Date();
-  
-  // Check for today
+
   if (dates.length === 1) {
-    const targetDate = format(now, 'dd MMM yy');
-    if (dates[0] === targetDate) return 'today';
-    
-    const tomorrowDate = format(addDays(now, 1), 'dd MMM yy');
-    if (dates[0] === tomorrowDate) return 'tomorrow';
+    if (dates[0] === now.toDateString()) return 'today';
+    if (dates[0] === addDays(now, 1).toDateString()) return 'tomorrow';
   }
-  
-  // Check for this week
+
   const thisWeekDates = getDatesByPreset('this-week');
-  if (dates.length === thisWeekDates.length && 
-      dates.every(date => thisWeekDates.includes(date))) {
+  if (dates.length === thisWeekDates.length &&
+      dates.every(d => thisWeekDates.includes(d))) {
     return 'this-week';
   }
-  
+
   return 'custom';
 }
 

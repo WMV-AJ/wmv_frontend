@@ -16,38 +16,66 @@ const FilterActionBar: React.FC<FilterActionBarProps> = ({
   selectedCount
 }) => {
   return (
-    <div className="px-6 py-3 pb-8 border-t border-white/10 bg-black/50 backdrop-blur-sm">
-      <div className="flex items-center justify-between space-x-3">
-        {/* Cancel Button */}
+    <div
+      className="px-5 py-4"
+      style={{
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(8,8,20,0.95)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+      }}
+    >
+      <div className="flex items-center gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 py-2.5 px-5 bg-white/15 text-white font-geist font-medium text-sm rounded-xl hover:bg-white/20"
+          style={{
+            flex: 1,
+            padding: '12px 0',
+            borderRadius: 14,
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: 14,
+            fontWeight: 500,
+          }}
         >
           Cancel
         </button>
 
-        {/* Apply Button */}
         <button
           onClick={onApply}
-          className={`flex-1 py-2.5 px-5 font-geist font-medium text-sm rounded-xl ${
-            hasUnsavedChanges
-              ? 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white'
-              : 'bg-amber-600 hover:bg-amber-700 text-white'
-          }`}
           disabled={!hasUnsavedChanges && selectedCount === 0}
+          style={{
+            flex: 2,
+            padding: '12px 0',
+            borderRadius: 14,
+            background: hasUnsavedChanges || selectedCount > 0
+              ? 'linear-gradient(135deg, #d4af37 0%, #b8952e 100%)'
+              : 'rgba(212,175,55,0.25)',
+            border: '1px solid rgba(212,175,55,0.3)',
+            color: hasUnsavedChanges || selectedCount > 0 ? '#0a0a14' : 'rgba(212,175,55,0.5)',
+            fontSize: 14,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
         >
-          <span className="flex items-center justify-center space-x-2">
-            <span>Apply</span>
-            {selectedCount > 0 && (
-              <span className="px-2 py-0.5 bg-white/20 rounded-full text-sm font-semibold">
-                {selectedCount}
-              </span>
-            )}
-          </span>
-
+          <span>Apply</span>
+          {selectedCount > 0 && (
+            <span style={{
+              padding: '1px 8px',
+              borderRadius: 20,
+              background: 'rgba(0,0,0,0.2)',
+              fontSize: 12,
+              fontWeight: 700,
+            }}>
+              {selectedCount}
+            </span>
+          )}
         </button>
       </div>
-
     </div>
   );
 };
