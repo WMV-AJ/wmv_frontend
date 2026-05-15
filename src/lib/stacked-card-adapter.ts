@@ -183,9 +183,9 @@ function calculateDataCompleteness(card: {
 }
 
 /**
- * Transform Supabase venue/event data to StackedEventCards format
+ * Transform venue/event data to StackedEventCards format
  */
-export function transformSupabaseDataToStackedCards(
+export function transformVenueDataToStackedCards(
   venues: SupabaseVenueEvent[]
 ) {
   // Step 1: Transform all records to card format

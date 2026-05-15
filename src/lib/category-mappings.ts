@@ -51,51 +51,58 @@ export const PRIMARY_CATEGORY_MAP: Record<string, CategoryConfig> = {
   }
 };
 
-// Secondary categories grouped by primary (exact values from Supabase event_categories[].secondary)
+// Secondary categories grouped by primary (exact values from DB event_categories[].secondary)
 export const SECONDARY_CATEGORIES_MAP: Record<string, string[]> = {
   "Food & Dining": [
-    "Dining Experience",
-    "Set Menu"
+    "Restaurant Week",
+    "Special Offer",
+    "Special Menu",
+    "Seasonal Menu",
+    "Set Menu",
   ],
   "Sports Viewing": [
+    "Cricket",
     "Football",
-    "Rugby",
-    "Cricket"
+    "Live Screening",
   ],
   "Live Performance": [
-    "Solo Artist",
-    "Guest DJ",
-    "Live Band"
+    "Music",
+    "DJ Set",
+    "Concert",
+    "Karaoke",
+    "Live Music",
   ],
   "Club Night": [
-    "Open Format",
-    "Latin"
+    "DJ Set",
+    "Themed Night",
+    "Bollywood Night",
   ],
   "Day Party & Afterwork": [
-    "Afternoon",
+    "Beach Day",
     "Sundowner",
-    "Sunset"
+    "Sunset Session",
   ],
   "Happy Hour": [
-    "Daily",
-    "Weekdays Only",
     "Specific Hours",
-    "After Office"
+    "Food & Drink Offers",
   ],
   "Pool Party": [
-    "Daytime"
+    "Beach Day",
+    "Day Pass",
+    "Night Swim",
+    "Cabana Rental",
   ],
   "Ladies Night": [
-    "Complimentary Drinks"
+    "Beach Day",
+    "Club Night",
   ],
   "Brunch": [
-    "Live Entertainment",
-    "Bottomless",
-    "Free-Flow"
+    "Themed Brunch",
+    "Family Friendly",
   ],
   "Comedy Night": [
-    "Open Mic"
-  ]
+    "Stand-up Comedy",
+  ],
 };
 
 // Hex color mapping for UI — brightened palette for dark theme visibility

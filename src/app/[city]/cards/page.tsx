@@ -12,7 +12,7 @@ import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import {
   getCategoryColorForStackedCards,
-  transformSupabaseDataToStackedCards
+  transformVenueDataToStackedCards
 } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
 
@@ -75,7 +75,7 @@ export default function CityCardsPage() {
   }, [allVenues, filters.activeDates]);
 
   const cards = useMemo(() => {
-    const allCards = transformSupabaseDataToStackedCards(filteredVenues);
+    const allCards = transformVenueDataToStackedCards(filteredVenues);
     const eventMap = new Map<string, typeof allCards[0]>();
     allCards.forEach(card => {
       if (card.event.id && !eventMap.has(card.event.id)) {

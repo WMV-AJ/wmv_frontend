@@ -260,13 +260,18 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     setMiniCardOverrides(new Map());
   }, [activeDates]);
 
-  // Cards changed (filter change) → collapse expanded card
+  // Cards changed (filter/category change) → collapse expanded card and restore panel
   useEffect(() => {
     setListFullScreenVenueId(null);
     setMarkerFullScreen(false);
     setExpandedCardOverride(null);
     setExpandedLocalDates([]);
     setMiniCardOverrides(new Map());
+    // Reset to list mode so filtered cards are visible — marker mode would show
+    // nothing if the selected venue was filtered out by the new category filter
+    setMode('list');
+    setMarkerVenueId(null);
+    setIsDismissed(false);
   }, [displayCards]);
 
   // Map marker click → switch to marker mode with single card

@@ -20,7 +20,7 @@ import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import {
   getCategoryColorForStackedCards,
-  transformSupabaseDataToStackedCards,
+  transformVenueDataToStackedCards,
 } from '@/lib/stacked-card-adapter';
 import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/marker-colors';
 import { getDisplayName } from '@/lib/category-mappings';
@@ -308,7 +308,7 @@ export default function CityMapPage() {
   }, [allVenues]);
 
   const cards = useMemo(() => {
-    const rawCards = transformSupabaseDataToStackedCards(filteredVenues);
+    const rawCards = transformVenueDataToStackedCards(filteredVenues);
     const todayTime = new Date().setHours(0, 0, 0, 0);
     const dedupMap = new Map<string, (typeof rawCards)[0]>();
     rawCards.forEach((card) => {
@@ -336,7 +336,7 @@ export default function CityMapPage() {
   }, [filteredVenues, filters.activeDates]);
 
   const allCards = useMemo(() => {
-    const rawCards = transformSupabaseDataToStackedCards(allVenues);
+    const rawCards = transformVenueDataToStackedCards(allVenues);
     const eventMap = new Map<string, (typeof rawCards)[0]>();
     rawCards.forEach((card) => {
       if (card.event.id && !eventMap.has(card.event.id)) eventMap.set(card.event.id, card);
@@ -353,6 +353,20 @@ export default function CityMapPage() {
       } catch { return false; }
     });
   }, [allVenues, filters.activeDates]);
+
+  // For pill counts: future events only (past excluded), no category filter applied.
+  // This keeps pill counts accurate and stable regardless of which category is selected.
+  const countVenues = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    return dateFilteredVenues.filter((v) => {
+      if (!v.event_date) return true;
+      try {
+        const d = new Date(v.event_date);
+        return isNaN(d.getTime()) || d >= todayStart;
+      } catch { return true; }
+    });
+  }, [dateFilteredVenues]);
 
   const venues = useMemo(() => {
     const venueMap = new Map<number, (typeof filteredVenues)[0]>();
@@ -465,7 +479,7 @@ export default function CityMapPage() {
           <CategoryPills
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            venues={dateFilteredVenues}
+            venues={countVenues}
             inlineMode={true}
             variant="outlined"
             wrapPills={true}
