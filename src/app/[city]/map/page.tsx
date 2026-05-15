@@ -292,26 +292,12 @@ export default function CityMapPage() {
       const dateOptions: DateEntry[] = [];
       byDate.forEach((dateEntries, dateKey) => {
         const first = dateEntries[0];
-        if (dateEntries.length === 1) {
-          dateOptions.push({
-            day: first.d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-            date: first.d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            dateKey,
-            isToday: first.d.toDateString() === today.toDateString(),
-          });
-        } else {
-          dateEntries.forEach(e => {
-            const h = parseStartHour(e.eventTime);
-            dateOptions.push({
-              day: first.d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-              date: first.d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-              dateKey,
-              isToday: first.d.toDateString() === today.toDateString(),
-              timeOfDay: h >= 0 ? classifyTime(h) : undefined,
-              hasSameDaySibling: true,
-            });
-          });
-        }
+        dateOptions.push({
+          day: first.d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
+          date: first.d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          dateKey,
+          isToday: first.d.toDateString() === today.toDateString(),
+        });
       });
 
       dateOptions.sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());

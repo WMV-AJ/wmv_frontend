@@ -150,7 +150,15 @@ export default function CityHome() {
       fetch(`/api/venue-count?city=${encodeURIComponent(city)}`).then(r => r.json()),
     ])
       .then(([venues, vc]) => {
-        if (venues.success && Array.isArray(venues.data)) setVenues(venues.data);
+        if (venues.success && Array.isArray(venues.data)) {
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          setVenues(venues.data.filter((v: any) => {
+            if (!v.event_date) return true;
+            const d = new Date(v.event_date);
+            return isNaN(d.getTime()) || d >= todayStart;
+          }));
+        }
         if (vc.count) setTotalVenues(vc.count);
       })
       .catch(console.error)

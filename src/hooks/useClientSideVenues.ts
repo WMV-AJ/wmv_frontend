@@ -66,7 +66,16 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
     // city config, that's "All Dubai" / "All Bangalore" / etc.
     const isAllCitySentinel = (s: string) => typeof s === 'string' && /^All\s+/i.test(s);
 
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
     return allVenues.filter(venue => {
+      // Always exclude past events
+      if (venue.event_date) {
+        const d = new Date(venue.event_date);
+        if (!isNaN(d.getTime()) && d < todayStart) return false;
+      }
+
       // Apply area filter — bypassed when any selectedArea is the "All <City>" sentinel
       if (
         flatFilters.selectedAreas?.length > 0 &&

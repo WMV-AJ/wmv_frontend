@@ -162,8 +162,9 @@ const TopNav: React.FC<TopNavProps> = ({
 
   // Filter options now come from shared VenueDataContext — no fetch needed here
 
+  const hasDatePicker = !!datePickerProps;
   const dateOptions = useMemo(() => {
-    if (!datePickerProps) return [];
+    if (!hasDatePicker) return [];
     const allDates = filterOptions?.dates || [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -181,6 +182,7 @@ const TopNav: React.FC<TopNavProps> = ({
     });
 
     const sortedDates = Array.from(dateMap.entries())
+      .filter(([, date]) => date >= today)
       .sort(([, a], [, b]) => a.getTime() - b.getTime());
 
     return sortedDates.map(([dateKey, date]) => ({
@@ -191,7 +193,7 @@ const TopNav: React.FC<TopNavProps> = ({
       isSaturday: date.getDay() === 6,
       isSunday: date.getDay() === 0,
     }));
-  }, [filterOptions, datePickerProps]);
+  }, [filterOptions, hasDatePicker]);
 
   // Auto-scroll date pills on initial load (to today) and when dropdown preset changes
   const prevPresetRef = useRef<string>(selectedPreset);
@@ -236,9 +238,11 @@ const TopNav: React.FC<TopNavProps> = ({
     });
   }, [dateOptions, selectedPreset]);
 
-  // Track visible month for sticky vertical label
+  // Set initial visible month only once when dates first load
+  const monthInitialised = useRef(false);
   useEffect(() => {
-    if (dateOptions.length > 0) {
+    if (dateOptions.length > 0 && !monthInitialised.current) {
+      monthInitialised.current = true;
       setVisibleMonth(dateOptions[0].date.split(' ')[0].toUpperCase());
     }
   }, [dateOptions]);
@@ -246,11 +250,10 @@ const TopNav: React.FC<TopNavProps> = ({
   const handleDateScroll = () => {
     const container = mobileDateScrollRef.current;
     if (!container) return;
-    const containerRect = container.getBoundingClientRect();
+    const scrollLeft = container.scrollLeft;
     const buttons = container.querySelectorAll<HTMLButtonElement>('button[data-month]');
     for (const btn of buttons) {
-      const rect = btn.getBoundingClientRect();
-      if (rect.left + rect.width / 2 >= containerRect.left) {
+      if (btn.offsetLeft + btn.offsetWidth / 2 >= scrollLeft) {
         const month = btn.getAttribute('data-month');
         if (month) setVisibleMonth(month);
         break;
