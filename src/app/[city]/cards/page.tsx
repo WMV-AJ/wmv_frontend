@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
@@ -29,7 +29,7 @@ export default function CityCardsPage() {
     eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
     attributes: { venue: [], energy: [], timing: [], status: [] },
     selectedAreas: [cityConfig.defaultAreaLabel], // "All Dubai" / "All Bangalore"
-    activeDates: [], // No date filter by default — show every available date for this city
+    activeDates: [new Date().toDateString()], // Default to today on page load
     activeOffers: [],
     searchQuery: ''
   });
@@ -38,10 +38,10 @@ export default function CityCardsPage() {
 
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [navHeight, setNavHeight] = useState(140);
-  const [pillsHeight, setPillsHeight] = useState(70);
+  const [pillsHeight, setPillsHeight] = useState(0);
   const pillsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = pillsRef.current;
     if (!el) return;
     const update = () => setPillsHeight(el.offsetHeight);
@@ -146,6 +146,7 @@ export default function CityCardsPage() {
           style={{
             background: '#0a0a1a',
             top: `${navHeight + 6 + pillsHeight + 6}px`,
+            transition: 'top 0.22s ease-out',
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none' as const,

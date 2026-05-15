@@ -220,7 +220,7 @@ export default function CityMapPage() {
     },
     attributes: { venue: [], energy: [], timing: [], status: [] },
     selectedAreas: [getCityConfig(city).defaultAreaLabel],
-    activeDates: [], // No date filter by default — let the city's events surface regardless of "today"
+    activeDates: [new Date().toDateString()], // Default to today on page load
     activeOffers: [],
     searchQuery: '',
   });

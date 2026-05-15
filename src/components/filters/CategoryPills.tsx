@@ -8,7 +8,6 @@ import {
 import { HierarchicalFilterState, EventCategoryFilterState, Venue } from '@/types';
 import {
   PRIMARY_CATEGORY_MAP,
-  SECONDARY_CATEGORIES_MAP,
   getCategoryColor,
   getHexColor,
   getDisplayName
@@ -137,10 +136,19 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   const getExpandedSecondaries = () => {
     const secondaries: Array<{ primary: string, secondary: string }> = [];
     eventCategories.expandedPrimaries.forEach(primary => {
-      const subcategories = SECONDARY_CATEGORIES_MAP[primary] || [];
-      subcategories.forEach(secondary => {
-        secondaries.push({ primary, secondary });
+      // Build secondary counts from live venue data — sorted by count, top 5 only
+      const countMap = new Map<string, number>();
+      venues.forEach(venue => {
+        (venue.event_categories || []).forEach(cat => {
+          if (cat.primary === primary && cat.secondary) {
+            countMap.set(cat.secondary, (countMap.get(cat.secondary) || 0) + 1);
+          }
+        });
       });
+      Array.from(countMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .forEach(([secondary]) => secondaries.push({ primary, secondary }));
     });
     return secondaries;
   };
@@ -211,8 +219,18 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            exit={{
+              opacity: 0,
+              height: 0,
+              transition: {
+                opacity: { duration: 0.1 },
+                height: { duration: 0.22, delay: 0.08, ease: 'easeInOut' },
+              },
+            }}
+            transition={{
+              height: { duration: 0.22, ease: 'easeOut' },
+              opacity: { duration: 0.15, delay: 0.15 },
+            }}
             className="overflow-hidden"
           >
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 pt-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
