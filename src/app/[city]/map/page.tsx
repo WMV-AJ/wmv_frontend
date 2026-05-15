@@ -271,7 +271,7 @@ export default function CityMapPage() {
       const eventTime = venue.event_time || '';
       try {
         const d = new Date(venue.event_date);
-        if (isNaN(d.getTime())) return;
+        if (isNaN(d.getTime()) || d < today) return;
         const dateKey = d.toDateString();
         if (!rawMap.has(venueKey)) rawMap.set(venueKey, []);
         const existing = rawMap.get(venueKey)!;
@@ -371,6 +371,8 @@ export default function CityMapPage() {
   const [presetRangeDates, setPresetRangeDates] = useState<string[]>([]);
   const [navHeight, setNavHeight] = useState(140);
   const [currentZoom, setCurrentZoom] = useState(MAPCN_ZOOM);
+  // Prevents the map-level click dismiss from firing when a marker is clicked
+  const markerJustClickedRef = useRef(false);
 
   const showLabels = currentZoom >= 14;
 
@@ -388,6 +390,8 @@ export default function CityMapPage() {
   }, []);
 
   const handleVenueSelect = useCallback((venue: Venue) => {
+    markerJustClickedRef.current = true;
+    setTimeout(() => { markerJustClickedRef.current = false; }, 0);
     setSelectedVenue(venue);
   }, []);
 
@@ -481,7 +485,7 @@ export default function CityMapPage() {
           >
             <ZoomTracker onZoomChange={handleZoomChange} />
             <PanToVenue venue={highlightedVenue} />
-            <MapClickHandler onClick={() => setMapClickCount((c) => c + 1)} />
+            <MapClickHandler onClick={() => { if (!markerJustClickedRef.current) setMapClickCount((c) => c + 1); }} />
 
             {venues.map((venue) => {
               const color = getVenueColor(venue);
@@ -540,7 +544,7 @@ export default function CityMapPage() {
           allCards={allCards}
           getCategoryColor={getCategoryColorForStackedCards}
           activeDates={filters.activeDates}
-          selectedVenueId={selectedVenue?.venue_id}
+          selectedVenueId={selectedVenue ? Number(selectedVenue.venue_id) : null}
           venueDateMap={venueDateMap}
           selectedDates={filters.activeDates}
           onDateChange={handleDateChange}

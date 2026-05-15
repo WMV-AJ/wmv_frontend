@@ -2,7 +2,9 @@
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
+import { ShareModal } from '@/components/shared/ShareModal';
 import './StackedEventCards.css';
 
 // ===========================================
@@ -260,8 +262,11 @@ const EventCard: React.FC<EventCardProps> = ({
 }) => {
   const cardColor = getCardColor(event.category, venue.venue_rating);
   const dateDisplay = formatDate(event.event_date);
+  const params = useParams();
+  const city = (params?.city as string) || 'dubai';
 
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleInstagramClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -284,13 +289,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: `${venue.venue_name} - ${event.event_name}`,
-        text: event.event_subtitle,
-        url: window.location.href,
-      });
-    }
+    setShowShareModal(true);
   };
 
   const handleDirectionsClick = (e: React.MouseEvent) => {
@@ -322,6 +321,7 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   return (
+    <>
     <div
       id={`card-${event.id}`}
       className={`stacked-card ${isExpanded ? 'expanded' : ''}`}
@@ -634,7 +634,22 @@ const EventCard: React.FC<EventCardProps> = ({
           <span>Get Directions</span>
         </button>
       </div>
+
     </div>
+
+    <ShareModal
+      isOpen={showShareModal}
+      onClose={() => setShowShareModal(false)}
+      shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/${city}/${event.id}` : `/${city}/${event.id}`}
+      eventName={event.event_name}
+      venueName={venue.venue_name}
+      dateLabel={[
+        event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '',
+        event.event_time_start ? `at ${event.event_time_start}` : '',
+        event.event_time_end ? `- ${event.event_time_end}` : '',
+      ].filter(Boolean).join(' ')}
+    />
+    </>
   );
 };
 

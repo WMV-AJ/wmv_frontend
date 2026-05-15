@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
   Clock,
@@ -228,8 +230,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   darkMode = false,
 }) => {
   const { event, venue } = card;
+  const params = useParams();
+  const city = (params?.city as string) || 'dubai';
   const expandedRef = useRef<HTMLDivElement>(null);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [fullscreenMediaIdx, setFullscreenMediaIdx] = useState<number | null>(null);
   // Build media list from real DB media, separating images from videos
   const isVideoUrl = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
@@ -264,13 +269,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: event.event_name,
-        text: `${event.event_name} at ${venue.venue_name}`,
-        url: window.location.href,
-      }).catch(() => {});
-    }
+    setShowShareModal(true);
   };
 
   const handleDirectionsClick = (e: React.MouseEvent) => {
@@ -333,6 +332,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   // =============================================
   if (isFullScreen) {
     return (
+      <>
       <div
         className="fixed z-[60] flex flex-col rounded-2xl overflow-hidden"
         style={darkMode ? {
@@ -389,7 +389,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
         {/* Scrollable Content */}
         <div
-          className="flex-1 overflow-y-auto px-4 pb-24"
+          className="flex-1 overflow-y-auto px-4 pb-4"
           style={{ scrollbarWidth: 'thin' }}
         >
           {/* Divider + Images side by side */}
@@ -901,6 +901,19 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           </div>
         )}
       </div>
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/${city}/${event.id}` : `/${city}/${event.id}`}
+        eventName={event.event_name}
+        venueName={venue.venue_name}
+        dateLabel={[
+          event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '',
+          event.event_time_start ? `at ${event.event_time_start}` : '',
+          event.event_time_end ? `- ${event.event_time_end}` : '',
+        ].filter(Boolean).join(' ')}
+      />
+      </>
     );
   }
 
@@ -910,6 +923,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   if (!isExpanded) return null; // Only show when selected
 
   return (
+    <>
     <div
       ref={expandedRef}
       className="rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
@@ -1055,6 +1069,20 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
 
     </div>
+
+    <ShareModal
+      isOpen={showShareModal}
+      onClose={() => setShowShareModal(false)}
+      shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/${city}/${event.id}` : `/${city}/${event.id}`}
+      eventName={event.event_name}
+      venueName={venue.venue_name}
+      dateLabel={[
+        event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '',
+        event.event_time_start ? `at ${event.event_time_start}` : '',
+        event.event_time_end ? `- ${event.event_time_end}` : '',
+      ].filter(Boolean).join(' ')}
+    />
+    </>
   );
 };
 
