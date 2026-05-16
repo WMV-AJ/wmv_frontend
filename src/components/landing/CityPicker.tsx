@@ -24,8 +24,10 @@ export function CityPicker({ value, onChange }: CityPickerProps) {
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
-          padding: '13px 18px',
+          flexShrink: 0,
+          gap: 6,
+          padding: '0 14px',
+          height: 44,
           borderRadius: 9999,
           background: 'rgba(15,15,25,0.7)',
           backdropFilter: 'blur(20px)',
@@ -33,10 +35,11 @@ export function CityPicker({ value, onChange }: CityPickerProps) {
           border: '1.5px solid rgba(255,255,255,0.25)',
           color: '#fff',
           fontFamily: "'Inter', sans-serif",
-          fontSize: 15,
+          fontSize: 13,
           fontWeight: 600,
           letterSpacing: '-0.01em',
           cursor: 'pointer',
+          whiteSpace: 'nowrap',
           boxShadow: '0 8px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06) inset',
         }}
       >

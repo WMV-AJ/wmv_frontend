@@ -28,15 +28,16 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
+        flexShrink: 0,
         gap: 8,
-        padding: '10px 16px',
-        height: 48,
+        padding: '0 14px',
+        height: 44,
         borderRadius: 9999,
         background: '#fff',
         border: '1px solid rgba(255,255,255,0.6)',
         color: '#0a0a1a',
         fontFamily: "'Inter', sans-serif",
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: 600,
         letterSpacing: '-0.01em',
         whiteSpace: 'nowrap',
@@ -73,7 +74,7 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
         />
       ) : (
         <>
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -121,7 +122,7 @@ export function LandingOverlay() {
         </div>
       )}
 
-      {/* Bottom-center: [Continue with Google] [city ▾] [→] — single row */}
+      {/* Bottom-center: [Continue with Google] [city ▾] [→] — locked single row */}
       <div
         style={{
           position: 'fixed',
@@ -130,11 +131,11 @@ export function LandingOverlay() {
           transform: 'translateX(-50%)',
           zIndex: 50,
           display: 'flex',
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 10,
-          maxWidth: '94vw',
+          gap: 8,
+          whiteSpace: 'nowrap',
         }}
       >
         {!authLoading && !isAuthed && <GoogleSignInPill returnTo={`/${city}`} />}
@@ -148,8 +149,9 @@ export function LandingOverlay() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
+              flexShrink: 0,
               borderRadius: '50%',
               background: 'rgba(255,255,255,0.95)',
               border: '1.5px solid rgba(255,255,255,0.6)',
@@ -172,7 +174,7 @@ export function LandingOverlay() {
                 '0 8px 28px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.2) inset';
             }}
           >
-          <ArrowRight size={22} strokeWidth={2.5} />
+          <ArrowRight size={20} strokeWidth={2.5} />
         </button>
       </div>
     </>

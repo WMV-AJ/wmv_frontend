@@ -328,7 +328,7 @@ export function HUDLayer({ time }: { time: number }) {
         style={{
           position: 'absolute',
           left: 50,
-          bottom: 140,
+          bottom: 320,
           width: 8,
           height: 420,
           borderRadius: 6,
@@ -368,7 +368,7 @@ export function HUDLayer({ time }: { time: number }) {
         style={{
           position: 'absolute',
           left: '50%',
-          bottom: 500,
+          bottom: 680,
           transform: `translate(-50%, ${(1 - pillsP) * 30}px)`,
           opacity: Easing.easeOutCubic(pillsP),
           textAlign: 'center',
@@ -411,7 +411,7 @@ export function HUDLayer({ time }: { time: number }) {
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: 230,
+          bottom: 410,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
