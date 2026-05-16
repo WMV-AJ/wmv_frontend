@@ -1,7 +1,9 @@
-// Every page is reachable only via /<city>/... The old single-city routes
-// (/, /map, /cards) were deleted alongside this middleware — requests to
-// those legacy paths land here and are 308-redirected to the default city's
-// equivalent.
+// Routing model:
+//   - `/`              → landing page (src/app/page.tsx) with city picker.
+//   - `/<city>/...`    → city-scoped pages (src/app/[city]/...).
+//   - `/login`, `/auth/...`, `/api/...`, `/_next/...` → pass-through.
+//   - Legacy unprefixed paths (`/map`, `/cards`, typos) 308-redirect to
+//     `/${DEFAULT_CITY}${path}` so old bookmarks keep working.
 //
 // Auth is still client-side via AuthContext (backend at /api/auth/*).
 import { NextResponse, type NextRequest } from 'next/server';
@@ -10,15 +12,22 @@ import { ALL_CITIES, DEFAULT_CITY } from './config/cities.config';
 const KNOWN_CITY_PREFIXES = (ALL_CITIES as readonly string[]).map((c) => `/${c}`);
 
 // Top-level paths that must NOT be rewritten under a city prefix.
-const PASSTHROUGH = new Set(['login', 'auth', 'api', '_next', 'favicon.ico']);
+const PASSTHROUGH = new Set(['auth', 'api', '_next', 'favicon.ico']);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Bare root → default city home
+  // Bare root → the landing page (src/app/page.tsx). Let it through.
   if (pathname === '/') {
+    return NextResponse.next();
+  }
+
+  // /login and /login/* fold into the landing page. The cinematic landing
+  // hosts "Continue with Google" directly, so there is no separate /login
+  // surface. 308 preserves any `?error=...` querystrings from OAuth returns.
+  if (pathname === '/login' || pathname.startsWith('/login/')) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${DEFAULT_CITY}`;
+    url.pathname = '/';
     return NextResponse.redirect(url, 308);
   }
 
