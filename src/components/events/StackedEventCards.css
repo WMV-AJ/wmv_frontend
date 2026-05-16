@@ -324,7 +324,7 @@
 .stacked-card.expanded .stacked-card-content {
   max-height: var(--content-height, 1200px);
   opacity: 1;
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .stacked-card-image-wrapper {
@@ -344,14 +344,14 @@
 .stacked-card-info-row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .stacked-card-info-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,8 +360,8 @@
 }
 
 .stacked-card-info-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Icon Colors */
@@ -380,12 +380,12 @@
 .stacked-card-info-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
   flex: 1;
 }
 
 .stacked-card-info-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   color: rgba(120, 200, 230, 0.95);
   text-transform: uppercase;
@@ -393,17 +393,17 @@
 }
 
 .stacked-card-info-value {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #ffffff;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .stacked-card-offers-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #ffffff;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* ===========================================
