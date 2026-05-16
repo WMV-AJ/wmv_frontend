@@ -216,6 +216,16 @@ const SparklesIcon: React.FC = () => (
   </svg>
 );
 
+const FileTextIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
 const MapPinIcon: React.FC = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -256,6 +266,20 @@ const EventCard: React.FC<EventCardProps> = ({
   const city = (params?.city as string) || 'dubai';
 
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+
+  const handleDetailsToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDetailsExpanded) {
+      trackEvent('expand_event_card', {
+        event_id: event.id,
+        venue_id: venue.id,
+        event_name: event.event_name,
+        source: 'details_toggle',
+      });
+    }
+    setIsDetailsExpanded(!isDetailsExpanded);
+  };
 
   const handleInstagramClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -426,16 +450,6 @@ const EventCard: React.FC<EventCardProps> = ({
         className="stacked-card-content"
       >
         <div className="stacked-card-info-row">
-          <div className="stacked-card-info-icon stacked-card-date-icon">
-            <CalendarIcon />
-          </div>
-          <div className="stacked-card-info-content">
-            <span className="stacked-card-info-label">DATE</span>
-            <span className="stacked-card-info-value">{dateDisplay}</span>
-          </div>
-        </div>
-
-        <div className="stacked-card-info-row">
           <div className="stacked-card-info-icon stacked-card-entry-icon">
             <DollarIcon />
           </div>
@@ -487,6 +501,32 @@ const EventCard: React.FC<EventCardProps> = ({
                   </span>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {event.analysis_notes && (
+          <div className="stacked-card-info-row">
+            <div className="stacked-card-info-icon stacked-card-notes-icon">
+              <FileTextIcon />
+            </div>
+            <div className="stacked-card-info-content">
+              <span className="stacked-card-info-label">DETAILS</span>
+              <p
+                className={`stacked-card-analysis-notes ${
+                  isDetailsExpanded ? 'expanded' : 'collapsed'
+                }`}
+              >
+                {event.analysis_notes}
+              </p>
+              {event.analysis_notes.length > 150 && (
+                <span
+                  className="stacked-card-details-toggle"
+                  onClick={handleDetailsToggle}
+                >
+                  <strong>{isDetailsExpanded ? 'Show less' : 'Show more'}</strong>
+                </span>
+              )}
             </div>
           </div>
         )}
