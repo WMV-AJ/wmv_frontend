@@ -92,7 +92,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
                   unoptimized
                   className="object-contain mx-auto rounded-full"
                 />
-                <h1 className="font-mono text-sm font-bold text-white mt-2 tracking-wide">
+                <h1 className="font-geist text-sm font-bold text-white mt-2 tracking-wide">
                   Where&apos;s My Vibe?
                 </h1>
               </div>

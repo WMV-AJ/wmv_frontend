@@ -42,7 +42,7 @@ export const ExpandableCardList: React.FC<ExpandableCardListProps> = ({
         </p>
         {/* Debug info in development */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-xs font-mono text-left">
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-xs font-geist text-left">
             <p>Debug Info:</p>
             <p>Venues received: {venues.length}</p>
             <p>EventsByVenue keys: {Object.keys(eventsByVenue).length}</p>

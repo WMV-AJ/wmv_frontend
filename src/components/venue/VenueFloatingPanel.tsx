@@ -231,10 +231,8 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
 
   return (
     <>
-      {/* Custom CSS */}
+      {/* Custom CSS — fonts now come from next/font in layout.tsx (Geist Sans + Fraunces) */}
       <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
-
         .event-card {
           width: 100%;
           max-width: 100%;
@@ -370,7 +368,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                 duration: 0.3
               }}
               className="fixed bottom-1 md:bottom-4 left-1 right-1 md:left-2 md:right-2 z-[60] mx-auto"
-              style={{ fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif" }}
+              style={{ fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className={`event-card ${isCardExpanded ? 'expanded' : ''}`}>
@@ -392,7 +390,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                     <h1
                       ref={venueNameRef}
                       style={{
-                        fontFamily: "'Fraunces', Georgia, serif",
+                        fontFamily: "var(--font-fraunces), Georgia, serif",
                         fontSize: '22px',
                         fontWeight: 700,
                         color: '#ffffff',

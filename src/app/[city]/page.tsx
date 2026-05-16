@@ -44,7 +44,7 @@ const T = {
   chipLight: '#f5f2ed',
 };
 
-const mono = "var(--font-geist-mono), 'Geist Mono', ui-monospace, monospace";
+const mono = "var(--font-geist-sans), ui-monospace, monospace";
 const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
@@ -326,7 +326,7 @@ export default function CityHome() {
         WebkitOverflowScrolling: 'touch',
         background: T.bg,
         color: T.ink,
-        fontFamily: "var(--font-inter), 'Inter', system-ui, sans-serif",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
       }}
     >
       <style>{`

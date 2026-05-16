@@ -144,7 +144,7 @@ function Pill({ cat, delay, pillsP }: PillProps) {
         WebkitBackdropFilter: 'blur(20px)',
         border: `1.75px solid ${cat.color}`,
         color: cat.color,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
         fontSize: 24,
         fontWeight: 700,
         letterSpacing: '-0.01em',
@@ -179,7 +179,7 @@ function StatCell({ value, label, accent }: { value: number; label: string; acce
     >
       <div
         style={{
-          fontFamily: "'Fraunces', serif",
+          fontFamily: "var(--font-fraunces), Georgia, serif",
           fontSize: 104,
           fontWeight: 700,
           color: '#fff',
@@ -193,7 +193,7 @@ function StatCell({ value, label, accent }: { value: number; label: string; acce
       </div>
       <div
         style={{
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           fontSize: 24,
           fontWeight: 700,
           color: accent,
@@ -260,7 +260,7 @@ export function HUDLayer({ time }: { time: number }) {
           />
           <span
             style={{
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
               fontSize: 32,
               fontWeight: 800,
               color: '#fff',
@@ -293,7 +293,7 @@ export function HUDLayer({ time }: { time: number }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 24, marginTop: 14 }}>
           <div
             style={{
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "var(--font-fraunces), Georgia, serif",
               fontSize: 200,
               fontWeight: 700,
               letterSpacing: '-0.045em',
@@ -307,7 +307,7 @@ export function HUDLayer({ time }: { time: number }) {
           </div>
           <div
             style={{
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
               fontSize: 40,
               fontWeight: 800,
               color: '#fff',
@@ -377,7 +377,7 @@ export function HUDLayer({ time }: { time: number }) {
       >
         <div
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
             fontSize: 18,
             fontWeight: 700,
             color: '#7dd3fc',
@@ -391,12 +391,14 @@ export function HUDLayer({ time }: { time: number }) {
         </div>
         <div
           style={{
-            fontFamily: "'Fraunces', serif",
-            fontSize: 88,
+            // Playfair Display italic — the editorial flourish moment, paired
+            // against Fraunces for the structured tabular counters below.
+            fontFamily: "var(--font-playfair), Georgia, serif",
+            fontSize: 96,
             fontWeight: 700,
             fontStyle: 'italic',
             color: '#fff',
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.025em',
             lineHeight: 0.95,
             textShadow: '0 4px 30px rgba(0,0,0,0.85)',
           }}

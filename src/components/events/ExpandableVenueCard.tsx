@@ -44,7 +44,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
       >
         <div className="flex justify-between items-start gap-3">
           <h1 style={{
-            fontFamily: "'Fraunces', Georgia, serif",
+            fontFamily: "var(--font-fraunces), Georgia, serif",
             fontSize: '22px',
             fontWeight: 700,
             color: '#1a1a1a',
@@ -89,7 +89,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
       <div className="flex justify-between items-start mb-4 gap-3">
         <div className="flex-1 min-w-0">
           <h1 style={{
-            fontFamily: "'Fraunces', Georgia, serif",
+            fontFamily: "var(--font-fraunces), Georgia, serif",
             fontSize: '22px',
             fontWeight: 700,
             color: '#1a1a1a',
@@ -175,7 +175,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
       {/* Event Title */}
       <div style={{ marginBottom: '16px' }}>
         <h2 style={{
-          fontFamily: "'Fraunces', Georgia, serif",
+          fontFamily: "var(--font-fraunces), Georgia, serif",
           fontSize: '16px',
           fontWeight: 700,
           color: '#1a1a1a',

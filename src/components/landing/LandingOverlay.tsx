@@ -56,7 +56,7 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
         background: '#fff',
         border: '1px solid rgba(255,255,255,0.6)',
         color: '#0a0a1a',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
         fontSize: 13,
         fontWeight: 600,
         letterSpacing: '-0.01em',

@@ -114,7 +114,7 @@ export function ChaosOverlay({ time }: { time: number }) {
         />
         <span
           style={{
-            fontFamily: "'Geist Mono', 'JetBrains Mono', ui-monospace, monospace",
+            fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
             fontSize: 30,
             fontWeight: 800,
             color: '#ef4444',
@@ -229,7 +229,7 @@ export function ChaosOverlay({ time }: { time: number }) {
             >
               <span
                 style={{
-                  fontFamily: "'Geist Mono', monospace",
+                  fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
                   fontSize: 18,
                   fontWeight: 700,
                   color: 'rgba(15,15,30,0.5)',
@@ -253,7 +253,7 @@ export function ChaosOverlay({ time }: { time: number }) {
             {/* Main label — clean dark-on-glass, color from textColor variant */}
             <div
               style={{
-                fontFamily: "'Geist Mono', 'JetBrains Mono', ui-monospace, monospace",
+                fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
                 fontSize: 28,
                 fontWeight: 800,
                 color: L.textColor,
@@ -290,7 +290,7 @@ export function ChaosOverlay({ time }: { time: number }) {
               />
               <span
                 style={{
-                  fontFamily: "'Geist Mono', monospace",
+                  fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
                   fontSize: 17,
                   fontWeight: 600,
                   color: 'rgba(15,15,30,0.65)',

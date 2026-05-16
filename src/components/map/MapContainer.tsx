@@ -486,7 +486,7 @@ button.gm-ui-hover-effect{display:none!important}
           <p className="text-muted-foreground mb-4">
             Please add your Google Maps API key to the environment variables to display the map.
           </p>
-          <div className="bg-muted p-3 rounded text-sm font-mono text-left">
+          <div className="bg-muted p-3 rounded text-sm font-geist text-left">
             NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key
             <br />
             Current: {GOOGLE_MAPS_CONFIG.apiKey || 'undefined'}

@@ -178,7 +178,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ isOpen, onClose }) =>
                 className="text-white font-semibold leading-snug"
                 style={{
                   fontSize: '13px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
+                  fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
                   textAlign: c.align === 'center' ? 'center' : c.align === 'right' ? 'right' : 'left',
                 }}
               >
