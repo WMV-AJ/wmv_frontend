@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { DEFAULT_CITY, CITIES, type CitySlug } from '@/config/cities.config';
@@ -9,9 +9,29 @@ import UserMenu from '@/components/auth/UserMenu';
 import { trackEvent } from '@/lib/analytics/track';
 import { CityPicker } from './CityPicker';
 
+// Adaptive viewport check: on phone-narrow screens we collapse the Google
+// pill to "Sign in" instead of "Continue with Google" so the whole row
+// (Google + city + arrow) always fits in one line — iPhone Safari renders
+// fonts a few px wider than Chrome, which was pushing the long label past
+// the wrap threshold.
+function useIsNarrow() {
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 480px)');
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isNarrow;
+}
+
 function GoogleSignInPill({ returnTo }: { returnTo: string }) {
   const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
+  const isNarrow = useIsNarrow();
+  const label = isNarrow ? 'Sign in' : 'Continue with Google';
 
   const handle = () => {
     setLoading(true);
@@ -29,15 +49,15 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        gap: 8,
-        padding: '0 14px',
+        gap: 6,
+        padding: '0 12px',
         height: 44,
         borderRadius: 9999,
         background: '#fff',
         border: '1px solid rgba(255,255,255,0.6)',
         color: '#0a0a1a',
         fontFamily: "'Inter', sans-serif",
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: 600,
         letterSpacing: '-0.01em',
         whiteSpace: 'nowrap',
@@ -74,7 +94,7 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
         />
       ) : (
         <>
-          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -92,7 +112,7 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          <span>Continue with Google</span>
+          <span>{label}</span>
         </>
       )}
     </button>
