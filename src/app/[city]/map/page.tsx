@@ -457,7 +457,7 @@ export default function CityMapPage() {
 
         <TopNav
           embedded={false}
-          hideSignOut={true}
+          hideProfile={true}
           onSearchClick={() => setIsFilterSheetOpen(true)}
           showDatePicker={true}
           datePickerProps={{
