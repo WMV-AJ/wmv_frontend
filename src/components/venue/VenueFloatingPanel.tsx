@@ -931,18 +931,20 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                     <button
                       onClick={() => {
                         if (navigator.share) {
-                          trackEvent('share_venue', {
+                          trackEvent('share_event', {
                             venue_id: venue.venue_id,
                             method: 'native_share',
+                            source: 'event_panel',
                           });
                           navigator.share({
                             title: venue.name,
                             url: window.location.href
                           });
                         } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                          trackEvent('share_venue', {
+                          trackEvent('share_event', {
                             venue_id: venue.venue_id,
                             method: 'copy_link',
+                            source: 'event_panel',
                           });
                           navigator.clipboard.writeText(window.location.href).catch(() => {});
                         }

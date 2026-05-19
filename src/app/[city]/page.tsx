@@ -533,7 +533,7 @@ export default function CityHome() {
                   cursor: s.event_id ? 'pointer' : 'default',
                 }} onClick={() => {
                   if (!s.event_id) return;
-                  trackEvent('view_event', { event_id: s.event_id, venue_id: s.venue_id, source: 'stories_grid' });
+                  trackEvent('view_event', { event_id: s.event_id, venue_id: s.venue_id, place_id: s.place_id, event_date: s.event_date, source: 'stories_grid' });
                   router.push(`/${city}/event/${s.event_id}`);
                 }}>
                   {s.mediaUrl && s.mediaType === 'video' ? (
@@ -608,7 +608,7 @@ export default function CityHome() {
                 return (
                   <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
                     if (!e.event_id) return;
-                    trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, source: 'tonight_featured' });
+                    trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'tonight_featured' });
                     router.push(`/${city}/event/${e.event_id}`);
                   }}>
                     {hasVideo ? (
@@ -689,7 +689,7 @@ export default function CityHome() {
                   cursor: e.event_id ? 'pointer' : 'default',
                 }} onClick={() => {
                   if (!e.event_id) return;
-                  trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, source: 'tonight_list' });
+                  trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'tonight_list' });
                   router.push(`/${city}/event/${e.event_id}`);
                 }}>
                   {/* Number */}
@@ -844,7 +844,7 @@ export default function CityHome() {
                   return (
                     <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
                       if (!e.event_id) return;
-                      trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, source: 'weekend_carousel' });
+                      trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'weekend_carousel' });
                       router.push(`/${city}/event/${e.event_id}`);
                     }}>
                       <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>

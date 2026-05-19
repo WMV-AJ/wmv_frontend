@@ -284,11 +284,17 @@ const EventCard: React.FC<EventCardProps> = ({
   const handleInstagramClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (venue.venue_instagram) {
+      const handle = venue.venue_instagram.startsWith('http')
+        ? venue.venue_instagram
+        : venue.venue_instagram.replace('@', '');
+      trackEvent('click_instagram', {
+        instagram_handle: handle,
+        source: 'stacked_card',
+      });
       if (venue.venue_instagram.startsWith('http')) {
         window.open(venue.venue_instagram, '_blank');
       } else {
-        const username = venue.venue_instagram.replace('@', '');
-        window.open(`https://instagram.com/${username}`, '_blank');
+        window.open(`https://instagram.com/${handle}`, '_blank');
       }
     }
   };

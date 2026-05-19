@@ -158,10 +158,11 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
   const handleShareClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (navigator.share) {
-      trackEvent('share_venue', {
+      trackEvent('share_event', {
         venue_id: venue.id,
         event_id: event.id,
         method: 'native_share',
+        source: 'map_card',
       });
       navigator.share({
         title: event.event_name,

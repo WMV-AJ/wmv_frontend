@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { trackEvent } from '@/lib/analytics/track';
 import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
@@ -256,6 +257,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     e.stopPropagation();
     if (venue.venue_instagram) {
       const handle = venue.venue_instagram.replace('@', '').trim();
+      trackEvent('click_instagram', {
+        instagram_handle: handle,
+        source: 'event_card',
+      });
       window.open(`https://www.instagram.com/${handle}`, '_blank');
     }
   };

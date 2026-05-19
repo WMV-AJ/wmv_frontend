@@ -9,7 +9,7 @@ export type AnalyticsEventName =
   | 'expand_event_card'
   | 'view_event'
   | 'click_instagram'
-  | 'share_venue'
+  | 'share_event'
   | 'filter_applied'
   | 'search_performed'
   | 'nav_view_change'
