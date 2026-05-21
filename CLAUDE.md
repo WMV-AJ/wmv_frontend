@@ -1,6 +1,67 @@
 # CLAUDE.md - AI Assistant Project Context
 ## Dubai Events Platform V2 (Where's My Vibe)
 
+---
+
+## 🚨 MULTI-CITY INVARIANTS (added 2026-05-21)
+
+WMV is no longer Dubai-only. **Dubai, Bangalore, and Mumbai are live**, and
+new cities onboard via the backend's `/api/admin/cities` workflow with
+**zero frontend code edits**. Every frontend change must preserve this.
+
+See `/Users/arpitjhamb/Desktop/WMV Prod/backend/CLAUDE.md` for the full
+contract — frontend-specific rules below.
+
+### Hard NOs
+
+| ❌ | ✅ |
+|---|---|
+| `type CitySlug = 'dubai' \| 'bangalore'` | `type CitySlug = string` (already widened) |
+| `import { CITIES } from '@/config/cities.config'` and treat as static | Same import, but know it mutates at runtime via `loadCitiesFromApi()` |
+| `if (slug === 'dubai' \|\| slug === 'bangalore')` | `isValidCity(slug)` |
+| Hardcoding Dubai's `+4` UTC offset in date math | `getCityConfig(slug).utcOffsetHours` |
+| Removing `<CitiesProvider>` from `src/app/layout.tsx` | Keep it — it's how dynamic cities load on first paint |
+| Removing or "simplifying" `src/middleware.ts:refreshDynamicCities` | It's the only thing preventing `/mumbai` from 307'ing to `/dubai/mumbai` |
+| Adding a new top-level path (e.g. `/about`) without adding it to middleware's `PASSTHROUGH` | It'll 307 to `/<DEFAULT_CITY>/about` |
+| Querying Supabase directly instead of `WMV_API_BASE` proxy routes | All data flows through the backend at `127.0.0.1:2300` |
+
+### Build & deploy
+
+- `npm run build` automatically runs `npm run sync-standalone` (copies
+  `.next/static` and `public` into `.next/standalone/` because Next.js
+  doesn't do this in standalone mode). Skipping the sync = every JS/CSS
+  asset 404s.
+- Never run `pm2 restart wmv-frontend` after only `next build` — always use
+  the full `npm run build` script.
+
+### Adding a new page
+
+- Server-side renders use the **static** `CITIES` (Dubai + Bangalore only)
+  because the runtime fetcher only runs in the browser. New cities like
+  Mumbai will render with the DEFAULT_CITY config on SSR, then re-render
+  on hydration once `loadCitiesFromApi()` populates the cache.
+- This briefly shows the wrong city's config on first paint for non-static
+  cities. If that's a problem for your page, fetch `/api/cities` directly
+  in a server component and pass the config as props.
+
+### Verifying multi-city after any frontend change
+
+```bash
+# Each active city renders the [city] page (no 307)
+for c in dubai bangalore mumbai; do
+  echo -n "$c: "; curl -sI "https://wheresmyvibe.com/$c" | head -1
+done
+
+# /api/cities proxy still works
+curl -s https://wheresmyvibe.com/api/cities | jq '.cities[].slug'
+
+# Static assets serve (catches the sync-standalone regression)
+curl -sI https://wheresmyvibe.com/_next/static/css/$(curl -s https://wheresmyvibe.com/dubai | grep -oE '/_next/static/css/[^"]+\.css' | head -1 | xargs basename)
+```
+
+---
+
+
 > **Purpose**: This file provides comprehensive context for AI assistants (Claude, GPT, etc.) working on this project.
 > **Last Updated**: December 2025
 > **Project Status**: V1.0 Production Ready, V2.0 Planning

@@ -190,7 +190,9 @@ const VenueDetailsSidebar: React.FC<VenueDetailsSidebarProps> = ({
                       <span className={`w-1 h-1 rounded-full ${
                         isDarkMode ? 'bg-white/60' : 'bg-gray-500'
                       }`}></span>
-                      <span>Dubai</span>
+                      {/* Show venue's actual city (carried from final_1.city) instead
+                          of a hardcoded "Dubai". Capitalize the slug for display. */}
+                      <span>{((venue as { city?: string }).city || 'Dubai').replace(/^\w/, c => c.toUpperCase())}</span>
                     </p>
                   </div>
                 </div>

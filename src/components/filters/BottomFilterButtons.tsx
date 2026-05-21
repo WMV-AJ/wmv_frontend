@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, MapPin, Sparkles, Gift, ChevronUp, Music } from 'lucide-react';
 import type { FilterState } from '@/types';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { isAllCitySentinel, hasAllCitySentinel } from '@/lib/city-helpers';
+import { getCityConfig } from '@/config/cities.config';
 
 interface BottomFilterButtonsProps {
   filters: FilterState;
@@ -20,9 +22,14 @@ const BottomFilterButtons: React.FC<BottomFilterButtonsProps> = ({
 }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
   const { filterOptions, isLoading, error } = useFilterOptions();
+  const params = useParams();
+  const currentCity = typeof params?.city === 'string' ? params.city : 'dubai';
+  // "All <City>" label for the active city — was hardcoded to 'All Dubai'
+  // pre-multi-city; now sourced from the DB-backed city registry.
+  const cityDefaultLabel = getCityConfig(currentCity).defaultAreaLabel ?? `All ${getCityConfig(currentCity).displayName}`;
 
   const toggleArea = (area: string) => {
-    const existingAllSentinel = filters.selectedAreas.find(isAllCitySentinel) || 'All Dubai';
+    const existingAllSentinel = filters.selectedAreas.find(isAllCitySentinel) || cityDefaultLabel;
     if (isAllCitySentinel(area)) {
       onFiltersChange({ ...filters, selectedAreas: [area] });
     } else {
@@ -163,8 +170,8 @@ const BottomFilterButtons: React.FC<BottomFilterButtonsProps> = ({
                   <div className="grid grid-cols-1 gap-3 max-h-[30vh] overflow-y-auto scrollbar-thin">
                     {(() => {
                       // The "All <City>" sentinel for the current city (read from filters,
-                      // falls back to "All Dubai" for legacy state).
-                      const allSentinel = filters.selectedAreas.find(isAllCitySentinel) || 'All Dubai';
+                      // falls back to the active city's label sourced from cities.config).
+                      const allSentinel = filters.selectedAreas.find(isAllCitySentinel) || cityDefaultLabel;
                       return (
                         <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/50 cursor-pointer touch-manipulation transition-all duration-200 group">
                           <input

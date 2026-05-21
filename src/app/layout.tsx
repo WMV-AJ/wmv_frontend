@@ -5,6 +5,7 @@ import { Geist, Fraunces, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
+import { CitiesProvider } from "@/contexts/CitiesProvider";
 import AnalyticsProvider from "@/lib/analytics/AnalyticsProvider";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 
@@ -125,9 +126,11 @@ export default function RootLayout({
         <AuthProvider>
           <Suspense fallback={null}>
             <AnalyticsProvider>
-              <VenueDataProvider>
-                {children}
-              </VenueDataProvider>
+              <CitiesProvider>
+                <VenueDataProvider>
+                  {children}
+                </VenueDataProvider>
+              </CitiesProvider>
             </AnalyticsProvider>
           </Suspense>
           <CookieConsentBanner />

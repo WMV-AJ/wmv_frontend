@@ -73,9 +73,14 @@ export const StackedVenueCard: React.FC<StackedVenueCardProps> = ({
   const handleShareClick = async () => {
     if (navigator.share) {
       try {
+        // Venue's city (carried from final_1.city) is the source of truth for
+        // share text. Falls back to "in town" if venue.city is missing —
+        // safer than hardcoding any city name.
+        const venueCity = (venue as { city?: string }).city;
+        const cityLabel = venueCity ? ` in ${venueCity.charAt(0).toUpperCase()}${venueCity.slice(1)}` : '';
         await navigator.share({
           title: venue.name,
-          text: `Check out ${venue.name} in Dubai!`,
+          text: `Check out ${venue.name}${cityLabel}!`,
           url: window.location.href
         });
       } catch (error) {

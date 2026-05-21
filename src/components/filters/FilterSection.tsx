@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
+import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import PillButton from './PillButton';
 import DatePresets from './DatePresets';
 import { isAllCitySentinel } from '@/lib/city-helpers';
+import { getCityConfig } from '@/config/cities.config';
 
 interface FilterSectionConfig {
   id: string;
@@ -28,14 +30,19 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   onToggle,
   onSelectionChange
 }) => {
+  const params = useParams();
+  const currentCity = typeof params?.city === 'string' ? params.city : 'dubai';
+
   const handlePillClick = (option: string) => {
     const { selectedValues, id } = section;
 
     // Special handling for areas — "All <City>" sentinel logic
     if (id === 'selectedAreas') {
       // The current "All <City>" sentinel for this filter (e.g. "All Dubai",
-      // "All Bangalore"). Falls back to "All Dubai" if none is in state yet.
-      const existingAllSentinel = selectedValues.find(isAllCitySentinel) || 'All Dubai';
+      // "All Bangalore", "All Mumbai"). Falls back to the active city's label
+      // from cities.config (was hardcoded to 'All Dubai' pre-multi-city).
+      const cityDefaultLabel = getCityConfig(currentCity).defaultAreaLabel ?? `All ${getCityConfig(currentCity).displayName}`;
+      const existingAllSentinel = selectedValues.find(isAllCitySentinel) || cityDefaultLabel;
 
       if (isAllCitySentinel(option)) {
         onSelectionChange([option]);

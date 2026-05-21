@@ -9,8 +9,14 @@
  * box, assuming the backend has venues tagged with that city.
  */
 
-export type CitySlug = 'dubai' | 'bangalore';
+// Widened to `string` so dynamic cities loaded from /api/cities at runtime
+// don't fail the compile-time literal check. Validation now happens via
+// `isValidCity()` against the merged static+dynamic registry.
+export type CitySlug = string;
 
+// Mutable — `loadCitiesFromApi()` pushes new city slugs in at runtime
+// (called from the root layout on mount). Stays seeded with Dubai +
+// Bangalore so SSG and build-time consumers have a sane baseline.
 export const ALL_CITIES: CitySlug[] = ['dubai', 'bangalore'];
 
 /** Default city for the root redirect (`/` → `/dubai`). */
@@ -49,6 +55,12 @@ export interface CityUiConfig {
   defaultZoom: number;
   areas: CityArea[];            // for the area filter
   defaultAreaLabel: string;     // "All Dubai" / "All Bangalore"
+  // Stage-3 / city_config taxonomy mirrored from backend (migration 046/047).
+  // Drives the order + membership of the primary category pills on [city].
+  // Empty array → CategoryPills falls back to whatever categories exist in
+  // the venues data (organic discovery), useful for cities whose backend
+  // taxonomy hasn't been curated yet.
+  eventCategories: string[];
 }
 
 const DUBAI_AREAS: CityArea[] = [
@@ -83,6 +95,12 @@ export const CITIES: Record<CitySlug, CityUiConfig> = {
     defaultZoom: 12,
     areas: DUBAI_AREAS,
     defaultAreaLabel: 'All Dubai',
+    eventCategories: [
+      'Club Night', 'Brunch', 'Pool Party', 'Ladies Night',
+      'Live Performance', 'Happy Hour', 'Sports Viewing',
+      'Day Party & Afterwork', 'Comedy Night', 'Food & Dining',
+      'Business Event',
+    ],
   },
   bangalore: {
     slug: 'bangalore',
@@ -98,6 +116,13 @@ export const CITIES: Record<CitySlug, CityUiConfig> = {
     defaultZoom: 12,
     areas: BANGALORE_AREAS,
     defaultAreaLabel: 'All Bangalore',
+    // Mirrors migration 047 BLR taxonomy (post-Quiz/Open Mic collapse).
+    eventCategories: [
+      'Food & Dining', 'Live Performance', 'Club Night', 'Cocktail Bar Night',
+      'Pub Night', 'Sports Viewing', 'Business Event', 'Comedy Night',
+      'Activities', 'Karaoke', 'Tasting Event', 'Happy Hour',
+      'Workshop', 'Family & Kids', 'Pop Up', 'Ladies Night',
+    ],
   },
 };
 
@@ -112,6 +137,93 @@ export function isValidCity(slug: string | undefined | null): slug is CitySlug {
 export function getCityConfig(slug: string | undefined | null): CityUiConfig {
   if (isValidCity(slug)) return CITIES[slug];
   return CITIES[DEFAULT_CITY];
+}
+
+// ---------------------------------------------------------------------------
+// Runtime city loader (migration 043 / Phase 9.4)
+// ---------------------------------------------------------------------------
+// Fetches the DB-backed city registry from /api/cities and mutates CITIES +
+// ALL_CITIES in place so newly-onboarded cities (e.g. Mumbai) appear without
+// a code edit + redeploy. Call once at app boot from a top-level provider:
+//
+//   await loadCitiesFromApi();
+//
+// Failure is silent (kept the static Dubai+Bangalore fallback) — a
+// frontend-only outage when the API is down is worse than serving slightly
+// stale config.
+
+interface ApiCity {
+  slug: string;
+  displayName: string;
+  country?: string;
+  region?: string;
+  timezone?: string;
+  utcOffsetHours?: number;
+  currency?: string;
+  currencySymbol?: string;
+  status?: string;
+  mapCenter?: { lat: number; lng: number } | null;
+  mapBounds?: { north: number; south: number; east: number; west: number } | null;
+  defaultZoom?: number;
+  defaultAreaLabel?: string | null;
+  areas?: CityArea[] | null;
+  eventCategories?: string[] | null;
+}
+
+function apiCityToUi(c: ApiCity): CityUiConfig | null {
+  // We need at least a map center to render the [city] page. If the city is
+  // pending and hasn't been auto-derived yet, skip it.
+  if (!c.mapCenter || !c.mapBounds) return null;
+  return {
+    slug: c.slug,
+    displayName: c.displayName,
+    country: c.country ?? '',
+    region: c.region ?? '',
+    timezone: c.timezone ?? 'UTC',
+    utcOffsetHours: c.utcOffsetHours ?? 0,
+    currency: c.currency ?? '',
+    currencySymbol: c.currencySymbol ?? c.currency ?? '',
+    mapCenter: c.mapCenter,
+    mapBounds: c.mapBounds,
+    defaultZoom: c.defaultZoom ?? 12,
+    areas: c.areas ?? [],
+    defaultAreaLabel: c.defaultAreaLabel ?? `All ${c.displayName}`,
+    eventCategories: c.eventCategories ?? [],
+  };
+}
+
+let loadedOnce = false;
+
+export async function loadCitiesFromApi(): Promise<void> {
+  try {
+    // /api/cities is a Next.js proxy route (see app/api/cities/route.ts)
+    // that forwards to the backend's GET /api/cities. Using a relative URL
+    // works both client-side (browser → same origin) and server-side
+    // (during SSG, Next.js routes the call internally).
+    const r = await fetch('/api/cities', { cache: 'no-store' });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j.success || !Array.isArray(j.cities)) return;
+    for (const api of j.cities as ApiCity[]) {
+      if (api.status !== 'active') continue;
+      const ui = apiCityToUi(api);
+      if (!ui) continue;
+      // Mutate in place so every existing consumer (CITIES[slug],
+      // ALL_CITIES.includes(), getCityConfig(slug)) sees the new entry.
+      (CITIES as Record<string, CityUiConfig>)[ui.slug] = ui;
+      if (!ALL_CITIES.includes(ui.slug)) ALL_CITIES.push(ui.slug);
+    }
+    loadedOnce = true;
+  } catch (err) {
+    // Static Dubai+Bangalore fallback remains in CITIES — log and move on.
+    if (typeof console !== 'undefined') {
+      console.warn('[cities.config] loadCitiesFromApi failed, using static fallback', err);
+    }
+  }
+}
+
+export function hasLoadedDynamicCities(): boolean {
+  return loadedOnce;
 }
 
 /** Format a ticket price using the city's currency symbol. */

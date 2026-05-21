@@ -48,6 +48,53 @@ export const PRIMARY_CATEGORY_MAP: Record<string, CategoryConfig> = {
   "Comedy Night": {
     display: "Comedy",
     color: "gray"
+  },
+  // ── Per-city additions (migration 046 + 047 — Bangalore, Mumbai) ──
+  // Keys MUST match `primary` values from Stage 3 / city_config.event_categories.
+  "Cocktail Bar Night": {
+    display: "Cocktail Bar",
+    color: "violet"
+  },
+  "Pub Night": {
+    display: "Pub Night",
+    color: "amber"
+  },
+  "Workshop": {
+    display: "Workshop",
+    color: "sage"
+  },
+  "Family & Kids": {
+    display: "Family",
+    color: "coral"
+  },
+  "Activities": {
+    display: "Activities",
+    color: "mint"
+  },
+  "Karaoke": {
+    display: "Karaoke",
+    color: "rose"
+  },
+  "Tasting Event": {
+    display: "Tasting",
+    color: "burgundy"
+  },
+  "Pop Up": {
+    display: "Pop Up",
+    color: "gold"
+  },
+  "Business Event": {
+    display: "Business",
+    color: "slate"
+  },
+  // Mumbai-specific (migration 046)
+  "Bollywood Night": {
+    display: "Bollywood",
+    color: "saffron"
+  },
+  "Standup Comedy": {
+    display: "Standup",
+    color: "lemon"
   }
 };
 
@@ -116,13 +163,27 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   blue: "#2EC495",     // Pool Party — bright emerald
   green: "#3ECFCC",    // Live Performance — bright cyan-teal
   teal: "#FFD600",     // Happy Hour — bright yellow
-  gray: "#AAAAAA"      // Comedy Night — lighter gray
+  gray: "#AAAAAA",     // Comedy Night — lighter gray
+  // ── Added with 046/047 city-specific taxonomies ──
+  violet: "#C77DFF",   // Cocktail Bar Night
+  amber: "#D4A574",    // Pub Night
+  sage: "#9DCC5F",     // Workshop
+  coral: "#FF9AA2",    // Family & Kids
+  mint: "#4ECDC4",     // Activities
+  rose: "#FF6F91",     // Karaoke
+  burgundy: "#E07A5F", // Tasting Event (brightened from #B85450 for dark theme)
+  gold: "#F7B731",     // Pop Up
+  slate: "#7B8CDE",    // Business Event (brightened)
+  saffron: "#FF8C42",  // Bollywood Night
+  lemon: "#F4E04D"     // Standup Comedy
 };
 
 // Google Maps marker color mapping
+// Google Maps only supports a fixed palette (red, blue, green, yellow,
+// purple, orange, pink) so the new categories map down to the nearest match.
 export const GOOGLE_MAPS_COLOR_MAP: Record<string, string> = {
   purple: "purple",
-  red: "red", 
+  red: "red",
   yellow: "yellow",
   orange: "orange",
   pink: "pink",
@@ -130,7 +191,18 @@ export const GOOGLE_MAPS_COLOR_MAP: Record<string, string> = {
   blue: "blue",
   green: "green",
   teal: "blue",
-  gray: "red" // fallback
+  gray: "red", // fallback
+  violet: "purple",
+  amber: "orange",
+  sage: "green",
+  coral: "pink",
+  mint: "green",
+  rose: "pink",
+  burgundy: "red",
+  gold: "yellow",
+  slate: "blue",
+  saffron: "orange",
+  lemon: "yellow"
 };
 
 // Get display name from database primary name

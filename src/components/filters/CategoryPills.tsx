@@ -1,17 +1,21 @@
 'use client';
 
 import React from 'react';
+import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Utensils, Laugh, Moon, Music2, Trophy, Sun, Clock, Waves, Sparkles, Coffee
+  Utensils, Laugh, Moon, Music2, Trophy, Sun, Clock, Waves, Sparkles, Coffee,
+  // 046/047 city-specific category icons
+  Martini, Beer, Wrench, Users, PartyPopper, Mic, Wine, Zap, Briefcase, Film,
+  Tag, // generic fallback for unknown categories
 } from 'lucide-react';
 import { HierarchicalFilterState, EventCategoryFilterState, Venue } from '@/types';
 import {
-  PRIMARY_CATEGORY_MAP,
   getCategoryColor,
   getHexColor,
   getDisplayName
 } from '@/lib/category-mappings';
+import { getCityConfig } from '@/config/cities.config';
 
 interface CategoryPillsProps {
   filters: HierarchicalFilterState;
@@ -26,6 +30,13 @@ interface CategoryPillsProps {
 const SHORT_DISPLAY_NAMES: Record<string, string> = {
   'Food & Dining': 'Food',
   'Club Night': 'Clubs',
+  'Cocktail Bar Night': 'Cocktail',
+  'Live Performance': 'Live',
+  'Business Event': 'Business',
+  'Family & Kids': 'Family',
+  'Tasting Event': 'Tasting',
+  'Bollywood Night': 'Bollywood',
+  'Standup Comedy': 'Standup',
 };
 
 // Icon mapping for primary categories — keys match DB event_categories[].primary exactly
@@ -40,6 +51,18 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'Ladies Night': Sparkles,
   'Brunch': Coffee,
   'Comedy Night': Laugh,
+  // 046/047 city-specific additions
+  'Cocktail Bar Night': Martini,
+  'Pub Night': Beer,
+  'Workshop': Wrench,
+  'Family & Kids': Users,
+  'Activities': PartyPopper,
+  'Karaoke': Mic,
+  'Tasting Event': Wine,
+  'Pop Up': Zap,
+  'Business Event': Briefcase,
+  'Bollywood Night': Film,
+  'Standup Comedy': Mic,
 };
 
 const CategoryPills: React.FC<CategoryPillsProps> = ({
@@ -155,7 +178,22 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
 
   const expandedSecondaries = getExpandedSecondaries();
 
-  const sortedCategories = Object.keys(PRIMARY_CATEGORY_MAP)
+  // City-driven pill list (migration 046/047 — backend city_config.event_categories,
+  // mirrored into frontend CityUiConfig.eventCategories and synced via
+  // /api/cities at runtime). Falls back to any organically-observed categories
+  // in the venues data if the city's taxonomy is empty (e.g. a freshly-onboarded
+  // city before its taxonomy is curated).
+  const params = useParams();
+  const citySlug = (Array.isArray(params?.city) ? params.city[0] : params?.city) || '';
+  const cityCfg = getCityConfig(citySlug);
+
+  const taxonomy: string[] = cityCfg.eventCategories?.length
+    ? cityCfg.eventCategories
+    : Array.from(new Set(
+        venues.flatMap(v => (v.event_categories || []).map(c => c.primary).filter(Boolean) as string[])
+      ));
+
+  const sortedCategories = taxonomy
     .map(category => ({ category, count: getCategoryCount(category) }))
     .filter(({ count }) => count > 0)
     .sort((a, b) => b.count - a.count);
@@ -167,7 +205,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
     const displayName = getDisplayName(category);
     const label = isOutlined ? (SHORT_DISPLAY_NAMES[category] || displayName) : displayName;
     const count = getCategoryCount(category);
-    const IconComponent = CATEGORY_ICONS[category];
+    const IconComponent = CATEGORY_ICONS[category] ?? Tag;
 
     return (
       <button
