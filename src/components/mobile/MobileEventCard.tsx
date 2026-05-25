@@ -28,6 +28,7 @@ import {
   Sun,
   Sunset,
   Moon,
+  Ticket,
 } from 'lucide-react';
 
 interface EventCardData {
@@ -50,6 +51,7 @@ interface EventCardData {
     website_social?: string;
     event_categories?: Array<{ primary: string; secondary?: string }>;
     deals?: Array<{ type: string; timing?: string | null; description: string }>;
+    swipe_link_url?: string | null;
   };
   venue: {
     id: string;
@@ -286,6 +288,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     } else if (venue.venue_address) {
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(venue.venue_address)}`, '_blank');
     }
+  };
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!event.swipe_link_url) return;
+    const url = event.swipe_link_url.startsWith('http')
+      ? event.swipe_link_url
+      : `https://${event.swipe_link_url}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const highlightTags = parseToArray(venue.venue_highlights);
@@ -828,19 +839,35 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               </button>
             </div>
 
-            {/* Get Directions pill button */}
-            <button
-              className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
-              style={{
-                background: 'rgba(90, 90, 90, 0.75)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
-                color: '#ffffff',
-              }}
-              onClick={handleDirectionsClick}
-            >
-              <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
-              <span>Get Directions</span>
-            </button>
+            {/* Book + Directions pill buttons */}
+            <div className="flex items-center gap-2">
+              {event.swipe_link_url && (
+                <button
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                  style={{
+                    background: 'rgba(90, 90, 90, 0.75)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                    color: '#ffffff',
+                  }}
+                  onClick={handleBookClick}
+                >
+                  <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
+                  <span>Book</span>
+                </button>
+              )}
+              <button
+                className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                style={{
+                  background: 'rgba(90, 90, 90, 0.75)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                  color: '#ffffff',
+                }}
+                onClick={handleDirectionsClick}
+              >
+                <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
+                <span>Directions</span>
+              </button>
+            </div>
           </div>
         </div>
 

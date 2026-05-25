@@ -24,6 +24,7 @@ import {
   Copy,
   Link2,
   Check,
+  Ticket,
 } from 'lucide-react';
 import { formatDateLabel, formatTimeClean, isEventHappeningNow } from '@/lib/time-utils';
 
@@ -66,6 +67,7 @@ interface EventRecord {
   media_type_2: string;
   deals: any;
   instagram_id: string;
+  swipe_link_url?: string | null;
 }
 
 interface RelatedEvent {
@@ -305,6 +307,14 @@ export default function EventDetailPage() {
     if (!event?.venue_final_instagram) return;
     const ig = event.venue_final_instagram;
     window.open(ig.startsWith('http') ? ig : `https://instagram.com/${ig.replace('@', '')}`, '_blank');
+  }, [event]);
+
+  const handleBook = useCallback(() => {
+    if (!event?.swipe_link_url) return;
+    const url = event.swipe_link_url.startsWith('http')
+      ? event.swipe_link_url
+      : `https://${event.swipe_link_url}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }, [event]);
 
   // ===== Loading / Error State =====
@@ -901,13 +911,23 @@ export default function EventDetailPage() {
             >
               <Share2 className="w-[18px] h-[18px] text-gray-700" />
             </button>
+            {event.swipe_link_url && (
+              <button
+                onClick={handleBook}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[14px] font-semibold"
+                style={{ background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)', color: '#374151' }}
+              >
+                <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
+                Book
+              </button>
+            )}
             <button
               onClick={handleDirections}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[14px] font-semibold"
               style={{ background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.1)', color: '#374151' }}
             >
               <Navigation className="w-4 h-4 text-green-400" />
-              Get Directions
+              Directions
             </button>
           </div>
         </div>

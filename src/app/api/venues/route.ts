@@ -194,7 +194,8 @@ export async function GET(request: Request) {
       media_url_2: mediaUrls[1] ?? record.media_url_2 ?? null,
       media_type_2: mediaTypes[1] ?? record.media_type_2 ?? null,
       deals: record.deals || null,
-      scrape_date: record.scrape_date || null
+      scrape_date: record.scrape_date || null,
+      swipe_link_url: record.swipe_link_url || null,
       };
     }) || [];
 

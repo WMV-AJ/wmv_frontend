@@ -256,6 +256,9 @@ export interface Final1Record {
   // New event category fields
   event_categories?: EventCategory[];
   attributes?: EventAttributes;
+  // Swipe-up booking link from HikerAPI story sticker — when non-null, drives
+  // the "Book" button on event detail / card / map surfaces.
+  swipe_link_url?: string | null;
 }
 
 // Event Types (Legacy - for compatibility)
@@ -286,6 +289,8 @@ export interface Event {
   media_type_2?: string;
   media_urls?: string[];
   media_types?: string[];
+  // Swipe-up booking link from HikerAPI story sticker (mirrors Final1Record).
+  swipe_link_url?: string | null;
 }
 
 // Instagram Story Types (for compatibility)

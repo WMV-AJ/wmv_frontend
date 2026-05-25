@@ -511,6 +511,40 @@
   white-space: nowrap;
 }
 
+/* Book pill — mirrors directions, sits to its left. Pink ticket icon for
+   visual hierarchy (it's the monetisable CTA on every event). */
+.stacked-card-book-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 30px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stacked-card-book-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.02);
+}
+
+.stacked-card-book-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: #E1306C;
+}
+
+.stacked-card-book-btn span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
 /* ===========================================
    RESPONSIVE ADJUSTMENTS
    =========================================== */

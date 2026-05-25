@@ -66,6 +66,9 @@ export interface SupabaseVenueEvent {
   media_url_2?: string;
   media_type_2?: string;
 
+  // Booking link from HikerAPI swipe-up sticker — drives the Book button.
+  swipe_link_url?: string | null;
+
   // Attributes
   attributes?: {
     venue?: string[];
@@ -247,6 +250,7 @@ export function transformVenueDataToStackedCards(
         media_url_2: venue.media_url_2,
         media_type_2: venue.media_type_2,
         deals: venue.deals,
+        swipe_link_url: venue.swipe_link_url ?? null,
       },
       venue: {
         id: venue.venue_id?.toString() || '',

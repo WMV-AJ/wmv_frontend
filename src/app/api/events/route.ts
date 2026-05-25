@@ -37,6 +37,7 @@ interface EventRecord {
   media_type_1?: string | null;
   media_url_2?: string | null;
   media_type_2?: string | null;
+  swipe_link_url?: string | null;
 }
 
 // Server-side only. Never read NEXT_PUBLIC_BACKEND_URL here — the public URL
@@ -229,6 +230,7 @@ export async function GET(request: Request) {
       media_type_1: r.media_type_1 || null,
       media_url_2: r.media_url_2 || null,
       media_type_2: r.media_type_2 || null,
+      swipe_link_url: r.swipe_link_url || null,
     }));
 
     // Dedup

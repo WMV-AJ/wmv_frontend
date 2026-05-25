@@ -53,6 +53,7 @@ interface Event {
   media_type_1?: string;
   media_url_2?: string;
   media_type_2?: string;
+  swipe_link_url?: string | null;
 }
 
 interface EventCardData {
@@ -202,6 +203,15 @@ const NavigationIcon: React.FC = () => (
   </svg>
 );
 
+const TicketIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M2 9V7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z"/>
+    <path d="M13 5v2"/>
+    <path d="M13 17v2"/>
+    <path d="M13 11v2"/>
+  </svg>
+);
+
 const MusicIcon: React.FC = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M9 18V5l12-2v13" />
@@ -324,6 +334,15 @@ const EventCard: React.FC<EventCardProps> = ({
       const address = encodeURIComponent(venue.venue_address);
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`, '_blank');
     }
+  };
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!event.swipe_link_url) return;
+    const url = event.swipe_link_url.startsWith('http')
+      ? event.swipe_link_url
+      : `https://${event.swipe_link_url}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -622,12 +641,21 @@ const EventCard: React.FC<EventCardProps> = ({
             <ShareIcon />
           </button>
         </div>
+        {event.swipe_link_url && (
+          <button
+            className="stacked-card-book-btn"
+            onClick={handleBookClick}
+          >
+            <TicketIcon />
+            <span>Book</span>
+          </button>
+        )}
         <button
           className="stacked-card-directions-btn"
           onClick={handleDirectionsClick}
         >
           <NavigationIcon />
-          <span>Get Directions</span>
+          <span>Directions</span>
         </button>
       </div>
 
