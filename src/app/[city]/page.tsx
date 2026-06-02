@@ -365,20 +365,22 @@ export default function CityHome() {
                 trackEvent('nav_view_change', { from: 'home', to: 'map', source: 'header' });
                 router.push(`/${city}/map`);
               }}
-              style={{ width: 30, height: 30, borderRadius: '50%', border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', padding: 0 }}
               aria-label="Map"
             >
-              <MapIcon style={{ width: 14, height: 14, color: T.inkMuted }} />
+              <MapIcon className="w-3.5 h-3.5 md:w-3 md:h-3" style={{ color: T.inkMuted }} />
             </button>
             <button
               onClick={() => {
                 trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'header' });
                 router.push(`/${city}/cards`);
               }}
-              style={{ width: 30, height: 30, borderRadius: '50%', border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', padding: 0 }}
               aria-label="Cards"
             >
-              <List style={{ width: 14, height: 14, color: T.inkMuted }} />
+              <List className="w-3.5 h-3.5 md:w-3 md:h-3" style={{ color: T.inkMuted }} />
             </button>
             {/* Auth state: real avatar when signed in, sign-in icon otherwise. */}
             <AuthCornerWidget />

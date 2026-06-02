@@ -342,7 +342,7 @@ export default function EventDetailPage() {
           {/* Hero skeleton */}
           <div className="relative w-full" style={{ height: '280px' }}>
             <div className="w-full h-full skeleton-pulse" style={{ background: 'rgba(0,0,0,0.06)' }} />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 40%, rgba(245,245,240,1) 100%)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 40%, rgba(245,245,240,1) 100%)', pointerEvents: 'none' }} />
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 z-10" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
               <button
                 onClick={() => router.back()}

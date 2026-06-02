@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -30,14 +31,21 @@ export function Stage({
   children,
 }: StageProps) {
   const [time, setTime] = useState(0);
-  const [scale, setScale] = useState(1);
+  // Start at 0 so the SSR'd HTML paints an invisible canvas. Without this,
+  // the browser briefly shows the canvas at full 1080×1920 (scale 1) before
+  // JS hydrates and runs the measurement — content spills past the viewport.
+  const [scale, setScale] = useState(0);
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number | null>(null);
 
   // Auto-scale canvas to fit wrapper while preserving aspect ratio.
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the measurement runs BEFORE the browser
+  // paints — otherwise the canvas briefly renders at its full 1080×1920 size
+  // (because the initial useState(1) puts scale at 1) and you see a flash of
+  // oversized content on first load.
+  useLayoutEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
 

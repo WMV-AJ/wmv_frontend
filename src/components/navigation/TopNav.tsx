@@ -668,18 +668,19 @@ const TopNav: React.FC<TopNavProps> = ({
                 if (onListToggle) {
                   onListToggle();
                 } else {
+                  // Pathname-based fallback: cards → map, anything else → cards
                   const citySegment = pathname.split('/').filter(Boolean)[0] || 'dubai';
-                  router.push(pathname.endsWith('/cards') ? `/${citySegment}` : `/${citySegment}/cards`);
+                  router.push(pathname.endsWith('/cards') ? `/${citySegment}/map` : `/${citySegment}/cards`);
                 }
               }}
               className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
-              style={{ background: 'rgba(59, 130, 246, 0.9)' }}
+              style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
               aria-label={isListView ? 'Show map' : 'Show event list'}
             >
               {isListView ? (
-                <MapIcon className="w-4 h-4 md:w-3 md:h-3 text-white" />
+                <MapIcon className={`w-4 h-4 md:w-3 md:h-3 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
               ) : (
-                <List className="w-4 h-4 md:w-3 md:h-3 text-white" />
+                <List className={`w-4 h-4 md:w-3 md:h-3 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
               )}
             </button>
 

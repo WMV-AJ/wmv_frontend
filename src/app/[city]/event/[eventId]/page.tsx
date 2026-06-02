@@ -515,8 +515,8 @@ export default function EventDetailPage() {
         ) : (
           <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1c1c2a 0%, #0a0a14 100%)' }} />
         )}
-        {/* Gradient overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(10,10,20,1) 100%)' }} />
+        {/* Gradient overlay — pointer-events:none so taps reach the image below */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(10,10,20,1) 100%)', pointerEvents: 'none' }} />
 
         {/* Back + Share buttons */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 z-10" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>

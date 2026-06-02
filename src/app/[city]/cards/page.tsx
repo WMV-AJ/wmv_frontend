@@ -118,8 +118,8 @@ export default function CityCardsPage() {
             selectedDates: filters.activeDates,
             onDateChange: handleDateChange,
           }}
-          onListToggle={() => router.push(`/${city}`)}
-          isListView={false}
+          onListToggle={() => router.push(`/${city}/map`)}
+          isListView={true}
           onHeightChange={setNavHeight}
           darkMode={true}
         />
