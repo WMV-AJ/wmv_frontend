@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useLayoutEffect } from 'react';
+import { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
@@ -40,6 +40,7 @@ export default function CityCardsPage() {
   const [navHeight, setNavHeight] = useState(140);
   const [pillsHeight, setPillsHeight] = useState(0);
   const pillsRef = useRef<HTMLDivElement>(null);
+  const cardsScrollRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const el = pillsRef.current;
@@ -84,6 +85,48 @@ export default function CityCardsPage() {
     });
     return Array.from(eventMap.values());
   }, [filteredVenues]);
+
+  // Clip the overlapping-card stack to the last card's real bottom. The deck's
+  // negative margins otherwise reserve ~680px of phantom height below the last
+  // card (a negative-margin + scroll-height browser quirk), which shows as an
+  // over-scroll gap on mobile. Re-runs on expand/collapse and when the filtered
+  // card set changes. (Same fix as /[city]/vibe/[vibeId].)
+  useEffect(() => {
+    const root = cardsScrollRef.current;
+    if (!root) return;
+    const stack = root.querySelector('.stacked-cards-stack') as HTMLElement | null;
+    if (!stack) return;
+
+    let adjusting = false;
+    let raf = 0;
+    const fix = () => {
+      if (adjusting) return;
+      adjusting = true;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        stack.style.height = 'auto';
+        const cardEls = stack.querySelectorAll<HTMLElement>('.stacked-card');
+        if (cardEls.length) {
+          const last = cardEls[cardEls.length - 1];
+          stack.style.height = `${Math.ceil(last.offsetTop + last.offsetHeight)}px`;
+        }
+        requestAnimationFrame(() => { adjusting = false; });
+      });
+    };
+
+    fix();
+    const mo = new MutationObserver(fix);
+    mo.observe(stack, { subtree: true, attributes: true, attributeFilter: ['class', 'style'], childList: true });
+    const ro = new ResizeObserver(fix);
+    ro.observe(stack);
+    window.addEventListener('resize', fix);
+    return () => {
+      mo.disconnect();
+      ro.disconnect();
+      window.removeEventListener('resize', fix);
+      cancelAnimationFrame(raf);
+    };
+  }, [cards]);
 
   if (isLoading) {
     return (
@@ -142,6 +185,7 @@ export default function CityCardsPage() {
 
         <div
           id="cards-scroll-container"
+          ref={cardsScrollRef}
           className="fixed left-2 right-2 bottom-0 z-10 overflow-y-auto rounded-2xl"
           style={{
             background: '#0a0a1a',

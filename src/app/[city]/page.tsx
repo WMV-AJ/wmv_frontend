@@ -6,19 +6,12 @@ import { getCityConfig, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
 import {
   Heart,
-  Map as MapIcon,
   ArrowUpRight,
-  Music,
-  Sparkles,
-  Waves,
-  UtensilsCrossed,
-  GlassWater,
-  Droplet,
-  Mic as MicVocal,
-  List,
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
-import AuthCornerWidget from '@/components/auth/AuthCornerWidget';
+import HomeMasthead from '@/components/navigation/HomeMasthead';
+import { VIBES, matchesVibe } from '@/config/vibes';
+import { slugifyArea } from '@/lib/areas';
 
 // ── THEME TOKENS ─────────────────────────────────────────────────────
 const T = {
@@ -48,16 +41,8 @@ const mono = "var(--font-geist-sans), ui-monospace, monospace";
 const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
-const VIBES = [
-  { id: 'clubs',  label: 'Clubs',        color: '#a78bfa', Icon: Music,          keywords: ['nightclub', 'club', 'dance'],  categories: ['Club Night'] },
-  { id: 'brunch', label: 'Brunch',        color: '#34d399', Icon: UtensilsCrossed,keywords: ['brunch'],                      categories: ['Brunch'] },
-  { id: 'rooftops',label: 'Rooftops',     color: '#f472b6', Icon: Sparkles,       keywords: ['rooftop', 'terrace'],          categories: [] },
-  { id: 'ladies', label: 'Ladies Night',  color: '#ec4899', Icon: Heart,          keywords: ['ladies night', 'ladies'],      categories: ['Ladies Night'] },
-  { id: 'beach',  label: 'Beach Clubs',   color: '#22d3ee', Icon: Waves,          keywords: ['beach', 'pool'],               categories: ['Pool Party'] },
-  { id: 'happy',  label: 'Happy Hour',    color: '#f59e0b', Icon: GlassWater,     keywords: ['happy hour'],                  categories: ['Happy Hour'] },
-  { id: 'pool',   label: 'Pool Party',    color: '#06b6d4', Icon: Droplet,        keywords: ['pool party'],                  categories: ['Pool Party', 'Day Party & Afterwork'] },
-  { id: 'live',   label: 'Live Music',    color: '#84cc16', Icon: MicVocal,       keywords: ['live music', 'live'],          categories: ['Live Performance'] },
-];
+// VIBES + matchesVibe live in '@/config/vibes' so the homepage pill counts
+// and the /[city]/vibe/[vibeId] listing page stay in sync.
 
 const RADAR_DOTS = [
   { t: '22%', l: '32%', c: '#a78bfa' },
@@ -278,33 +263,10 @@ export default function CityHome() {
     .slice(0, 6)
     .map(([label, count]) => ({ label, count }));
 
-  const vibeGrid = VIBES.map(v => {
-    const count = venues.filter(venue => {
-      const vibeArr: string[] = Array.isArray(venue.event_vibe) ? venue.event_vibe : [];
-      const catArr: string[] = Array.isArray(venue.venue_category) ? venue.venue_category
-        : typeof venue.category === 'string' ? [venue.category] : [];
-      const highlightsText = (() => {
-        try {
-          const raw = venue.venue_highlights;
-          const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-          return Array.isArray(parsed) ? parsed.flatMap((o: any) => Object.keys(o)).join(' ') : '';
-        } catch { return ''; }
-      })();
-      const haystack = [...vibeArr, ...catArr, highlightsText].join(' ').toLowerCase();
-      const keywordMatch = v.keywords.some(kw => haystack.includes(kw));
-      // event_categories primary match
-      const evCats = (() => {
-        try {
-          const raw = venue.event_categories;
-          const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-          return Array.isArray(parsed) ? parsed.map((c: any) => c?.primary || '').filter(Boolean) : [];
-        } catch { return []; }
-      })();
-      const categoryMatch = v.categories.length > 0 && evCats.some((p: string) => v.categories.includes(p));
-      return keywordMatch || categoryMatch;
-    }).length;
-    return { ...v, count };
-  });
+  const vibeGrid = VIBES.map(v => ({
+    ...v,
+    count: venues.filter(venue => matchesVibe(venue, v)).length,
+  }));
 
   const skeletonStyle = (w: string | number, h: string | number | undefined, extra?: React.CSSProperties): React.CSSProperties => ({
     width: w,
@@ -338,54 +300,7 @@ export default function CityHome() {
       <div style={{ maxWidth: 430, margin: '0 auto', paddingBottom: 40 }}>
 
         {/* Masthead */}
-        <div style={{
-          padding: '14px 18px 12px',
-          borderBottom: `1px solid ${T.line}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img
-              src="/wmv-logo.gif"
-              alt="Where's My Vibe"
-              style={{
-                width: 28, height: 28, objectFit: 'cover',
-                borderRadius: '50%', flexShrink: 0,
-              }}
-            />
-            <div>
-              <div style={{
-                fontFamily: serif, fontStyle: 'italic', fontWeight: 700, fontSize: 14,
-                color: T.ink, letterSpacing: '-0.01em', lineHeight: 1,
-              }}>Where&rsquo;s My Vibe</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button
-              onClick={() => {
-                trackEvent('nav_view_change', { from: 'home', to: 'map', source: 'header' });
-                router.push(`/${city}/map`);
-              }}
-              className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', padding: 0 }}
-              aria-label="Map"
-            >
-              <MapIcon className="w-3.5 h-3.5 md:w-3 md:h-3" style={{ color: T.inkMuted }} />
-            </button>
-            <button
-              onClick={() => {
-                trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'header' });
-                router.push(`/${city}/cards`);
-              }}
-              className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', padding: 0 }}
-              aria-label="Cards"
-            >
-              <List className="w-3.5 h-3.5 md:w-3 md:h-3" style={{ color: T.inkMuted }} />
-            </button>
-            {/* Auth state: real avatar when signed in, sign-in icon otherwise. */}
-            <AuthCornerWidget />
-          </div>
-        </div>
+        <HomeMasthead city={city} from="home" />
 
         {/* Hero — radar + title */}
         <div style={{ position: 'relative', padding: '20px 18px 0' }}>
@@ -790,7 +705,12 @@ export default function CityHome() {
             {vibeGrid.map((v) => {
               const Icon = v.Icon;
               return (
-                <div key={v.id} style={{
+                <div key={v.id}
+                  onClick={() => {
+                    trackEvent('vibe_pill_click', { vibe: v.id, city });
+                    router.push(`/${city}/vibe/${v.id}`);
+                  }}
+                  style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '8px 12px', borderRadius: 999,
                   border: `1px solid ${T.line}`, background: T.surface,
@@ -907,9 +827,14 @@ export default function CityHome() {
               </div>
             ))
             : areas.map((a, i) => (
-              <div key={a.label} style={{
-                display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 12,
-                padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`,
+              <div key={a.label}
+                onClick={() => {
+                  trackEvent('area_row_click', { area: a.label, city });
+                  router.push(`/${city}/area/${slugifyArea(a.label)}`);
+                }}
+                style={{
+                display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
+                padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer',
               }}>
                 <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
                   {String(i + 1).padStart(2, '0')}
@@ -920,6 +845,7 @@ export default function CityHome() {
                 <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
                   {a.count} events
                 </span>
+                <ArrowUpRight size={13} strokeWidth={2} style={{ color: T.inkFaint, flexShrink: 0 }} />
               </div>
             ))
           }

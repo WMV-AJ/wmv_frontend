@@ -338,7 +338,7 @@ export default function EventDetailPage() {
     // Skeleton loading state
     return (
       <main ref={mainRef} className="fixed inset-0 overflow-y-auto" style={{ backgroundColor: '#f5f5f0' }}>
-        <div className="min-h-full w-full pb-8">
+        <div className="min-h-full w-full pb-8" style={{ maxWidth: 430, margin: '0 auto' }}>
           {/* Hero skeleton */}
           <div className="relative w-full" style={{ height: '280px' }}>
             <div className="w-full h-full skeleton-pulse" style={{ background: 'rgba(0,0,0,0.06)' }} />
@@ -489,7 +489,7 @@ export default function EventDetailPage() {
 
   return (
     <main ref={mainRef} className="fixed inset-0 overflow-y-auto" style={{ backgroundColor: '#f5f5f0' }}>
-      <div className="min-h-full w-full pb-8">
+      <div className="min-h-full w-full pb-8" style={{ maxWidth: 430, margin: '0 auto' }}>
       {/* ===== HERO IMAGE SECTION ===== */}
       <div className="relative w-full" style={{ height: heroImage ? '280px' : '120px' }}>
         {heroImage ? (

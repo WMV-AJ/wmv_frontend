@@ -123,7 +123,15 @@ const TopNav: React.FC<TopNavProps> = ({
   // Use shared filter options from context — no duplicate fetch
   const { filterOptions: sharedFilterOptions } = useVenueData();
   const filterOptions = { dates: sharedFilterOptions.dates };
-  const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('all');
+  // Derive the initial dropdown preset from the actual selection so the dropdown
+  // highlights the right item on load (e.g. cards page defaults to [today] → show
+  // "Today" highlighted, not "All Dates").
+  const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>(() => {
+    const sel = datePickerProps?.selectedDates ?? [];
+    if (sel.length === 0) return 'all';
+    if (sel.length === 1 && sel[0] === new Date().toDateString()) return 'today';
+    return 'all';
+  });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
