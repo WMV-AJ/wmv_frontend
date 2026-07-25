@@ -16,7 +16,22 @@ import { ALL_CITIES, getCityConfig } from '@/config/cities.config';
 
 export default function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100dvh', background: T.bg, display: 'flex', justifyContent: 'center' }}>
+    // The app's globals lock html/body to the viewport (overflow: hidden), so
+    // this shell owns its scrolling: fixed full-viewport container with its
+    // own overflow — without this the marketing pages simply don't scroll.
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        background: T.bg,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+      }}
+    >
       <div
         style={{
           width: '100%',
