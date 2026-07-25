@@ -7,6 +7,7 @@ import { type HierarchicalFilterState } from '@/types';
 import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
 import { trackEvent } from '@/lib/analytics/track';
+import { isUpcomingInCity } from '@/lib/city-date';
 import { getVibeById, matchesVibe } from '@/config/vibes';
 import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
 
@@ -39,14 +40,10 @@ export default function VibeListingPage() {
   // All upcoming events matching this vibe → deduped stacked cards.
   const cards = useMemo(() => {
     if (!vibe) return [];
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
     const matched = allVenues.filter((v: any) => {
-      if (v.event_date) {
-        const d = new Date(v.event_date);
-        if (!isNaN(d.getTime()) && d < todayStart) return false; // upcoming only
-      }
+      // City-anchored upcoming check (viewer-local midnight hid the city's
+      // tonight for viewers in timezones ahead of the city).
+      if (!isUpcomingInCity(v.event_date, city)) return false;
       return matchesVibe(v, vibe);
     });
 

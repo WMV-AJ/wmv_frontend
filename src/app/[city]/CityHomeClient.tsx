@@ -135,18 +135,20 @@ export default function CityHome() {
   const loading = isLoadingVenues;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const venues = useMemo<any[]>(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    // The runtime records carry event fields (event_time, media_url_1…) that
-    // the narrow Venue interface doesn't declare; this page has always been
-    // written against the loose shape.
+    // "Upcoming" is anchored to the CITY's calendar day, not the viewer's:
+    // a viewer in IST at 00:30 looking at Dubai (UTC+4, still yesterday
+    // evening there) must NOT have Dubai's tonight filtered out as "past".
+    // Event dates are compared as UTC date-parts (they parse as UTC midnight).
+    const cityToday = getCityDateString(city); // YYYY-MM-DD in the city's tz
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (allVenues as any[]).filter((v) => {
       if (!v.event_date) return true;
       const d = new Date(v.event_date);
-      return isNaN(d.getTime()) || d >= todayStart;
+      if (isNaN(d.getTime())) return true;
+      const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      return ds >= cityToday;
     });
-  }, [allVenues]);
+  }, [allVenues, city]);
 
   const toggle = (id: string) =>
     setLiked(s => {

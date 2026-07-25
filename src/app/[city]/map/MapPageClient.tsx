@@ -33,6 +33,7 @@ import {
   getMapCenter,
 } from '@/lib/mapcn-config';
 import { getCityConfig } from '@/config/cities.config';
+import { getCityDateString } from '@/lib/city-date';
 
 function getVenueColor(venue: Venue): string {
   return getMarkerColorScheme(venue).svgColor;
@@ -398,10 +399,19 @@ export default function CityMapPage() {
       if (vibe) seededCategories.push(...vibe.categories);
     }
 
-    let seededDates = [new Date().toDateString()]; // Default: today
+    // "Today" is the CITY's today, not the viewer's. Building the entry via
+    // `new Date('YYYY-MM-DD')` (UTC midnight) matches how event dates are
+    // parsed for comparison, so the toDateString values line up in any
+    // viewer timezone. (Viewer-local `new Date()` made an IST viewer's map
+    // show zero Dubai events between IST- and Dubai-midnight.)
+    const cityTodayEntry = (offsetDays = 0) => {
+      const d = new Date(`${getCityDateString(city)}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + offsetDays);
+      return d.toDateString();
+    };
+    let seededDates = [cityTodayEntry(0)]; // Default: the city's today
     if (dateParam === 'tomorrow') {
-      const t = new Date(); t.setDate(t.getDate() + 1);
-      seededDates = [t.toDateString()];
+      seededDates = [cityTodayEntry(1)];
     } else if (dateParam && dateParam !== 'today') {
       const d = new Date(dateParam);
       if (!Number.isNaN(d.getTime())) seededDates = [d.toDateString()];

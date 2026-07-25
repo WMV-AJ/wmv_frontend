@@ -18,6 +18,7 @@ import { DEFAULT_CITY, getCityConfig, type CitySlug } from '@/config/cities.conf
 import { VIBES } from '@/config/vibes';
 import EventMedia from '@/components/shared/EventMedia';
 import { trackEvent } from '@/lib/analytics/track';
+import { isUpcomingInCity } from '@/lib/city-date';
 import { SourceChips, PipelineTimeline, StoryCollage } from '@/components/marketing/visuals';
 import { T, serif, mono, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 
@@ -209,12 +210,10 @@ function TonightStrip({ city }: { city: CitySlug }) {
         .then((r) => r.json())
         .then((j) => {
           if (!j.success || !Array.isArray(j.data)) return;
-          const today = new Date(); today.setHours(0, 0, 0, 0);
           const seen = new Set<string>();
           const list = j.data.filter((v: any) => {
             if (!v.event_date || !v.event_id) return false;
-            const d = new Date(v.event_date);
-            if (Number.isNaN(d.getTime()) || d < today) return false;
+            if (!isUpcomingInCity(v.event_date, city)) return false;
             if (seen.has(String(v.event_id))) return false;
             seen.add(String(v.event_id));
             return true;
