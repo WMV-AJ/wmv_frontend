@@ -4,6 +4,7 @@
 // adapter depends on (venue_name_original → name, venue_rating → rating, etc.)
 // and rewires media from the new `media_urls[]` array.
 import { NextResponse } from 'next/server';
+import { getCached } from '@/lib/server-cache';
 
 interface VenueResponse {
   venue_id: number;
@@ -31,7 +32,41 @@ interface VenueResponse {
 const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://localhost:2300').replace(/\/$/, '');
 
 export async function GET(request: Request) {
+  // Multi-city: forward `?city=` to the backend so the venue list is scoped.
+  // Falls back to all-cities if omitted (back-compat with old callers).
+  const { searchParams } = new URL(request.url);
+  const city = searchParams.get('city');
+
   try {
+    // Cache the TRANSFORMED per-city venue array (~320KB), not the raw
+    // upstream fetch — Next's data cache refuses >2MB responses, so the old
+    // `next: { revalidate: 300 }` never actually cached the full upstream
+    // payload. Concurrent requests share one in-flight build (this dedup is
+    // what killed the duplicate-fetch 503s observed in prod).
+    const body = await getCached(
+      `venues:${city ?? 'all'}`,
+      5 * 60_000, // fresh: 5 min
+      60 * 60_000, // stale-servable: 1 h
+      () => buildVenues(city),
+    );
+    return NextResponse.json(body, {
+      headers: {
+        // 30s fresh, then up to 5 min serve-stale-while-revalidate.
+        'Cache-Control': 'public, max-age=30, stale-while-revalidate=300',
+      },
+    });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({
+      success: false,
+      data: [],
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, { status: 502 });
+  }
+}
+
+async function buildVenues(city: string | null): Promise<Record<string, unknown>> {
+  {
     // Force client-side filtering by ignoring all parameters
 
     // Use empty filters since we want client-side filtering
@@ -40,10 +75,6 @@ export async function GET(request: Request) {
     const activeDates: string[] = [];
     const activeGenres: string[] = [];
 
-    // Multi-city: forward `?city=` to the backend so the venue list is scoped.
-    // Falls back to all-cities if omitted (back-compat with old callers).
-    const { searchParams } = new URL(request.url);
-    const city = searchParams.get('city');
     const upstreamUrl = city
       ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
       : `${WMV_API_BASE}/api/events`;
@@ -51,30 +82,16 @@ export async function GET(request: Request) {
     // Fetch from upstream WMV backend (joins events + venues from final_1 already).
     // Upstream records have 40+ fields; we keep loose typing here since this route
     // acts as a translation layer that strictly shapes the response at the bottom.
+    // `no-store`: server-cache.ts owns caching of the derived output.
     /* eslint-disable @typescript-eslint/no-explicit-any */
     let upstreamData: any[] = [];
-    try {
-      // Events update at most once per day after the pipeline runs; 5-min ISR
-      // is plenty fresh and saves ~300ms on repeat nav. Browser cache header
-      // is set on the response below.
-      const upstream = await fetch(upstreamUrl, { next: { revalidate: 300 } });
+    {
+      const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
       if (!upstream.ok) {
-        console.error('Upstream error:', upstream.status, upstream.statusText);
-        return NextResponse.json({
-          success: false,
-          data: [],
-          error: `Upstream ${upstream.status}: ${upstream.statusText}`,
-        }, { status: 502 });
+        throw new Error(`Upstream ${upstream.status}: ${upstream.statusText}`);
       }
       const payload = await upstream.json();
       upstreamData = Array.isArray(payload?.data) ? payload.data : [];
-    } catch (err) {
-      console.error('Upstream fetch failed:', err);
-      return NextResponse.json({
-        success: false,
-        data: [],
-        error: err instanceof Error ? err.message : 'Upstream fetch failed',
-      }, { status: 502 });
     }
 
     // Keep only records with venue_id and coordinates (map markers need lat/lng).
@@ -300,26 +317,10 @@ export async function GET(request: Request) {
       return venue as VenueResponse;
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: venueResponse,
-        message: `Retrieved ${venues.length} venues from upstream`,
-      },
-      {
-        headers: {
-          // 30s fresh, then up to 5 min serve-stale-while-revalidate.
-          'Cache-Control': 'public, max-age=30, stale-while-revalidate=300',
-        },
-      }
-    );
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      data: [],
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return {
+      success: true,
+      data: venueResponse,
+      message: `Retrieved ${venues.length} venues from upstream`,
+    };
   }
 }

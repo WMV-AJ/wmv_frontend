@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useVenueData } from '@/contexts/VenueDataContext';
 import { getCityConfig, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
 import {
@@ -115,11 +116,30 @@ export default function CityHome() {
   const city = (params?.city as string) || 'dubai';
 
   const [liked, setLiked] = useState<Set<string>>(new Set());
-  const [venues, setVenues] = useState<any[]>([]);
   const [totalVenues, setTotalVenues] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [tonightVisible, setTonightVisible] = useState(4);
+
+  // Venue data comes from the shared VenueDataProvider (root layout) — this
+  // page used to fire its own /api/venues fetch concurrently with the
+  // provider's, doubling upstream load on every home visit (the thundering
+  // herd behind the intermittent 503s).
+  const { allVenues, isLoadingVenues } = useVenueData();
+  const loading = isLoadingVenues;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const venues = useMemo<any[]>(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    // The runtime records carry event fields (event_time, media_url_1…) that
+    // the narrow Venue interface doesn't declare; this page has always been
+    // written against the loose shape.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (allVenues as any[]).filter((v) => {
+      if (!v.event_date) return true;
+      const d = new Date(v.event_date);
+      return isNaN(d.getTime()) || d >= todayStart;
+    });
+  }, [allVenues]);
 
   const toggle = (id: string) =>
     setLiked(s => {
@@ -130,24 +150,10 @@ export default function CityHome() {
     });
 
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/venues?city=${encodeURIComponent(city)}`).then(r => r.json()),
-      fetch(`/api/venue-count?city=${encodeURIComponent(city)}`).then(r => r.json()),
-    ])
-      .then(([venues, vc]) => {
-        if (venues.success && Array.isArray(venues.data)) {
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          setVenues(venues.data.filter((v: any) => {
-            if (!v.event_date) return true;
-            const d = new Date(v.event_date);
-            return isNaN(d.getTime()) || d >= todayStart;
-          }));
-        }
-        if (vc.count) setTotalVenues(vc.count);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetch(`/api/venue-count?city=${encodeURIComponent(city)}`)
+      .then(r => r.json())
+      .then(vc => { if (vc.count) setTotalVenues(vc.count); })
+      .catch(console.error);
   }, [city]);
 
   useEffect(() => {

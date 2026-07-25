@@ -1,5 +1,6 @@
 // Filter Options API route - areas from WMV backend with hierarchical genre/vibe structure
 import { NextResponse } from 'next/server';
+import { getCached } from '@/lib/server-cache';
 
 interface FilterRecord {
   venue_area?: string;
@@ -20,7 +21,38 @@ interface FilterRecord {
 const WMV_API_BASE = process.env.WMV_API_BASE || 'http://localhost:2300';
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const city = searchParams.get('city');
+
   try {
+    // Cache the DERIVED 6KB facet object, not the raw upstream fetch — Next's
+    // data cache silently refuses >2MB responses, so the old
+    // `fetch(..., { next: { revalidate: 1800 } })` was a no-op and every cold
+    // hit paid full upstream fetch + derivation (measured 6s TTFB). Concurrent
+    // requests share one in-flight derivation (kills the 503 thundering herd).
+    const body = await getCached(
+      `filter-options:${city ?? 'all'}`,
+      30 * 60_000, // fresh: 30 min (data refreshes daily)
+      24 * 60 * 60_000, // stale-servable: 24 h
+      () => buildFilterOptions(city),
+    );
+    return NextResponse.json(body, {
+      headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=1800' },
+    });
+  } catch (error) {
+    // Upstream down and no stale cache to serve — same graceful empty
+    // response the route always returned (deliberately NOT cached).
+    console.error('filter-options upstream failed with empty cache:', error);
+    return NextResponse.json({
+      success: true,
+      data: { areas: [], vibes: [], dates: [], genres: [] },
+      message: 'Retrieved 0 areas/vibes/dates/genres (upstream error)',
+    });
+  }
+}
+
+async function buildFilterOptions(city: string | null): Promise<Record<string, unknown>> {
+  {
 
     // Force parameters to empty for client-side filtering
     const selectedAreas: string[] = [];
@@ -28,25 +60,18 @@ export async function GET(request: Request) {
     const activeDates: string[] = [];
     const activeGenres: string[] = [];
 
-    const { searchParams } = new URL(request.url);
-    const city = searchParams.get('city');
     const upstreamUrl = city
       ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
       : `${WMV_API_BASE}/api/events`;
 
-    // Fetch from upstream WMV backend
+    // Fetch from upstream WMV backend. `no-store`: server-cache.ts owns
+    // caching of the derived output; double-caching the raw payload would
+    // just burn memory (and Next refuses >2MB bodies anyway).
     let data: any[] = [];
-    try {
-      // Filter options derive from the daily-refreshed event set; 30-min ISR
-      // is fine and slashes upstream load when many tabs open the same city.
-      const upstream = await fetch(upstreamUrl, { next: { revalidate: 1800 } });
+    {
+      const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
       if (!upstream.ok) {
-        console.error('Upstream error:', upstream.status, upstream.statusText);
-        return NextResponse.json({
-          success: true,
-          data: { areas: [], vibes: [], dates: [], genres: [] },
-          message: `Retrieved 0 areas/vibes/dates/genres (upstream error)`
-        });
+        throw new Error(`Upstream error: ${upstream.status} ${upstream.statusText}`);
       }
       const payload = await upstream.json();
       const raw: any[] = Array.isArray(payload?.data) ? payload.data : [];
@@ -63,13 +88,6 @@ export async function GET(request: Request) {
         event_categories: r.event_categories,
         attributes: r.attributes,
       }));
-    } catch (err) {
-      console.error('Upstream fetch failed:', err);
-      return NextResponse.json({
-        success: true,
-        data: { areas: [], vibes: [], dates: [], genres: [] },
-        message: `Retrieved 0 areas/vibes/dates/genres (upstream fetch failed)`
-      });
     }
 
     // Helper function to apply filters excluding a specific filter type
@@ -447,7 +465,7 @@ export async function GET(request: Request) {
       .map((price: any) => price.toString().trim());
     const uniqueVenuePrices = [...new Set(allVenuePrices)].sort();
 
-    return NextResponse.json({
+    return {
       success: true,
       data: {
         areas: uniqueAreas,
@@ -467,14 +485,6 @@ export async function GET(request: Request) {
         eventCategories: uniqueEventCategories
       },
       message: `Retrieved ${uniqueAreas.length} areas, ${Object.keys(hierarchicalGenres).length} genre categories, ${Object.keys(hierarchicalVibes).length} vibe categories, ${uniqueDates.length} dates, ${venueCategories.length} venue categories, ${uniqueOffers.length} special offers, ${orderedTimes.length} time categories, ${uniqueAtmospheres.length} atmospheres, ${uniqueEventCategories.length} event categories, ${uniqueVenuePrices.length} venue prices`
-    });
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      data: { areas: [], vibes: [], dates: [], genres: [] },
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    };
   }
 }

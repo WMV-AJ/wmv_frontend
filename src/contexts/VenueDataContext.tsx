@@ -52,6 +52,33 @@ function extractCityFromPath(pathname: string | null): CitySlug {
   return isValidCity(firstSegment) ? firstSegment : DEFAULT_CITY;
 }
 
+/**
+ * fetch with up to 2 retries on 5xx/network failure (500ms, 1500ms backoff).
+ * A transient upstream blip used to surface as a hard error state (empty map,
+ * no cards) for the whole session; a single retry almost always recovers it.
+ * 4xx responses are returned as-is — retrying a client error is pointless.
+ */
+async function fetchWithRetry(url: string, init?: RequestInit): Promise<Response> {
+  const delays = [500, 1500];
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      const response = await fetch(url, init);
+      if (response.ok || (response.status >= 400 && response.status < 500)) {
+        return response;
+      }
+      lastError = new Error(`HTTP error! status: ${response.status}`);
+    } catch (err) {
+      lastError = err;
+    }
+    if (attempt < delays.length) {
+      await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+    }
+  }
+  throw lastError;
+}
+
 export function VenueDataProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const city = extractCityFromPath(pathname);
@@ -70,7 +97,7 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
         setIsLoadingVenues(true);
         setVenueError(null);
 
-        const response = await fetch(`/api/venues?city=${encodeURIComponent(city)}`, {
+        const response = await fetchWithRetry(`/api/venues?city=${encodeURIComponent(city)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -103,7 +130,7 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
         setIsLoadingFilters(true);
         setFilterError(null);
 
-        const response = await fetch(`/api/filter-options?city=${encodeURIComponent(city)}`, {
+        const response = await fetchWithRetry(`/api/filter-options?city=${encodeURIComponent(city)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
