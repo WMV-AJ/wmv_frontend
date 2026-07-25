@@ -6,6 +6,7 @@ import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
 import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
+import { trackEvent } from '@/lib/analytics/track';
 import { getVibeById, matchesVibe } from '@/config/vibes';
 import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
 
@@ -63,6 +64,7 @@ export default function VibeListingPage() {
 
   const header = (
     <ListPageHeader
+      onViewMap={vibe ? () => { trackEvent('nav_view_change', { from: 'vibe_list', to: 'map', source: 'list_header', vibe: vibe.id }); router.push(`/${city}/map?vibe=${vibe.id}`); } : undefined}
       onBack={() => router.push(`/${city}`)}
       icon={Icon ? <Icon style={{ width: 12, height: 12, color: '#0a0a14' }} /> : null}
       iconBg={vibe ? vibe.color : '#2a2638'}

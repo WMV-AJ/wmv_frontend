@@ -7,6 +7,7 @@ import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
 import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
+import { trackEvent } from '@/lib/analytics/track';
 import { findAreaBySlug, humanizeSlug } from '@/lib/areas';
 import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
 
@@ -69,6 +70,7 @@ export default function AreaListingPage() {
 
   const header = (
     <ListPageHeader
+      onViewMap={areaName ? () => { trackEvent('nav_view_change', { from: 'area_list', to: 'map', source: 'list_header', area: areaName }); router.push(`/${city}/map?area=${encodeURIComponent(areaName)}`); } : undefined}
       onBack={() => router.push(`/${city}`)}
       icon={<MapPin style={{ width: 12, height: 12, color: '#0a0a14' }} />}
       iconBg="#a78bfa"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
   Map as MapView,
   MapMarker,
@@ -24,6 +24,7 @@ import {
 } from '@/lib/stacked-card-adapter';
 import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/marker-colors';
 import { getDisplayName } from '@/lib/category-mappings';
+import { getVibeDataById } from '@/config/vibes-data';
 import { type Venue, type HierarchicalFilterState } from '@/types';
 import {
   MAPCN_ZOOM,
@@ -265,20 +266,47 @@ export default function CityMapPage() {
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
-  const [filters, setFilters] = useState<HierarchicalFilterState>({
-    selectedPrimaries: { genres: [], vibes: [] },
-    selectedSecondaries: { genres: {}, vibes: {} },
-    expandedPrimaries: { genres: [], vibes: [] },
-    eventCategories: {
-      selectedPrimaries: [],
-      selectedSecondaries: {},
-      expandedPrimaries: [],
-    },
-    attributes: { venue: [], energy: [], timing: [], status: [] },
-    selectedAreas: [getCityConfig(city).defaultAreaLabel],
-    activeDates: [new Date().toDateString()], // Default to today on page load
-    activeOffers: [],
-    searchQuery: '',
+  const searchParams = useSearchParams();
+
+  const [filters, setFilters] = useState<HierarchicalFilterState>(() => {
+    // Deep-link seeds (initializer-only — the URL seeds state, it is not
+    // two-way-bound): ?cat=Club+Night (repeatable), ?area=Dubai+Marina,
+    // ?date=today|tomorrow|YYYY-MM-DD, ?vibe=brunch (vibes-data categories).
+    const catParams = searchParams?.getAll('cat') ?? [];
+    const vibeParam = searchParams?.get('vibe');
+    const areaParam = searchParams?.get('area');
+    const dateParam = searchParams?.get('date');
+
+    const seededCategories = [...catParams];
+    if (vibeParam) {
+      const vibe = getVibeDataById(vibeParam);
+      if (vibe) seededCategories.push(...vibe.categories);
+    }
+
+    let seededDates = [new Date().toDateString()]; // Default: today
+    if (dateParam === 'tomorrow') {
+      const t = new Date(); t.setDate(t.getDate() + 1);
+      seededDates = [t.toDateString()];
+    } else if (dateParam && dateParam !== 'today') {
+      const d = new Date(dateParam);
+      if (!Number.isNaN(d.getTime())) seededDates = [d.toDateString()];
+    }
+
+    return {
+      selectedPrimaries: { genres: [], vibes: [] },
+      selectedSecondaries: { genres: {}, vibes: {} },
+      expandedPrimaries: { genres: [], vibes: [] },
+      eventCategories: {
+        selectedPrimaries: Array.from(new Set(seededCategories)),
+        selectedSecondaries: {},
+        expandedPrimaries: [],
+      },
+      attributes: { venue: [], energy: [], timing: [], status: [] },
+      selectedAreas: [areaParam || getCityConfig(city).defaultAreaLabel],
+      activeDates: seededDates,
+      activeOffers: [],
+      searchQuery: '',
+    };
   });
 
   const { allVenues, filteredVenues, isLoading, error } = useClientSideVenues(filters);

@@ -27,13 +27,15 @@ const mono = "var(--font-geist-sans), ui-monospace, monospace";
 
 // Standard header row used inside the sticky bar: back + icon circle + title + count.
 export function ListPageHeader({
-  onBack, icon, iconBg, title, subtitle,
+  onBack, icon, iconBg, title, subtitle, onViewMap,
 }: {
   onBack: () => void;
   icon: React.ReactNode;
   iconBg: string;
   title: string;
   subtitle: string;
+  /** Optional "view on map" deep-link action (e.g. /dubai/map?vibe=brunch). */
+  onViewMap?: () => void;
 }) {
   return (
     <div style={{
@@ -62,6 +64,19 @@ export function ListPageHeader({
           {subtitle}
         </div>
       </div>
+      {onViewMap && (
+        <button
+          onClick={onViewMap}
+          style={{
+            flexShrink: 0, padding: '6px 12px', borderRadius: 999,
+            border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer',
+            fontFamily: mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.8px',
+            textTransform: 'uppercase', color: T.ink,
+          }}
+        >
+          Map →
+        </button>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
 import { getCityConfig, type CitySlug } from '@/config/cities.config';
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
+import StickyModeBar from '@/components/navigation/StickyModeBar';
 import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
 import { slugifyArea } from '@/lib/areas';
@@ -120,6 +121,7 @@ export default function CityHome() {
   const [totalVenues, setTotalVenues] = useState<number>(0);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [tonightVisible, setTonightVisible] = useState(4);
+  const heroRef = useRef<HTMLDivElement | null>(null);
 
   // Venue data comes from the shared VenueDataProvider (root layout) — this
   // page used to fire its own /api/venues fetch concurrently with the
@@ -314,7 +316,7 @@ export default function CityHome() {
         <HomeMasthead city={city} from="home" />
 
         {/* Hero — radar + title */}
-        <div style={{ position: 'relative', padding: '20px 18px 0' }}>
+        <div ref={heroRef} style={{ position: 'relative', padding: '20px 18px 0' }}>
           <div style={{
             position: 'absolute', top: 6, right: -70, width: 300, height: 300,
             pointerEvents: 'none', opacity: 0.9,
@@ -899,6 +901,7 @@ export default function CityHome() {
         </div>
       </div>
 
+      <StickyModeBar city={city} heroRef={heroRef} />
     </main>
   );
 }
