@@ -425,7 +425,9 @@ const EventCard: React.FC<EventCardProps> = ({
             if (type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url)) {
               return (
                 <video
-                  src={url}
+                  // #t=0.1 media fragment: browser paints that frame as the
+                  // preview, so the tile shows the video's own thumbnail.
+                  src={`${url}#t=0.1`}
                   className="stacked-card-thumb"
                   style={thumbStyle}
                   muted

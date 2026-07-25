@@ -123,12 +123,15 @@ export default function EventMedia({
         }
       : { objectFit: 'cover', ...style };
 
-    // Always set a poster: a non-autoplaying <video> with only metadata often
-    // paints BLACK until playback (readyState 0) — the branded placeholder
-    // beats a void when no sibling image exists.
+    // Non-autoplaying videos get a media-fragment start time (#t=0.1): the
+    // browser fetches and PAINTS that frame as the preview, so every video
+    // shows its own real thumbnail. The poster underneath is just the
+    // loading/error fallback (a metadata-only video would otherwise paint
+    // black — readyState 0).
+    const videoSrc = videoAutoPlay || url.includes('#') ? url : `${url}#t=0.1`;
     return (
       <video
-        src={url}
+        src={videoSrc}
         muted
         loop
         playsInline

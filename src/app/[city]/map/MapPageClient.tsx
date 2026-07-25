@@ -228,7 +228,10 @@ function PanToVenue({ venue }: { venue: Venue | null }) {
     if (prevVenueId.current === venueIdStr) return;
     prevVenueId.current = venueIdStr;
     if (venue.lng && venue.lat && !userDraggingRef.current) {
-      map.easeTo({ center: [venue.lng, venue.lat], duration: 500 });
+      // 350ms: quick enough that the map visibly follows each card swipe.
+      // Rapid successive easeTo calls retarget smoothly (MapLibre interrupts
+      // the previous animation), so fast flicks track without queueing.
+      map.easeTo({ center: [venue.lng, venue.lat], duration: 350 });
     }
   }, [map, isLoaded, venue]);
 

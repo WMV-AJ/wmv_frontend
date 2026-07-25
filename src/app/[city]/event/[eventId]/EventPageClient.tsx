@@ -722,7 +722,7 @@ export default function EventDetailPage() {
             <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_1, isVideo: event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) })}>
               {event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) ? (
                 <video
-                  src={event.media_url_1}
+                  src={`${event.media_url_1}#t=0.1`}
                   className="w-full h-full object-cover"
                   muted loop playsInline preload="metadata"
                 />
@@ -739,7 +739,7 @@ export default function EventDetailPage() {
             <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_2, isVideo: event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) })}>
               {event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) ? (
                 <video
-                  src={event.media_url_2}
+                  src={`${event.media_url_2}#t=0.1`}
                   className="w-full h-full object-cover"
                   muted loop playsInline preload="metadata"
                 />
@@ -948,7 +948,7 @@ export default function EventDetailPage() {
                       {r.media_url_1 && !/\.(mp4|mov|webm)$/i.test(r.media_url_1) ? (
                         <Image src={r.media_url_1} alt={r.event_name || ''} fill sizes="128px" className="object-cover" />
                       ) : r.media_url_1 ? (
-                        <video src={r.media_url_1} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
+                        <video src={`${r.media_url_1}#t=0.1`} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Music className="w-5 h-5 text-[#5f5a70]" />

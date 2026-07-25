@@ -119,19 +119,12 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   const displayCardsRef = useRef(displayCards);
   const hasCards = displayCards.length > 0;
 
-  // The card the carousel has SETTLED on. activeCardIndex updates per frame
-  // (cheap — drives the dot indicator); settledCardIndex updates only when
-  // the flick stops, and it's what notifies the parent. Previously every
-  // scroll frame re-rendered all map markers and fired a fresh 500ms easeTo.
-  const [settledCardIndex, setSettledCardIndex] = useState(0);
-
   // Layout-read cache: children's offsetLeft/offsetWidth were read in a loop
   // on EVERY scroll event (layout thrash). Centers only change when the card
   // set changes or the container resizes — precompute them then.
   const childCentersRef = useRef<number[]>([]);
   const halfViewportRef = useRef(0);
   const scrollTickingRef = useRef(false);
-  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const measureCarousel = useCallback(() => {
     const el = scrollRef.current;
@@ -156,7 +149,10 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   }, [displayCards, measureCarousel]);
 
   // Track active card via scroll position — rAF-throttled; reads only
-  // scrollLeft (cheap) against the precomputed centers.
+  // scrollLeft (cheap) against the precomputed centers. setActiveCardIndex
+  // only re-renders when the NEAREST CARD actually changes (a few times per
+  // swipe, not per frame), so the marker highlight + pan can follow it
+  // immediately — a settle delay here read as "the marker lags my swipe".
   const handleCarouselScroll = useCallback(() => {
     if (scrollTickingRef.current) return;
     scrollTickingRef.current = true;
@@ -175,19 +171,9 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
           closestIndex = i;
         }
       }
-      const idx = Math.min(closestIndex, displayCards.length - 1);
-      setActiveCardIndex(idx);
-
-      // Settle detection: 150ms after the last scroll event, commit the
-      // index that notifies the parent (marker highlight + map pan).
-      if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
-      settleTimerRef.current = setTimeout(() => setSettledCardIndex(idx), 150);
+      setActiveCardIndex(Math.min(closestIndex, displayCards.length - 1));
     });
   }, [displayCards.length]);
-
-  useEffect(() => () => {
-    if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
-  }, []);
 
   // Reset carousel position AND immediately highlight first card when cards/filters change
   // When All Dates (activeDates=[]), auto-scroll to today's first card (or nearest future)
@@ -217,7 +203,6 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     }
 
     setActiveCardIndex(startIndex);
-    setSettledCardIndex(startIndex);
 
     // Scroll to the target card after render
     requestAnimationFrame(() => {
@@ -260,7 +245,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     }
 
     if (mode === 'list' && hasCards && !isDismissed && onActiveCardChange) {
-      const activeCard = displayCards[settledCardIndex];
+      const activeCard = displayCards[activeCardIndex];
       onActiveCardChange(activeCard?.venue.id || null);
       const offer = activeCard?.event.event_offers;
       onActiveOfferChange?.(offer && !offer.toLowerCase().includes('no special offer') ? offer : null);
@@ -274,7 +259,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
       onActiveCardChange(null);
       onActiveOfferChange?.(null);
     }
-  }, [settledCardIndex, mode, markerVenueId, hasCards, isDismissed, onActiveCardChange, onActiveOfferChange, displayCards]);
+  }, [activeCardIndex, mode, markerVenueId, hasCards, isDismissed, onActiveCardChange, onActiveOfferChange, displayCards]);
 
   // Dismiss when parent signals (e.g. map click)
   useEffect(() => {
