@@ -23,12 +23,12 @@ interface SourceLabel {
 // AAA contrast on translucent white — yellow especially needs the dark
 // variant since bright yellow text is unreadable on light backgrounds.
 const LABELS: SourceLabel[] = [
-  { idx: '01', text: 'INSTAGRAM STORIES', x: 0.25, y: 0.26, color: '#ec4899', textColor: '#9d174d', delay: 0.2, count: '2,341 stories', side: 'left'   },
-  { idx: '02', text: 'INSTAGRAM POSTS',   x: 0.75, y: 0.28, color: '#eab308', textColor: '#713f12', delay: 0.5, count: '1,089 posts',   side: 'right'  },
-  { idx: '03', text: 'TICKETING APIs',    x: 0.50, y: 0.18, color: '#10b981', textColor: '#064e3b', delay: 0.8, count: '12 sources',    side: 'center' },
-  { idx: '04', text: 'PLATINUM LIST',     x: 0.50, y: 0.82, color: '#0ea5e9', textColor: '#0c4a6e', delay: 1.1, count: 'live feed',     side: 'center' },
-  { idx: '05', text: 'VENUE WEBSITES',    x: 0.27, y: 0.68, color: '#f97316', textColor: '#7c2d12', delay: 1.4, count: '380 venues',    side: 'left'   },
-  { idx: '06', text: 'DUBAI EVENT SITES', x: 0.73, y: 0.70, color: '#8b5cf6', textColor: '#4c1d95', delay: 1.7, count: '47 sites',      side: 'right'  },
+  { idx: '01', text: 'INSTAGRAM STORIES', x: 0.25, y: 0.26, color: '#ec4899', textColor: '#9d174d', delay: 0.04, count: '2,341 stories', side: 'left'   },
+  { idx: '02', text: 'INSTAGRAM POSTS',   x: 0.75, y: 0.28, color: '#eab308', textColor: '#713f12', delay: 0.10, count: '1,089 posts',   side: 'right'  },
+  { idx: '03', text: 'TICKETING APIs',    x: 0.50, y: 0.18, color: '#10b981', textColor: '#064e3b', delay: 0.16, count: '12 sources',    side: 'center' },
+  { idx: '04', text: 'PLATINUM LIST',     x: 0.50, y: 0.82, color: '#0ea5e9', textColor: '#0c4a6e', delay: 0.22, count: 'live feed',     side: 'center' },
+  { idx: '05', text: 'VENUE WEBSITES',    x: 0.27, y: 0.68, color: '#f97316', textColor: '#7c2d12', delay: 0.28, count: '380 venues',    side: 'left'   },
+  { idx: '06', text: 'DUBAI EVENT SITES', x: 0.73, y: 0.70, color: '#8b5cf6', textColor: '#4c1d95', delay: 0.34, count: '47 sites',      side: 'right'  },
 ];
 
 // Approximate bounding box of each card — used to start the data thread at
@@ -59,7 +59,7 @@ export function ChaosOverlay({ time }: { time: number }) {
   if (time > DUR.CHAOS_END + 0.4) return null;
 
   const fadeIn = clamp(time / 0.5, 0, 1);
-  const fadeOut = 1 - clamp((time - (DUR.CHAOS_END - 0.6)) / 0.6, 0, 1);
+  const fadeOut = 1 - clamp((time - (DUR.CHAOS_END - 0.3)) / 0.3, 0, 1);
   const baseOp = Easing.easeOutCubic(fadeIn) * Easing.easeOutCubic(fadeOut);
 
   const blink = (Math.sin(time * Math.PI * 5) + 1) / 2;
@@ -308,7 +308,7 @@ export function ChaosOverlay({ time }: { time: number }) {
       {/* Traveling data dots — exit card edge → arrive at logo rim, looping */}
       {LABELS.map((L, i) => {
         const g = geometry[i];
-        const lt = time - L.delay - 0.4;
+        const lt = time - L.delay - 0.1;
         if (lt < 0) return null;
         const cyclePos = (lt % DOT_TRAVEL_S) / DOT_TRAVEL_S;
         const eased = Easing.easeInOutCubic(cyclePos);

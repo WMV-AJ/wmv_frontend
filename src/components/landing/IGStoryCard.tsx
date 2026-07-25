@@ -34,13 +34,11 @@ const handleImgError = (
   e: React.SyntheticEvent<HTMLImageElement>,
   venue: string,
 ) => {
+  void venue;
   const img = e.currentTarget;
-  if (!img.dataset.fallback) {
-    img.dataset.fallback = '1';
-    img.src = `https://picsum.photos/seed/${encodeURIComponent(venue)}/600/900`;
-  } else {
-    img.style.display = 'none';
-  }
+  // Cards are bundled local assets now — if one somehow fails, hide it
+  // rather than hotlinking a third-party placeholder service.
+  img.style.display = 'none';
 };
 
 export function IGStoryCard({

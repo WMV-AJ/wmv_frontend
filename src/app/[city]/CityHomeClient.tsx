@@ -155,6 +155,8 @@ export default function CityHome() {
       .then(r => r.json())
       .then(vc => { if (vc.count) setTotalVenues(vc.count); })
       .catch(console.error);
+    // Landing page + marketing sections follow the visitor's last city.
+    try { window.localStorage.setItem('wmv_last_city', city); } catch { /* ignore */ }
   }, [city]);
 
   useEffect(() => {

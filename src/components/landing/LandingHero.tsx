@@ -1,7 +1,7 @@
 'use client';
 
 import { phaseProgress, useTime } from '@/lib/landing/animation-core';
-import { Stage } from '@/lib/landing/Stage';
+import { Stage, type StageHandle } from '@/lib/landing/Stage';
 import { CANVAS_H, CANVAS_W, DUR } from '@/lib/landing/constants';
 import { CardsLayer } from './scenes/CardsLayer';
 import { ChaosOverlay } from './scenes/ChaosOverlay';
@@ -58,7 +58,7 @@ function Scene() {
           height: 600,
           background:
             'linear-gradient(180deg, rgba(15,20,25,0) 0%, rgba(15,20,25,0.85) 60%, rgba(15,20,25,0.95) 100%)',
-          opacity: phaseProgress(time, DUR.SETTLE_END - 0.4, DUR.SETTLE_END + 0.8),
+          opacity: phaseProgress(time, DUR.SETTLE_END - 0.2, DUR.SETTLE_END + 0.4),
           pointerEvents: 'none',
         }}
       />
@@ -85,14 +85,26 @@ function Scene() {
   );
 }
 
-export function LandingHero() {
+interface LandingHeroProps {
+  /** Render the settled final frame statically (returning visitors). */
+  settled?: boolean;
+  /** Fires when the (non-looping) intro reaches its end. */
+  onComplete?: () => void;
+  /** Imperative handle for skipTo (skip button). */
+  stageRef?: React.Ref<StageHandle>;
+}
+
+export function LandingHero({ settled = false, onComplete, stageRef }: LandingHeroProps) {
   return (
     <Stage
+      ref={stageRef}
       width={CANVAS_W}
       height={CANVAS_H}
       duration={DUR.TOTAL}
       background="#0a0a1a"
-      loop
+      loop={false}
+      initialTime={settled ? DUR.TOTAL : 0}
+      onComplete={onComplete}
     >
       <Scene />
     </Stage>

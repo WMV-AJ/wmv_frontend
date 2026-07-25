@@ -1,12 +1,15 @@
 import { hash } from './animation-core';
 
-// Phase boundaries (seconds) — copied verbatim from WMV Stories Loop.html
+// Phase boundaries (seconds). Compressed 2026-07 from the original 16.5s
+// looping cut: the intro now reads as a fast flash of doomscroll-chaos that
+// snaps into the settled map — total 3.4s, non-looping, skippable (see
+// useIntroGate). Returning visitors render the final frame statically.
 export const DUR = {
-  CHAOS_END: 6.5,
-  COLLAPSE_END: 8.5,
-  BURST_END: 9.7,
-  SETTLE_END: 12.0,
-  TOTAL: 16.5,
+  CHAOS_END: 1.3,
+  COLLAPSE_END: 1.9,
+  BURST_END: 2.3,
+  SETTLE_END: 2.9,
+  TOTAL: 3.4,
 } as const;
 
 export const CANVAS_W = 1080;
@@ -26,41 +29,15 @@ export const VENUE_PALETTE = [
   '#06b6d4',
 ] as const;
 
-const flickr = (tags: string, seed: number): string =>
-  `https://loremflickr.com/600/900/${encodeURIComponent(tags)}?lock=${seed}`;
-
-// 4-photo themed pool per venue category; cards cycle through these every 1s
+// Bundled branded backdrops (public/landing/cards/*.webp, ~3.5KB each).
+// Previously these were loremflickr.com hotlinks — third-party, slow, and
+// pointless in a 1.3s chaos flash. One image per card, no cycling.
 export const PHOTO_POOL: Record<string, string[]> = {
-  nightclub: [
-    flickr('nightclub,dj,party', 201),
-    flickr('club,neon,laser', 202),
-    flickr('rave,crowd,dance', 203),
-    flickr('club,bar,smoke', 204),
-  ],
-  beach: [
-    flickr('beach,sunset,party', 211),
-    flickr('poolparty,bikini', 212),
-    flickr('beachclub,palm', 213),
-    flickr('beach,drinks,sand', 214),
-  ],
-  rooftop: [
-    flickr('rooftop,city,skyline', 221),
-    flickr('rooftop,bar,night', 222),
-    flickr('skyline,sunset', 223),
-    flickr('rooftop,brunch', 224),
-  ],
-  bar: [
-    flickr('cocktail,bar,negroni', 231),
-    flickr('speakeasy,jazz', 232),
-    flickr('bar,whiskey,drinks', 233),
-    flickr('cocktail,glass,neon', 234),
-  ],
-  restaurant: [
-    flickr('restaurant,food,fine', 241),
-    flickr('sushi,restaurant', 242),
-    flickr('chefstable,plate', 243),
-    flickr('restaurant,wine,dinner', 244),
-  ],
+  nightclub: ['/landing/cards/nightclub-1.webp', '/landing/cards/nightclub-2.webp', '/landing/cards/nightclub-3.webp'],
+  beach: ['/landing/cards/beach-1.webp', '/landing/cards/beach-2.webp', '/landing/cards/beach-3.webp'],
+  rooftop: ['/landing/cards/rooftop-1.webp', '/landing/cards/rooftop-2.webp', '/landing/cards/rooftop-3.webp'],
+  bar: ['/landing/cards/bar-1.webp', '/landing/cards/bar-2.webp', '/landing/cards/bar-3.webp'],
+  restaurant: ['/landing/cards/restaurant-1.webp', '/landing/cards/restaurant-2.webp', '/landing/cards/restaurant-3.webp'],
 };
 
 export type CardCategory = keyof typeof PHOTO_POOL;
@@ -90,14 +67,12 @@ export const CARDS: CardSpec[] = [
   { v: 'Solutions',    c: 'bar',        t: 'JAZZ + BURGERS',    m: '9PM · Live Band',    seed: 15, r: 360, ang0: 160, dir:  1, variant: 'story' },
   { v: 'Bla Bla',      c: 'beach',      t: 'BEACH PARTY',       m: '8PM · Open Bar',     seed: 16, r: 520, ang0: 180, dir: -1, variant: 'story' },
   { v: 'SUSHISAMBA',   c: 'restaurant', t: 'LATIN NIGHT',       m: '9PM · Cocktails',    seed: 17, r: 400, ang0: 200, dir:  1, variant: 'story' },
-  { v: 'Drift',        c: 'beach',      t: 'GOLDEN HOUR',       m: '5PM · Champagne',    seed: 18, r: 540, ang0: 220, dir: -1, variant: 'website' },
-  { v: 'STK Rooftop',  c: 'rooftop',    t: 'WEEKEND BRUNCH',    m: '12PM · Bottomless',  seed: 19, r: 340, ang0: 240, dir:  1, variant: 'story' },
-  { v: 'Blind Tiger',  c: 'bar',        t: 'SPEAKEASY',         m: '10PM · Live Jazz',   seed: 20, r: 480, ang0: 260, dir: -1, variant: 'story' },
-  { v: 'Zero Gravity', c: 'beach',      t: 'DAY CLUB',          m: '1PM · Pool Party',   seed: 21, r: 420, ang0: 280, dir:  1, variant: 'story' },
+  { v: 'Drift',        c: 'beach',      t: 'GOLDEN HOUR',       m: '5PM · Champagne',    seed: 18, r: 540, ang0: 230, dir: -1, variant: 'website' },
+  { v: 'Blind Tiger',  c: 'bar',        t: 'SPEAKEASY',         m: '10PM · Live Jazz',   seed: 20, r: 480, ang0: 265, dir: -1, variant: 'story' },
   { v: 'Bohemia',      c: 'nightclub',  t: 'TECHNO TUESDAY',    m: '11PM · Underground', seed: 22, r: 560, ang0: 300, dir: -1, variant: 'website' },
-  { v: 'Lock Stock',   c: 'bar',        t: 'PUB QUIZ',          m: '8PM · Trivia',       seed: 23, r: 380, ang0: 320, dir:  1, variant: 'story' },
-  { v: 'Atlantis',     c: 'rooftop',    t: 'SKY HIGH',          m: '10PM · DJ Set',      seed: 24, r: 500, ang0: 340, dir: -1, variant: 'story' },
+  { v: 'Atlantis',     c: 'rooftop',    t: 'SKY HIGH',          m: '10PM · DJ Set',      seed: 24, r: 500, ang0: 335, dir: -1, variant: 'story' },
 ];
+// 12 cards (was 18) — fewer image decodes inside a 1.3s chaos window.
 
 // Pre-baked dot positions on the Dubai map (normalized 0..1 over the canvas).
 // Clusters concentrated on the Palm trunk + Marina; mirrors the reference screenshot.

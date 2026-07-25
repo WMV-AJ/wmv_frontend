@@ -11,10 +11,13 @@ import {
 } from '@/lib/landing/constants';
 import { IGStoryCard } from '../IGStoryCard';
 
-function photoForCard(card: CardSpec, time: number): string {
+// One stable image per card — cycling made sense over a 6.5s chaos phase,
+// but at 1.3s it just multiplied decodes. (time param kept for call-site
+// compatibility; deliberately unused.)
+function photoForCard(card: CardSpec, _time: number): string {
+  void _time;
   const pool = PHOTO_POOL[card.c] || PHOTO_POOL.nightclub;
-  const slot = Math.floor(time + (card.seed % 4) * 0.25) % pool.length;
-  return pool[slot];
+  return pool[card.seed % pool.length];
 }
 
 interface ChaosPos {

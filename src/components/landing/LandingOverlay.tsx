@@ -119,10 +119,19 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
   );
 }
 
-export function LandingOverlay() {
+interface LandingOverlayProps {
+  /** Reports the picked city so the marketing sections below can follow it. */
+  onCityChange?: (city: CitySlug) => void;
+}
+
+export function LandingOverlay({ onCityChange }: LandingOverlayProps = {}) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [city, setCity] = useState<CitySlug>(DEFAULT_CITY);
+  const [city, setCityState] = useState<CitySlug>(DEFAULT_CITY);
+  const setCity = (c: CitySlug) => {
+    setCityState(c);
+    onCityChange?.(c);
+  };
   const cityName = CITIES[city].displayName;
   const isAuthed = !!user;
 
@@ -132,7 +141,7 @@ export function LandingOverlay() {
       {!authLoading && isAuthed && (
         <div
           style={{
-            position: 'fixed',
+            position: 'absolute',
             top: 16,
             right: 16,
             zIndex: 50,
@@ -145,7 +154,7 @@ export function LandingOverlay() {
       {/* Bottom-center: [Continue with Google] [city ▾] [→] — locked single row */}
       <div
         style={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: 'max(28px, env(safe-area-inset-bottom))',
           left: '50%',
           transform: 'translateX(-50%)',
