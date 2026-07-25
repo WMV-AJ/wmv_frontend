@@ -18,6 +18,7 @@ import { DEFAULT_CITY, getCityConfig, type CitySlug } from '@/config/cities.conf
 import { VIBES } from '@/config/vibes';
 import EventMedia from '@/components/shared/EventMedia';
 import { trackEvent } from '@/lib/analytics/track';
+import { SourceChips, PipelineTimeline, StoryCollage } from '@/components/marketing/visuals';
 import { T, serif, mono, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 
 export default function LandingClient() {
@@ -136,12 +137,15 @@ function Label({ children }: { children: React.ReactNode }) {
 /* ── 2. Problem → solution ────────────────────────────────────────── */
 function ProblemSection() {
   return (
-    <section style={{ padding: '56px 0 40px', borderBottom: `1px solid ${T.line}` }}>
+    <section style={{ padding: '56px 0 40px', borderBottom: `1px solid ${T.line}`, position: 'relative' }}>
       <Label>The problem</Label>
       <h2 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 30, lineHeight: 1.15, color: T.ink, margin: 0 }}>
         47 stories deep<br />and still no plan.
       </h2>
-      <p style={{ color: T.inkMuted, fontSize: 14, lineHeight: 1.6, marginTop: 16 }}>
+      <div style={{ margin: '24px 0 22px' }}>
+        <StoryCollage />
+      </div>
+      <p style={{ color: T.inkMuted, fontSize: 14, lineHeight: 1.6, marginTop: 0 }}>
         Every venue posts tonight&rsquo;s lineup to Instagram — and Instagram buries it.
         You scroll, you screenshot, you text the group chat, and by the time everyone
         agrees, the guestlist closed.
@@ -154,26 +158,23 @@ function ProblemSection() {
   );
 }
 
-/* ── 3. How it works mini ─────────────────────────────────────────── */
+/* ── 3. How it works mini — sources + connected pipeline ──────────── */
 function HowItWorksMini() {
   const router = useRouter();
-  const steps = [
-    { n: '01', t: 'We scan', d: 'Instagram stories, posts, ticketing feeds and venue sites — refreshed daily.' },
-    { n: '02', t: 'AI sorts', d: 'Every event gets a vibe: brunch, club night, rooftop, ladies night, live music…' },
-    { n: '03', t: 'You go', d: 'One live map and list of what’s actually on tonight. Pick, tap, out the door.' },
-  ];
   return (
     <section style={{ padding: '40px 0', borderBottom: `1px solid ${T.line}` }}>
+      <Label>What we scan, daily</Label>
+      <div style={{ marginBottom: 26 }}>
+        <SourceChips compact />
+      </div>
       <Label>How it works</Label>
-      {steps.map((s) => (
-        <div key={s.n} style={{ display: 'flex', gap: 14, marginBottom: 18 }}>
-          <div style={{ fontFamily: mono, fontSize: 11, color: T.accent, fontWeight: 700, paddingTop: 2 }}>{s.n}</div>
-          <div>
-            <div style={{ color: T.ink, fontSize: 14, fontWeight: 700 }}>{s.t}</div>
-            <div style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.55, marginTop: 2 }}>{s.d}</div>
-          </div>
-        </div>
-      ))}
+      <PipelineTimeline
+        steps={[
+          { n: '01', title: 'We scan', color: '#ec4899', desc: 'Instagram stories, posts, ticketing feeds and venue sites — refreshed daily.' },
+          { n: '02', title: 'AI sorts', color: '#eab308', desc: 'Every event gets a vibe: brunch, club night, rooftop, ladies night, live music…' },
+          { n: '03', title: 'You go', color: '#f4c430', desc: 'One live map and list of what’s actually on tonight. Pick, tap, out the door.' },
+        ]}
+      />
       <button
         onClick={() => {
           trackEvent('marketing_cta_click', { cta: 'how_it_works', source: 'landing' });

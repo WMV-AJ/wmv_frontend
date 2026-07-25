@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import MarketingShell from '@/components/marketing/MarketingShell';
 import CtaButton from '@/components/marketing/CtaButton';
+import { SourceChips, RadarRings } from '@/components/marketing/visuals';
 import { getActiveCities } from '@/lib/server-data';
 import { T, serif, mono } from '@/lib/theme/tokens';
 
@@ -28,9 +29,11 @@ export default async function ListYourVenuePage() {
 
   return (
     <MarketingShell>
-      <div style={{ padding: '32px 18px 8px' }}>
-        <h1 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px' }}>
-          Your venue is already<br />on the radar. Own it.
+      <div style={{ padding: '32px 18px 8px', position: 'relative', overflow: 'hidden' }}>
+        <RadarRings size={260} right={-80} top={-40} />
+        <h1 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
+          Your venue is already<br />
+          <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>on the radar. Own it.</span>
         </h1>
         <p style={{ color: T.inkMuted, fontSize: 14, lineHeight: 1.6, margin: '0 0 34px' }}>
           If you post your events publicly, chances are we&rsquo;re already scanning
@@ -55,12 +58,12 @@ export default async function ListYourVenuePage() {
 
         <section style={{ paddingBottom: 28, borderBottom: `1px solid ${T.line}`, marginBottom: 28 }}>
           <Label>How venues get on WMV</Label>
-          <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.65, margin: 0 }}>
-            Organically: our pipeline scans public Instagram stories, posts, ticketing
-            feeds and venue sites daily. If your events are posted, they appear.
-            Claiming your venue lets you verify your details, make sure every event is
-            captured, and talk to us about featured placement.
+          <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.65, margin: '0 0 16px' }}>
+            Organically: our pipeline scans these public channels daily. If your events
+            are posted, they appear. Claiming your venue lets you verify your details,
+            make sure every event is captured, and talk to us about featured placement.
           </p>
+          <SourceChips compact />
         </section>
 
         <section style={{ padding: '4px 0 36px' }}>
