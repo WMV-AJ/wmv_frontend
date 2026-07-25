@@ -17,7 +17,21 @@ export type AnalyticsEventName =
   | 'login_completed'
   | 'logout'
   | 'consent_given'
-  | 'consent_denied';
+  | 'consent_denied'
+  // Home-page tiles (these were already fired by [city]/page.tsx but missing here)
+  | 'vibe_pill_click'
+  | 'area_row_click'
+  // Landing intro + marketing funnels
+  //   Visitor funnel: page_view(/) → intro_completed|intro_skipped →
+  //     landing_cta_click → page_view(/{city}) → nav_view_change → view_event
+  //   B2B funnel: marketing_cta_click{cta:'list_venue'} →
+  //     page_view(/list-your-venue) → venue_lead_click{channel}
+  | 'intro_skipped'
+  | 'intro_completed'
+  | 'landing_cta_click'
+  | 'marketing_cta_click'
+  | 'venue_lead_click'
+  | 'faq_expand';
 
 export type AnalyticsProperties = Record<string, unknown>;
 

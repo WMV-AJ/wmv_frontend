@@ -33,7 +33,7 @@ interface MobileFeaturedCardProps {
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVW-pbYSH_W9UliC5eEBX7oWNcsAJN9LETGg&s';
+import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 
 const MobileFeaturedCard: React.FC<MobileFeaturedCardProps> = ({ card, onClick }) => {
   const { event, venue } = card;

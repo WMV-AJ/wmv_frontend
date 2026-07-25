@@ -501,6 +501,7 @@ export default function EventDetailPage() {
               muted
               loop
               playsInline
+              preload="metadata"
               onClick={() => setLightboxMedia({ url: heroImage, isVideo: true })}
               onError={(e) => { (e.target as HTMLVideoElement).style.display = 'none'; }}
             />
@@ -732,7 +733,7 @@ export default function EventDetailPage() {
                 <video
                   src={event.media_url_1}
                   className="w-full h-full object-cover"
-                  autoPlay muted loop playsInline
+                  muted loop playsInline preload="metadata"
                 />
               ) : (
                 <img
@@ -747,7 +748,7 @@ export default function EventDetailPage() {
                 <video
                   src={event.media_url_2}
                   className="w-full h-full object-cover"
-                  autoPlay muted loop playsInline
+                  muted loop playsInline preload="metadata"
                 />
               ) : (
                 <img
@@ -952,7 +953,7 @@ export default function EventDetailPage() {
                       {r.media_url_1 && !/\.(mp4|mov|webm)$/i.test(r.media_url_1) ? (
                         <img src={r.media_url_1} alt={r.event_name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       ) : r.media_url_1 ? (
-                        <video src={r.media_url_1} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                        <video src={r.media_url_1} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Music className="w-5 h-5 text-gray-400" />

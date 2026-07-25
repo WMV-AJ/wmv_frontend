@@ -19,7 +19,21 @@ import { ALL_CITIES, DEFAULT_CITY } from './config/cities.config';
 const KNOWN_CITY_PREFIXES = (ALL_CITIES as readonly string[]).map((c) => `/${c}`);
 
 // Top-level paths that must NOT be rewritten under a city prefix.
-const PASSTHROUGH = new Set(['auth', 'api', '_next', 'favicon.ico']);
+// NOTE: every new top-level route (marketing pages, sitemap, robots) MUST be
+// added here — the matcher below excludes only asset extensions, so e.g. an
+// unlisted /sitemap.xml would 307 to /dubai/sitemap.xml.
+const PASSTHROUGH = new Set([
+  'auth',
+  'api',
+  '_next',
+  'favicon.ico',
+  // Marketing / SEO surfaces
+  'how-it-works',
+  'faq',
+  'list-your-venue',
+  'sitemap.xml',
+  'robots.txt',
+]);
 
 // Dynamic cities cache, refreshed against the backend's /api/cities.
 // Worker-local, hydrated lazily on first unknown-path request.

@@ -145,9 +145,9 @@ function OfferBanner({
       <div
         className="px-[11px] py-[7px] md:px-[8px] md:py-[5px]"
         style={{
-          background: 'rgba(10,10,26,0.88)',
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
+          // Opaque instead of backdrop-blur: MapLibre repositions this popup on
+          // every pan frame, and backdrop-filter forces a recomposite per frame.
+          background: 'rgba(10,10,26,0.95)',
           border: `1px solid ${color}55`,
           borderLeft: `3px solid ${color}`,
           borderRadius: '10px',
@@ -158,6 +158,21 @@ function OfferBanner({
       </div>
     </MapPopup>
   );
+}
+
+// Two-finger rotation can't be disabled via constructor options alone —
+// touchZoomRotate is a combined handler, so rotation is switched off post-init.
+// Without this (and with the compass hidden) an accidental two-finger twist
+// leaves the map permanently rotated with no way to reset it.
+function DisableTouchRotation() {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    map.touchZoomRotate.disableRotation();
+  }, [map, isLoaded]);
+
+  return null;
 }
 
 function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
@@ -496,7 +511,11 @@ export default function CityMapPage() {
             maxBounds={getMapBounds(city)}
             theme="dark"
             className="w-full h-full"
+            dragRotate={false}
+            pitchWithRotate={false}
+            touchPitch={false}
           >
+            <DisableTouchRotation />
             <ZoomTracker onZoomChange={handleZoomChange} />
             <PanToVenue venue={highlightedVenue} />
             <MapClickHandler onClick={() => { if (!markerJustClickedRef.current) setMapClickCount((c) => c + 1); }} />
@@ -545,12 +564,14 @@ export default function CityMapPage() {
               <OfferBanner venue={highlightedVenue} offer={highlightedOffer} color={getVenueColor(highlightedVenue)} />
             )}
 
-            <MapControls position="bottom-right" showZoom={false} showCompass={false} />
+            <MapControls position="bottom-right" showZoom={false} showCompass={false} showLocate />
           </MapView>
 
-          <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-xs text-gray-600 border border-gray-200 shadow-sm z-10">
-            MapCN (MapLibre) · {venues.length} venues
-          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-sm rounded-md px-3 py-1.5 text-xs text-gray-600 border border-gray-200 shadow-sm z-10">
+              MapCN (MapLibre) · {venues.length} venues
+            </div>
+          )}
         </div>
 
         <MobileEventList

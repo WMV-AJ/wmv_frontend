@@ -40,6 +40,8 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
+  // Base URL for resolving relative canonical/OG URLs in per-route metadata.
+  metadataBase: new URL("https://wheresmyvibe.com"),
   // Generic across cities. Per-city pages (e.g. /[city]/page.tsx) can override
   // via their own `generateMetadata` for SEO-targeted titles.
   title: "Where's My Vibe - Event Discovery",
@@ -97,6 +99,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* Event/venue media (Instagram scrapes) and map tiles come from these
+            hosts on every content page — warming the connections saves a
+            DNS+TLS round-trip on the first image/tile fetch (mobile: 100-300ms). */}
+        <link rel="preconnect" href="https://storage.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://storage.googleapis.com" />
+        <link rel="preconnect" href="https://basemaps.cartocdn.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${geistSans.variable} ${fraunces.variable} ${playfairDisplay.variable} antialiased`}
       >

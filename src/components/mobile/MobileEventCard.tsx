@@ -103,12 +103,8 @@ interface MobileEventCardProps {
   darkMode?: boolean;
 }
 
-const PLACEHOLDER_IMAGES = [
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVW-pbYSH_W9UliC5eEBX7oWNcsAJN9LETGg&s',
-  'https://images.musement.com/cover/0002/45/dubai-skyline-at-dusk-jpg_header-144981.jpeg',
-  'https://cdn.audleytravel.com/4571/3265/79/15992392-dubai-marina-skyline-dubai.jpg',
-];
-const PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGES[0];
+import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
+const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
 function parseToArray(value: unknown): string[] {
   if (!value) return [];
@@ -1000,14 +996,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               const u2 = (event as any).media_url_2 as string | undefined;
               const isVid = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
               if (u1 && isVid(u1)) return (
-                <video src={u1} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                <video src={u1} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
               );
               if (u1) return (
                 <img src={u1} alt={venue.venue_name} className="w-full h-full object-cover"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }} loading="lazy" />
               );
               if (u2 && isVid(u2)) return (
-                <video src={u2} className="w-full h-full object-cover" muted playsInline autoPlay loop />
+                <video src={u2} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
               );
               if (u2) return (
                 <img src={u2} alt={venue.venue_name} className="w-full h-full object-cover"

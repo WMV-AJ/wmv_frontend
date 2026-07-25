@@ -454,9 +454,11 @@ export default function CityHome() {
                   router.push(`/${city}/event/${s.event_id}`);
                 }}>
                   {s.mediaUrl && s.mediaType === 'video' ? (
+                    // No autoPlay on tiny grid tiles — 8 concurrent mp4 streams starved
+                    // the page. preload="metadata" paints the first frame as a still.
                     <video
                       src={s.mediaUrl}
-                      autoPlay muted loop playsInline
+                      muted loop playsInline preload="metadata"
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : s.mediaUrl ? (
@@ -529,7 +531,7 @@ export default function CityHome() {
                     router.push(`/${city}/event/${e.event_id}`);
                   }}>
                     {hasVideo ? (
-                      <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
+                      <video src={e.media_url_1} autoPlay muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
                     ) : hasImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={e.media_url_1} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
@@ -616,7 +618,7 @@ export default function CityHome() {
                   {/* Thumbnail — left */}
                   <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden', borderRadius: 4 }}>
                     {hasVideo ? (
-                      <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <video src={e.media_url_1} muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : hasImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={e.media_url_1} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -771,7 +773,7 @@ export default function CityHome() {
                     }}>
                       <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
                         {hasVideo ? (
-                          <video src={e.media_url_1} autoPlay muted loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <video src={e.media_url_1} muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : hasImage ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={e.media_url_1} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />

@@ -13,7 +13,7 @@ interface SplitViewEventCardProps {
   onMouseLeave: () => void;
 }
 
-const PLACEHOLDER_IMAGE = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVW-pbYSH_W9UliC5eEBX7oWNcsAJN9LETGg&s';
+import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 
 function getVenueImage(venue: Venue): string {
   return (venue as any).media_url_1 || (venue as any).media_url_2 || PLACEHOLDER_IMAGE;

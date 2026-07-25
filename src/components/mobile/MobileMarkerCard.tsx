@@ -84,7 +84,7 @@ interface MobileMarkerCardProps {
   onDateChange?: (dates: string[]) => void;
 }
 
-const PLACEHOLDER_IMAGE = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVW-pbYSH_W9UliC5eEBX7oWNcsAJN9LETGg&s';
+import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 
 function parseToArray(value: unknown): string[] {
   if (!value) return [];

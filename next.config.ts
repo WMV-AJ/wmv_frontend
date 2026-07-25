@@ -31,16 +31,15 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '/wmv-ig-images/**' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
-    formats: ['image/webp'],
+    // AVIF first (30-50% smaller than WebP for photos), WebP fallback.
+    // AVIF encodes are slower but the 24h on-disk cache amortizes them.
+    formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24, // 24h on-disk cache
-    // Only generate two sizes for thumbnails — fewer Sharp jobs per image.
-    imageSizes: [128, 256],
+    // 96 covers the card thumbnails; keeps Sharp jobs per image low.
+    imageSizes: [96, 128, 256],
     deviceSizes: [640, 1080],
   },
   output: 'standalone',
-  serverExternalPackages: [
-    '@react-google-maps/api',
-  ],
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
