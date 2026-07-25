@@ -119,27 +119,75 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   const displayCardsRef = useRef(displayCards);
   const hasCards = displayCards.length > 0;
 
-  // Track active card via scroll position — uses actual card element widths
-  const handleCarouselScroll = useCallback(() => {
+  // The card the carousel has SETTLED on. activeCardIndex updates per frame
+  // (cheap — drives the dot indicator); settledCardIndex updates only when
+  // the flick stops, and it's what notifies the parent. Previously every
+  // scroll frame re-rendered all map markers and fired a fresh 500ms easeTo.
+  const [settledCardIndex, setSettledCardIndex] = useState(0);
+
+  // Layout-read cache: children's offsetLeft/offsetWidth were read in a loop
+  // on EVERY scroll event (layout thrash). Centers only change when the card
+  // set changes or the container resizes — precompute them then.
+  const childCentersRef = useRef<number[]>([]);
+  const halfViewportRef = useRef(0);
+  const scrollTickingRef = useRef(false);
+  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const measureCarousel = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-
-    // Find which card's center is closest to the viewport center (robust across all screen sizes)
-    const viewportCenter = el.scrollLeft + el.offsetWidth / 2;
-    let closestIndex = 0;
-    let closestDist = Infinity;
+    halfViewportRef.current = el.offsetWidth / 2;
+    const centers: number[] = [];
     const children = el.children;
     for (let i = 0; i < children.length; i++) {
       const child = children[i] as HTMLElement;
-      const childCenter = child.offsetLeft + child.offsetWidth / 2;
-      const dist = Math.abs(childCenter - viewportCenter);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestIndex = i;
-      }
+      centers.push(child.offsetLeft + child.offsetWidth / 2);
     }
-    setActiveCardIndex(Math.min(closestIndex, displayCards.length - 1));
+    childCentersRef.current = centers;
+  }, []);
+
+  useEffect(() => {
+    measureCarousel();
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measureCarousel);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [displayCards, measureCarousel]);
+
+  // Track active card via scroll position — rAF-throttled; reads only
+  // scrollLeft (cheap) against the precomputed centers.
+  const handleCarouselScroll = useCallback(() => {
+    if (scrollTickingRef.current) return;
+    scrollTickingRef.current = true;
+    requestAnimationFrame(() => {
+      scrollTickingRef.current = false;
+      const el = scrollRef.current;
+      if (!el) return;
+      const viewportCenter = el.scrollLeft + halfViewportRef.current;
+      const centers = childCentersRef.current;
+      let closestIndex = 0;
+      let closestDist = Infinity;
+      for (let i = 0; i < centers.length; i++) {
+        const dist = Math.abs(centers[i] - viewportCenter);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIndex = i;
+        }
+      }
+      const idx = Math.min(closestIndex, displayCards.length - 1);
+      setActiveCardIndex(idx);
+
+      // Settle detection: 150ms after the last scroll event, commit the
+      // index that notifies the parent (marker highlight + map pan).
+      if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = setTimeout(() => setSettledCardIndex(idx), 150);
+    });
   }, [displayCards.length]);
+
+  useEffect(() => () => {
+    if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+  }, []);
 
   // Reset carousel position AND immediately highlight first card when cards/filters change
   // When All Dates (activeDates=[]), auto-scroll to today's first card (or nearest future)
@@ -169,6 +217,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     }
 
     setActiveCardIndex(startIndex);
+    setSettledCardIndex(startIndex);
 
     // Scroll to the target card after render
     requestAnimationFrame(() => {
@@ -211,7 +260,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     }
 
     if (mode === 'list' && hasCards && !isDismissed && onActiveCardChange) {
-      const activeCard = displayCards[activeCardIndex];
+      const activeCard = displayCards[settledCardIndex];
       onActiveCardChange(activeCard?.venue.id || null);
       const offer = activeCard?.event.event_offers;
       onActiveOfferChange?.(offer && !offer.toLowerCase().includes('no special offer') ? offer : null);
@@ -225,7 +274,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
       onActiveCardChange(null);
       onActiveOfferChange?.(null);
     }
-  }, [activeCardIndex, mode, markerVenueId, hasCards, isDismissed, onActiveCardChange, onActiveOfferChange, displayCards]);
+  }, [settledCardIndex, mode, markerVenueId, hasCards, isDismissed, onActiveCardChange, onActiveOfferChange, displayCards]);
 
   // Dismiss when parent signals (e.g. map click)
   useEffect(() => {
@@ -502,6 +551,9 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                   scrollSnapType: 'x mandatory',
                   gap: '12px',
                   padding: '0 12px env(safe-area-inset-bottom, 0px) 12px',
+                  // Own horizontal touch outright — stops gesture-direction
+                  // contention with the map behind it.
+                  touchAction: 'pan-x',
                 } as React.CSSProperties}
                 onScroll={handleCarouselScroll}
               >

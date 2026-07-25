@@ -84,7 +84,7 @@ interface MobileMarkerCardProps {
   onDateChange?: (dates: string[]) => void;
 }
 
-import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
+import EventMedia from '@/components/shared/EventMedia';
 
 function parseToArray(value: unknown): string[] {
   if (!value) return [];
@@ -312,11 +312,11 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
           {/* Venue header bar */}
           <div className="flex items-center gap-3 pb-3" style={{ borderBottom: isImageExpanded ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
             <div
-              className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer transition-transform active:scale-95"
+              className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer transition-transform active:scale-95"
               style={{ border: '1.5px solid rgba(255,255,255,0.1)' }}
               onClick={(e) => { e.stopPropagation(); setIsImageExpanded(prev => !prev); }}
             >
-              <img src={event.media_url_1 || event.media_url_2 || PLACEHOLDER_IMAGE} alt={venue.venue_name} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }} />
+              <EventMedia src={event.media_url_1 || event.media_url_2} alt={venue.venue_name} sizes="96px" fill />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-[16px]" style={{ color: '#e8e0ff' }}>{venue.venue_name}</p>
@@ -338,12 +338,14 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
               style={{ border: '1px solid rgba(255,255,255,0.08)' }}
               onClick={(e) => { e.stopPropagation(); setIsImageExpanded(false); }}
             >
-              <img
-                src={event.media_url_1 || event.media_url_2 || PLACEHOLDER_IMAGE}
+              <EventMedia
+                src={event.media_url_1 || event.media_url_2}
                 alt={venue.venue_name}
+                sizes="(max-width: 430px) 100vw, 430px"
+                width={430}
+                height={260}
                 className="w-full object-cover"
-                style={{ maxHeight: '260px' }}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
+                style={{ height: 'auto', maxHeight: '260px' }}
               />
             </div>
           )}
@@ -749,15 +751,9 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
         {/* Right Column: Image */}
         <div className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ width: '90px' }}>
           {/* Venue Image */}
-          <div className="w-[76px] h-[76px] rounded-xl overflow-hidden"
+          <div className="relative w-[76px] h-[76px] rounded-xl overflow-hidden"
                style={{ border: '2px solid rgba(255,255,255,0.08)' }}>
-            <img
-              src={event.media_url_1 || event.media_url_2 || PLACEHOLDER_IMAGE}
-              alt={venue.venue_name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
-            />
+            <EventMedia src={event.media_url_1 || event.media_url_2} alt={venue.venue_name} sizes="96px" fill />
           </div>
         </div>
       </div>

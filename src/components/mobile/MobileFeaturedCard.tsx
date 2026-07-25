@@ -33,7 +33,7 @@ interface MobileFeaturedCardProps {
   onClick?: () => void;
 }
 
-import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
+import EventMedia from '@/components/shared/EventMedia';
 
 const MobileFeaturedCard: React.FC<MobileFeaturedCardProps> = ({ card, onClick }) => {
   const { event, venue } = card;
@@ -58,13 +58,12 @@ const MobileFeaturedCard: React.FC<MobileFeaturedCardProps> = ({ card, onClick }
       onClick={onClick}
     >
       {/* Thumbnail */}
-      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-        <img
-          src={event.media_url_1 || event.media_url_2 || PLACEHOLDER_IMAGE}
+      <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+        <EventMedia
+          src={event.media_url_1 || event.media_url_2}
           alt={venue.venue_name}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
+          sizes="64px"
+          fill
         />
       </div>
 

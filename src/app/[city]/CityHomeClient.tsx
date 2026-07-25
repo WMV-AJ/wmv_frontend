@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
+import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
 import { slugifyArea } from '@/lib/areas';
 
@@ -209,6 +210,8 @@ export default function CityHome() {
         color: '#a78bfa',
         mediaUrl: v.media_url_1 || null,
         mediaType: v.media_type_1 || null,
+        // Sibling image doubles as the poster when slot 1 is a video.
+        posterUrl: v.media_type_2 !== 'video' ? (v.media_url_2 || null) : null,
         isLive: isLiveNow(v.event_date, v.event_time, todayStr, dubaiHour),
       }));
   })();
@@ -459,20 +462,18 @@ export default function CityHome() {
                   trackEvent('view_event', { event_id: s.event_id, venue_id: s.venue_id, place_id: s.place_id, event_date: s.event_date, source: 'stories_grid' });
                   router.push(`/${city}/event/${s.event_id}`);
                 }}>
-                  {s.mediaUrl && s.mediaType === 'video' ? (
-                    // No autoPlay on tiny grid tiles — 8 concurrent mp4 streams starved
-                    // the page. preload="metadata" paints the first frame as a still.
-                    <video
+                  {s.mediaUrl ? (
+                    // lazyVideo: <video> only mounts near the viewport; until
+                    // then the sibling image (or placeholder) renders via the
+                    // optimizer. No autoPlay on tiny grid tiles.
+                    <EventMedia
                       src={s.mediaUrl}
-                      muted loop playsInline preload="metadata"
-                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : s.mediaUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={s.mediaUrl}
-                      alt=""
-                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                      mediaType={s.mediaType}
+                      poster={s.posterUrl}
+                      alt={s.venue}
+                      sizes="(max-width: 430px) 25vw, 107px"
+                      fill
+                      lazyVideo
                     />
                   ) : null}
                   {s.isLive && (
@@ -537,10 +538,24 @@ export default function CityHome() {
                     router.push(`/${city}/event/${e.event_id}`);
                   }}>
                     {hasVideo ? (
-                      <video src={e.media_url_1} autoPlay muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
+                      <EventMedia
+                        src={e.media_url_1}
+                        mediaType="video"
+                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                        alt={e.venue_name || ''}
+                        sizes="(max-width: 430px) 100vw, 430px"
+                        fill
+                        videoAutoPlay
+                        style={{ filter: 'saturate(1.1)' }}
+                      />
                     ) : hasImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={e.media_url_1} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.1)' }} />
+                      <EventMedia
+                        src={e.media_url_1}
+                        alt={e.venue_name || ''}
+                        sizes="(max-width: 430px) 100vw, 430px"
+                        fill
+                        style={{ filter: 'saturate(1.1)' }}
+                      />
                     ) : (
                       <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, #a78bfa22, #ec489922, #0a0a14)` }} />
                     )}
@@ -623,11 +638,16 @@ export default function CityHome() {
                   </div>
                   {/* Thumbnail — left */}
                   <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden', borderRadius: 4 }}>
-                    {hasVideo ? (
-                      <video src={e.media_url_1} muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : hasImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={e.media_url_1} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {(hasVideo || hasImage) ? (
+                      <EventMedia
+                        src={e.media_url_1}
+                        mediaType={e.media_type_1}
+                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                        alt={e.venue_name || ''}
+                        sizes="96px"
+                        fill
+                        lazyVideo
+                      />
                     ) : (
                       <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
                     )}
@@ -778,11 +798,16 @@ export default function CityHome() {
                       router.push(`/${city}/event/${e.event_id}`);
                     }}>
                       <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
-                        {hasVideo ? (
-                          <video src={e.media_url_1} muted loop playsInline preload="metadata" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : hasImage ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={e.media_url_1} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {(hasVideo || hasImage) ? (
+                          <EventMedia
+                            src={e.media_url_1}
+                            mediaType={e.media_type_1}
+                            poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                            alt={e.venue_name || ''}
+                            sizes="(max-width: 430px) 40vw, 172px"
+                            fill
+                            lazyVideo
+                          />
                         ) : null}
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(10,10,20,0.85))' }} />
                         <div style={{

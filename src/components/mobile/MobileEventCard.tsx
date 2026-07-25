@@ -104,6 +104,7 @@ interface MobileEventCardProps {
 }
 
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
+import EventMedia from '@/components/shared/EventMedia';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
 function parseToArray(value: unknown): string[] {
@@ -989,27 +990,28 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         </div>
         {/* Right Column: Image */}
         <div className="flex flex-col items-center flex-shrink-0 w-[100px] md:w-[72px]">
-          <div className="w-[96px] h-[96px] md:w-[68px] md:h-[68px] rounded-xl overflow-hidden"
+          <div className="relative w-[96px] h-[96px] md:w-[68px] md:h-[68px] rounded-xl overflow-hidden"
                style={{ border: darkMode ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.06)' }}>
             {(() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const u1 = (event as any).media_url_1 as string | undefined;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const u2 = (event as any).media_url_2 as string | undefined;
               const isVid = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
-              if (u1 && isVid(u1)) return (
-                <video src={u1} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
+              // Same precedence as before: url_1 wins, url_2 fallback. If the
+              // primary is a video and the sibling is an image, the sibling
+              // doubles as the poster frame.
+              const primary = u1 || u2;
+              const sibling = primary === u1 ? u2 : undefined;
+              return (
+                <EventMedia
+                  src={primary}
+                  alt={venue.venue_name}
+                  sizes="96px"
+                  fill
+                  poster={sibling && !isVid(sibling) ? sibling : null}
+                />
               );
-              if (u1) return (
-                <img src={u1} alt={venue.venue_name} className="w-full h-full object-cover"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }} loading="lazy" />
-              );
-              if (u2 && isVid(u2)) return (
-                <video src={u2} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
-              );
-              if (u2) return (
-                <img src={u2} alt={venue.venue_name} className="w-full h-full object-cover"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }} loading="lazy" />
-              );
-              return <img src={PLACEHOLDER_IMAGE} alt={venue.venue_name} className="w-full h-full object-cover" loading="lazy" />;
             })()}
           </div>
         </div>

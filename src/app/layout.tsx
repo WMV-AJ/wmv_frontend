@@ -17,18 +17,21 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Font-cut audit (2026-07): every Playfair usage in the codebase is italic at
+// 400/700, and no italic Fraunces exists anywhere. Trimming 13 cuts → 5
+// files saves ~8 render-blocking woff2 downloads on first paint.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   weight: ["600", "700"],
-  style: ["normal", "italic"],
+  style: ["normal"],
 });
 
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["400", "500", "600", "700"],
+  style: ["italic"],
+  weight: ["400", "700"],
 });
 
 export const viewport = {

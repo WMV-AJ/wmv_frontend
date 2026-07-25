@@ -13,10 +13,12 @@ interface SplitViewEventCardProps {
   onMouseLeave: () => void;
 }
 
-import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
+import EventMedia from '@/components/shared/EventMedia';
 
-function getVenueImage(venue: Venue): string {
-  return (venue as any).media_url_1 || (venue as any).media_url_2 || PLACEHOLDER_IMAGE;
+function getVenueImage(venue: Venue): string | undefined {
+  // EventMedia falls back to the local placeholder when src is empty.
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  return (venue as any).media_url_1 || (venue as any).media_url_2 || undefined;
 }
 
 const SplitViewEventCard: React.FC<SplitViewEventCardProps> = ({
@@ -43,13 +45,12 @@ const SplitViewEventCard: React.FC<SplitViewEventCardProps> = ({
       onMouseLeave={onMouseLeave}
     >
       {/* Thumbnail */}
-      <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-        <img
+      <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+        <EventMedia
           src={getVenueImage(venue)}
           alt={venue.name}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
+          sizes="96px"
+          fill
         />
       </div>
 

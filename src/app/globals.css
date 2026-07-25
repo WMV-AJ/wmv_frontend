@@ -748,3 +748,18 @@
     background: rgba(10, 10, 26, 0.97);
   }
 }
+/* ── Map pan-performance: flatten marker styling while the map moves ──
+   MapLibre retransforms every DOM marker per animation frame during a pan;
+   box-shadow, the ping ring, text-shadow and transitions force per-frame
+   repaints. MapMoveClassToggler (map route) adds .wmv-map-moving to the map
+   container on movestart and removes it on moveend. */
+.wmv-map-moving .maplibregl-marker,
+.wmv-map-moving .maplibregl-marker * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+.wmv-map-moving .maplibregl-popup {
+  transition: none !important;
+}

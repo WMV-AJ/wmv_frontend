@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -505,12 +506,15 @@ export default function EventDetailPage() {
               onError={(e) => { (e.target as HTMLVideoElement).style.display = 'none'; }}
             />
           ) : (
-            <img
+            <Image
               src={heroImage}
-              alt={event.event_name}
-              className="w-full h-full object-cover cursor-pointer"
+              alt={event.event_name || 'Event'}
+              fill
+              priority
+              fetchPriority="high"
+              sizes="(max-width: 430px) 100vw, 430px"
+              className="object-cover cursor-pointer"
               onClick={() => setLightboxMedia({ url: heroImage, isVideo: false })}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           )
         ) : (
@@ -715,7 +719,7 @@ export default function EventDetailPage() {
         {/* Side-by-side Images */}
         {hasSecondImage && (
           <div className="mt-6 flex gap-2">
-            <div className="flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_1, isVideo: event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) })}>
+            <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_1, isVideo: event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) })}>
               {event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) ? (
                 <video
                   src={event.media_url_1}
@@ -723,14 +727,16 @@ export default function EventDetailPage() {
                   muted loop playsInline preload="metadata"
                 />
               ) : (
-                <img
+                <Image
                   src={event.media_url_1}
                   alt={`${event.event_name} 1`}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 430px) 50vw, 215px"
+                  className="object-cover"
                 />
               )}
             </div>
-            <div className="flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_2, isVideo: event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) })}>
+            <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_2, isVideo: event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) })}>
               {event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) ? (
                 <video
                   src={event.media_url_2}
@@ -738,10 +744,12 @@ export default function EventDetailPage() {
                   muted loop playsInline preload="metadata"
                 />
               ) : (
-                <img
+                <Image
                   src={event.media_url_2}
                   alt={`${event.event_name} 2`}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 430px) 50vw, 215px"
+                  className="object-cover"
                 />
               )}
             </div>
@@ -936,9 +944,9 @@ export default function EventDetailPage() {
                     onClick={() => router.push(`/${city}/event/${r.event_id}`)}
                   >
                     {/* Thumbnail */}
-                    <div className="w-[55px] h-[55px] rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                    <div className="relative w-[55px] h-[55px] rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
                       {r.media_url_1 && !/\.(mp4|mov|webm)$/i.test(r.media_url_1) ? (
-                        <img src={r.media_url_1} alt={r.event_name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <Image src={r.media_url_1} alt={r.event_name || ''} fill sizes="128px" className="object-cover" />
                       ) : r.media_url_1 ? (
                         <video src={r.media_url_1} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
                       ) : (
