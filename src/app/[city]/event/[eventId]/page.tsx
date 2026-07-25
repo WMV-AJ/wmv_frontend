@@ -28,9 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const eventName = event.event_name || event.venue_name || 'Event';
   const venuePart = event.venue_name && event.event_name ? ` at ${event.venue_name}` : '';
   const title = `${eventName}${venuePart} — ${cityName} | Where's My Vibe`;
+  // Some records carry a date string in event_time ("25/07/2026") — showing
+  // it next to event_date reads as a duplicate; keep only real times.
+  const timePart =
+    typeof event.event_time === 'string' && !/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(event.event_time.trim())
+      ? event.event_time
+      : null;
   const description = [
     event.event_date,
-    event.event_time,
+    timePart,
     event.venue_area,
     event.music_genre,
   ]
