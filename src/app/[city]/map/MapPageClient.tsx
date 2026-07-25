@@ -29,10 +29,8 @@ import { getVibeDataById } from '@/config/vibes-data';
 import { type Venue, type HierarchicalFilterState } from '@/types';
 import {
   MAPCN_ZOOM,
-  MAPCN_MIN_ZOOM,
   MAPCN_MAX_ZOOM,
   getMapCenter,
-  getMapBounds,
 } from '@/lib/mapcn-config';
 import { getCityConfig } from '@/config/cities.config';
 
@@ -232,7 +230,13 @@ function PanToVenue({ venue }: { venue: Venue | null }) {
       // 350ms: quick enough that the map visibly follows each card swipe.
       // Rapid successive easeTo calls retarget smoothly (MapLibre interrupts
       // the previous animation), so fast flicks track without queueing.
-      map.easeTo({ center: [venue.lng, venue.lat], duration: 350 });
+      // padding.bottom keeps the target marker centered in the VISIBLE strip
+      // above the card carousel instead of hiding underneath it.
+      map.easeTo({
+        center: [venue.lng, venue.lat],
+        duration: 350,
+        padding: { top: 120, bottom: 260, left: 0, right: 0 },
+      });
     }
   }, [map, isLoaded, venue]);
 
@@ -271,6 +275,13 @@ function useLiveLocation(city: string) {
   }, []);
 
   const start = useCallback(() => {
+    // Browsers block geolocation on insecure origins (plain HTTP) — the
+    // permission prompt never even appears. Real on the HTTP dev2 preview;
+    // production (https) is unaffected.
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      showNotice('Location needs a secure (https) connection — works on the live site');
+      return;
+    }
     if (!navigator.geolocation) {
       showNotice('Location not supported on this device');
       return;
@@ -327,7 +338,12 @@ function FlyToUser({ pos }: { pos: { lat: number; lng: number } | null }) {
     if (!map || !isLoaded || !pos) { if (!pos) flownRef.current = false; return; }
     if (flownRef.current) return;
     flownRef.current = true;
-    map.easeTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 13), duration: 800 });
+    map.easeTo({
+      center: [pos.lng, pos.lat],
+      zoom: Math.max(map.getZoom(), 13),
+      duration: 800,
+      padding: { top: 120, bottom: 260, left: 0, right: 0 },
+    });
   }, [map, isLoaded, pos]);
 
   return null;
@@ -674,9 +690,13 @@ export default function CityMapPage() {
           <MapView
             center={getMapCenter(city)}
             zoom={MAPCN_ZOOM}
-            minZoom={MAPCN_MIN_ZOOM}
+            // Free-flowing map (Google-Maps-style): no hard bounds clamp —
+            // the old per-city maxBounds rubber-banded every pan, which made
+            // it impossible to drag the area hidden behind the bottom cards
+            // up into view. minZoom 3 allows zooming out; the city center/
+            // zoom props still start each city in the right place.
+            minZoom={3}
             maxZoom={MAPCN_MAX_ZOOM}
-            maxBounds={getMapBounds(city)}
             theme="dark"
             className="w-full h-full"
             dragRotate={false}
