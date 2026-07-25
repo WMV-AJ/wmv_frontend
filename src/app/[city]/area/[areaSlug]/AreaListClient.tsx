@@ -73,7 +73,7 @@ export default function AreaListingPage() {
       onViewMap={areaName ? () => { trackEvent('nav_view_change', { from: 'area_list', to: 'map', source: 'list_header', area: areaName }); router.push(`/${city}/map?area=${encodeURIComponent(areaName)}`); } : undefined}
       onBack={() => router.push(`/${city}`)}
       icon={<MapPin style={{ width: 12, height: 12, color: '#0a0a14' }} />}
-      iconBg="#a78bfa"
+      iconBg="#f4c430"
       title={title}
       subtitle={
         isLoading ? 'Loading…'

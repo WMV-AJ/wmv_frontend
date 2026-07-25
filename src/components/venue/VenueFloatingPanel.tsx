@@ -240,13 +240,13 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
           backdrop-filter: blur(30px) saturate(180%);
           -webkit-backdrop-filter: blur(30px) saturate(180%);
           border-radius: 24px;
-          border: 1px solid rgba(124, 58, 237, 0.2);
+          border: 1px solid rgba(202, 138, 4, 0.2);
           overflow: hidden;
           box-shadow:
             0 4px 8px rgba(0, 0, 0, 0.3),
             0 12px 24px rgba(0, 0, 0, 0.35),
             0 20px 40px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(124, 58, 237, 0.1);
+            inset 0 1px 0 rgba(202, 138, 4, 0.1);
           position: relative;
           display: flex;
           flex-direction: column;
@@ -299,8 +299,8 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
         .scroll-arrow {
           width: 52px;
           height: 52px;
-          background: rgba(124, 58, 237, 0.15);
-          border: 2px solid rgba(124, 58, 237, 0.3);
+          background: rgba(202, 138, 4, 0.15);
+          border: 2px solid rgba(202, 138, 4, 0.3);
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -326,10 +326,10 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
         }
 
         .scroll-arrow:hover {
-          background: rgba(124, 58, 237, 0.25);
+          background: rgba(202, 138, 4, 0.25);
           color: #ffffff;
           transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+          box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3);
         }
 
         @keyframes bounceDown {
@@ -349,7 +349,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
           position: relative;
           z-index: 10;
           box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
-          border-top: 1px solid rgba(124, 58, 237, 0.2);
+          border-top: 1px solid rgba(202, 138, 4, 0.2);
         }
       `}</style>
 
@@ -437,7 +437,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                         {vibes.map((vibe, index) => (
                           <React.Fragment key={index}>
                             <span style={{
-                              color: '#a78bfa',
+                              color: '#f4c430',
                               fontSize: '11px',
                               fontWeight: 600,
                               textTransform: 'uppercase',
@@ -446,7 +446,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                               {vibe}
                             </span>
                             {index < vibes.length - 1 && (
-                              <span style={{ color: '#a78bfa', fontSize: '11px', fontWeight: 600 }}> | </span>
+                              <span style={{ color: '#f4c430', fontSize: '11px', fontWeight: 600 }}> | </span>
                             )}
                           </React.Fragment>
                         ))}
@@ -469,12 +469,12 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      background: 'rgba(124, 58, 237, 0.2)',
+                      background: 'rgba(202, 138, 4, 0.2)',
                       padding: '6px 10px',
                       borderRadius: '20px',
-                      border: '1px solid rgba(124, 58, 237, 0.4)'
+                      border: '1px solid rgba(202, 138, 4, 0.4)'
                     }}>
-                      <span style={{ color: '#a78bfa', fontSize: '14px' }}>★</span>
+                      <span style={{ color: '#f4c430', fontSize: '14px' }}>★</span>
                       <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '14px' }}>
                         {venue.rating ? venue.rating.toFixed(1) : '4.5'}
                       </span>
@@ -503,7 +503,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                       <div style={{
                         fontSize: '13px',
                         fontWeight: 500,
-                        color: '#a78bfa',
+                        color: '#f4c430',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
@@ -541,12 +541,12 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                             minWidth: '70px',
                             cursor: 'pointer',
                             transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                            border: selectedDateIndex === index ? '1.5px solid rgba(124, 58, 237, 0.5)' : '1.5px solid rgba(124, 58, 237, 0.15)',
+                            border: selectedDateIndex === index ? '1.5px solid rgba(202, 138, 4, 0.5)' : '1.5px solid rgba(202, 138, 4, 0.15)',
                             background: selectedDateIndex === index
-                              ? 'linear-gradient(145deg, rgba(124, 58, 237, 0.4) 0%, rgba(109, 40, 217, 0.5) 100%)'
+                              ? 'linear-gradient(145deg, rgba(202, 138, 4, 0.4) 0%, rgba(109, 40, 217, 0.5) 100%)'
                               : 'rgba(255, 255, 255, 0.05)',
                             boxShadow: selectedDateIndex === index
-                              ? '0 4px 12px rgba(124, 58, 237, 0.3)'
+                              ? '0 4px 12px rgba(202, 138, 4, 0.3)'
                               : 'none',
                             position: 'relative'
                           }}
@@ -556,7 +556,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                               position: 'absolute',
                               top: '-8px',
                               right: '-8px',
-                              background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                              background: 'linear-gradient(135deg, #ca8a04 0%, #6d28d9 100%)',
                               color: 'white',
                               fontSize: '8px',
                               fontWeight: 700,
@@ -564,7 +564,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                               borderRadius: '6px',
                               textTransform: 'uppercase',
                               letterSpacing: '0.05em',
-                              boxShadow: '0 2px 6px rgba(124, 58, 237, 0.4)'
+                              boxShadow: '0 2px 6px rgba(202, 138, 4, 0.4)'
                             }}>
                               TONIGHT
                             </span>
@@ -611,7 +611,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                       <div style={{
                         fontSize: '10px',
                         fontWeight: 600,
-                        color: '#a78bfa',
+                        color: '#f4c430',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         marginBottom: '8px'
@@ -669,8 +669,8 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                     {/* Limited tickets alert */}
                     {hasLimitedTickets && (
                       <div style={{
-                        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(124, 58, 237, 0.25) 100%)',
-                        border: '1px solid rgba(124, 58, 237, 0.3)',
+                        background: 'linear-gradient(135deg, rgba(202, 138, 4, 0.15) 0%, rgba(202, 138, 4, 0.25) 100%)',
+                        border: '1px solid rgba(202, 138, 4, 0.3)',
                         borderRadius: '12px',
                         padding: '12px 14px',
                         display: 'flex',
@@ -683,12 +683,12 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                           <div style={{ fontSize: '13px', color: '#c084fc', fontWeight: 600 }}>
                             Limited online tickets left
                           </div>
-                          <div style={{ fontSize: '12px', color: '#a78bfa', fontWeight: 500 }}>
+                          <div style={{ fontSize: '12px', color: '#f4c430', fontWeight: 500 }}>
                             Secure online now
                           </div>
                         </div>
                         <button style={{
-                          background: 'linear-gradient(145deg, #7c3aed 0%, #6d28d9 100%)',
+                          background: 'linear-gradient(145deg, #ca8a04 0%, #6d28d9 100%)',
                           color: 'white',
                           border: 'none',
                           padding: '8px 14px',
@@ -884,9 +884,9 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                             key={index}
                             style={{
                               fontSize: '11px',
-                              color: '#a78bfa',
-                              background: 'rgba(124, 58, 237, 0.1)',
-                              border: '1px solid rgba(124, 58, 237, 0.25)',
+                              color: '#f4c430',
+                              background: 'rgba(202, 138, 4, 0.1)',
+                              border: '1px solid rgba(202, 138, 4, 0.25)',
                               padding: '5px 10px',
                               borderRadius: '6px',
                               fontWeight: 500
@@ -960,7 +960,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '1.5px solid rgba(124, 58, 237, 0.2)',
+                        border: '1.5px solid rgba(202, 138, 4, 0.2)',
                         background: 'rgba(255, 255, 255, 0.05)',
                         color: '#e2e8f0'
                       }}
@@ -989,7 +989,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          border: '1.5px solid rgba(124, 58, 237, 0.2)',
+                          border: '1.5px solid rgba(202, 138, 4, 0.2)',
                           background: 'rgba(255, 255, 255, 0.05)',
                           color: '#E1306C',
                           textDecoration: 'none'
@@ -1013,7 +1013,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          border: '1.5px solid rgba(124, 58, 237, 0.2)',
+                          border: '1.5px solid rgba(202, 138, 4, 0.2)',
                           background: 'rgba(255, 255, 255, 0.05)',
                           color: '#25D366',
                           textDecoration: 'none'
@@ -1040,9 +1040,9 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                         justifyContent: 'center',
                         gap: '8px',
                         border: 'none',
-                        background: 'linear-gradient(145deg, #7c3aed 0%, #6d28d9 100%)',
+                        background: 'linear-gradient(145deg, #ca8a04 0%, #6d28d9 100%)',
                         color: 'white',
-                        boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+                        boxShadow: '0 4px 12px rgba(202, 138, 4, 0.3)',
                         textDecoration: 'none'
                       }}
                     >

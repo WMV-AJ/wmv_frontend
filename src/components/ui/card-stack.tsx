@@ -47,7 +47,7 @@ export const CardStack = ({
           'from-green-400 to-green-600',
           'from-yellow-400 to-orange-500',
           'from-orange-400 to-red-500',
-          'from-purple-400 to-pink-500',
+          'from-amber-400 to-pink-500',
           'from-blue-400 to-cyan-500',
         ];
 

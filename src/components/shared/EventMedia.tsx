@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 
@@ -17,28 +17,27 @@ export interface EventMediaProps {
   fill?: boolean;
   width?: number;
   height?: number;
-  /** Optional sibling image used as the <video> poster (ignored for images). */
+  /** Optional sibling image used as the video thumbnail (ignored for images). */
   poster?: string | null;
   videoAutoPlay?: boolean;
-  /**
-   * Only mount the <video> element once the tile is within 200px of the
-   * viewport; until then render the poster (or placeholder) via next/image.
-   */
+  /** Kept for call-site compatibility; thumbnails are plain images now. */
   lazyVideo?: boolean;
 }
 
-/**
- * Route an image URL through the Next.js image optimizer so video posters
- * also benefit from AVIF/WebP + resize + caching.
- */
-function optimizedPosterUrl(url: string): string {
-  return `/_next/image?url=${encodeURIComponent(url)}&w=640&q=75`;
+/** Server-extracted real frame of the video (ffmpeg, disk-cached, ~20KB). */
+export function videoThumbUrl(videoSrc: string): string {
+  return `/api/video-thumb?src=${encodeURIComponent(videoSrc.split('#')[0])}`;
 }
 
 /**
- * Unified event media renderer: decides image vs video, routes images (and
- * video posters) through the Next.js image optimizer, and falls back to the
- * local placeholder on error.
+ * Unified event media renderer.
+ *
+ * Key speed decision: tiles never mount <video> unless they actually autoplay.
+ * A muted, non-autoplaying, control-less <video> can never play — it was just
+ * a very expensive way to show one frame (500KB+ of mp4 per tile). Instead,
+ * video tiles render their REAL first frame as a tiny server-extracted JPEG
+ * (/api/video-thumb) through the image optimizer. Autoplaying surfaces keep
+ * the <video>, with the same real frame as poster so nothing paints black.
  */
 export default function EventMedia({
   src,
@@ -53,65 +52,22 @@ export default function EventMedia({
   height,
   poster,
   videoAutoPlay = false,
-  lazyVideo = false,
+  lazyVideo: _lazyVideo = false,
 }: EventMediaProps) {
+  void _lazyVideo;
   const [failed, setFailed] = useState(false);
-  const [videoInView, setVideoInView] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const url = src || null;
   const isVideo =
     !!url &&
-    ((mediaType || '').toLowerCase() === 'video' || VIDEO_URL_PATTERN.test(url));
+    ((mediaType || '').toLowerCase() === 'video' || VIDEO_URL_PATTERN.test(url.split('#')[0]));
 
-  // SSR-safe lazy video mount: start unmounted, observe after mount.
-  useEffect(() => {
-    if (!isVideo || !lazyVideo || videoInView) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setVideoInView(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVideoInView(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isVideo, lazyVideo, videoInView]);
-
-  // Poster must itself be an image URL to be useful.
+  // Sibling image beats the extracted frame (no ffmpeg work needed).
   const posterImage = poster && !VIDEO_URL_PATTERN.test(poster) ? poster : null;
 
   const imageStyle: React.CSSProperties = { objectFit: 'cover', ...style };
 
-  if (isVideo && url) {
-    // Not yet near the viewport → render the poster/placeholder instead of
-    // mounting a <video> element (saves the media fetch entirely).
-    if (lazyVideo && !videoInView) {
-      const wrapperStyle: React.CSSProperties = fill
-        ? { position: 'absolute', inset: 0 }
-        : { position: 'relative', width, height };
-      return (
-        <div ref={sentinelRef} className={className} style={wrapperStyle}>
-          <Image
-            src={posterImage ?? PLACEHOLDER_IMAGE}
-            alt={alt}
-            fill
-            sizes={sizes}
-            style={imageStyle}
-            onError={() => setVideoInView(true)}
-          />
-        </div>
-      );
-    }
-
+  if (isVideo && url && videoAutoPlay) {
     const videoStyle: React.CSSProperties = fill
       ? {
           position: 'absolute',
@@ -123,21 +79,15 @@ export default function EventMedia({
         }
       : { objectFit: 'cover', ...style };
 
-    // Non-autoplaying videos get a media-fragment start time (#t=0.1): the
-    // browser fetches and PAINTS that frame as the preview, so every video
-    // shows its own real thumbnail. The poster underneath is just the
-    // loading/error fallback (a metadata-only video would otherwise paint
-    // black — readyState 0).
-    const videoSrc = videoAutoPlay || url.includes('#') ? url : `${url}#t=0.1`;
     return (
       <video
-        src={videoSrc}
+        src={url.split('#')[0]}
         muted
         loop
         playsInline
+        autoPlay
         preload="metadata"
-        {...(videoAutoPlay ? { autoPlay: true } : {})}
-        poster={optimizedPosterUrl(posterImage ?? PLACEHOLDER_IMAGE)}
+        poster={posterImage ?? videoThumbUrl(url)}
         {...(!fill && width !== undefined ? { width } : {})}
         {...(!fill && height !== undefined ? { height } : {})}
         className={className}
@@ -146,7 +96,13 @@ export default function EventMedia({
     );
   }
 
-  const effectiveSrc = failed || !url ? PLACEHOLDER_IMAGE : url;
+  // Images AND non-autoplaying videos land here: one optimized <Image>.
+  const effectiveSrc = failed || !url
+    ? PLACEHOLDER_IMAGE
+    : isVideo
+      ? (posterImage ?? videoThumbUrl(url))
+      : url;
+
   const dimensionProps = fill
     ? ({ fill: true } as const)
     : { width: width ?? 128, height: height ?? 128 };

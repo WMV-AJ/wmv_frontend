@@ -18,7 +18,7 @@ export const CENTER_X = CANVAS_W / 2;
 export const CENTER_Y = CANVAS_H / 2;
 
 export const VENUE_PALETTE = [
-  '#a78bfa',
+  '#f4c430',
   '#34d399',
   '#f97316',
   '#22d3ee',

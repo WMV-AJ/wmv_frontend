@@ -500,8 +500,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Date */}
             <div className="flex items-center gap-3.5">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                   style={{ background: 'rgba(147, 51, 234, 0.15)', border: '1px solid rgba(147, 51, 234, 0.1)' }}>
-                <Calendar className="w-4 h-4 text-purple-500" />
+                   style={{ background: 'rgba(212, 160, 23, 0.15)', border: '1px solid rgba(212, 160, 23, 0.1)' }}>
+                <Calendar className="w-4 h-4 text-amber-500" />
               </div>
               <div className="flex-1">
                 <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Date</p>
@@ -664,7 +664,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Artists */}
             {event.artist && (
               <div className="flex items-start gap-3">
-                <Music className="w-4 h-4 text-purple-500 flex-shrink-0 mt-1" />
+                <Music className="w-4 h-4 text-amber-500 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Artists</p>
                   <div className="flex flex-wrap gap-1.5">
@@ -673,9 +673,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                         key={idx}
                         className="text-[11px] px-2.5 py-1 rounded-full font-medium"
                         style={{
-                          background: 'rgba(147, 51, 234, 0.15)',
+                          background: 'rgba(212, 160, 23, 0.15)',
                           color: darkMode ? 'rgb(196, 167, 255)' : 'rgb(109, 40, 217)',
-                          border: '1px solid rgba(147, 51, 234, 0.25)',
+                          border: '1px solid rgba(212, 160, 23, 0.25)',
                         }}
                       >
                         {artist.trim()}

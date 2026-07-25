@@ -283,7 +283,7 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
                 style={{ background: 'rgba(20, 20, 40, 1)', border: '1px solid rgba(255,255,255,0.15)' }}
               >
-                <Calendar className="w-3 h-3 text-purple-400" />
+                <Calendar className="w-3 h-3 text-amber-400" />
                 <span className="text-[10px] text-gray-300 font-bold uppercase">{datePill.day}</span>
                 <span className="text-[12px] text-white font-semibold">{datePill.date}</span>
               </div>
@@ -356,8 +356,8 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
             {/* Date */}
             <div className="flex items-center gap-3.5">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                   style={{ background: 'rgba(147, 51, 234, 0.15)', border: '1px solid rgba(147, 51, 234, 0.1)' }}>
-                <Calendar className="w-4 h-4 text-purple-400" />
+                   style={{ background: 'rgba(212, 160, 23, 0.15)', border: '1px solid rgba(212, 160, 23, 0.1)' }}>
+                <Calendar className="w-4 h-4 text-amber-400" />
               </div>
               <div className="flex-1">
                 <p className="text-[9px] uppercase tracking-[0.12em] font-semibold" style={{ color: 'rgb(100, 100, 140)' }}>Date</p>
@@ -480,7 +480,7 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
             {/* Artists */}
             {event.artist && (
               <div className="flex items-start gap-3">
-                <Music className="w-4 h-4 text-purple-400 flex-shrink-0 mt-1" />
+                <Music className="w-4 h-4 text-amber-400 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1.5">Artists</p>
                   <div className="flex flex-wrap gap-1.5">
@@ -489,9 +489,9 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                         key={idx}
                         className="text-[11px] px-2.5 py-1 rounded-full font-medium"
                         style={{
-                          background: 'rgba(147, 51, 234, 0.15)',
+                          background: 'rgba(212, 160, 23, 0.15)',
                           color: 'rgb(192, 132, 252)',
-                          border: '1px solid rgba(147, 51, 234, 0.2)',
+                          border: '1px solid rgba(212, 160, 23, 0.2)',
                         }}
                       >
                         {artist.trim()}
@@ -669,9 +669,9 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
           <button
             className="flex-[1.5] flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-semibold transition-all active:scale-95"
             style={{
-              background: 'rgba(124, 58, 237, 0.2)',
-              color: '#a78bfa',
-              border: '1px solid rgba(124, 58, 237, 0.3)',
+              background: 'rgba(202, 138, 4, 0.2)',
+              color: '#f4c430',
+              border: '1px solid rgba(202, 138, 4, 0.3)',
             }}
             onClick={handleDirectionsClick}
           >
@@ -731,9 +731,9 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                   key={idx}
                   className="text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide"
                   style={{
-                    background: 'rgba(124, 58, 237, 0.12)',
-                    color: 'rgb(167, 139, 250)',
-                    border: '1px solid rgba(124, 58, 237, 0.18)',
+                    background: 'rgba(202, 138, 4, 0.12)',
+                    color: 'rgb(244, 196, 48)',
+                    border: '1px solid rgba(202, 138, 4, 0.18)',
                   }}
                 >
                   {tag.label}
@@ -818,7 +818,7 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                 border: '1px solid rgba(255,255,255,0.15)',
               }}
             >
-              <Calendar className="w-3 h-3 text-purple-400" />
+              <Calendar className="w-3 h-3 text-amber-400" />
               <span className="text-[10px] text-gray-300 font-bold uppercase">{datePill.day}</span>
               <span className="text-[12px] text-white font-semibold">{datePill.date}</span>
             </div>
@@ -829,8 +829,8 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
         <button
           className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
           style={{
-            background: 'rgba(124, 58, 237, 0.15)',
-            border: '1px solid rgba(124, 58, 237, 0.25)',
+            background: 'rgba(202, 138, 4, 0.15)',
+            border: '1px solid rgba(202, 138, 4, 0.25)',
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -838,7 +838,7 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
           }}
           aria-label="Expand"
         >
-          <ChevronUp className="w-4 h-4 text-purple-400" />
+          <ChevronUp className="w-4 h-4 text-amber-400" />
         </button>
 
       </div>
@@ -855,9 +855,9 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                   key={idx}
                   className="text-[10px] px-2.5 py-1 rounded-full font-semibold whitespace-nowrap flex-shrink-0"
                   style={{
-                    background: 'rgba(147, 51, 234, 0.15)',
+                    background: 'rgba(212, 160, 23, 0.15)',
                     color: 'rgb(192, 132, 252)',
-                    border: '1px solid rgba(147, 51, 234, 0.2)',
+                    border: '1px solid rgba(212, 160, 23, 0.2)',
                   }}
                 >
                   {artist.trim()}

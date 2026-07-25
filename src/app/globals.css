@@ -44,7 +44,7 @@
   --card-foreground: #e8ecf2;   /* Light text on card */
   --popover: #1a1a3e;           /* Popover background */
   --popover-foreground: #e2e8f0; /* Light text */
-  --primary: #7c3aed;           /* Violet accent */
+  --primary: #ca8a04;           /* Violet accent */
   --primary-foreground: #ffffff; /* White on violet */
   --secondary: #1e1b4b;         /* Dark indigo surface */
   --secondary-foreground: #e2e8f0; /* Light text */
@@ -56,16 +56,16 @@
   --destructive-foreground: #ffffff; /* White text */
   --border: rgba(255, 255, 255, 0.06); /* Neutral border */
   --input: #1e1b4b;             /* Dark indigo input */
-  --ring: #7c3aed;              /* Purple focus ring */
+  --ring: #ca8a04;              /* Purple focus ring */
 
   /* Venue Pin Colors - Purple Spectrum */
-  --venue-nightclub: #a78bfa;  /* Light purple - Premium venues */
+  --venue-nightclub: #f4c430;  /* Light purple - Premium venues */
   --venue-restaurant: #34d399; /* Emerald - Dining */
   --venue-bar: #f97316;        /* Orange - Bars/Lounges */
   --venue-beach: #22d3ee;      /* Cyan - Beach clubs */
   --venue-rooftop: #f472b6;    /* Pink - Rooftop venues */
   --venue-hotel: #a3a3a3;      /* Gray - Hotel venues */
-  --venue-default: #7c3aed;    /* Purple - Default */
+  --venue-default: #ca8a04;    /* Purple - Default */
 }
 
 /* Dark mode uses the same palette */
@@ -76,7 +76,7 @@
   --card-foreground: #e8ecf2;
   --popover: #1a1a3e;
   --popover-foreground: #e8ecf2;
-  --primary: #7c3aed;
+  --primary: #ca8a04;
   --primary-foreground: #ffffff;
   --secondary: #1e1b4b;
   --secondary-foreground: #e8ecf2;
@@ -88,7 +88,7 @@
   --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.06);
   --input: #1e1b4b;
-  --ring: #7c3aed;
+  --ring: #ca8a04;
 }
 
 @layer base {
@@ -198,10 +198,10 @@
   }
 
   .glassmorphism-card {
-    background: rgba(124, 58, 237, 0.08);
+    background: rgba(202, 138, 4, 0.08);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(124, 58, 237, 0.15);
+    border: 1px solid rgba(202, 138, 4, 0.15);
   }
 
   .glassmorphism-dark {
@@ -386,7 +386,7 @@
     font-family: var(--font-fraunces), Georgia, serif;
     font-size: 22px;
     font-weight: 700;
-    color: #a78bfa;
+    color: #f4c430;
     letter-spacing: -0.02em;
     line-height: 1.2;
     margin: 0;
@@ -599,9 +599,9 @@
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
-    background: rgba(124, 58, 237, 0.2);
-    border: 1px solid rgba(124, 58, 237, 0.4);
-    color: #a78bfa;
+    background: rgba(202, 138, 4, 0.2);
+    border: 1px solid rgba(202, 138, 4, 0.4);
+    color: #f4c430;
   }
 
   /* Offer Badges */

@@ -22,8 +22,8 @@ interface VenueTypeInfo {
 
 const venueTypes: VenueTypeInfo[] = [
   {
-    color: '#9333ea',
-    bgColor: 'bg-purple-500',
+    color: '#d4a017',
+    bgColor: 'bg-amber-500',
     icon: '🍸',
     name: 'Bars & Lounges',
     description: 'Cocktails & nightlife',
@@ -98,7 +98,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
               </div>
 
               <p className="font-geist text-sm text-gray-200 leading-relaxed">
-                Here we will help you discover all the events happening around you. Scraped from Instagram, Web and all sources to get you a curated but exhaustive list of places, to match your <span className="font-semibold text-purple-300">VIBE</span>
+                Here we will help you discover all the events happening around you. Scraped from Instagram, Web and all sources to get you a curated but exhaustive list of places, to match your <span className="font-semibold text-amber-300">VIBE</span>
               </p>
             </div>
 
@@ -122,7 +122,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <Card className="p-3 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-200">
                   <CardContent className="p-0">
-                    <MapPin className="w-5 h-5 text-purple-400 mx-auto mb-2" />
+                    <MapPin className="w-5 h-5 text-amber-400 mx-auto mb-2" />
                     <p className="font-geist text-white text-xs font-medium tracking-wide">
                       Tap markers
                     </p>

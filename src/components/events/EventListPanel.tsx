@@ -23,7 +23,7 @@ const EventListPanel: React.FC<EventListPanelProps> = ({
     return (
       <div className="h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500/20 border-t-purple-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500/20 border-t-amber-500"></div>
           <span className="text-sm text-gray-400 font-medium">Loading events...</span>
         </div>
       </div>

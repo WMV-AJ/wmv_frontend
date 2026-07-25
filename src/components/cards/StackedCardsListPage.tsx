@@ -199,7 +199,7 @@ export default function StackedCardsListPage({
           >
             {isLoading ? (
               <div style={{ padding: 48, textAlign: 'center' }}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto" />
               </div>
             ) : cards.length === 0 ? (
               emptyState ?? defaultEmpty

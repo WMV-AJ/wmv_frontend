@@ -20,8 +20,8 @@ export const T = {
   lineFaint: 'rgba(255,255,255,0.08)',
   crosshair: 'rgba(255,255,255,0.06)',
 
-  accent: '#a78bfa',
-  accentSoft: 'rgba(167,139,250,0.18)',
+  accent: '#f4c430',
+  accentSoft: 'rgba(244, 196, 48,0.18)',
   live: '#ef4444',
   pink: '#ec4899',
 

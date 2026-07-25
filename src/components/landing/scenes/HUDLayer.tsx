@@ -18,7 +18,7 @@ interface Category {
 const CATS: Category[] = [
   { label: 'Food',         count: 18, color: '#f59e0b', icon: 'food' },
   { label: 'Live Music',   count: 10, color: '#22d3ee', icon: 'music' },
-  { label: 'Clubs',        count: 8,  color: '#a78bfa', icon: 'club' },
+  { label: 'Clubs',        count: 8,  color: '#f4c430', icon: 'club' },
   { label: 'Pool Party',   count: 6,  color: '#34d399', icon: 'pool' },
   { label: 'Day Party',    count: 4,  color: '#f97316', icon: 'day' },
   { label: 'Comedy',       count: 5,  color: '#ef4444', icon: 'comedy' },

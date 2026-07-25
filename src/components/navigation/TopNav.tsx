@@ -360,7 +360,7 @@ const TopNav: React.FC<TopNavProps> = ({
               <div ref={dropdownRef} className="relative flex-shrink-0">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="text-xs font-semibold px-3 py-3 rounded-xl transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 bg-purple-600/30 text-purple-300 shadow-[0_0_10px_rgba(124,58,237,0.3)]"
+                  className="text-xs font-semibold px-3 py-3 rounded-xl transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 bg-amber-600/30 text-amber-300 shadow-[0_0_10px_rgba(202, 138, 4,0.3)]"
                 >
                   {PRESET_LABELS[selectedPreset]}
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -370,7 +370,7 @@ const TopNav: React.FC<TopNavProps> = ({
                     className="absolute top-full left-0 mt-2 rounded-xl overflow-hidden z-[60]"
                     style={{
                       background: 'rgba(20, 20, 40, 0.97)',
-                      border: '1px solid rgba(124, 58, 237, 0.3)',
+                      border: '1px solid rgba(202, 138, 4, 0.3)',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
                       minWidth: '140px',
                     }}
@@ -381,10 +381,10 @@ const TopNav: React.FC<TopNavProps> = ({
                         onClick={() => handlePresetSelect(preset)}
                         className="w-full text-left px-4 py-2.5 text-xs font-medium transition-colors duration-150"
                         style={{
-                          color: selectedPreset === preset ? '#c4b5fd' : 'rgba(255,255,255,0.5)',
-                          background: selectedPreset === preset ? 'rgba(124, 58, 237, 0.2)' : 'transparent',
+                          color: selectedPreset === preset ? '#f8dc85' : 'rgba(255,255,255,0.5)',
+                          background: selectedPreset === preset ? 'rgba(202, 138, 4, 0.2)' : 'transparent',
                         }}
-                        onMouseEnter={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'rgba(124, 58, 237, 0.1)'; }}
+                        onMouseEnter={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'rgba(202, 138, 4, 0.1)'; }}
                         onMouseLeave={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'transparent'; }}
                       >
                         {PRESET_LABELS[preset]}
@@ -413,22 +413,22 @@ const TopNav: React.FC<TopNavProps> = ({
                     onClick={() => handleDateClick(dateOption.dateKey)}
                     className={`flex flex-col items-center px-3 py-1.5 rounded-xl transition-all duration-200 whitespace-nowrap flex-shrink-0 relative ${
                       isFullSelected
-                        ? 'bg-purple-600/30 shadow-[0_0_12px_rgba(124,58,237,0.3)]'
+                        ? 'bg-amber-600/30 shadow-[0_0_12px_rgba(202, 138, 4,0.3)]'
                         : 'hover:bg-white/5'
                     }`}
                     style={{
-                      ...(isToday && !isClicked && !isInRange ? { border: '1px solid rgba(124,58,237,0.4)' } : {}),
-                      ...(isFullSelected ? { border: '1px solid rgba(124,58,237,0.5)' } : {}),
+                      ...(isToday && !isClicked && !isInRange ? { border: '1px solid rgba(202, 138, 4,0.4)' } : {}),
+                      ...(isFullSelected ? { border: '1px solid rgba(202, 138, 4,0.5)' } : {}),
                       ...(!isFullSelected && isInRange ? { border: '1.5px solid rgba(59, 130, 246, 0.6)' } : {}),
                     }}
                   >
                     {isToday && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[7px] font-bold px-1.5 py-0.5 rounded bg-purple-600 text-white tracking-wider">
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[7px] font-bold px-1.5 py-0.5 rounded bg-amber-600 text-white tracking-wider">
                         TODAY
                       </span>
                     )}
                     <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-                      isFullSelected ? 'text-purple-300'
+                      isFullSelected ? 'text-amber-300'
                         : isWeekend ? 'text-red-400'
                         : 'text-gray-500'
                     }`}>
@@ -436,7 +436,7 @@ const TopNav: React.FC<TopNavProps> = ({
                     </span>
                     <span className={`text-[13px] font-bold ${
                       isFullSelected ? 'text-white'
-                        : isToday ? 'text-purple-400'
+                        : isToday ? 'text-amber-400'
                         : 'text-gray-400'
                     }`}>
                       {dateOption.date}
@@ -451,7 +451,7 @@ const TopNav: React.FC<TopNavProps> = ({
           {/* Search Bar */}
           <div className="w-64 flex-shrink-0">
             <div className="relative cursor-pointer group" onClick={onSearchClick}>
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none transition-colors group-hover:text-purple-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none transition-colors group-hover:text-amber-400" />
               <input
                 type="text"
                 placeholder="Search for your Vibe?"
@@ -473,13 +473,13 @@ const TopNav: React.FC<TopNavProps> = ({
               onClick={onListToggle}
               className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200"
               style={{
-                background: isListView ? 'rgba(124, 58, 237, 0.3)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${isListView ? 'rgba(124, 58, 237, 0.5)' : 'rgba(255,255,255,0.08)'}`,
+                background: isListView ? 'rgba(202, 138, 4, 0.3)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${isListView ? 'rgba(202, 138, 4, 0.5)' : 'rgba(255,255,255,0.08)'}`,
               }}
               aria-label={isListView ? 'Show map' : 'Show list'}
             >
               {isListView ? (
-                <MapIcon className="w-5 h-5 text-purple-300" />
+                <MapIcon className="w-5 h-5 text-amber-300" />
               ) : (
                 <List className="w-5 h-5 text-gray-300" />
               )}
@@ -577,7 +577,7 @@ const TopNav: React.FC<TopNavProps> = ({
                               color: 'rgba(255,255,255,0.9)',
                               border: '1px solid rgba(255,255,255,0.25)',
                             } : {
-                              background: '#7c3aed',
+                              background: '#ca8a04',
                               color: '#fff',
                             }}
                           >

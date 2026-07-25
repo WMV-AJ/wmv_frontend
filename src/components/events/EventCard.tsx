@@ -65,9 +65,9 @@ const EventCard: React.FC<EventCardProps> = ({ venue }) => {
 
             {/* Venue Category */}
             {venue?.category && (
-              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-50'}`}>
-                <MapPin className={`h-3.5 w-3.5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                <span className={`text-xs font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${isDarkMode ? 'bg-amber-500/20' : 'bg-amber-50'}`}>
+                <MapPin className={`h-3.5 w-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+                <span className={`text-xs font-medium ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>
                   {venue.category}
                 </span>
               </div>
@@ -125,9 +125,9 @@ const EventCard: React.FC<EventCardProps> = ({ venue }) => {
 
                 {/* Attributes */}
                 {event.attributes && (
-                  <div className={`flex items-start gap-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
-                    <Sparkles className={`h-4 w-4 flex-shrink-0 mt-0.5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                    <span className={`text-sm font-medium line-clamp-2 leading-relaxed ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                  <div className={`flex items-start gap-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
+                    <Sparkles className={`h-4 w-4 flex-shrink-0 mt-0.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+                    <span className={`text-sm font-medium line-clamp-2 leading-relaxed ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>
                       {[
                         ...(event.attributes.venue || []),
                         ...(event.attributes.energy || []),
@@ -165,8 +165,8 @@ const EventCard: React.FC<EventCardProps> = ({ venue }) => {
               rel="noopener noreferrer"
               className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 ${
                 isDarkMode
-                  ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border border-pink-500/30'
-                  : 'bg-gradient-to-r from-pink-50 to-purple-50 hover:from-pink-100 hover:to-purple-100 border border-pink-200'
+                  ? 'bg-gradient-to-r from-pink-500/20 to-amber-500/20 hover:from-pink-500/30 hover:to-amber-500/30 border border-pink-500/30'
+                  : 'bg-gradient-to-r from-pink-50 to-amber-50 hover:from-pink-100 hover:to-amber-100 border border-pink-200'
               }`}
             >
               <Instagram className={`w-5 h-5 ${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`} />

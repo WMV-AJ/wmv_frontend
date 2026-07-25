@@ -198,7 +198,7 @@ const EventListCard: React.FC<EventListCardProps> = ({
                     {venue.event_vibe_processed?.primaries?.map(vibe => (
                       <Badge
                         key={vibe}
-                        className="bg-purple-100 text-purple-700 border-purple-300"
+                        className="bg-amber-100 text-amber-700 border-amber-300"
                       >
                         {vibe}
                       </Badge>
@@ -339,7 +339,7 @@ const EventListCard: React.FC<EventListCardProps> = ({
                     href={`https://instagram.com/${venue.final_instagram}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg hover:from-pink-100 hover:to-purple-100 transition-colors border border-pink-200"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-50 to-amber-50 rounded-lg hover:from-pink-100 hover:to-amber-100 transition-colors border border-pink-200"
                   >
                     <Instagram className="w-4 h-4 text-pink-600" />
                     <span className="text-sm font-medium text-pink-700">

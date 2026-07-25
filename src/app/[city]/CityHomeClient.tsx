@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
-import StickyModeBar from '@/components/navigation/StickyModeBar';
+import NavPill from '@/components/navigation/NavPill';
 import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
 import { slugifyArea } from '@/lib/areas';
@@ -32,8 +32,8 @@ const T = {
   lineFaint: 'rgba(255,255,255,0.08)',
   crosshair: 'rgba(255,255,255,0.06)',
 
-  accent: '#a78bfa',
-  accentSoft: 'rgba(167,139,250,0.18)',
+  accent: '#f4c430',
+  accentSoft: 'rgba(244, 196, 48,0.18)',
   live: '#ef4444',
   pink: '#ec4899',
 
@@ -48,13 +48,13 @@ const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
 // and the /[city]/vibe/[vibeId] listing page stay in sync.
 
 const RADAR_DOTS = [
-  { t: '22%', l: '32%', c: '#a78bfa' },
+  { t: '22%', l: '32%', c: '#f4c430' },
   { t: '58%', l: '68%', c: '#22d3ee' },
   { t: '38%', l: '78%', c: '#f97316' },
   { t: '72%', l: '38%', c: '#84cc16' },
   { t: '50%', l: '22%', c: '#f472b6' },
   { t: '28%', l: '58%', c: '#ec4899' },
-  { t: '68%', l: '82%', c: '#a78bfa' },
+  { t: '68%', l: '82%', c: '#f4c430' },
 ];
 
 // ── HELPERS ───────────────────────────────────────────────────────────
@@ -122,6 +122,10 @@ export default function CityHome() {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [tonightVisible, setTonightVisible] = useState(4);
   const heroRef = useRef<HTMLDivElement | null>(null);
+  // Featured-slider swipe support
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipedRef = useRef(false);
+  const manualPauseUntilRef = useRef(0);
 
   // Venue data comes from the shared VenueDataProvider (root layout) — this
   // page used to fire its own /api/venues fetch concurrently with the
@@ -164,6 +168,8 @@ export default function CityHome() {
   useEffect(() => {
     if (loading) return;
     const interval = setInterval(() => {
+      // Hold auto-rotation briefly after a manual swipe.
+      if (Date.now() < manualPauseUntilRef.current) return;
       setFeaturedIndex(prev => prev + 1);
     }, 4000);
     return () => clearInterval(interval);
@@ -211,7 +217,7 @@ export default function CityHome() {
         event_id: v.event_id,
         venue: v.name || 'Venue',
         user: v.final_instagram ? v.final_instagram.replace(/^@/, '') : (v.name || 'venue').toLowerCase().replace(/\s+/g, ''),
-        color: '#a78bfa',
+        color: '#f4c430',
         mediaUrl: v.media_url_1 || null,
         mediaType: v.media_type_1 || null,
         // Sibling image doubles as the poster when slot 1 is a video.
@@ -531,12 +537,34 @@ export default function CityHome() {
           ) : tonightEvents.length > 0 ? (
             <>
               {(() => {
-                const fi = tonightEvents.length > 0 ? featuredIndex % tonightEvents.length : 0;
+                // Euclidean modulo — featuredIndex can go negative on a right-swipe.
+                const fi = tonightEvents.length > 0
+                  ? ((featuredIndex % tonightEvents.length) + tonightEvents.length) % tonightEvents.length
+                  : 0;
                 const e = tonightEvents[fi];
                 const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
                 const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
                 return (
-                  <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
+                  <div
+                    style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default', touchAction: 'pan-y' }}
+                    // Manual swipe: left/right changes the featured card and
+                    // pauses auto-rotation for a few seconds. A real swipe
+                    // suppresses the tap-navigation that follows pointerup.
+                    onPointerDown={(ev) => { swipeStartRef.current = { x: ev.clientX, y: ev.clientY }; }}
+                    onPointerUp={(ev) => {
+                      const start = swipeStartRef.current;
+                      swipeStartRef.current = null;
+                      if (!start) return;
+                      const dx = ev.clientX - start.x;
+                      const dy = ev.clientY - start.y;
+                      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                        swipedRef.current = true;
+                        manualPauseUntilRef.current = Date.now() + 8000;
+                        setFeaturedIndex((prev) => prev + (dx < 0 ? 1 : -1));
+                      }
+                    }}
+                    onClick={() => {
+                    if (swipedRef.current) { swipedRef.current = false; return; }
                     if (!e.event_id) return;
                     trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'tonight_featured' });
                     router.push(`/${city}/event/${e.event_id}`);
@@ -561,7 +589,7 @@ export default function CityHome() {
                         style={{ filter: 'saturate(1.1)' }}
                       />
                     ) : (
-                      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, #a78bfa22, #ec489922, #0a0a14)` }} />
+                      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, #f4c43022, #ec489922, #0a0a14)` }} />
                     )}
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(10,10,20,0.92))' }} />
                     <div style={{ position: 'absolute', top: 10, left: 10 }}>
@@ -794,7 +822,7 @@ export default function CityHome() {
                   const dateNum = d.getUTCDate();
                   const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
                   const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
-                  const color = ['#a78bfa', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
+                  const color = ['#f4c430', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
                   return (
                     <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
                       if (!e.event_id) return;
@@ -901,7 +929,7 @@ export default function CityHome() {
         </div>
       </div>
 
-      <StickyModeBar city={city} heroRef={heroRef} />
+      <NavPill city={city} active="home" />
     </main>
   );
 }

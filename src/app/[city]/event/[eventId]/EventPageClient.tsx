@@ -141,7 +141,7 @@ function getScoreColor(score: number) {
 const attrColors: Record<string, { bg: string; text: string }> = {
   venue: { bg: 'rgba(107, 114, 128, 0.15)', text: 'rgb(156, 163, 175)' },
   energy: { bg: 'rgba(249, 115, 22, 0.15)', text: 'rgb(251, 146, 60)' },
-  status: { bg: 'rgba(147, 51, 234, 0.15)', text: 'rgb(167, 139, 250)' },
+  status: { bg: 'rgba(212, 160, 23, 0.15)', text: 'rgb(244, 196, 48)' },
   timing: { bg: 'rgba(59, 130, 246, 0.15)', text: 'rgb(96, 165, 250)' },
 };
 
@@ -631,16 +631,16 @@ export default function EventDetailPage() {
           {/* Artist */}
           {event.artist && (
             <div className="flex items-start gap-3">
-              <Music className="w-[18px] h-[18px] flex-shrink-0 mt-1" style={{ color: 'rgb(167, 139, 250)' }} />
+              <Music className="w-[18px] h-[18px] flex-shrink-0 mt-1" style={{ color: 'rgb(244, 196, 48)' }} />
               <div className="flex flex-wrap gap-1.5">
                 {event.artist.split(/[|,]/).map((artist, idx) => (
                   <span
                     key={idx}
                     className="text-[12px] px-2.5 py-1 rounded-full font-medium"
                     style={{
-                      background: 'rgba(147, 51, 234, 0.15)',
-                      color: 'rgb(167, 139, 250)',
-                      border: '1px solid rgba(147, 51, 234, 0.25)',
+                      background: 'rgba(212, 160, 23, 0.15)',
+                      color: 'rgb(244, 196, 48)',
+                      border: '1px solid rgba(212, 160, 23, 0.25)',
                     }}
                   >
                     {artist.trim()}
@@ -721,10 +721,11 @@ export default function EventDetailPage() {
           <div className="mt-6 flex gap-2">
             <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_1, isVideo: event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) })}>
               {event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) ? (
-                <video
-                  src={`${event.media_url_1}#t=0.1`}
+                <img
+                  src={`/api/video-thumb?src=${encodeURIComponent(event.media_url_1)}`}
+                  alt=""
                   className="w-full h-full object-cover"
-                  muted loop playsInline preload="metadata"
+                  loading="lazy"
                 />
               ) : (
                 <Image
@@ -738,10 +739,11 @@ export default function EventDetailPage() {
             </div>
             <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_2, isVideo: event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) })}>
               {event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) ? (
-                <video
-                  src={`${event.media_url_2}#t=0.1`}
+                <img
+                  src={`/api/video-thumb?src=${encodeURIComponent(event.media_url_2)}`}
+                  alt=""
                   className="w-full h-full object-cover"
-                  muted loop playsInline preload="metadata"
+                  loading="lazy"
                 />
               ) : (
                 <Image
@@ -948,7 +950,7 @@ export default function EventDetailPage() {
                       {r.media_url_1 && !/\.(mp4|mov|webm)$/i.test(r.media_url_1) ? (
                         <Image src={r.media_url_1} alt={r.event_name || ''} fill sizes="128px" className="object-cover" />
                       ) : r.media_url_1 ? (
-                        <video src={`${r.media_url_1}#t=0.1`} className="w-full h-full object-cover" muted playsInline loop preload="metadata" />
+                        <img src={`/api/video-thumb?src=${encodeURIComponent(r.media_url_1)}`} alt="" className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Music className="w-5 h-5 text-[#5f5a70]" />

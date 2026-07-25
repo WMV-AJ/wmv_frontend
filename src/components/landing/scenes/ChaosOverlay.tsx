@@ -28,7 +28,7 @@ const LABELS: SourceLabel[] = [
   { idx: '03', text: 'TICKETING APIs',    x: 0.50, y: 0.18, color: '#10b981', textColor: '#064e3b', delay: 0.16, count: '12 sources',    side: 'center' },
   { idx: '04', text: 'PLATINUM LIST',     x: 0.50, y: 0.82, color: '#0ea5e9', textColor: '#0c4a6e', delay: 0.22, count: 'live feed',     side: 'center' },
   { idx: '05', text: 'VENUE WEBSITES',    x: 0.27, y: 0.68, color: '#f97316', textColor: '#7c2d12', delay: 0.28, count: '380 venues',    side: 'left'   },
-  { idx: '06', text: 'DUBAI EVENT SITES', x: 0.73, y: 0.70, color: '#8b5cf6', textColor: '#4c1d95', delay: 0.34, count: '47 sites',      side: 'right'  },
+  { idx: '06', text: 'DUBAI EVENT SITES', x: 0.73, y: 0.70, color: '#eab308', textColor: '#713f12', delay: 0.34, count: '47 sites',      side: 'right'  },
 ];
 
 // Approximate bounding box of each card — used to start the data thread at

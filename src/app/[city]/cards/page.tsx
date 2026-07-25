@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
 import TopNav from '@/components/navigation/TopNav';
+import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import StackedEventCards from '@/components/events/StackedEventCards';
 import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
@@ -210,6 +211,7 @@ export default function CityCardsPage() {
           onFiltersChange={handleFiltersChange}
           filterOptions={filterOptions}
         />
+        <NavPill city={city} active="cards" />
       </main>
       </div>
     </ThemeProvider>

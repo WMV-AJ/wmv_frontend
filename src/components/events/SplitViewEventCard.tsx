@@ -37,7 +37,7 @@ const SplitViewEventCard: React.FC<SplitViewEventCardProps> = ({
     <div
       className={`flex gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
         isSelected
-          ? 'bg-purple-600/15 border border-purple-500/25 shadow-[0_2px_12px_rgba(124,58,237,0.12)]'
+          ? 'bg-amber-600/15 border border-amber-500/25 shadow-[0_2px_12px_rgba(202, 138, 4,0.12)]'
           : 'bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/[0.08]'
       }`}
       onClick={onClick}
@@ -69,7 +69,7 @@ const SplitViewEventCard: React.FC<SplitViewEventCardProps> = ({
 
         {/* Bottom row: category badge + time + price */}
         <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-600/20 text-purple-300 font-semibold truncate max-w-[100px] border border-purple-500/15">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-600/20 text-amber-300 font-semibold truncate max-w-[100px] border border-amber-500/15">
             {categoryLabel}
           </span>
           {eventTime && (

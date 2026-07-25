@@ -52,9 +52,9 @@ export default function UserMenu({ variant = 'desktop', hideSignOut = false }: U
         onClick={() => setOpen((v) => !v)}
         className={`${buttonSize} rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 overflow-hidden`}
         style={{
-          background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+          background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #ca8a04 0%, #ec4899 100%)',
           border: '1px solid rgba(255,255,255,0.18)',
-          boxShadow: '0 0 10px rgba(124, 58, 237, 0.25)',
+          boxShadow: '0 0 10px rgba(202, 138, 4, 0.25)',
         }}
         aria-label="Account menu"
       >

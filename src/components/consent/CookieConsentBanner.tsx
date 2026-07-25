@@ -58,7 +58,7 @@ export default function CookieConsentBanner() {
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">
-          <Cookie className="w-5 h-5 text-purple-300" />
+          <Cookie className="w-5 h-5 text-amber-300" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold mb-1">We use cookies for analytics</p>
@@ -78,9 +78,9 @@ export default function CookieConsentBanner() {
               onClick={handleAccept}
               className="text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
               style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                background: 'linear-gradient(135deg, #ca8a04 0%, #ec4899 100%)',
                 color: '#fff',
-                boxShadow: '0 0 12px rgba(124, 58, 237, 0.35)',
+                boxShadow: '0 0 12px rgba(202, 138, 4, 0.35)',
               }}
             >
               Accept

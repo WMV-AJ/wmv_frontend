@@ -32,7 +32,7 @@ export function LogoLayer({ time }: { time: number }) {
           inset: -30,
           borderRadius: '50%',
           background:
-            'radial-gradient(circle, rgba(124,58,237,0.5), rgba(124,58,237,0) 65%)',
+            'radial-gradient(circle, rgba(202, 138, 4,0.5), rgba(202, 138, 4,0) 65%)',
           filter: 'blur(8px)',
         }}
       />
@@ -41,8 +41,8 @@ export function LogoLayer({ time }: { time: number }) {
           position: 'absolute',
           inset: -8,
           borderRadius: '50%',
-          border: '2px solid rgba(167,139,250,0.4)',
-          borderTopColor: 'rgba(167,139,250,0.95)',
+          border: '2px solid rgba(244, 196, 48,0.4)',
+          borderTopColor: 'rgba(244, 196, 48,0.95)',
           borderRightColor: 'rgba(236,72,153,0.75)',
           transform: `rotate(${logoRot}deg)`,
         }}
@@ -54,7 +54,7 @@ export function LogoLayer({ time }: { time: number }) {
           borderRadius: '50%',
           overflow: 'hidden',
           boxShadow:
-            '0 0 80px rgba(124,58,237,0.6), 0 0 40px rgba(236,72,153,0.35), 0 20px 60px rgba(0,0,0,0.6)',
+            '0 0 80px rgba(202, 138, 4,0.6), 0 0 40px rgba(236,72,153,0.35), 0 20px 60px rgba(0,0,0,0.6)',
           background: '#000',
         }}
       >

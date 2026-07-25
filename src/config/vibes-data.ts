@@ -17,7 +17,7 @@ export interface VibeData {
 }
 
 export const VIBES_DATA: VibeData[] = [
-  { id: 'clubs',   label: 'Clubs',        color: '#a78bfa', keywords: ['nightclub', 'club', 'dance'], categories: ['Club Night'],                       seoNoun: 'Club nights' },
+  { id: 'clubs',   label: 'Clubs',        color: '#f4c430', keywords: ['nightclub', 'club', 'dance'], categories: ['Club Night'],                       seoNoun: 'Club nights' },
   { id: 'brunch',  label: 'Brunch',       color: '#34d399', keywords: ['brunch'],                     categories: ['Brunch'],                           seoNoun: 'Brunches' },
   { id: 'rooftops',label: 'Rooftops',     color: '#f472b6', keywords: ['rooftop', 'terrace'],         categories: [],                                   seoNoun: 'Rooftop nights' },
   { id: 'ladies',  label: 'Ladies Night', color: '#ec4899', keywords: ['ladies night', 'ladies'],     categories: ['Ladies Night'],                     seoNoun: 'Ladies nights' },

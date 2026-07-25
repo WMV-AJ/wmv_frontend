@@ -18,7 +18,7 @@
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(124, 58, 237, 0.08);
+    inset 0 1px 0 rgba(202, 138, 4, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.06);
 
   /* Smooth transitions */
@@ -105,12 +105,12 @@
 }
 
 .nav-active {
-  background: rgba(124, 58, 237, 0.6) !important;
+  background: rgba(202, 138, 4, 0.6) !important;
   box-shadow:
-    0 2px 8px rgba(124, 58, 237, 0.4),
+    0 2px 8px rgba(202, 138, 4, 0.4),
     inset 0 2px 4px rgba(0, 0, 0, 0.2),
     inset 0 -1px 0 rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(124, 58, 237, 0.3) !important;
+  border: 1px solid rgba(202, 138, 4, 0.3) !important;
 }
 
 .nav-active::before {
@@ -253,8 +253,8 @@
   box-shadow:
     0 -20px 60px rgba(0, 0, 0, 0.3),
     0 -8px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(124, 58, 237, 0.15),
-    inset 0 -1px 0 rgba(124, 58, 237, 0.05);
+    inset 0 1px 0 rgba(202, 138, 4, 0.15),
+    inset 0 -1px 0 rgba(202, 138, 4, 0.05);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: none;

@@ -89,7 +89,7 @@ const DatePillsRow: React.FC<DatePillsRowProps> = ({
   return (
     <div className="flex items-center gap-2 px-5 py-2.5 overflow-x-auto scrollbar-hide border-b"
          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', borderColor: 'rgba(255,255,255,0.04)' }}>
-      <Calendar className="w-4 h-4 text-purple-400/60 flex-shrink-0" />
+      <Calendar className="w-4 h-4 text-amber-400/60 flex-shrink-0" />
 
       {dateOptions.map((opt) => {
         const isSelected = selectedDates.includes(opt.dateKey);
@@ -99,13 +99,13 @@ const DatePillsRow: React.FC<DatePillsRowProps> = ({
             onClick={() => handleDateClick(opt.dateKey)}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
               isSelected
-                ? 'bg-purple-600 text-white shadow-[0_2px_10px_rgba(124,58,237,0.35)]'
+                ? 'bg-amber-600 text-white shadow-[0_2px_10px_rgba(202, 138, 4,0.35)]'
                 : 'bg-white/[0.03] text-gray-400 border border-white/[0.08] hover:bg-white/[0.06] hover:text-gray-300'
             }`}
           >
             <span>{opt.label}</span>
             {opt.eventCount > 0 && (
-              <span className={`text-[10px] ${isSelected ? 'text-purple-200' : 'text-gray-500'}`}>
+              <span className={`text-[10px] ${isSelected ? 'text-amber-200' : 'text-gray-500'}`}>
                 {opt.eventCount} Events
               </span>
             )}

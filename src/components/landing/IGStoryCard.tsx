@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import { hash } from '@/lib/landing/animation-core';
 
 const VENUE_COLORS: Record<string, string> = {
-  nightclub: '#a78bfa',
+  nightclub: '#f4c430',
   restaurant: '#34d399',
   bar: '#f97316',
   beach: '#22d3ee',
@@ -58,7 +58,7 @@ export function IGStoryCard({
   image = null,
   variant = 'story',
 }: IGStoryCardProps) {
-  const accent = hue || VENUE_COLORS[category] || '#a78bfa';
+  const accent = hue || VENUE_COLORS[category] || '#f4c430';
   const h1 = (hash(seed) * 360) | 0;
   const h2 = (hash(seed + 1) * 360) | 0;
   const fallbackBg = `linear-gradient(${(hash(seed + 2) * 180) | 0}deg,

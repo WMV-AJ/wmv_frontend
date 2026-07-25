@@ -12,6 +12,7 @@ import {
   useMap,
 } from '@/components/ui/map';
 import TopNav from '@/components/navigation/TopNav';
+import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
 import MobileEventList from '@/components/mobile/MobileEventList';
@@ -238,6 +239,100 @@ function PanToVenue({ venue }: { venue: Venue | null }) {
   return null;
 }
 
+// ── Live-location toggle ─────────────────────────────────────────────
+// ON: watchPosition keeps a gold "you are here" dot on the map — but only
+// when the fix is inside the current city's bounds; being elsewhere shows a
+// brief notice and flips the toggle back off (panning the map to another
+// country helps nobody). OFF: watcher cleared, dot removed. The preference
+// persists per-browser.
+const LOCATION_PREF_KEY = 'wmv_location_on';
+
+function useLiveLocation(city: string) {
+  const [enabled, setEnabled] = useState(false);
+  const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showNotice = useCallback((msg: string) => {
+    setNotice(msg);
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => setNotice(null), 3500);
+  }, []);
+
+  const stop = useCallback(() => {
+    if (watchIdRef.current != null) {
+      navigator.geolocation?.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setPos(null);
+    setEnabled(false);
+    try { window.localStorage.setItem(LOCATION_PREF_KEY, '0'); } catch { /* ignore */ }
+  }, []);
+
+  const start = useCallback(() => {
+    if (!navigator.geolocation) {
+      showNotice('Location not supported on this device');
+      return;
+    }
+    const bounds = getCityConfig(city).mapBounds;
+    setEnabled(true);
+    try { window.localStorage.setItem(LOCATION_PREF_KEY, '1'); } catch { /* ignore */ }
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (p) => {
+        const { latitude: lat, longitude: lng } = p.coords;
+        const inside =
+          lng >= bounds.west && lng <= bounds.east && lat >= bounds.south && lat <= bounds.north;
+        if (!inside) {
+          showNotice(`You're outside ${getCityConfig(city).displayName} — location hidden`);
+          stop();
+          return;
+        }
+        setPos({ lat, lng });
+      },
+      () => {
+        showNotice('Location permission denied');
+        stop();
+      },
+      { enableHighAccuracy: false, maximumAge: 30_000, timeout: 15_000 },
+    );
+  }, [city, showNotice, stop]);
+
+  // Restore the saved preference once per mount.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(LOCATION_PREF_KEY) === '1') start();
+    } catch { /* ignore */ }
+    return () => {
+      if (watchIdRef.current != null) navigator.geolocation?.clearWatch(watchIdRef.current);
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [city]);
+
+  const toggle = useCallback(() => {
+    if (enabled) stop();
+    else start();
+  }, [enabled, start, stop]);
+
+  return { enabled, pos, notice, toggle };
+}
+
+// Fly to the user's position once when it first appears.
+function FlyToUser({ pos }: { pos: { lat: number; lng: number } | null }) {
+  const { map, isLoaded } = useMap();
+  const flownRef = useRef(false);
+
+  useEffect(() => {
+    if (!map || !isLoaded || !pos) { if (!pos) flownRef.current = false; return; }
+    if (flownRef.current) return;
+    flownRef.current = true;
+    map.easeTo({ center: [pos.lng, pos.lat], zoom: Math.max(map.getZoom(), 13), duration: 800 });
+  }, [map, isLoaded, pos]);
+
+  return null;
+}
+
 // Flattens marker styling while the map is moving: MapLibre retransforms
 // every DOM marker each animation frame during a pan, and box-shadow /
 // animate-ping / text-shadow force expensive repaints per frame. The
@@ -270,6 +365,7 @@ export default function CityMapPage() {
   const city = (params?.city as string) || 'dubai';
 
   const searchParams = useSearchParams();
+  const liveLocation = useLiveLocation(city);
 
   const [filters, setFilters] = useState<HierarchicalFilterState>(() => {
     // Deep-link seeds (initializer-only — the URL seeds state, it is not
@@ -637,7 +733,29 @@ export default function CityMapPage() {
               <OfferBanner venue={highlightedVenue} offer={highlightedOffer} color={getVenueColor(highlightedVenue)} />
             )}
 
-            <MapControls position="bottom-right" showZoom={false} showCompass={false} showLocate />
+            {/* Live "you are here" dot (only inside city bounds) */}
+            {liveLocation.pos && (
+              <MapMarker longitude={liveLocation.pos.lng} latitude={liveLocation.pos.lat}>
+                <MarkerContent>
+                  <div style={{ position: 'relative', width: 22, height: 22 }}>
+                    <div style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: '#f4c430', opacity: 0.25,
+                      animation: 'wmv-loc-pulse 2s ease-in-out infinite',
+                    }} />
+                    <div style={{
+                      position: 'absolute', inset: 5, borderRadius: '50%',
+                      background: '#f4c430', border: '2.5px solid #fff',
+                      boxShadow: '0 1px 6px rgba(0,0,0,0.5)',
+                    }} />
+                  </div>
+                  <style>{`@keyframes wmv-loc-pulse { 0%,100% { transform: scale(1); opacity: 0.25 } 50% { transform: scale(1.8); opacity: 0.08 } }`}</style>
+                </MarkerContent>
+              </MapMarker>
+            )}
+            <FlyToUser pos={liveLocation.pos} />
+
+            <MapControls position="bottom-right" showZoom={false} showCompass={false} />
           </MapView>
 
           {process.env.NODE_ENV === 'development' && (
@@ -645,7 +763,52 @@ export default function CityMapPage() {
               MapCN (MapLibre) · {venues.length} venues
             </div>
           )}
+
+          {/* Location on/off toggle — above the card carousel */}
+          <button
+            onClick={liveLocation.toggle}
+            aria-label={liveLocation.enabled ? 'Turn location off' : 'Turn location on'}
+            className="absolute z-20 flex items-center justify-center"
+            style={{
+              right: 12,
+              bottom: 232,
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: liveLocation.enabled ? '#f4c430' : 'rgba(20,20,31,0.9)',
+              border: `1px solid ${liveLocation.enabled ? '#f4c430' : 'rgba(255,255,255,0.14)'}`,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
+              cursor: 'pointer',
+              transition: 'background 0.2s ease',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke={liveLocation.enabled ? '#0a0a14' : '#f5f2ed'} strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+              <circle cx="12" cy="12" r="8" />
+            </svg>
+          </button>
+
+          {/* Location notice toast */}
+          {liveLocation.notice && (
+            <div
+              className="absolute z-30"
+              style={{
+                left: '50%', transform: 'translateX(-50%)', bottom: 288,
+                padding: '10px 18px', borderRadius: 999, maxWidth: '85%',
+                background: 'rgba(20,20,31,0.95)', border: '1px solid rgba(255,255,255,0.14)',
+                color: '#f5f2ed', fontSize: 12, fontWeight: 600, textAlign: 'center',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              }}
+            >
+              {liveLocation.notice}
+            </div>
+          )}
         </div>
+
+        <NavPill city={city} active="map" bottomOffset={236} />
 
         <MobileEventList
           cards={cards}

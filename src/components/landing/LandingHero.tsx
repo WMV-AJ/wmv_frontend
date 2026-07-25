@@ -23,7 +23,7 @@ function Scene() {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(ellipse 60% 45% at 50% 50%, rgba(124,58,237,0.09), transparent 65%)',
+          background: 'radial-gradient(ellipse 60% 45% at 50% 50%, rgba(202, 138, 4,0.09), transparent 65%)',
           opacity: ambientFade,
         }}
       />
