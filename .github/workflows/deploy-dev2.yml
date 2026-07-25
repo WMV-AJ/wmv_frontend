@@ -27,7 +27,6 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: http://91.99.102.124:2302
           NEXT_PUBLIC_APP_URL: http://91.99.102.124:2312
           WMV_API_BASE: http://91.99.102.124:2302
-          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: AIzaSyA_nRGBR8KMfbkAYNG44cVnS7H5WsFGAnA
           NODE_ENV: production
         run: |
           npm run build

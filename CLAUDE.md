@@ -62,8 +62,36 @@ curl -sI https://wheresmyvibe.com/_next/static/css/$(curl -s https://wheresmyvib
 ---
 
 
+## ⚠️ STACK REALITY (added 2026-07-25 — overrides anything below)
+
+The long "V1.0 / December 2025" body below is kept for historical UI/feature notes,
+but its **infrastructure claims are stale**. Where the old text disagrees with this
+block, **this block wins**:
+
+- **Database:** self-hosted **Postgres** (`final_1` table) on the Hetzner VPS —
+  **not Supabase**. Supabase is fully removed (not even a dependency). All data flows
+  through the WMV backend proxy at `127.0.0.1:2300`; never query a DB directly from the
+  frontend — use the `WMV_API_BASE` API routes.
+- **Maps:** the live map is **MapLibre GL** with **Carto** basemaps
+  (`src/components/ui/map.tsx`). Google Maps is **dead code** (`MapContainer.tsx` et al.
+  are unmounted) and `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` has been removed — ignore any
+  Google-Maps setup steps below.
+- **Auth:** custom **backend-driven Google OAuth** — the frontend redirects to
+  `${NEXT_PUBLIC_BACKEND_URL}/api/auth/google/start`, receives a token at
+  `/auth/complete#token=…`, stores it in `localStorage` (`wmv_token`), and calls
+  `/api/auth/me`. **No Supabase Auth, no NextAuth, no email/password or phone OTP.**
+  See `src/contexts/AuthContext.tsx`.
+- **Deployment:** self-hosted on the Hetzner VPS `91.99.102.124`, **not Vercel**. Pushes
+  to `main` / `dev_branch_2` trigger GitHub Actions (`.github/workflows/deploy-*.yml`)
+  which build the Next.js **standalone** bundle, SCP it to the box, `rsync --delete` it
+  into `/opt/wmv-frontend*/.next/standalone/`, and `pm2 restart`. Ports: prod **2310**,
+  dev2 **2312**, aj **2313**. nginx fronts `wheresmyvibe.com`. (A `Dockerfile` exists but
+  is unused.)
+
+---
+
 > **Purpose**: This file provides comprehensive context for AI assistants (Claude, GPT, etc.) working on this project.
-> **Last Updated**: December 2025
+> **Last Updated**: December 2025 (infra facts corrected 2026-07-25 — see STACK REALITY above)
 > **Project Status**: V1.0 Production Ready, V2.0 Planning
 
 ---
@@ -73,11 +101,11 @@ curl -sI https://wheresmyvibe.com/_next/static/css/$(curl -s https://wheresmyvib
 **Dubai Events Platform** (internally: "Where's My Vibe") is a sophisticated event discovery web application that helps users find venues and events in Dubai through an interactive map interface with advanced filtering capabilities.
 
 ### Quick Facts
-- **Tech Stack**: Next.js 15, React 19, TypeScript 5, Tailwind CSS 4, Supabase
+- **Tech Stack**: Next.js 15, React 19, TypeScript 5, Tailwind CSS 4; data via WMV backend API over Postgres (`final_1`); MapLibre GL + Carto tiles for maps *(not Supabase, not Google Maps — see STACK REALITY)*
 - **Codebase Size**: 65+ components, 387-line type system, 552-line filtering hook
 - **Documentation**: 30,000+ words across comprehensive docs
 - **Current Version**: V1.0 (Production Ready)
-- **Deployment**: Vercel (primary), supports Docker
+- **Deployment**: Self-hosted Hetzner VPS via GitHub Actions → PM2 standalone build (prod port 2310) *(Docker image present but unused; not Vercel)*
 
 ---
 
@@ -130,20 +158,20 @@ dubai-events-v6/
 ### Critical Dependencies
 ```json
 {
-  "@supabase/supabase-js": "2.57.2",
-  "@googlemaps/js-api-loader": "2.20.7",
+  "maplibre-gl": "5.23.0",
   "zustand": "5.0.8",
   "@tanstack/react-query": "5.87.1",
   "framer-motion": "12.23.12",
   "lucide-react": "0.542.0"
 }
 ```
+*(No `@supabase/supabase-js`. `@react-google-maps/api` is still installed but its
+components are unmounted dead code — the live map is MapLibre.)*
 
 ### Authentication
-- **Supabase Auth** with multi-provider support
-- Google OAuth 2.0
-- Email/Password
-- Phone OTP (SMS)
+- **Custom backend-driven Google OAuth** (see `src/contexts/AuthContext.tsx`)
+- Token stored in `localStorage` (`wmv_token`); validated via backend `/api/auth/me`
+- No Supabase Auth, no NextAuth, no email/password or phone OTP
 
 ---
 
@@ -185,7 +213,7 @@ dubai-events-v6/
 
 ### 3. Single Unified Table
 **Why**: Simplify queries, reduce joins
-**Table**: `final_1` in Supabase
+**Table**: `final_1` in Postgres (Hetzner VPS), accessed via the backend proxy — not Supabase
 **Contains**: Both venue AND event data (denormalized)
 **Deduplication**: By `venue_id` after filtering
 
@@ -971,8 +999,8 @@ const attributes = typeof event.attributes === 'string'
 3. **Phone OTP** - SMS-based verification for UAE numbers
 
 ### Session Management
-- **Supabase Auth** handles JWT tokens
-- **LocalStorage** persistence
+- **Backend-issued opaque token** (not Supabase); frontend sends it as `Authorization: Bearer`
+- **LocalStorage** persistence (`wmv_token`)
 - **Auto-refresh** on tab/window change
 - **Auth Context** (`src/contexts/AuthContext.tsx`) provides global state
 
@@ -1174,9 +1202,8 @@ npm install
 
 # 2. Configure environment variables
 cp .env.example .env.local
-# Add: NEXT_PUBLIC_SUPABASE_URL
-#      NEXT_PUBLIC_SUPABASE_ANON_KEY
-#      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+# Set: NEXT_PUBLIC_BACKEND_URL   (WMV backend — auth/analytics/data proxy)
+#      NEXT_PUBLIC_GA_MEASUREMENT_ID  (optional; empty disables GA4)
 
 # 3. Start development server
 npm run dev  # http://localhost:3000
@@ -1476,8 +1503,8 @@ console.log('🗺️ Map loaded with venues:', venues.length);
 - Tailwind CSS: https://tailwindcss.com/docs
 
 ### Project Links
-- GitHub: https://github.com/jhamb285/WMV
-- Deployment: Vercel (primary)
+- GitHub: https://github.com/jhamb285/wmv_frontend
+- Deployment: Self-hosted Hetzner VPS (91.99.102.124) via GitHub Actions → PM2 (not Vercel)
 
 ---
 
