@@ -1,104 +1,54 @@
-'use client';
+// Server wrapper for the area listing page: "Things to do in Dubai Marina".
+// The interactive list lives in ./AreaListClient.tsx ('use client').
+import type { Metadata } from 'next';
+import AreaListClient from './AreaListClient';
+import JsonLd from '@/components/seo/JsonLd';
+import { humanizeSlug, slugifyArea } from '@/lib/areas';
+import { getCityDisplayName, getCityEvents } from '@/lib/server-data';
+import { buildItemListSchema } from '@/lib/seo-schema';
 
-import { useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { MapPin } from 'lucide-react';
-import { useClientSideVenues } from '@/hooks/useClientSideVenues';
-import { type HierarchicalFilterState } from '@/types';
-import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
-import { getCityConfig } from '@/config/cities.config';
-import { findAreaBySlug, humanizeSlug } from '@/lib/areas';
-import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
+interface Props {
+  params: Promise<{ city: string; areaSlug: string }>;
+}
 
-// No filters — we want ALL venues from context, then filter by area ourselves so
-// the count matches the homepage "Areas" row exactly.
-const EMPTY_FILTERS: HierarchicalFilterState = {
-  selectedPrimaries: { genres: [], vibes: [] },
-  selectedSecondaries: { genres: {}, vibes: {} },
-  expandedPrimaries: { genres: [], vibes: [] },
-  eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
-  attributes: { venue: [], energy: [], timing: [], status: [] },
-  selectedAreas: [],
-  activeDates: [],
-  activeOffers: [],
-  searchQuery: '',
-};
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { city, areaSlug } = await params;
+  const areaName = humanizeSlug(areaSlug);
+  const cityName = await getCityDisplayName(city);
+  const title = `Things to do in ${areaName}, ${cityName} — tonight & this week | Where's My Vibe`;
+  const description = `Events, brunches and nightlife in ${areaName}, ${cityName} — updated daily from venues' own Instagram stories.`;
 
-const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
-const mono = "var(--font-geist-sans), ui-monospace, monospace";
+  return {
+    title,
+    description,
+    alternates: { canonical: `/${city}/area/${areaSlug}` },
+    openGraph: { title, description, url: `/${city}/area/${areaSlug}`, type: 'website', images: ['/og-image.png'] },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
+  };
+}
 
-export default function AreaListingPage() {
-  const router = useRouter();
-  const params = useParams();
-  const city = (params?.city as string) || 'dubai';
-  const areaSlug = (params?.areaSlug as string) || '';
+export default async function AreaListPage({ params }: Props) {
+  const { city, areaSlug } = await params;
+  const areaName = humanizeSlug(areaSlug);
 
-  const { allVenues, isLoading } = useClientSideVenues(EMPTY_FILTERS);
-
-  // Resolve the real area label from the slug (areas are dynamic data strings).
-  const areaName = useMemo(
-    () => findAreaBySlug(allVenues as Array<{ area?: string | null }>, areaSlug),
-    [allVenues, areaSlug],
-  );
-
-  // All upcoming events in this area → deduped stacked cards.
-  const cards = useMemo(() => {
-    if (!areaName) return [];
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const matched = allVenues.filter((v: any) => {
-      if (v.event_date) {
-        const d = new Date(v.event_date);
-        if (!isNaN(d.getTime()) && d < todayStart) return false; // upcoming only
-      }
-      return v.area === areaName;
-    });
-
-    const allCards = transformVenueDataToStackedCards(matched as any);
-    const eventMap = new Map<string, typeof allCards[0]>();
-    allCards.forEach(card => {
-      if (card.event.id && !eventMap.has(card.event.id)) {
-        eventMap.set(card.event.id, card);
-      }
-    });
-    return Array.from(eventMap.values());
-  }, [allVenues, areaName]);
-
-  const title = areaName ?? humanizeSlug(areaSlug);
-
-  const header = (
-    <ListPageHeader
-      onBack={() => router.push(`/${city}`)}
-      icon={<MapPin style={{ width: 12, height: 12, color: '#0a0a14' }} />}
-      iconBg="#a78bfa"
-      title={title}
-      subtitle={
-        isLoading ? 'Loading…'
-        : `${cards.length} event${cards.length === 1 ? '' : 's'} · ${getCityConfig(city).displayName}`
-      }
-    />
-  );
-
-  const emptyState = (
-    <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: '#f5f2ed' }}>
-        No events in {title} right now
-      </div>
-      <div style={{ fontFamily: mono, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
-        Check back soon — the city updates daily.
-      </div>
-    </div>
-  );
+  const events = await getCityEvents(city);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // Match by round-tripping the slug (same rule the client's findAreaBySlug
+  // uses) — area strings like "Marsa Dubai - Dubai Marina" don't survive a
+  // naive humanize+compare.
+  const matching = events.filter((e) => {
+    if (!e?.event_date || !e?.venue_area) return false;
+    const d = new Date(e.event_date);
+    if (Number.isNaN(d.getTime()) || d < today) return false;
+    return slugifyArea(String(e.venue_area)) === areaSlug;
+  });
+  const itemList = buildItemListSchema(matching, city, `Things to do in ${areaName}`);
 
   return (
-    <StackedCardsListPage
-      city={city}
-      header={header}
-      cards={cards}
-      isLoading={isLoading}
-      emptyState={emptyState}
-      mastheadFrom="area"
-    />
+    <>
+      {itemList && <JsonLd data={itemList} />}
+      <AreaListClient />
+    </>
   );
 }

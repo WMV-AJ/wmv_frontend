@@ -83,12 +83,14 @@ export const metadata: Metadata = {
     siteName: "Where's My Vibe",
     locale: "en_US",
     type: "website",
+    images: ["/og-image.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Where's My Vibe - Event Discovery",
     description: "Discover the hottest events, venues, and nightlife through real-time Instagram stories and venue data.",
     creator: "@wheresmyvibe",
+    images: ["/og-image.png"],
   },
 };
 
