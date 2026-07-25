@@ -123,6 +123,9 @@ export default function EventMedia({
         }
       : { objectFit: 'cover', ...style };
 
+    // Always set a poster: a non-autoplaying <video> with only metadata often
+    // paints BLACK until playback (readyState 0) — the branded placeholder
+    // beats a void when no sibling image exists.
     return (
       <video
         src={url}
@@ -131,7 +134,7 @@ export default function EventMedia({
         playsInline
         preload="metadata"
         {...(videoAutoPlay ? { autoPlay: true } : {})}
-        {...(posterImage ? { poster: optimizedPosterUrl(posterImage) } : {})}
+        poster={optimizedPosterUrl(posterImage ?? PLACEHOLDER_IMAGE)}
         {...(!fill && width !== undefined ? { width } : {})}
         {...(!fill && height !== undefined ? { height } : {})}
         className={className}
