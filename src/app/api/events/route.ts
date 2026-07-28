@@ -90,8 +90,14 @@ export async function GET(request: Request) {
     const upstreamUrl = city
       ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
       : `${WMV_API_BASE}/api/events`;
-    // Events refresh once per day after the pipeline; 5-min ISR is plenty.
-    const upstream = await fetch(upstreamUrl, { next: { revalidate: 300 } });
+    // Always read through to the backend. This previously used
+    // `{ next: { revalidate: 300 } }`, but on 2026-07-28 the standalone
+    // server's on-disk fetch cache was still serving a response from
+    // 2026-07-26 — the backend's earliest event was that day's date while
+    // the public API's was two days older, and a pm2 restart did not clear
+    // it. Events must never be stale: the upstream is on localhost and the
+    // response already carries its own short Cache-Control for clients.
+    const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
     if (!upstream.ok) {
       return NextResponse.json(
         { success: false, data: [], error: `Upstream ${upstream.status}: ${upstream.statusText}` },
@@ -101,8 +107,17 @@ export async function GET(request: Request) {
     const payload = await upstream.json();
     let records: EventRecord[] = Array.isArray(payload?.data) ? payload.data : [];
 
-    // Only events
-    records = records.filter((r) => r.event_id != null);
+    // Only events, and only ones that have not already happened. Without the
+    // date check, a city whose pipeline has not run yet today keeps yesterday's
+    // rows, and once the sort below is soonest-first those expired events take
+    // the top of the list.
+    const startOfToday = new Date(new Date().toISOString().slice(0, 10)).getTime();
+    records = records.filter((r) => {
+      if (r.event_id == null) return false;
+      if (!r.event_date) return true;
+      const d = new Date(r.event_date).getTime();
+      return Number.isNaN(d) || d >= startOfToday;
+    });
 
     // Filter by venue_id if specified
     if (venue_id) {
@@ -110,11 +125,14 @@ export async function GET(request: Request) {
       records = records.filter((r) => r.venue_id === wanted);
     }
 
-    // Newest first
+    // Soonest first. This used to sort newest-first, which combined with the
+    // `limit` applied further down meant the default 50-event response was
+    // filled with events weeks out while tonight's never made the list — the
+    // site looked empty on days the pipeline had run perfectly well.
     records.sort((a, b) => {
       const ad = a.event_date ? new Date(a.event_date).getTime() : 0;
       const bd = b.event_date ? new Date(b.event_date).getTime() : 0;
-      return bd - ad;
+      return ad - bd;
     });
 
     // Genre filter — primaries match
