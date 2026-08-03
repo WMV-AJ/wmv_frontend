@@ -2,6 +2,7 @@
 // per-venue / genre / vibe / offers / category / attribute / date filtering.
 // No Supabase — all data lives in production Postgres on 91.99.102.124:2400.
 import { NextResponse } from 'next/server';
+import { isUpcomingInCity } from '@/lib/city-date';
 
 interface EventRecord {
   event_vibe?: string[] | string | null;
@@ -111,13 +112,15 @@ export async function GET(request: Request) {
     // date check, a city whose pipeline has not run yet today keeps yesterday's
     // rows, and once the sort below is soonest-first those expired events take
     // the top of the list.
-    const startOfToday = new Date(new Date().toISOString().slice(0, 10)).getTime();
-    records = records.filter((r) => {
-      if (r.event_id == null) return false;
-      if (!r.event_date) return true;
-      const d = new Date(r.event_date).getTime();
-      return Number.isNaN(d) || d >= startOfToday;
-    });
+    //
+    // Anchored to the CITY's date via isUpcomingInCity, not the viewer's. An
+    // earlier draft of this compared against UTC midnight, which reintroduces
+    // exactly the bug that helper exists to prevent: a viewer in IST at 00:30
+    // looking at Dubai — still on yesterday's date — would have had Dubai's
+    // tonight filtered out as past.
+    records = records.filter(
+      (r) => r.event_id != null && isUpcomingInCity(r.event_date, city),
+    );
 
     // Filter by venue_id if specified
     if (venue_id) {
