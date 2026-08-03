@@ -83,8 +83,17 @@ export async function POST(request: Request) {
     const upstreamUrl = city
       ? `${WMV_API_BASE}/api/events?city=${encodeURIComponent(city)}`
       : `${WMV_API_BASE}/api/events`;
-    // Events change once per day; 5-min ISR is fresh enough.
-    const upstream = await fetch(upstreamUrl, { next: { revalidate: 300 } });
+    // Always read through to the backend, for the same reason as
+    // /api/events: on 2026-07-28 and again on 2026-07-30 the standalone
+    // server's on-disk fetch cache served a response that was two days old,
+    // and restarting the process did not clear it. This route returns the
+    // same event data, so it carries the same risk — on 30 July the database
+    // held 500 Dubai events while the site served 356.
+    //
+    // The upstream is on localhost and the response already sets its own
+    // short Cache-Control for clients, so there is nothing to gain here and a
+    // silently stale site to lose.
+    const upstream = await fetch(upstreamUrl, { cache: 'no-store' });
     if (!upstream.ok) {
       return NextResponse.json(
         { success: false, data: {}, error: `Upstream ${upstream.status}: ${upstream.statusText}` },
