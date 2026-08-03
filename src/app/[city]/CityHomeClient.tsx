@@ -135,18 +135,20 @@ export default function CityHome() {
   const loading = isLoadingVenues;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const venues = useMemo<any[]>(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    // The runtime records carry event fields (event_time, media_url_1…) that
-    // the narrow Venue interface doesn't declare; this page has always been
-    // written against the loose shape.
+    // "Upcoming" is anchored to the CITY's calendar day, not the viewer's:
+    // a viewer in IST at 00:30 looking at Dubai (UTC+4, still yesterday
+    // evening there) must NOT have Dubai's tonight filtered out as "past".
+    // Event dates are compared as UTC date-parts (they parse as UTC midnight).
+    const cityToday = getCityDateString(city); // YYYY-MM-DD in the city's tz
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (allVenues as any[]).filter((v) => {
       if (!v.event_date) return true;
       const d = new Date(v.event_date);
-      return isNaN(d.getTime()) || d >= todayStart;
+      if (isNaN(d.getTime())) return true;
+      const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      return ds >= cityToday;
     });
-  }, [allVenues]);
+  }, [allVenues, city]);
 
   const toggle = (id: string) =>
     setLiked(s => {
@@ -355,21 +357,53 @@ export default function CityHome() {
             <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: T.crosshair }} />
           </div>
 
+          {/* Warm gold glow behind the headline */}
+          <div aria-hidden style={{
+            position: 'absolute', left: -60, top: -20, width: 320, height: 300,
+            background: `radial-gradient(ellipse 60% 50% at 35% 40%, ${T.accent}14, transparent 70%)`,
+            pointerEvents: 'none',
+          }} />
+
           <div style={{ position: 'relative', zIndex: 1 }}>
+            {/* Live badge with the city's actual day + date */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.live }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
-              Scanning · updated 2m ago
+              Live · {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
             </div>
+            {/* City-first headline — the city IS the product */}
             <h1 style={{
               fontFamily: serif, fontStyle: 'italic', fontWeight: 400,
-              fontSize: 60, lineHeight: 0.92, margin: '14px 0 0',
+              fontSize: 54, lineHeight: 0.94, margin: '14px 0 0',
               letterSpacing: '-0.035em', color: T.ink,
             }}>
-              Where&rsquo;s<br />
-              <span style={{ color: T.accent }}>my vibe</span>
+              Tonight in<br />
+              <span style={{
+                color: T.accent,
+                textShadow: `0 0 40px ${T.accent}40`,
+              }}>{getCityConfig(city).displayName}</span>
             </h1>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 220, lineHeight: 1.5 }}>
-              {getCityConfig(city).displayName}&rsquo;s nightlife, pulled live from Instagram &amp; the web.
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 230, lineHeight: 1.5 }}>
+              Every venue&rsquo;s stories — scanned, sorted &amp; mapped live.
+            </div>
+            {/* Source ticker: what feeds the radar */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12, maxWidth: 250 }}>
+              {[
+                ['IG stories', '#ec4899'],
+                ['IG posts', '#eab308'],
+                ['Ticketing', '#10b981'],
+                ['Venue sites', '#f97316'],
+              ].map(([label, color]) => (
+                <span key={label} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '3px 8px', borderRadius: 999,
+                  border: `1px solid ${color}44`, background: `${color}12`,
+                  fontFamily: mono, fontSize: 8, fontWeight: 600,
+                  letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted,
+                }}>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: color as string, boxShadow: `0 0 6px ${color}` }} />
+                  {label}
+                </span>
+              ))}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button

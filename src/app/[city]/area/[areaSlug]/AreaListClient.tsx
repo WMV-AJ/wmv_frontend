@@ -8,6 +8,7 @@ import { type HierarchicalFilterState } from '@/types';
 import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
 import { trackEvent } from '@/lib/analytics/track';
+import { isUpcomingInCity } from '@/lib/city-date';
 import { findAreaBySlug, humanizeSlug } from '@/lib/areas';
 import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
 
@@ -45,14 +46,9 @@ export default function AreaListingPage() {
   // All upcoming events in this area → deduped stacked cards.
   const cards = useMemo(() => {
     if (!areaName) return [];
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
     const matched = allVenues.filter((v: any) => {
-      if (v.event_date) {
-        const d = new Date(v.event_date);
-        if (!isNaN(d.getTime()) && d < todayStart) return false; // upcoming only
-      }
+      // City-anchored upcoming check (see isUpcomingInCity).
+      if (!isUpcomingInCity(v.event_date, city)) return false;
       return v.area === areaName;
     });
 

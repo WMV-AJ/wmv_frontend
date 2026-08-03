@@ -30,3 +30,24 @@ export function getCityTonightDate(city: CitySlug | string | undefined = 'dubai'
   if (cityNow.getUTCHours() < 6) cityNow.setUTCDate(cityNow.getUTCDate() - 1);
   return cityNow.toISOString().slice(0, 10);
 }
+
+/**
+ * City-anchored "upcoming" check for event records.
+ *
+ * Event dates ("YYYY-MM-DD") parse as UTC midnight, so they're compared as
+ * UTC date-parts against the CITY's current date — never the viewer's local
+ * midnight. (A viewer in IST at 00:30 looking at Dubai, which is still on
+ * yesterday's date, must not see Dubai's tonight filtered out as "past".)
+ * Records without a parseable date are treated as upcoming.
+ */
+export function isUpcomingInCity(
+  eventDate: string | null | undefined,
+  city: CitySlug | string | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!eventDate) return true;
+  const d = new Date(eventDate);
+  if (Number.isNaN(d.getTime())) return true;
+  const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  return ds >= getCityDateString(city, now);
+}

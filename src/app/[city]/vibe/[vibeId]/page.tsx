@@ -8,6 +8,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import { getVibeDataById, matchesVibe } from '@/config/vibes-data';
 import { getCityDisplayName, getCityEvents } from '@/lib/server-data';
 import { buildItemListSchema } from '@/lib/seo-schema';
+import { isUpcomingInCity } from '@/lib/city-date';
 
 interface Props {
   params: Promise<{ city: string; vibeId: string }>;
@@ -41,13 +42,9 @@ export default async function VibeListPage({ params }: Props) {
   let itemList: Record<string, unknown> | null = null;
   if (vibe) {
     const events = await getCityEvents(city);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const matching = events.filter((e) => {
-      if (!e?.event_date) return false;
-      const d = new Date(e.event_date);
-      return !Number.isNaN(d.getTime()) && d >= today && matchesVibe(e, vibe);
-    });
+    const matching = events.filter(
+      (e) => e?.event_date && isUpcomingInCity(e.event_date, city) && matchesVibe(e, vibe),
+    );
     const name = await getCityDisplayName(city);
     itemList = buildItemListSchema(matching, city, `${vibe.seoNoun} in ${name}`);
   }
