@@ -489,6 +489,12 @@ export default function CityMapPage() {
 
         <div className="absolute inset-0">
           <MapView
+            // Force-remount when the resolved city coords change. MapLibre's
+            // init runs once with `[]` deps inside the wrapper, so on a
+            // dynamic city like Mumbai (not in the static SSR fallback) the
+            // map would otherwise stay pinned at Dubai's center + bounds
+            // even after CitiesProvider populates Mumbai's real config.
+            key={getMapCenter(city).join(',')}
             center={getMapCenter(city)}
             zoom={MAPCN_ZOOM}
             minZoom={MAPCN_MIN_ZOOM}
