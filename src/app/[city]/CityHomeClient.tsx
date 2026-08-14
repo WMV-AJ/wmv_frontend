@@ -925,10 +925,10 @@ export default function CityHome() {
                       display: 'flex', flexDirection: 'column',
                     }}
                   >
-                    {/* The actual deal, first and biggest */}
+                    {/* The actual deal, first — mono, swapped with the venue's serif */}
                     <div style={{
-                      fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: T.ink,
-                      lineHeight: 1.2, letterSpacing: '-0.01em',
+                      fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.ink,
+                      lineHeight: 1.45, letterSpacing: '0.4px',
                       display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                     }}>
                       {dealText}
@@ -946,7 +946,8 @@ export default function CityHome() {
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.event_name || ''}
                     </div>
-                    <div style={{ fontFamily: mono, fontSize: 9, color: T.accent, marginTop: 4, letterSpacing: '0.5px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {/* Venue — gold serif italic (took the deal's old font) */}
+                    <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: T.accent, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.name || ''}
                     </div>
                     <div style={{ fontFamily: mono, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
