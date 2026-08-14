@@ -277,6 +277,9 @@ const EventCard: React.FC<EventCardProps> = ({
   const city = (params?.city as string) || 'dubai';
 
   const [showShareModal, setShowShareModal] = useState(false);
+  // Tap on the thumbnail opens the media fullscreen instead of toggling
+  // the card expansion.
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; isVideo: boolean } | null>(null);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
 
   const handleDetailsToggle = (e: React.MouseEvent) => {
@@ -419,7 +422,17 @@ const EventCard: React.FC<EventCardProps> = ({
           })()}
         </div>
 
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch' }}>
+        <div
+          style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch', cursor: 'pointer' }}
+          onClick={(e) => {
+            const url = event.media_url_1 || event.media_url_2;
+            if (!url) return; // no media — let the tap toggle the card
+            e.stopPropagation();
+            const type = event.media_url_1 ? event.media_type_1 : event.media_type_2;
+            const isVideo = type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url);
+            setFullscreenMedia({ url, isVideo });
+          }}
+        >
           {(() => {
             const url = event.media_url_1 || event.media_url_2;
             const type = event.media_url_1 ? event.media_type_1 : event.media_type_2;
@@ -676,6 +689,49 @@ const EventCard: React.FC<EventCardProps> = ({
       </div>
 
     </div>
+
+    {/* Fullscreen media viewer (thumbnail tap) */}
+    {fullscreenMedia && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center"
+        style={{ background: 'rgba(0, 0, 0, 0.95)' }}
+        onClick={(e) => { e.stopPropagation(); setFullscreenMedia(null); }}
+      >
+        <button
+          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255, 255, 255, 0.15)', top: 'max(16px, env(safe-area-inset-top))' }}
+          onClick={(e) => { e.stopPropagation(); setFullscreenMedia(null); }}
+          aria-label="Close"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="max-w-full max-h-full p-4" onClick={(e) => e.stopPropagation()}>
+          {fullscreenMedia.isVideo ? (
+            <video
+              src={fullscreenMedia.url}
+              className="max-w-full max-h-[85vh] rounded-lg"
+              controls
+              autoPlay
+              loop
+              playsInline
+              poster={`/api/video-thumb?src=${encodeURIComponent(fullscreenMedia.url)}`}
+            />
+          ) : (
+            <Image
+              src={fullscreenMedia.url}
+              alt={event.event_name}
+              width={1080}
+              height={1350}
+              sizes="100vw"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              style={{ width: 'auto', height: 'auto' }}
+            />
+          )}
+        </div>
+      </div>
+    )}
 
     <ShareModal
       isOpen={showShareModal}
