@@ -189,15 +189,19 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function SpecCell({
-  label, value, note, valueColor = T.ink, first = false,
-}: { label: string; value: string; note?: string; valueColor?: string; first?: boolean }) {
+  label, value, note, valueColor = T.ink, first = false, grow = false,
+}: { label: string; value: string; note?: string; valueColor?: string; first?: boolean; grow?: boolean }) {
   return (
     <div style={{
       padding: first ? '14px 12px 14px 0' : '14px 12px',
       borderLeft: first ? 'none' : `1px solid ${T.line}`,
-      // Content-aware width: a cell with a long note (e.g. a wordy deal
-      // under ENTRY) grows instead of being squeezed into a rigid third.
-      flex: '1 1 auto', minWidth: 0, maxWidth: '55%',
+      // Content-aware widths: the cell flagged `grow` (longest note) takes
+      // every spare pixel; the others hug their content. `flex-basis: auto`
+      // alone can't do this — with long wrapping text all three cells'
+      // intrinsic widths overflow and shrink back to near-equal thirds.
+      ...(grow
+        ? { flex: '1 1 0%', minWidth: 0 }
+        : { flex: '0 1 auto', minWidth: 0, maxWidth: '34%' }),
     }}>
       <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '1.3px', textTransform: 'uppercase', color: T.inkFaint }}>
         {label}
@@ -476,18 +480,33 @@ export default function EventPageRedesign({
                 display: 'flex', alignItems: 'stretch',
                 borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}`,
               }}>
-                <SpecCell
-                  first
-                  label="When"
-                  value={time.start ? formatTimeClean(time.start) : formatDateLabel(event.event_date)}
-                  note={time.end ? `till ${formatTimeClean(time.end)}` : formatDateLabel(event.event_date)}
-                />
-                <SpecCell label="Entry" value={priceText || 'Free entry'} note={offerText || 'No offers listed'} valueColor={MONEY} />
-                <SpecCell
-                  label="Door"
-                  value={attrs.find(a => a.type === 'status')?.label || 'Walk-in'}
-                  note={attrs.find(a => a.type === 'timing')?.label || 'ID may be required'}
-                />
+                {(() => {
+                  const whenNote = time.end ? `till ${formatTimeClean(time.end)}` : formatDateLabel(event.event_date);
+                  const entryNote = offerText || 'No offers listed';
+                  const doorNote = attrs.find(a => a.type === 'timing')?.label || 'ID may be required';
+                  // Longest note wins the flexible column (ties/short notes →
+                  // ENTRY grows by default, it's the wordiest in practice).
+                  const lens = [whenNote.length, entryNote.length, doorNote.length];
+                  const growIdx = lens.indexOf(Math.max(...lens));
+                  return (
+                    <>
+                      <SpecCell
+                        first
+                        grow={growIdx === 0}
+                        label="When"
+                        value={time.start ? formatTimeClean(time.start) : formatDateLabel(event.event_date)}
+                        note={whenNote}
+                      />
+                      <SpecCell grow={growIdx === 1} label="Entry" value={priceText || 'Free entry'} note={entryNote} valueColor={MONEY} />
+                      <SpecCell
+                        grow={growIdx === 2}
+                        label="Door"
+                        value={attrs.find(a => a.type === 'status')?.label || 'Walk-in'}
+                        note={doorNote}
+                      />
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
