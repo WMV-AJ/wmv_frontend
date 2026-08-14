@@ -655,7 +655,7 @@ export default function CityHome() {
                 ? Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined) }} />
                 ))
-                : happeningNow.slice(0, 12).map((e) => (
+                : happeningNow.map((e) => (
                   <div
                     key={e.event_id || e.venue_id}
                     onClick={() => openEvent(e, 'happening_now')}
@@ -735,7 +735,7 @@ export default function CityHome() {
               {/* 2-up portrait scroller */}
               <div style={{ marginBottom: 14 }}>
                 <HScrollRail>
-                  {tonightEvents.slice(0, 10).map((e) => {
+                  {tonightEvents.map((e) => {
                     const cat = getPrimaryCat(e);
                     return (
                       <div
@@ -894,7 +894,7 @@ export default function CityHome() {
             />
             <HScrollRail>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {dealsTonight.slice(0, 12).map((e: any) => {
+              {dealsTonight.map((e: any) => {
                 const deal = Array.isArray(e.deals) && e.deals.length > 0 ? e.deals[0] : null;
                 const cfg = DEAL_LABELS[deal?.type as string] || DEAL_LABELS.special_offer;
                 const dealText = deal?.description || (e.special_offers ? String(e.special_offers) : '') || cfg.label;
@@ -1021,7 +1021,7 @@ export default function CityHome() {
                   </div>
                   <HScrollRail>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {events.slice(0, 12).map((e: any, idx: number) => {
+                    {events.map((e: any, idx: number) => {
                       const color = ['#f4c430', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
                       return (
                         <div
