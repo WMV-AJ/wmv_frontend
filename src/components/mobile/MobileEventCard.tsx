@@ -20,7 +20,6 @@ import {
   Navigation,
   ChevronUp,
   X,
-  Target,
   Globe,
   Tag,
   ChevronLeft,
@@ -346,12 +345,20 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     }
   };
 
-  // Get confidence score color
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return { bg: 'rgba(34, 197, 94, 0.15)', text: 'rgb(74, 222, 128)', border: 'rgba(34, 197, 94, 0.25)' };
-    if (score >= 60) return { bg: 'rgba(251, 191, 36, 0.15)', text: 'rgb(251, 191, 36)', border: 'rgba(251, 191, 36, 0.25)' };
-    return { bg: 'rgba(239, 68, 68, 0.15)', text: 'rgb(248, 113, 113)', border: 'rgba(239, 68, 68, 0.25)' };
+  // Uniform muted styling for the expanded card's detail rows — one neutral
+  // treatment instead of a different accent color per section.
+  const iconBadgeStyle: React.CSSProperties = {
+    background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
   };
+  const mutedIcon = darkMode ? '#a8a2b8' : '#6b7280';
+  const chipStyle: React.CSSProperties = {
+    background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    color: darkMode ? '#d6d3e0' : '#374151',
+    border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.08)',
+  };
+  const labelCls = `text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`;
+  const valueCls = `text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`;
 
   // =============================================
   // FULL-SCREEN EXPANDED VIEW
@@ -528,96 +535,108 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             </div>
           </div>
 
-          {/* Detail rows */}
+          {/* Detail rows — order: date+time, artists, genre, offers, entry,
+              event type, details, then venue details below. One muted style
+              throughout. */}
           <div className="space-y-4">
-            {/* Event Type */}
-            {event.event_categories && event.event_categories.length > 0 && (
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style={{ background: 'rgba(20, 184, 166, 0.15)', border: '1px solid rgba(20, 184, 166, 0.1)' }}>
-                  <Tag className="w-4 h-4 text-teal-500" />
+            {/* Date & Time — one line */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
+                <Calendar className="w-4 h-4" style={{ color: mutedIcon }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={labelCls}>Date & Time</p>
+                <p className={valueCls}>
+                  {formatDisplayDate(event.event_date) || 'TBA'}
+                  {event.event_time_start && (
+                    <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+                      {' '}· {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Artists */}
+            {event.artist && (
+              <div className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
+                  <Music className="w-4 h-4" style={{ color: mutedIcon }} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {event.event_categories.map(cat => cat.primary).join(', ')}
-                  </p>
-                  <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {event.event_categories.map(cat => cat.secondary).filter(Boolean).join(', ') || '—'}
-                  </p>
+                  <p className={labelCls}>Artists</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {event.artist.split(/[|,]/).map((artist, idx) => (
+                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={chipStyle}>
+                        {artist.trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Date */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                   style={{ background: 'rgba(212, 160, 23, 0.15)', border: '1px solid rgba(212, 160, 23, 0.1)' }}>
-                <Calendar className="w-4 h-4 text-amber-500" />
-              </div>
-              <div className="flex-1">
-                <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Date</p>
-                <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{formatDisplayDate(event.event_date) || 'TBA'}</p>
-              </div>
-            </div>
-
-            {/* Time */}
-            {event.event_time_start && (
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
-                  <Clock className="w-4 h-4 text-indigo-500" />
+            {/* Music Genres */}
+            {event.music_genre && (
+              <div className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
+                  <Music className="w-4 h-4" style={{ color: mutedIcon }} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Time</p>
-                  <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {event.event_time_start}
-                    {event.event_time_end && <span className={darkMode ? 'text-gray-500' : 'text-gray-400'}> — </span>}
-                    {event.event_time_end && event.event_time_end}
-                  </p>
+                  <p className={labelCls}>Music</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {event.music_genre.split(',').map((genre, idx) => (
+                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={chipStyle}>
+                        {genre.trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Entry Price */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                   style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                <DollarSign className="w-4 h-4 text-emerald-500" />
+            {/* Vibes */}
+            {event.event_vibe && (
+              <div className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
+                  <Sparkles className="w-4 h-4" style={{ color: mutedIcon }} />
+                </div>
+                <div className="flex-1">
+                  <p className={labelCls}>Vibes</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {event.event_vibe.split('|').map((vibe, idx) => (
+                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={chipStyle}>
+                        {vibe.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Entry</p>
-                <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{event.event_entry_price || 'TBA'}</p>
-              </div>
-            </div>
+            )}
 
-            {/* Deals & Offers */}
+            {/* Offers */}
             {event.deals && event.deals.length > 0 ? (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                     style={{ background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                  <Gift className="w-4 h-4 text-amber-500" />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
+                  <Gift className="w-4 h-4" style={{ color: mutedIcon }} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Deals & Offers</p>
+                  <p className={labelCls}>Offers</p>
                   <div className="mt-1.5 space-y-2">
                     {event.deals.map((deal, idx) => {
-                      const dealConfig: Record<string, { label: string; bg: string; text: string; border: string }> = {
-                        ladies_night: { label: 'Ladies Night', bg: 'rgba(236, 72, 153, 0.15)', text: darkMode ? 'rgb(249, 168, 212)' : 'rgb(190, 24, 93)', border: 'rgba(236, 72, 153, 0.25)' },
-                        '2for1': { label: 'Buy 1 Get 1', bg: 'rgba(16, 185, 129, 0.15)', text: darkMode ? 'rgb(110, 231, 183)' : 'rgb(5, 150, 105)', border: 'rgba(16, 185, 129, 0.25)' },
-                        happy_hour: { label: 'Happy Hour', bg: 'rgba(251, 191, 36, 0.15)', text: darkMode ? 'rgb(253, 224, 71)' : 'rgb(180, 130, 20)', border: 'rgba(251, 191, 36, 0.25)' },
-                        discount: { label: 'Discount', bg: 'rgba(59, 130, 246, 0.15)', text: darkMode ? 'rgb(147, 197, 253)' : 'rgb(37, 99, 235)', border: 'rgba(59, 130, 246, 0.25)' },
-                        free_entry: { label: 'Free Entry', bg: 'rgba(34, 197, 94, 0.15)', text: darkMode ? 'rgb(134, 239, 172)' : 'rgb(22, 163, 74)', border: 'rgba(34, 197, 94, 0.25)' },
-                        special_offer: { label: 'Special Offer', bg: 'rgba(249, 115, 22, 0.15)', text: darkMode ? 'rgb(253, 186, 116)' : 'rgb(194, 80, 10)', border: 'rgba(249, 115, 22, 0.25)' },
+                      const dealLabels: Record<string, string> = {
+                        ladies_night: 'Ladies Night',
+                        '2for1': 'Buy 1 Get 1',
+                        happy_hour: 'Happy Hour',
+                        discount: 'Discount',
+                        free_entry: 'Free Entry',
+                        special_offer: 'Special Offer',
                       };
-                      const config = dealConfig[deal.type] || dealConfig.special_offer;
                       return (
                         <div key={idx} className="rounded-lg px-2.5 py-2" style={{ background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0, 0, 0, 0.02)', border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.05)' }}>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                              style={{ background: config.bg, color: config.text, border: `1px solid ${config.border}` }}
-                            >
-                              {config.label}
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={chipStyle}>
+                              {dealLabels[deal.type] || dealLabels.special_offer}
                             </span>
                             {deal.timing && (
                               <span className={`text-[10px] font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{deal.timing}</span>
@@ -632,58 +651,55 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               </div>
             ) : event.event_offers && !event.event_offers.toLowerCase().includes('no special offers') ? (
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style={{ background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                  <Gift className="w-4 h-4 text-amber-500" />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
+                  <Gift className="w-4 h-4" style={{ color: mutedIcon }} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Offers</p>
-                  <p className={`text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{event.event_offers}</p>
+                  <p className={labelCls}>Offers</p>
+                  <p className={valueCls}>{event.event_offers}</p>
                 </div>
               </div>
             ) : null}
 
-            {/* AI Confidence Score */}
-            {event.confidence_score != null && (
+            {/* Entry */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
+                <DollarSign className="w-4 h-4" style={{ color: mutedIcon }} />
+              </div>
+              <div className="flex-1">
+                <p className={labelCls}>Entry</p>
+                <p className={valueCls}>{event.event_entry_price || 'TBA'}</p>
+              </div>
+            </div>
+
+            {/* Event type (e.g. Club Night) */}
+            {event.event_categories && event.event_categories.length > 0 && (
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style={{ background: getScoreColor(event.confidence_score).bg, border: `1px solid ${getScoreColor(event.confidence_score).border}` }}>
-                  <Target className="w-4 h-4" style={{ color: getScoreColor(event.confidence_score).text }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
+                  <Tag className="w-4 h-4" style={{ color: mutedIcon }} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>AI Confidence</p>
-                  <div className="flex items-center gap-2.5 mt-1">
-                    <div className="flex-1 h-2 rounded-full" style={{ background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0, 0, 0, 0.06)' }}>
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${event.confidence_score}%`,
-                          background: getScoreColor(event.confidence_score).text,
-                        }}
-                      />
-                    </div>
-                    <span className="text-[14px] font-bold" style={{ color: getScoreColor(event.confidence_score).text }}>
-                      {event.confidence_score}%
-                    </span>
-                  </div>
+                  <p className={labelCls}>
+                    {event.event_categories.map(cat => cat.primary).join(', ')}
+                  </p>
+                  <p className={valueCls}>
+                    {event.event_categories.map(cat => cat.secondary).filter(Boolean).join(', ') || '—'}
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Analysis Notes / Details */}
+            {/* Details */}
             {event.analysis_notes && (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                     style={{ background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                  <FileText className="w-4 h-4 text-amber-500" />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
+                  <FileText className="w-4 h-4" style={{ color: mutedIcon }} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Details</p>
+                  <p className={labelCls}>Details</p>
                   <p
-                    className="text-[12px] mt-1 leading-relaxed"
+                    className={`text-[12px] mt-1 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
                     style={{
-                      color: darkMode ? 'rgba(253, 224, 71, 0.85)' : 'rgb(120, 100, 50)',
-                      fontStyle: 'italic',
                       display: '-webkit-box',
                       WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
                       WebkitBoxOrient: 'vertical',
@@ -694,8 +710,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   </p>
                   {event.analysis_notes.length > 120 && (
                     <button
-                      className="text-[10px] font-semibold mt-1.5 transition-colors"
-                      style={{ color: darkMode ? 'rgba(253, 224, 71, 0.7)' : 'rgb(140, 120, 60)' }}
+                      className={`text-[10px] font-semibold mt-1.5 transition-colors ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
                       onClick={(e) => { e.stopPropagation(); setIsDetailsExpanded(prev => !prev); }}
                     >
                       {isDetailsExpanded ? 'Show less' : 'Show more'}
@@ -705,87 +720,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               </div>
             )}
 
-          </div>
-
-          {/* Artists, Genres & Vibes */}
-          {(event.artist || event.music_genre || event.event_vibe) && (
-            <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
-          )}
-          <div className="space-y-3">
-            {/* Artists */}
-            {event.artist && (
-              <div className="flex items-start gap-3">
-                <Music className="w-4 h-4 text-amber-500 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Artists</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {event.artist.split(/[|,]/).map((artist, idx) => (
-                      <span
-                        key={idx}
-                        className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                        style={{
-                          background: 'rgba(212, 160, 23, 0.15)',
-                          color: darkMode ? 'rgb(196, 167, 255)' : 'rgb(109, 40, 217)',
-                          border: '1px solid rgba(212, 160, 23, 0.25)',
-                        }}
-                      >
-                        {artist.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Music Genres */}
-            {event.music_genre && (
-              <div className="flex items-start gap-3">
-                <Music className="w-4 h-4 text-blue-500 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Music Genres</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {event.music_genre.split(',').map((genre, idx) => (
-                      <span
-                        key={idx}
-                        className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                        style={{
-                          background: 'rgba(59, 130, 246, 0.15)',
-                          color: darkMode ? 'rgb(147, 197, 253)' : 'rgb(37, 99, 235)',
-                          border: '1px solid rgba(59, 130, 246, 0.25)',
-                        }}
-                      >
-                        {genre.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Event Vibes */}
-            {event.event_vibe && (
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-pink-500 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Vibes</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {event.event_vibe.split('|').map((vibe, idx) => (
-                      <span
-                        key={idx}
-                        className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                        style={{
-                          background: 'rgba(236, 72, 153, 0.15)',
-                          color: darkMode ? 'rgb(249, 168, 212)' : 'rgb(190, 24, 93)',
-                          border: '1px solid rgba(236, 72, 153, 0.25)',
-                        }}
-                      >
-                        {vibe.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Venue Details Section */}
