@@ -214,12 +214,15 @@ function HScrollRail({ children }: { children: React.ReactNode }) {
 }
 
 // Colored event-category pill — same palette as the list/map CategoryPills.
-function CategoryPillTag({ primary, small }: { primary: string; small?: boolean }) {
+// `onMedia` swaps the translucent tint for a solid dark backing so the
+// colored text stays readable on top of photos/videos.
+function CategoryPillTag({ primary, small, onMedia }: { primary: string; small?: boolean; onMedia?: boolean }) {
   const hex = getHexColor(getCategoryColor(primary));
   return (
     <span style={{
       display: 'inline-block', padding: small ? '2px 7px' : '3px 9px', borderRadius: 999,
-      background: `${hex}1f`, border: `1px solid ${hex}66`, color: hex,
+      background: onMedia ? 'rgba(10,10,20,0.78)' : `${hex}1f`,
+      border: `1px solid ${hex}66`, color: hex,
       fontFamily: mono, fontSize: small ? 8 : 9, fontWeight: 700,
       letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap',
     }}>
@@ -765,7 +768,7 @@ export default function CityHome() {
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(10,10,20,0.92))' }} />
                         {cat && (
                           <div style={{ position: 'absolute', top: 8, left: 8 }}>
-                            <CategoryPillTag primary={cat} small />
+                            <CategoryPillTag primary={cat} small onMedia />
                           </div>
                         )}
                         <button
@@ -1023,6 +1026,7 @@ export default function CityHome() {
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {events.map((e: any, idx: number) => {
                       const color = ['#f4c430', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
+                      const wCat = getPrimaryCat(e);
                       return (
                         <div
                           key={`${e.venue_id}-${ds}`}
@@ -1030,6 +1034,11 @@ export default function CityHome() {
                           style={{ flex: '0 0 180px', width: 180, minWidth: 180, maxWidth: 180, scrollSnapAlign: 'start', cursor: e.event_id ? 'pointer' : 'default' }}
                         >
                           <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6, background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
+                            {wCat && (
+                              <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}>
+                                <CategoryPillTag primary={wCat} small onMedia />
+                              </div>
+                            )}
                             {e.media_url_1 ? (
                               <EventMedia
                                 src={e.media_url_1}
