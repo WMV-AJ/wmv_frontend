@@ -399,23 +399,6 @@ export default function CityHome() {
       });
   })();
 
-  // Colored category pills — city config first, organic fallback from data.
-  const categoryCounts = useMemo(() => {
-    const cfg = getCityConfig(city).eventCategories || [];
-    let base: string[] = cfg;
-    if (base.length === 0) {
-      const s = new Set<string>();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      venues.forEach(v => getEventCategories(v as any).forEach(c => { if (c.primary) s.add(c.primary); }));
-      base = Array.from(s);
-    }
-    return base
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map(cat => ({ cat, count: venues.filter(v => getEventCategories(v as any).some(c => c.primary === cat)).length }))
-      .filter(c => c.count > 0)
-      .sort((a, b) => b.count - a.count);
-  }, [venues, city]);
-
   const areaMap = new Map<string, number>();
   venues.forEach(v => {
     if (v.area) areaMap.set(v.area, (areaMap.get(v.area) || 0) + 1);
@@ -957,47 +940,6 @@ export default function CityHome() {
                 );
               })}
             </HScrollRail>
-          </div>
-        )}
-
-        {/* § Browse by category — colored pills → list view (today) */}
-        {(loading || categoryCounts.length > 0) && (
-          <div style={{ padding: '26px 18px 0' }}>
-            <SectionHeader label="Browse by category" />
-            {loading ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} style={skeletonStyle(96, 30, { borderRadius: 999 })} />
-                ))}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {categoryCounts.map(({ cat, count }) => {
-                  const hex = getHexColor(getCategoryColor(cat));
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        trackEvent('home_category_click', { category: cat, city });
-                        router.push(`/${city}/cards?cat=${encodeURIComponent(cat)}&date=today`);
-                      }}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 7,
-                        padding: '8px 13px', borderRadius: 999, cursor: 'pointer',
-                        background: `${hex}1a`, border: `1px solid ${hex}55`,
-                      }}
-                    >
-                      <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: hex }}>
-                        {getDisplayName(cat)}
-                      </span>
-                      <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, color: T.inkMuted }}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         )}
 
