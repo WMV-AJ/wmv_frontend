@@ -33,8 +33,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Bookmark, Share2, Star, Music, MapPin, Sparkles, Phone,
-  Instagram, Navigation, Ticket, Maximize2, ArrowUpRight,
+  Instagram, Navigation, Ticket, Maximize2, ArrowUpRight, Globe, Tag,
 } from 'lucide-react';
+import { getEventCategories } from '@/lib/category-utils';
+import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
 import { T, serif } from '@/lib/theme/tokens';
 import { formatPrice } from '@/config/cities.config';
 import { formatDateLabel, formatTimeClean, isEventHappeningNow } from '@/lib/time-utils';
@@ -65,6 +67,7 @@ export interface EventRecord {
   event_vibe: string;
   ticket_price: string;
   special_offers: string;
+  website_social?: string;
   confidence_score: number;
   analysis_notes: string;
   event_categories: any;
@@ -90,6 +93,22 @@ export interface RelatedEvent {
   venue_name_original: string;
   venue_area: string;
   media_url_1: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  event_categories?: any;
+}
+
+// Colored event-category pill — same palette as the list/map pills.
+function CategoryPillTag({ primary }: { primary: string }) {
+  const hex = getHexColor(getCategoryColor(primary));
+  return (
+    <span style={{
+      display: 'inline-block', padding: '2px 7px', borderRadius: 999,
+      background: `${hex}1f`, border: `1px solid ${hex}66`, color: hex,
+      fontSize: 8, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+    }}>
+      {getDisplayName(primary)}
+    </span>
+  );
 }
 
 // ── Design tokens used by this screen only ───────────────────────────────────
@@ -162,7 +181,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase',
-      color: T.inkFaint, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 14,
+      color: T.ink, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 14,
     }}>
       {children}
     </div>
@@ -253,6 +272,8 @@ export default function EventPageRedesign({
 
   const genres = event.music_genre ? event.music_genre.split(',').map(g => g.trim()).filter(Boolean) : [];
   const artists = event.artist ? event.artist.split(/[|,]/).map(a => a.trim()).filter(Boolean) : [];
+  const vibes = event.event_vibe ? event.event_vibe.split('|').map(v => v.trim()).filter(Boolean) : [];
+  const venueCategories = parseKeyedList(event.venue_category);
   const highlights = parseKeyedList(event.venue_highlights);
   const atmosphere = parseKeyedList(event.venue_atmosphere);
   const priceText = event.ticket_price ? formatPrice(event.ticket_price as any, city) : 'Free entry';
@@ -329,27 +350,28 @@ export default function EventPageRedesign({
         >
           <div style={{ paddingBottom: 104 }}>
 
-            {/* ── HERO ─────────────────────────────────────────────────────── */}
-            <div style={{ position: 'relative', height: HERO_H, overflow: 'hidden' }}>
-              {heroUrl ? (
+            {/* ── HERO — full, uncropped media; title sits BELOW it ────────── */}
+            <div style={{ position: 'relative', overflow: 'hidden', minHeight: heroUrl ? 120 : HERO_H, background: `linear-gradient(135deg, ${T.surfaceAlt}, ${T.bg})` }}>
+              {heroUrl && (
                 <EventMedia
                   src={heroUrl}
                   mediaType={event.media_type_1}
                   poster={siblingImage}
                   alt={event.event_name || 'Event'}
                   sizes="(max-width: 430px) 100vw, 430px"
-                  fill
+                  width={860}
+                  height={1075}
                   priority
                   videoAutoPlay
+                  style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }}
                 />
-              ) : (
-                <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${T.surfaceAlt}, ${T.bg})` }} />
               )}
 
+              {/* light top scrim so the circle buttons stay legible */}
               <div
                 style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none',
-                  background: 'linear-gradient(180deg, rgba(10,10,20,0.45) 0%, transparent 34%, rgba(10,10,20,0.97) 92%)',
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 110, pointerEvents: 'none',
+                  background: 'linear-gradient(180deg, rgba(10,10,20,0.5) 0%, transparent 100%)',
                 }}
               />
 
@@ -395,8 +417,10 @@ export default function EventPageRedesign({
                 </button>
               )}
 
-              {/* title block */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 20px', zIndex: 2 }}>
+            </div>
+
+            {/* title block — below the media, on the page background */}
+            <div style={{ padding: '16px 20px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {isLive && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 9px', borderRadius: 5, background: T.live, whiteSpace: 'nowrap' }}>
@@ -432,7 +456,6 @@ export default function EventPageRedesign({
                     </span>
                   )}
                 </div>
-              </div>
             </div>
 
             {/* ── SPEC STRIP ───────────────────────────────────────────────── */}
@@ -522,7 +545,7 @@ export default function EventPageRedesign({
             )}
 
             {/* ── THE NIGHT (artists / genres / attributes) ─────────────────── */}
-            {(artists.length > 0 || genres.length > 0 || attrs.length > 0) && (
+            {(artists.length > 0 || genres.length > 0 || vibes.length > 0 || attrs.length > 0) && (
               <div style={{ padding: '22px 20px 0' }}>
                 <SectionLabel>The night</SectionLabel>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -533,6 +556,9 @@ export default function EventPageRedesign({
                   ))}
                   {genres.map(g => (
                     <span key={g} style={{ padding: '6px 11px', borderRadius: 999, fontSize: 12, color: T.inkMuted, border: '1px solid rgba(255,255,255,0.14)' }}>{g}</span>
+                  ))}
+                  {vibes.map(v => (
+                    <span key={v} style={{ padding: '6px 11px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: 'rgba(236,72,153,0.14)', color: 'rgb(249,168,212)', border: '1px solid rgba(236,72,153,0.3)' }}>{v}</span>
                   ))}
                   {attrs.map(t => {
                     const c = attrColors[t.type] || attrColors.venue;
@@ -621,11 +647,29 @@ export default function EventPageRedesign({
                   </div>
                 </button>
               </div>
+
+              {/* Event website / social (was on the old page) */}
+              {event.website_social && (
+                <a
+                  href={event.website_social.startsWith('http') ? event.website_social : `https://${event.website_social}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: R_CARD, background: T.surface, border: `1px solid ${T.line}`, textDecoration: 'none', marginTop: 8 }}
+                >
+                  <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: '#60a5fa' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, color: T.ink, fontWeight: 600 }}>Event site</div>
+                    <div style={{ fontSize: 10, color: T.inkFaint, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {event.website_social.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                    </div>
+                  </div>
+                </a>
+              )}
             </div>
 
             {/* ── VENUE ────────────────────────────────────────────────────── */}
             <div style={{ padding: '22px 20px 0' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.inkFaint, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 6 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.ink, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 6 }}>
                 {venueName}
               </div>
               {event.venue_address && (
@@ -642,10 +686,30 @@ export default function EventPageRedesign({
                   </span>
                 </div>
               )}
+              {venueCategories.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderBottom: `1px solid ${T.lineFaint}` }}>
+                  <Tag className="w-[15px] h-[15px] flex-shrink-0 mt-0.5" style={{ color: T.inkFaint }} />
+                  <span style={{ fontSize: 13, color: T.inkMuted, lineHeight: 1.4 }}>{venueCategories.join(', ')}</span>
+                </div>
+              )}
               {hasPhone && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${T.lineFaint}` }}>
                   <Phone className="w-[15px] h-[15px] flex-shrink-0" style={{ color: T.inkFaint }} />
                   <span style={{ fontSize: 13, color: T.inkMuted }}>{event.venue_phone}</span>
+                </div>
+              )}
+              {event.venue_website && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
+                  <Globe className="w-[15px] h-[15px] flex-shrink-0" style={{ color: T.inkFaint }} />
+                  <a
+                    href={event.venue_website.startsWith('http') ? event.venue_website : `https://${event.venue_website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 13, color: '#60a5fa', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {event.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
+                  </a>
                 </div>
               )}
             </div>
@@ -653,28 +717,49 @@ export default function EventPageRedesign({
             {/* ── YOU MAY ALSO LIKE ────────────────────────────────────────── */}
             {related.length > 0 && (
               <div style={{ padding: '22px 20px 0' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.inkFaint, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 4 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.ink, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 4 }}>
                   You may also like
                 </div>
                 {related.map(r => {
                   const rt = parseTime(r.event_time);
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const rCat = getEventCategories(r as any)[0]?.primary ?? null;
                   return (
                     <div
                       key={r.event_id}
                       onClick={() => router.push(`/${city}/event/${r.event_id}`)}
-                      style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center', padding: '13px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer' }}
                     >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 17, lineHeight: 1.1, color: T.ink }}>
-                          {r.venue_name_original || r.venue_name}
+                      {/* Thumbnail (as on the old page) */}
+                      <div style={{ position: 'relative', width: 55, height: 55, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)' }}>
+                        {r.media_url_1 ? (
+                          <EventMedia
+                            src={r.media_url_1}
+                            alt={r.event_name || ''}
+                            sizes="96px"
+                            fill
+                            lazyVideo
+                          />
+                        ) : (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Music className="w-5 h-5" style={{ color: T.inkFaint }} />
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.accent, whiteSpace: 'nowrap' }}>
+                            {formatDateLabel(r.event_date)}{rt.start ? ` · ${formatTimeClean(rt.start)}` : ''}
+                          </span>
+                          {rCat && <CategoryPillTag primary={rCat} />}
                         </div>
-                        <div style={{ fontSize: 10, color: T.inkFaint, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.ink, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {r.event_name}
                         </div>
+                        <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 13, color: T.inkMuted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.venue_name_original || r.venue_name}
+                        </div>
                       </div>
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.accent, whiteSpace: 'nowrap' }}>
-                        {formatDateLabel(r.event_date)}{rt.start ? ` ${formatTimeClean(rt.start)}` : ''}
-                      </span>
                       <ArrowUpRight className="w-3 h-3 flex-shrink-0" style={{ color: T.inkFaint }} />
                     </div>
                   );
