@@ -237,6 +237,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [fullscreenMediaIdx, setFullscreenMediaIdx] = useState<number | null>(null);
+  // Expired/dead media URLs (old Instagram CDN links 403 once their signature
+  // lapses) — swap to the placeholder instead of a broken-image glyph.
+  const [failedMediaIdx, setFailedMediaIdx] = useState<ReadonlySet<number>>(new Set());
+  const markMediaFailed = (idx: number) => setFailedMediaIdx(prev => {
+    if (prev.has(idx)) return prev;
+    const next = new Set(prev);
+    next.add(idx);
+    return next;
+  });
   // Build media list from real DB media, separating images from videos
   const isVideoUrl = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
   const allMedia: Array<{ url: string; isVideo: boolean }> = [];
@@ -425,7 +434,18 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             >
               {activeImages.map((src, idx) => (
                 <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
-                  {activeMediaTypes[idx] ? (
+                  {failedMediaIdx.has(idx) ? (
+                    <Image
+                      src={PLACEHOLDER_IMAGE}
+                      alt={`${venue.venue_name} ${idx + 1}`}
+                      width={640}
+                      height={800}
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="w-full h-auto block"
+                      style={{ width: '100%', height: 'auto' }}
+                      draggable={false}
+                    />
+                  ) : activeMediaTypes[idx] ? (
                     <video
                       src={src}
                       className="w-full h-auto block"
@@ -435,6 +455,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                       loop
                       preload="metadata"
                       poster={videoThumbUrl(src, siblingImage)}
+                      onError={() => markMediaFailed(idx)}
                     />
                   ) : (
                     <Image
@@ -446,6 +467,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                       className="w-full h-auto block"
                       style={{ width: '100%', height: 'auto' }}
                       draggable={false}
+                      onError={() => markMediaFailed(idx)}
                     />
                   )}
                 </div>
@@ -933,7 +955,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               </button>
             )}
             <div className="max-w-full max-h-full p-4" onClick={(e) => e.stopPropagation()}>
-              {activeMediaTypes[fullscreenMediaIdx] ? (
+              {failedMediaIdx.has(fullscreenMediaIdx) ? (
+                <Image
+                  src={PLACEHOLDER_IMAGE}
+                  alt={`${venue.venue_name} ${fullscreenMediaIdx + 1}`}
+                  width={1080}
+                  height={1350}
+                  sizes="100vw"
+                  className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                  style={{ width: 'auto', height: 'auto' }}
+                />
+              ) : activeMediaTypes[fullscreenMediaIdx] ? (
                 <video
                   src={activeImages[fullscreenMediaIdx]}
                   className="max-w-full max-h-[85vh] rounded-lg"
@@ -942,6 +974,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   loop
                   playsInline
                   poster={videoThumbUrl(activeImages[fullscreenMediaIdx], siblingImage)}
+                  onError={() => markMediaFailed(fullscreenMediaIdx)}
                 />
               ) : (
                 <Image
@@ -952,6 +985,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   sizes="100vw"
                   className="max-w-full max-h-[85vh] object-contain rounded-lg"
                   style={{ width: 'auto', height: 'auto' }}
+                  onError={() => markMediaFailed(fullscreenMediaIdx)}
                 />
               )}
             </div>

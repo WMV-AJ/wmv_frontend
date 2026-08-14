@@ -262,10 +262,14 @@ export function transformVenueDataToStackedCards(
         venue_location: venue.area || '',
         venue_instagram: venue.final_instagram,
         venue_phone: venue.phone,
-        venue_coordinates: (venue.venue_lat && venue.venue_lng) ? {
-          lat: venue.venue_lat,
-          lng: venue.venue_lng
-        } : undefined,
+        // API rows use 'lat'/'lng'; DB-shaped rows use 'venue_lat'/'venue_lng'.
+        // (Only checking venue_* left coordinates undefined for every API card,
+        // which silently disabled distance-from-map-center sorting.)
+        venue_coordinates: (() => {
+          const lat = venue.venue_lat ?? (venue as { lat?: number }).lat;
+          const lng = venue.venue_lng ?? (venue as { lng?: number }).lng;
+          return (lat && lng) ? { lat, lng } : undefined;
+        })(),
 
         // New field mappings (API returns 'address'/'website', DB uses 'venue_*' prefix)
         venue_website: venue.website || venue.venue_website,

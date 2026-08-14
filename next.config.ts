@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '/wmv-ig-images/**' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
+      // A chunk of media rows still point at raw Instagram CDN URLs (the
+      // scraper hasn't mirrored them to GCS). Without these, the optimizer
+      // 400s and the tile shows a broken image.
+      { protocol: 'https', hostname: '**.cdninstagram.com' },
+      { protocol: 'https', hostname: '**.fbcdn.net' },
     ],
     // AVIF first (30-50% smaller than WebP for photos), WebP fallback.
     // AVIF encodes are slower but the 24h on-disk cache amortizes them.

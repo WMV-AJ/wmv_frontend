@@ -19,6 +19,19 @@ import os from 'node:os';
 import path from 'node:path';
 
 const ALLOWED_PREFIX = 'https://storage.googleapis.com/wmv-ig-images/';
+
+// Some media rows still carry raw Instagram CDN URLs (not yet mirrored to
+// GCS). Allow those hosts too — still an explicit allow-list, no open proxy.
+function isAllowedMediaUrl(url: string): boolean {
+  if (url.startsWith(ALLOWED_PREFIX)) return true;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') return false;
+    return u.hostname.endsWith('.cdninstagram.com') || u.hostname.endsWith('.fbcdn.net');
+  } catch {
+    return false;
+  }
+}
 const CACHE_DIR = path.join(os.tmpdir(), 'wmv-video-thumbs');
 const FFMPEG_TIMEOUT_MS = 15_000;
 
@@ -75,7 +88,7 @@ async function extractFrame(src: string, outPath: string): Promise<Buffer | null
 // "random default thumbnail" on every video. Prefer the caller-provided
 // sibling image; otherwise 404 and let the client's onError decide.
 function failureResponse(fallback: string | null) {
-  if (fallback && fallback.startsWith(ALLOWED_PREFIX)) {
+  if (fallback && isAllowedMediaUrl(fallback)) {
     return NextResponse.redirect(fallback, {
       status: 302,
       // Short-lived, never immutable: once ffmpeg is available the real
@@ -97,7 +110,7 @@ export async function GET(request: Request) {
 
   // Strip any media-fragment before validating/fetching.
   const cleanSrc = src.split('#')[0];
-  if (!cleanSrc.startsWith(ALLOWED_PREFIX)) {
+  if (!isAllowedMediaUrl(cleanSrc)) {
     return NextResponse.json({ error: 'src not allowed' }, { status: 400 });
   }
 
