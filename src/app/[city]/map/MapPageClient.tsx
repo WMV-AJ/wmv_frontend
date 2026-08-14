@@ -965,7 +965,9 @@ export default function CityMapPage() {
           )}
         </div>
 
-        <NavPill city={city} active="map" bottomOffset={236} />
+        {/* 206 puts the pill ~46px above the card strip (measured gap was
+            76px — reduced 40%). */}
+        <NavPill city={city} active="map" bottomOffset={206} />
 
         <MobileEventList
           cards={cards}
