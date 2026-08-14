@@ -212,19 +212,6 @@ function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void })
   return null;
 }
 
-function MapClickHandler({ onClick }: { onClick: () => void }) {
-  const { map, isLoaded } = useMap();
-
-  useEffect(() => {
-    if (!map || !isLoaded) return;
-    const handler = () => onClick();
-    map.on('click', handler);
-    return () => { map.off('click', handler); };
-  }, [map, isLoaded, onClick]);
-
-  return null;
-}
-
 function PanToVenue({
   venue,
   programmaticPanRef,
@@ -738,14 +725,11 @@ export default function CityMapPage() {
   }, [filteredVenues]);
 
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-  const [mapClickCount, setMapClickCount] = useState(0);
   const [highlightedVenueId, setHighlightedVenueId] = useState<string | null>(null);
   const [highlightedOffer, setHighlightedOffer] = useState<string | null>(null);
   const [presetRangeDates, setPresetRangeDates] = useState<string[]>([]);
   const [navHeight, setNavHeight] = useState(140);
   const [currentZoom, setCurrentZoom] = useState(MAPCN_ZOOM);
-  // Prevents the map-level click dismiss from firing when a marker is clicked
-  const markerJustClickedRef = useRef(false);
 
   const showLabels = currentZoom >= 14;
 
@@ -765,8 +749,6 @@ export default function CityMapPage() {
   }, []);
 
   const handleVenueSelect = useCallback((venue: Venue) => {
-    markerJustClickedRef.current = true;
-    setTimeout(() => { markerJustClickedRef.current = false; }, 0);
     setSelectedVenue(venue);
   }, []);
 
@@ -882,7 +864,6 @@ export default function CityMapPage() {
               programmaticPanRef={programmaticPanRef}
               onUserCenterChange={handleUserCenterChange}
             />
-            <MapClickHandler onClick={() => { if (!markerJustClickedRef.current) setMapClickCount((c) => c + 1); }} />
 
             {venues.map((venue) => {
               const venueIdStr = String(venue.venue_id);
@@ -913,12 +894,16 @@ export default function CityMapPage() {
                   <div style={{ position: 'relative', width: 22, height: 22 }}>
                     <div style={{
                       position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: '#f4c430', opacity: 0.25,
+                      // Blue "you are here" dot — deliberately NOT the venue
+                      // palette (nightclub markers are the same gold this dot
+                      // used to be, which made your own position read as a
+                      // venue).
+                      background: '#4285f4', opacity: 0.3,
                       animation: 'wmv-loc-pulse 2s ease-in-out infinite',
                     }} />
                     <div style={{
                       position: 'absolute', inset: 5, borderRadius: '50%',
-                      background: '#f4c430', border: '2.5px solid #fff',
+                      background: '#4285f4', border: '2.5px solid #fff',
                       boxShadow: '0 1px 6px rgba(0,0,0,0.5)',
                     }} />
                   </div>
@@ -948,15 +933,15 @@ export default function CityMapPage() {
               width: 40,
               height: 40,
               borderRadius: '50%',
-              background: liveLocation.enabled ? '#f4c430' : 'rgba(20,20,31,0.9)',
-              border: `1px solid ${liveLocation.enabled ? '#f4c430' : 'rgba(255,255,255,0.14)'}`,
+              background: liveLocation.enabled ? '#4285f4' : 'rgba(20,20,31,0.9)',
+              border: `1px solid ${liveLocation.enabled ? '#4285f4' : 'rgba(255,255,255,0.14)'}`,
               boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
               cursor: 'pointer',
               transition: 'background 0.2s ease',
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke={liveLocation.enabled ? '#0a0a14' : '#f5f2ed'} strokeWidth="2"
+              stroke={liveLocation.enabled ? '#fff' : '#f5f2ed'} strokeWidth="2"
               strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
@@ -992,7 +977,6 @@ export default function CityMapPage() {
           venueDateMap={venueDateMap}
           selectedDates={filters.activeDates}
           onDateChange={handleDateChange}
-          dismissSignal={mapClickCount}
           onActiveCardChange={setHighlightedVenueId}
           onActiveOfferChange={setHighlightedOffer}
           presetRangeDates={presetRangeDates}
