@@ -15,8 +15,17 @@ const HIDE_ALWAYS = new Set([
   'poi_stadium',
   'poi_park',
   'housenumber',
-  'place_hamlet',
 ]);
+
+// Area/neighbourhood labels (Marina, JBR, Indiranagar…): Carto only shows
+// them from zoom 12 and in a dim #666 — zoomed out, the map had no area
+// names at all. Show them from zoom 10 and brighten them so they read on
+// the dark basemap. NOTE: place_hamlet carries class=neighbourhood, so it
+// must never go into HIDE_ALWAYS.
+const AREA_LABELS: Record<string, { minzoom: number; maxzoom: number; color: string }> = {
+  place_suburbs: { minzoom: 10, maxzoom: 16, color: 'rgba(196,192,206,1)' },
+  place_hamlet: { minzoom: 10, maxzoom: 16, color: 'rgba(196,192,206,1)' },
+};
 
 // Residential/service roads: from zoom 14 (Carto default is ~13).
 const MINOR_ROAD_RE = /^(road|tunnel|bridge)_(service|minor)_/;
@@ -46,6 +55,10 @@ export function applyBasemapSimplification(map: MapLibreMap): void {
     try {
       if (HIDE_ALWAYS.has(id)) {
         map.setLayoutProperty(id, 'visibility', 'none');
+      } else if (id in AREA_LABELS) {
+        const cfg = AREA_LABELS[id];
+        map.setLayerZoomRange(id, cfg.minzoom, cfg.maxzoom);
+        map.setPaintProperty(id, 'text-color', cfg.color);
       } else if (PATH_RE.test(id)) {
         map.setLayerZoomRange(id, 15, 24);
       } else if (MINOR_ROAD_RE.test(id)) {
