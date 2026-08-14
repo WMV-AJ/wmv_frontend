@@ -467,23 +467,29 @@ const EventCard: React.FC<EventCardProps> = ({
       </div>
 
       {/* ARTISTS SECTION */}
-      {event.artist && (
-        <div className="stacked-card-artists-section">
-          <div className="stacked-card-artists-badges">
-            {event.artist.split(',').map((artist, idx) => (
-              <span key={idx} className="stacked-card-artist-badge">
-                {artist.trim()}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* EXPANDABLE CONTENT */}
       <div
         ref={isExpanded ? contentRef : null}
         className="stacked-card-content"
       >
+        {event.artist && (
+          <div className="stacked-card-info-row">
+            <div className="stacked-card-info-icon stacked-card-genre-icon">
+              <MusicIcon />
+            </div>
+            <div className="stacked-card-info-content">
+              <span className="stacked-card-info-label">ARTISTS</span>
+              <div className="stacked-card-artists-badges">
+                {event.artist.split(',').map((artist, idx) => (
+                  <span key={idx} className="stacked-card-artist-badge">
+                    {artist.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="stacked-card-info-row">
           <div className="stacked-card-info-icon stacked-card-entry-icon">
             <DollarIcon />

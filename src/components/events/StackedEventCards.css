@@ -304,7 +304,6 @@
 }
 
 .stacked-card-time-row:empty,
-.stacked-card-artists-section:empty,
 .stacked-card-event-section:empty {
   display: none;
   margin: 0;
@@ -386,8 +385,10 @@
   flex: 1;
 }
 
+/* Consistent type scale for expanded content:
+   labels 10px / values & notes & venue rows 13px / badges 12px. */
 .stacked-card-info-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   color: rgba(120, 200, 230, 0.95);
   text-transform: uppercase;
@@ -395,14 +396,14 @@
 }
 
 .stacked-card-info-value {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #ffffff;
   line-height: 1.3;
 }
 
 .stacked-card-offers-text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #ffffff;
   line-height: 1.3;
@@ -701,26 +702,22 @@
    NEW SECTIONS - Artists, Genres, Vibes, etc.
    =========================================== */
 
-/* Artists Section */
-.stacked-card-artists-section {
-  margin-top: 8px;
-}
-
+/* Artists (labeled info-row inside the expandable content) */
 .stacked-card-artists-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 6px;
 }
 
 .stacked-card-artist-badge {
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: rgba(212, 160, 23, 0.2);
   border: 1px solid rgba(212, 160, 23, 0.4);
   border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: rgba(196, 181, 253, 0.95);
-  text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
@@ -733,11 +730,11 @@
 }
 
 .stacked-card-genre-badge {
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: rgba(59, 130, 246, 0.2);
   border: 1px solid rgba(59, 130, 246, 0.4);
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: rgba(147, 197, 253, 0.95);
 }
@@ -755,11 +752,11 @@
 }
 
 .stacked-card-vibe-badge {
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: rgba(236, 72, 153, 0.2);
   border: 1px solid rgba(236, 72, 153, 0.4);
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: rgba(251, 207, 232, 0.95);
 }
@@ -770,7 +767,7 @@
 
 /* Analysis Notes */
 .stacked-card-analysis-notes {
-  font-size: 11px;
+  font-size: 13px;
   color: rgba(251, 191, 36, 0.95);
   line-height: 1.5;
   margin-top: 4px;
@@ -793,7 +790,7 @@
 
 .stacked-card-details-toggle {
   margin-top: 8px;
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(251, 191, 36, 0.95);
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -801,7 +798,7 @@
   background: none;
   border: none;
   display: inline;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .stacked-card-details-toggle:hover {
@@ -830,7 +827,7 @@
   align-items: flex-start;
   gap: 10px;
   margin-top: 10px;
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(229, 231, 235, 0.9);
 }
 
@@ -894,19 +891,5 @@
   }
 }
 
-@media (max-width: 500px) {
-  .stacked-card-artist-badge {
-    font-size: 12px;
-    padding: 5px 10px;
-  }
-
-  .stacked-card-genre-badge,
-  .stacked-card-vibe-badge {
-    font-size: 11px;
-    padding: 5px 10px;
-  }
-
-  .stacked-card-venue-detail-row {
-    font-size: 13px;
-  }
-}
+/* (Badge and venue-row sizes are now uniform across viewports — see the
+   consistent type scale by .stacked-card-info-label.) */
