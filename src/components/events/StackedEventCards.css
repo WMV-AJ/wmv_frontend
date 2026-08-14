@@ -94,8 +94,10 @@
   margin-bottom: 16px;
 }
 
+/* Expanded keeps the SAME header gap as collapsed — bumping it to 16px made
+   the text column visibly narrower the moment a card was tapped (titles and
+   dates re-wrapped), which read as "the card shrinks on click". */
 .stacked-card.expanded .stacked-card-header {
-  gap: 16px;
   margin-bottom: 20px;
 }
 
