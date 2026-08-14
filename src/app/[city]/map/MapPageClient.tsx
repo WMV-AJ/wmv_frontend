@@ -965,9 +965,9 @@ export default function CityMapPage() {
           )}
         </div>
 
-        {/* 206 puts the pill ~46px above the card strip (measured gap was
-            76px — reduced 40%). */}
-        <NavPill city={city} active="map" bottomOffset={206} />
+        {/* 228 vertically centers the 48px pill on the same line as the 40px
+            location toggle (bottom: 232 → shared center at 252). */}
+        <NavPill city={city} active="map" bottomOffset={228} />
 
         <MobileEventList
           cards={cards}
