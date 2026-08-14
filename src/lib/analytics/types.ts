@@ -21,6 +21,9 @@ export type AnalyticsEventName =
   // Home-page tiles (these were already fired by [city]/page.tsx but missing here)
   | 'vibe_pill_click'
   | 'area_row_click'
+  | 'home_search_submit'
+  | 'home_category_click'
+  | 'home_weekend_day_click'
   // Landing intro + marketing funnels
   //   Visitor funnel: page_view(/) → intro_completed|intro_skipped →
   //     landing_cta_click → page_view(/{city}) → nav_view_change → view_event

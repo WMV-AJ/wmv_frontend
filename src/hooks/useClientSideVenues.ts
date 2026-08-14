@@ -183,13 +183,17 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
         console.log('🎯 FILTER - Venue included (date match):', venue.name, 'Date:', venueDateKey);
       }
 
-      // Apply search query
+      // Apply search query. API rows carry `name` (venue_name is the DB-shaped
+      // alias) — matching only venue_name silently matched nothing for /api/venues
+      // data. Also match the event name so "brunch"-style queries work.
       if (flatFilters.searchQuery && flatFilters.searchQuery.trim()) {
         const query = flatFilters.searchQuery.toLowerCase();
-        const venueName = venue.venue_name?.toLowerCase() || '';
+        const venueName = (venue.venue_name || venue.name || '').toLowerCase();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const eventName = String((venue as any).event_name || '').toLowerCase();
         const venueCategory = venue.category?.toLowerCase() || venue.venue_category?.toLowerCase() || '';
 
-        if (!venueName.includes(query) && !venueCategory.includes(query)) {
+        if (!venueName.includes(query) && !eventName.includes(query) && !venueCategory.includes(query)) {
           return false;
         }
       }

@@ -8,6 +8,8 @@ import { getCityDateString } from '@/lib/city-date';
 import {
   Heart,
   ArrowUpRight,
+  Search,
+  ChevronRight,
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
@@ -15,6 +17,8 @@ import NavPill from '@/components/navigation/NavPill';
 import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
 import { slugifyArea } from '@/lib/areas';
+import { getEventCategories } from '@/lib/category-utils';
+import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
 
 // ── THEME TOKENS ─────────────────────────────────────────────────────
 const T = {
@@ -56,6 +60,16 @@ const RADAR_DOTS = [
   { t: '28%', l: '58%', c: '#ec4899' },
   { t: '68%', l: '82%', c: '#f4c430' },
 ];
+
+// Deal chip labels/colors — mirrors MobileEventCard's dealConfig.
+const DEAL_LABELS: Record<string, { label: string; rgb: string }> = {
+  ladies_night: { label: 'Ladies Night', rgb: '236, 72, 153' },
+  '2for1': { label: 'Buy 1 Get 1', rgb: '16, 185, 129' },
+  happy_hour: { label: 'Happy Hour', rgb: '251, 191, 36' },
+  discount: { label: 'Discount', rgb: '59, 130, 246' },
+  free_entry: { label: 'Free Entry', rgb: '34, 197, 94' },
+  special_offer: { label: 'Special Offer', rgb: '249, 115, 22' },
+};
 
 // ── HELPERS ───────────────────────────────────────────────────────────
 
@@ -111,6 +125,110 @@ function isLiveNow(
   return h >= startH && h < endH;
 }
 
+function utcDateKey(eventDate: string): string | null {
+  const d = new Date(eventDate);
+  if (isNaN(d.getTime())) return null;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getPrimaryCat(e: any): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cats = getEventCategories(e as any);
+  return cats[0]?.primary ?? null;
+}
+
+// ── SMALL BUILDING BLOCKS ─────────────────────────────────────────────
+
+function SectionHeader({ label, right, onClick }: {
+  label: React.ReactNode;
+  right?: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 12,
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+        {label}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+// Horizontal rail with a right-edge fade + chevron so it's obvious the row
+// scrolls. Affordance hides once the user reaches the end (or when the
+// content doesn't overflow at all).
+function HScrollRail({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [showHint, setShowHint] = useState(false);
+
+  const update = () => {
+    const el = ref.current;
+    if (!el) return;
+    const overflowing = el.scrollWidth > el.clientWidth + 8;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+    setShowHint(overflowing && !atEnd);
+  };
+
+  // Re-measure whenever the rendered children change (data arriving).
+  useEffect(() => { update(); });
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div
+        ref={ref}
+        onScroll={update}
+        style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', scrollSnapType: 'x mandatory', paddingBottom: 4 }}
+      >
+        {children}
+      </div>
+      {showHint && (
+        <>
+          <div style={{
+            position: 'absolute', top: 0, bottom: 4, right: 0, width: 44,
+            pointerEvents: 'none',
+            background: `linear-gradient(to left, ${T.bg}, transparent)`,
+          }} />
+          <button
+            aria-label="Scroll right"
+            onClick={() => ref.current?.scrollBy({ left: (ref.current?.clientWidth ?? 200) * 0.8, behavior: 'smooth' })}
+            style={{
+              position: 'absolute', top: '50%', right: 4, transform: 'translateY(-50%)',
+              width: 28, height: 28, borderRadius: '50%', padding: 0,
+              background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            }}
+          >
+            <ChevronRight size={15} color="#fff" />
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Colored event-category pill — same palette as the list/map CategoryPills.
+function CategoryPillTag({ primary, small }: { primary: string; small?: boolean }) {
+  const hex = getHexColor(getCategoryColor(primary));
+  return (
+    <span style={{
+      display: 'inline-block', padding: small ? '2px 7px' : '3px 9px', borderRadius: 999,
+      background: `${hex}1f`, border: `1px solid ${hex}66`, color: hex,
+      fontFamily: mono, fontSize: small ? 8 : 9, fontWeight: 700,
+      letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+    }}>
+      {getDisplayName(primary)}
+    </span>
+  );
+}
+
 // ── COMPONENT ─────────────────────────────────────────────────────────
 export default function CityHome() {
   const router = useRouter();
@@ -119,13 +237,8 @@ export default function CityHome() {
 
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [totalVenues, setTotalVenues] = useState<number>(0);
-  const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [tonightVisible, setTonightVisible] = useState(4);
+  const [searchQ, setSearchQ] = useState('');
   const heroRef = useRef<HTMLDivElement | null>(null);
-  // Featured-slider swipe support
-  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
-  const swipedRef = useRef(false);
-  const manualPauseUntilRef = useRef(0);
 
   // Venue data comes from the shared VenueDataProvider (root layout) — this
   // page used to fire its own /api/venues fetch concurrently with the
@@ -143,10 +256,8 @@ export default function CityHome() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (allVenues as any[]).filter((v) => {
       if (!v.event_date) return true;
-      const d = new Date(v.event_date);
-      if (isNaN(d.getTime())) return true;
-      const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-      return ds >= cityToday;
+      const ds = utcDateKey(v.event_date);
+      return !ds || ds >= cityToday;
     });
   }, [allVenues, city]);
 
@@ -167,36 +278,16 @@ export default function CityHome() {
     try { window.localStorage.setItem('wmv_last_city', city); } catch { /* ignore */ }
   }, [city]);
 
-  useEffect(() => {
-    if (loading) return;
-    const interval = setInterval(() => {
-      // Hold auto-rotation briefly after a manual swipe.
-      if (Date.now() < manualPauseUntilRef.current) return;
-      setFeaturedIndex(prev => prev + 1);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [loading]);
-
   const todayStr = getCityDateString(city);
   const dubaiHour = getCityHour(city);
 
   const todayVenues = venues.filter(v => {
-    const d = v.event_date ? new Date(v.event_date) : null;
-    if (!d) return false;
-    const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-    return ds === todayStr;
+    if (!v.event_date) return false;
+    return utcDateKey(v.event_date) === todayStr;
   });
-  const statsVibes = todayVenues.filter(v => {
-    if (!v.event_time) return false;
-    const t = v.event_time.trim().toLowerCase();
-    if (t === 'all day') return true;
-    const parts = v.event_time.split('-').map((p: string) => p.trim());
-    const startH = parseTimeHours(parts[0] || '');
-    return startH !== null && startH >= 18;
-  }).length;
-  const statsLive = venues.filter(v => isLiveNow(v.event_date, v.event_time, todayStr, dubaiHour)).length;
 
   const storiesData = (() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const venueMap = new Map<number, any>();
     todayVenues.forEach(v => {
       if (!venueMap.has(v.venue_id)) venueMap.set(v.venue_id, v);
@@ -217,6 +308,9 @@ export default function CityHome() {
       .map(v => ({
         id: String(v.venue_id ?? v.event_id ?? Math.random()),
         event_id: v.event_id,
+        venue_id: v.venue_id,
+        place_id: v.place_id,
+        event_date: v.event_date,
         venue: v.name || 'Venue',
         user: v.final_instagram ? v.final_instagram.replace(/^@/, '') : (v.name || 'venue').toLowerCase().replace(/\s+/g, ''),
         color: '#f4c430',
@@ -237,6 +331,7 @@ export default function CityHome() {
       const startH = parseTimeHours(parts[0] || '');
       return startH !== null && startH >= 18;
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .sort((a: any, b: any) => {
       const sa = parseTimeHours((a.event_time || '').split('-')[0]?.trim() || '') ?? 99;
       const sb = parseTimeHours((b.event_time || '').split('-')[0]?.trim() || '') ?? 99;
@@ -246,34 +341,77 @@ export default function CityHome() {
       return (a.venue_id ?? 0) - (b.venue_id ?? 0);
     });
 
-  const now = new Date();
-  const dubaiNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
-  const weekendDays: string[] = [];
-  for (let i = 0; i <= 7; i++) {
-    const d = new Date(dubaiNow);
-    d.setUTCDate(d.getUTCDate() + i);
-    const dow = d.getUTCDay();
-    if (dow === 5 || dow === 6) {
-      const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-      if (!weekendDays.includes(ds)) weekendDays.push(ds);
-      if (weekendDays.length === 2) break;
+  const tonightVenueCount = new Set(tonightEvents.map(e => e.venue_id)).size;
+
+  // Events running RIGHT NOW (city clock), deduped by event.
+  const happeningNow = (() => {
+    const seen = new Set<string>();
+    return venues
+      .filter(v => isLiveNow(v.event_date, v.event_time, todayStr, dubaiHour))
+      .filter(v => {
+        const k = String(v.event_id ?? v.venue_id);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .sort((a, b) =>
+        (parseTimeHours((a.event_time || '').split('-')[0]?.trim() || '') ?? 99) -
+        (parseTimeHours((b.event_time || '').split('-')[0]?.trim() || '') ?? 99));
+  })();
+
+  // Tonight's events that carry a deal. NOTE: home rows have `special_offers`
+  // (the `event_offers` rename happens later in the stacked-card adapter).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dealsTonight = tonightEvents.filter((e: any) => {
+    if (Array.isArray(e.deals) && e.deals.length > 0) return true;
+    const so = e.special_offers ? String(e.special_offers) : '';
+    return !!so && !so.toLowerCase().includes('no special');
+  });
+
+  // Upcoming Fri / Sat / Sun anchored to the CITY's calendar (today counts
+  // if it is one of them). Replaces the old hardcoded Dubai +4h offset.
+  const weekendByDay = (() => {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const anchor = new Date(`${todayStr}T00:00:00Z`);
+    return [5, 6, 0]
+      .map(dow => {
+        const d = new Date(anchor);
+        const delta = (dow - d.getUTCDay() + 7) % 7;
+        d.setUTCDate(d.getUTCDate() + delta);
+        const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+        return { ds, label: `${dayNames[dow]} · ${d.getUTCDate()} ${monthNames[d.getUTCMonth()]}` };
+      })
+      .sort((a, b) => (a.ds < b.ds ? -1 : 1))
+      .map(({ ds, label }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const map = new Map<string, any>();
+        venues.forEach(v => {
+          if (!v.event_date || utcDateKey(v.event_date) !== ds) return;
+          const key = `${v.venue_id}-${ds}`;
+          if (!map.has(key)) map.set(key, v);
+        });
+        const events = Array.from(map.values()).sort((a, b) => (a.event_time || '').localeCompare(b.event_time || ''));
+        return { ds, label, events };
+      });
+  })();
+
+  // Colored category pills — city config first, organic fallback from data.
+  const categoryCounts = useMemo(() => {
+    const cfg = getCityConfig(city).eventCategories || [];
+    let base: string[] = cfg;
+    if (base.length === 0) {
+      const s = new Set<string>();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      venues.forEach(v => getEventCategories(v as any).forEach(c => { if (c.primary) s.add(c.primary); }));
+      base = Array.from(s);
     }
-  }
-  const weekendMap = new Map<string, any>();
-  venues.forEach(v => {
-    const d = v.event_date ? new Date(v.event_date) : null;
-    if (!d) return;
-    const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-    if (!weekendDays.includes(ds)) return;
-    const key = `${v.venue_id}-${ds}`;
-    if (!weekendMap.has(key)) weekendMap.set(key, { ...v, _ds: ds });
-  });
-  const weekendEvents = Array.from(weekendMap.values()).sort((a, b) => {
-    if (a._ds !== b._ds) return a._ds < b._ds ? -1 : 1;
-    const at = a.event_time || '';
-    const bt = b.event_time || '';
-    return at.localeCompare(bt);
-  });
+    return base
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map(cat => ({ cat, count: venues.filter(v => getEventCategories(v as any).some(c => c.primary === cat)).length }))
+      .filter(c => c.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }, [venues, city]);
 
   const areaMap = new Map<string, number>();
   venues.forEach(v => {
@@ -298,6 +436,13 @@ export default function CityHome() {
     borderRadius: 2,
     ...extra,
   });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const openEvent = (e: any, source: string) => {
+    if (!e.event_id) return;
+    trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source });
+    router.push(`/${city}/event/${e.event_id}`);
+  };
 
   return (
     <main
@@ -443,7 +588,7 @@ export default function CityHome() {
           </div>
         </div>
 
-        {/* Stats strip */}
+        {/* Stats strip — real numbers only */}
         <div style={{
           margin: '14px 18px 0',
           borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}`,
@@ -457,18 +602,20 @@ export default function CityHome() {
               </div>
             ))
             : [
-              { n: statsVibes, l: 'Vibes tonight' },
-              { n: totalVenues, l: 'Venues' },
-              { n: statsLive, l: 'Live now', live: true },
+              { n: tonightEvents.length, l: 'Events tonight' },
+              { n: totalVenues, l: 'Venues tracked' },
+              { n: tonightVenueCount, l: 'Venues live', live: true },
             ].map((s, i) => (
               <div key={i} style={{
                 padding: '14px 10px',
                 borderLeft: i > 0 ? `1px solid ${T.line}` : 'none',
               }}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 <div style={{ fontFamily: serif, fontStyle: 'italic', fontWeight: 400, fontSize: 36, color: (s as any).live ? T.live : T.accent, lineHeight: 1 }}>
                   {s.n}
                 </div>
                 <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {(s as any).live && <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />}
                   {s.l}
                 </div>
@@ -477,17 +624,532 @@ export default function CityHome() {
           }
         </div>
 
-        {/* § A — Fresh from instagram */}
-        <div style={{ padding: '22px 18px 0' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 10,
+        {/* Search — lands on the list view for today */}
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            const q = searchQ.trim();
+            trackEvent('home_search_submit', { city, q });
+            router.push(`/${city}/cards?date=today${q ? `&q=${encodeURIComponent(q)}` : ''}`);
+          }}
+          style={{
+            margin: '12px 18px 0', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 14px', borderRadius: 10,
+            background: T.surface, border: `1px solid ${T.line}`,
+          }}
+        >
+          <Search size={15} style={{ color: T.inkMuted, flexShrink: 0 }} />
+          <input
+            value={searchQ}
+            onChange={e => setSearchQ(e.target.value)}
+            placeholder="Search venues, events…"
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: T.ink, fontFamily: mono, fontSize: 12, minWidth: 0 }}
+          />
+          <button type="submit" style={{
+            background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+            fontFamily: mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: T.accent,
           }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
-              Fresh from instagram
-            </div>
-          </div>
+            Go
+          </button>
+        </form>
 
+        {/* § Happening now — live right now, hidden when empty */}
+        {(loading || happeningNow.length > 0) && (
+          <div style={{ padding: '26px 18px 0' }}>
+            <SectionHeader
+              label={<>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
+                Happening now
+              </>}
+              right={<span style={{ fontFamily: mono, fontSize: 10, color: T.live, fontWeight: 600 }}>{loading ? '—' : `${happeningNow.length} LIVE`}</span>}
+            />
+            <HScrollRail>
+              {loading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined) }} />
+                ))
+                : happeningNow.slice(0, 12).map((e) => (
+                  <div
+                    key={e.event_id || e.venue_id}
+                    onClick={() => openEvent(e, 'happening_now')}
+                    style={{
+                      flex: '0 0 130px', scrollSnapAlign: 'start', position: 'relative',
+                      aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
+                      background: `linear-gradient(135deg, ${T.live}22, ${T.bg})`,
+                      border: `1px solid ${T.line}`, cursor: e.event_id ? 'pointer' : 'default',
+                    }}
+                  >
+                    {e.media_url_1 && (
+                      <EventMedia
+                        src={e.media_url_1}
+                        mediaType={e.media_type_1}
+                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                        alt={e.name || ''}
+                        sizes="140px"
+                        fill
+                        lazyVideo
+                      />
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 45%, rgba(10,10,20,0.9))' }} />
+                    <div style={{
+                      position: 'absolute', top: 6, left: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
+                      background: T.live, color: '#fff', fontFamily: mono, fontSize: 8, fontWeight: 700,
+                      padding: '2px 5px', letterSpacing: '0.5px', borderRadius: 3,
+                    }}>
+                      <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#fff', animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
+                      LIVE
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 6, left: 6, right: 6 }}>
+                      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 14, color: T.ink, lineHeight: 1.1 }}>
+                        {e.name || ''}
+                      </div>
+                      {e.event_time && (
+                        <div style={{ fontFamily: mono, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
+                          {e.event_time}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              }
+            </HScrollRail>
+          </div>
+        )}
+
+        {/* § Tonight in <city> */}
+        <div style={{ padding: '26px 18px 0' }}>
+          <SectionHeader
+            label={`Tonight in ${getCityConfig(city).displayName}`}
+            right={<span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>{loading ? '—' : `${tonightEvents.length} EVENTS`}</span>}
+          />
+
+          {loading ? (
+            <>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                {[0, 1].map(i => (
+                  <div key={i} style={{ flex: '0 0 48%', aspectRatio: '3/4', ...skeletonStyle('100%', undefined) }} />
+                ))}
+              </div>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '22px 1fr auto', gap: 10, padding: '12px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'start' }}>
+                  <div style={skeletonStyle(18, 12)} />
+                  <div>
+                    <div style={skeletonStyle(80, 10)} />
+                    <div style={{ ...skeletonStyle(120, 16), marginTop: 6 }} />
+                    <div style={{ ...skeletonStyle(100, 10), marginTop: 6 }} />
+                  </div>
+                  <div style={skeletonStyle(28, 28)} />
+                </div>
+              ))}
+            </>
+          ) : tonightEvents.length > 0 ? (
+            <>
+              {/* 2-up portrait scroller */}
+              <div style={{ marginBottom: 14 }}>
+                <HScrollRail>
+                  {tonightEvents.slice(0, 10).map((e) => {
+                    const cat = getPrimaryCat(e);
+                    return (
+                      <div
+                        key={e.event_id || e.venue_id}
+                        onClick={() => openEvent(e, 'tonight_scroller')}
+                        style={{
+                          flex: '0 0 48%', scrollSnapAlign: 'start', position: 'relative',
+                          aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
+                          background: 'linear-gradient(135deg, #1c1c2a, #0a0a14)',
+                          border: `1px solid ${T.line}`, cursor: e.event_id ? 'pointer' : 'default',
+                        }}
+                      >
+                        {e.media_url_1 ? (
+                          <EventMedia
+                            src={e.media_url_1}
+                            mediaType={e.media_type_1}
+                            poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                            alt={e.name || ''}
+                            sizes="(max-width: 430px) 48vw, 206px"
+                            fill
+                            lazyVideo
+                          />
+                        ) : (
+                          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
+                        )}
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(10,10,20,0.92))' }} />
+                        {cat && (
+                          <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                            <CategoryPillTag primary={cat} small />
+                          </div>
+                        )}
+                        <button
+                          onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
+                          style={{
+                            position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 4,
+                            background: 'rgba(20,20,31,0.75)', border: `1px solid ${T.line}`, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                          }}
+                          aria-label="Like"
+                        >
+                          <Heart style={{ width: 12, height: 12, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
+                        </button>
+                        <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8 }}>
+                          <div style={{
+                            fontFamily: serif, fontStyle: 'italic', fontSize: 16, fontWeight: 400,
+                            color: T.ink, lineHeight: 1.05, letterSpacing: '-0.015em',
+                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                          }}>
+                            {e.event_name || e.name}
+                          </div>
+                          <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.accent, letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {e.name || ''}{e.event_time ? ` · ${e.event_time}` : ''}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </HScrollRail>
+              </div>
+
+              {/* List — first 4 */}
+              {tonightEvents.slice(0, 4).map((e, i) => {
+                const cat = getPrimaryCat(e);
+                return (
+                <div key={e.event_id || e.venue_id || i} style={{
+                  display: 'grid', gridTemplateColumns: '22px 72px 1fr auto', gap: 10,
+                  padding: '10px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'center',
+                  minHeight: 88,
+                  cursor: e.event_id ? 'pointer' : 'default',
+                }} onClick={() => openEvent(e, 'tonight_list')}>
+                  {/* Number */}
+                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  {/* Thumbnail — left */}
+                  <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden', borderRadius: 4 }}>
+                    {e.media_url_1 ? (
+                      <EventMedia
+                        src={e.media_url_1}
+                        mediaType={e.media_type_1}
+                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                        alt={e.name || ''}
+                        sizes="96px"
+                        fill
+                        lazyVideo
+                      />
+                    ) : (
+                      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
+                    )}
+                  </div>
+                  {/* Text */}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                      {e.area || ''}
+                    </div>
+                    <div style={{
+                      fontFamily: serif, fontStyle: 'italic', fontSize: 18, fontWeight: 400,
+                      color: T.ink, letterSpacing: '-0.015em', lineHeight: 1.1, marginTop: 2,
+                    }}>
+                      {e.name || e.venue}
+                    </div>
+                    {/* Always reserve this row — keeps height consistent across cards */}
+                    <div style={{ fontSize: 11, color: T.inkMuted, marginTop: 3, minHeight: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {e.event_name || ''}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, fontFamily: mono, fontSize: 9, color: T.inkMuted, fontWeight: 500, letterSpacing: '0.5px', minHeight: 15, flexWrap: 'wrap' }}>
+                      {cat && <CategoryPillTag primary={cat} small />}
+                      {e.event_time && <span>{e.event_time}</span>}
+                      {e.rating && <span>★ {e.rating}</span>}
+                    </div>
+                  </div>
+                  {/* Like — top right */}
+                  <button
+                    onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
+                    style={{ width: 28, height: 28, border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
+                    aria-label="Like"
+                  >
+                    <Heart style={{ width: 13, height: 13, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
+                  </button>
+                </div>
+                );
+              })}
+              {/* See all → list view for today */}
+              {tonightEvents.length > 4 && (
+                <button
+                  onClick={() => {
+                    trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'tonight_see_all' });
+                    router.push(`/${city}/cards?date=today`);
+                  }}
+                  style={{
+                    width: '100%', marginTop: 10, padding: '10px 0',
+                    border: `1px solid ${T.line}`, background: 'transparent',
+                    fontFamily: mono, fontSize: 10, fontWeight: 600,
+                    letterSpacing: '1px', textTransform: 'uppercase',
+                    color: T.accent, cursor: 'pointer',
+                  }}
+                >
+                  See all {tonightEvents.length} events tonight →
+                </button>
+              )}
+            </>
+          ) : (
+            <div style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, padding: '20px 0', textAlign: 'center' }}>
+              No events found for tonight
+            </div>
+          )}
+        </div>
+
+        {/* § Tonight's deals — hidden when empty */}
+        {!loading && dealsTonight.length > 0 && (
+          <div style={{ padding: '26px 18px 0' }}>
+            <SectionHeader
+              label={"Tonight's deals"}
+              right={<span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>{dealsTonight.length} OFFERS</span>}
+            />
+            <HScrollRail>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {dealsTonight.slice(0, 12).map((e: any) => {
+                const deal = Array.isArray(e.deals) && e.deals.length > 0 ? e.deals[0] : null;
+                const cfg = DEAL_LABELS[deal?.type as string] || DEAL_LABELS.special_offer;
+                return (
+                  <div
+                    key={e.event_id || e.venue_id}
+                    onClick={() => openEvent(e, 'deals_rail')}
+                    style={{
+                      flex: '0 0 200px', scrollSnapAlign: 'start',
+                      padding: '12px 12px 14px', borderRadius: 8,
+                      background: T.surface, border: `1px solid ${T.line}`,
+                      cursor: e.event_id ? 'pointer' : 'default',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-block', padding: '3px 8px', borderRadius: 999,
+                      background: `rgba(${cfg.rgb}, 0.15)`, border: `1px solid rgba(${cfg.rgb}, 0.35)`,
+                      color: `rgb(${cfg.rgb})`, fontFamily: mono, fontSize: 8, fontWeight: 700,
+                      letterSpacing: '0.06em', textTransform: 'uppercase',
+                    }}>
+                      {cfg.label}
+                    </span>
+                    <div style={{
+                      fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: T.ink,
+                      lineHeight: 1.15, marginTop: 8, letterSpacing: '-0.01em',
+                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                    }}>
+                      {e.event_name || e.name}
+                    </div>
+                    <div style={{ fontFamily: mono, fontSize: 9, color: T.inkMuted, marginTop: 6, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {e.name || ''}{e.event_time ? ` · ${e.event_time}` : ''}
+                    </div>
+                    {deal?.timing && (
+                      <div style={{ fontFamily: mono, fontSize: 8, color: T.inkFaint, marginTop: 3, letterSpacing: '0.5px' }}>
+                        {deal.timing}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </HScrollRail>
+          </div>
+        )}
+
+        {/* § Browse by category — colored pills → list view (today) */}
+        {(loading || categoryCounts.length > 0) && (
+          <div style={{ padding: '26px 18px 0' }}>
+            <SectionHeader label="Browse by category" />
+            {loading ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={skeletonStyle(96, 30, { borderRadius: 999 })} />
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {categoryCounts.map(({ cat, count }) => {
+                  const hex = getHexColor(getCategoryColor(cat));
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        trackEvent('home_category_click', { category: cat, city });
+                        router.push(`/${city}/cards?cat=${encodeURIComponent(cat)}&date=today`);
+                      }}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 7,
+                        padding: '8px 13px', borderRadius: 999, cursor: 'pointer',
+                        background: `${hex}1a`, border: `1px solid ${hex}55`,
+                      }}
+                    >
+                      <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: hex }}>
+                        {getDisplayName(cat)}
+                      </span>
+                      <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, color: T.inkMuted }}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* § Pick your vibe */}
+        <div style={{ padding: '26px 18px 0' }}>
+          <SectionHeader label="Pick your vibe" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 2 }}>
+            {vibeGrid.map((v) => {
+              const Icon = v.Icon;
+              return (
+                <div key={v.id}
+                  onClick={() => {
+                    trackEvent('vibe_pill_click', { vibe: v.id, city });
+                    router.push(`/${city}/vibe/${v.id}`);
+                  }}
+                  style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 12px', borderRadius: 999,
+                  border: `1px solid ${T.line}`, background: T.surface,
+                  cursor: 'pointer',
+                }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: '50%', background: v.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <Icon style={{ width: 13, height: 13, color: '#0a0a14' }} />
+                  </div>
+                  <span style={{
+                    fontFamily: serif, fontStyle: 'italic', fontSize: 14, fontWeight: 400,
+                    color: T.ink, letterSpacing: '-0.01em', lineHeight: 1, flex: 1,
+                  }}>{v.label}</span>
+                  <span style={{
+                    fontFamily: mono, fontSize: 10, fontWeight: 700,
+                    color: v.color, lineHeight: 1, flexShrink: 0,
+                  }}>{loading ? '—' : v.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* § Weekend — one row per day (Fri / Sat / Sun) */}
+        {(loading || weekendByDay.some(d => d.events.length > 0)) && (
+          <div style={{ padding: '26px 18px 0' }}>
+            <SectionHeader label="Weekend Vibes" />
+            {loading ? (
+              <div style={{ display: 'flex', gap: 10, overflowX: 'hidden' }}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} style={{ flexShrink: 0, width: 180 }}>
+                    <div style={{ ...skeletonStyle(180, undefined), aspectRatio: '3/4' }} />
+                    <div style={{ ...skeletonStyle(140, 10), marginTop: 8 }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              weekendByDay.filter(d => d.events.length > 0).map(({ ds, label, events }) => (
+                <div key={ds} style={{ marginBottom: 18 }}>
+                  <div
+                    onClick={() => {
+                      trackEvent('home_weekend_day_click', { city, date: ds });
+                      router.push(`/${city}/cards?date=${ds}`);
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '4px 4px 8px', cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 17, color: T.ink, letterSpacing: '-0.01em' }}>
+                      {label}
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
+                      {events.length} events
+                      <ArrowUpRight size={12} strokeWidth={2.2} />
+                    </span>
+                  </div>
+                  <HScrollRail>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {events.slice(0, 12).map((e: any, idx: number) => {
+                      const color = ['#f4c430', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
+                      return (
+                        <div
+                          key={`${e.venue_id}-${ds}`}
+                          onClick={() => openEvent(e, 'weekend_rail')}
+                          style={{ flex: '0 0 180px', scrollSnapAlign: 'start', cursor: e.event_id ? 'pointer' : 'default' }}
+                        >
+                          <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6, background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
+                            {e.media_url_1 ? (
+                              <EventMedia
+                                src={e.media_url_1}
+                                mediaType={e.media_type_1}
+                                poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                                alt={e.name || ''}
+                                sizes="(max-width: 430px) 40vw, 172px"
+                                fill
+                                lazyVideo
+                              />
+                            ) : null}
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(10,10,20,0.85))' }} />
+                            <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8 }}>
+                              <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: color, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                                {e.area || ''}
+                              </div>
+                              <div style={{
+                                fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: T.ink, lineHeight: 1.05, marginTop: 2,
+                              }}>{e.name || e.venue}</div>
+                            </div>
+                          </div>
+                          {e.event_name && (
+                            <div style={{ fontSize: 10, color: T.inkMuted, marginTop: 6, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
+                              {e.event_name}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </HScrollRail>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* § Areas */}
+        <div style={{ padding: '26px 18px 0' }}>
+          <SectionHeader label="Areas" />
+          {loading
+            ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}` }}>
+                <div style={skeletonStyle(20, 10)} />
+                <div style={skeletonStyle(120, 16)} />
+                <div style={skeletonStyle(60, 10)} />
+                <div style={skeletonStyle(13, 13)} />
+              </div>
+            ))
+            : areas.map((a, i) => (
+              <div key={a.label}
+                onClick={() => {
+                  trackEvent('area_row_click', { area: a.label, city });
+                  router.push(`/${city}/area/${slugifyArea(a.label)}`);
+                }}
+                style={{
+                display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
+                padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer',
+              }}>
+                <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: T.ink, letterSpacing: '-0.01em' }}>
+                  {a.label}
+                </span>
+                <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
+                  {a.count} events
+                </span>
+                <ArrowUpRight size={13} strokeWidth={2} style={{ color: T.inkFaint, flexShrink: 0 }} />
+              </div>
+            ))
+          }
+        </div>
+
+        {/* § Fresh from instagram — now at the bottom */}
+        <div style={{ padding: '26px 18px 0' }}>
+          <SectionHeader label="Fresh from instagram" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
@@ -537,418 +1199,6 @@ export default function CityHome() {
               ))
             }
           </div>
-        </div>
-
-        {/* § B — Tonight */}
-        <div style={{ padding: '28px 18px 0' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 14,
-          }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
-              Tonight in {getCityConfig(city).displayName}
-            </div>
-            <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
-              {loading ? '—' : `${tonightEvents.length} EVENTS`}
-            </span>
-          </div>
-
-          {loading ? (
-            <>
-              <div style={{ ...skeletonStyle('100%', undefined), aspectRatio: '4/3', marginBottom: 14 }} />
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '22px 1fr auto', gap: 10, padding: '12px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'start' }}>
-                  <div style={skeletonStyle(18, 12)} />
-                  <div>
-                    <div style={skeletonStyle(80, 10)} />
-                    <div style={{ ...skeletonStyle(120, 16), marginTop: 6 }} />
-                    <div style={{ ...skeletonStyle(100, 10), marginTop: 6 }} />
-                  </div>
-                  <div style={skeletonStyle(28, 28)} />
-                </div>
-              ))}
-            </>
-          ) : tonightEvents.length > 0 ? (
-            <>
-              {(() => {
-                // Euclidean modulo — featuredIndex can go negative on a right-swipe.
-                const fi = tonightEvents.length > 0
-                  ? ((featuredIndex % tonightEvents.length) + tonightEvents.length) % tonightEvents.length
-                  : 0;
-                const e = tonightEvents[fi];
-                const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
-                const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
-                return (
-                  <div
-                    style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', marginBottom: 14, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, cursor: e.event_id ? 'pointer' : 'default', touchAction: 'pan-y' }}
-                    // Manual swipe: left/right changes the featured card and
-                    // pauses auto-rotation for a few seconds. A real swipe
-                    // suppresses the tap-navigation that follows pointerup.
-                    onPointerDown={(ev) => { swipeStartRef.current = { x: ev.clientX, y: ev.clientY }; }}
-                    onPointerUp={(ev) => {
-                      const start = swipeStartRef.current;
-                      swipeStartRef.current = null;
-                      if (!start) return;
-                      const dx = ev.clientX - start.x;
-                      const dy = ev.clientY - start.y;
-                      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-                        swipedRef.current = true;
-                        manualPauseUntilRef.current = Date.now() + 8000;
-                        setFeaturedIndex((prev) => prev + (dx < 0 ? 1 : -1));
-                      }
-                    }}
-                    onClick={() => {
-                    if (swipedRef.current) { swipedRef.current = false; return; }
-                    if (!e.event_id) return;
-                    trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'tonight_featured' });
-                    router.push(`/${city}/event/${e.event_id}`);
-                  }}>
-                    {hasVideo ? (
-                      <EventMedia
-                        src={e.media_url_1}
-                        mediaType="video"
-                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                        alt={e.venue_name || ''}
-                        sizes="(max-width: 430px) 100vw, 430px"
-                        fill
-                        videoAutoPlay
-                        style={{ filter: 'saturate(1.1)' }}
-                      />
-                    ) : hasImage ? (
-                      <EventMedia
-                        src={e.media_url_1}
-                        alt={e.venue_name || ''}
-                        sizes="(max-width: 430px) 100vw, 430px"
-                        fill
-                        priority
-                        style={{ filter: 'saturate(1.1)' }}
-                      />
-                    ) : (
-                      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, #f4c43022, #ec489922, #0a0a14)` }} />
-                    )}
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(10,10,20,0.92))' }} />
-                    <div style={{ position: 'absolute', top: 10, left: 10 }}>
-                      <span style={{ background: T.chipLight, color: T.inkInverse, fontFamily: mono, fontSize: 9, fontWeight: 700, padding: '3px 6px', letterSpacing: '0.8px' }}>FEATURED</span>
-                    </div>
-                    <button
-                      onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
-                      style={{
-                        position: 'absolute', top: 8, right: 8, width: 32, height: 32, borderRadius: 0,
-                        background: T.surface, border: `1.5px solid ${T.line}`, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                      }}
-                      aria-label="Like"
-                    >
-                      <Heart style={{ width: 15, height: 15, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
-                    </button>
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 14 }}>
-                      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                        {e.area || ''}{e.event_time ? ` · ${e.event_time}` : ''}
-                      </div>
-                      <div style={{
-                        fontFamily: serif, fontStyle: 'italic', fontWeight: 400, fontSize: 32,
-                        color: T.ink, lineHeight: 0.95, marginTop: 4, letterSpacing: '-0.02em',
-                      }}>
-                        {e.name || e.venue}
-                      </div>
-                      {e.event_name && (
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
-                          {e.event_name}
-                        </div>
-                      )}
-                      {/* Progress dots */}
-                      <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
-                        {tonightEvents.map((_, idx) => (
-                          <div
-                            key={idx}
-                            onClick={(ev) => { ev.stopPropagation(); setFeaturedIndex(idx); }}
-                            style={{
-                              width: idx === fi ? 16 : 4, height: 4,
-                              background: idx === fi ? T.accent : 'rgba(255,255,255,0.3)',
-                              borderRadius: 2, cursor: 'pointer',
-                              transition: 'width 0.3s ease, background 0.3s ease',
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {tonightEvents.slice(0, tonightVisible).map((e, i) => {
-                const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
-                const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
-                const rawCat = e.category;
-                const catLabel = (() => {
-                  if (!rawCat) return '';
-                  if (typeof rawCat === 'string' && rawCat.trim().startsWith('[')) {
-                    try { const arr = JSON.parse(rawCat); return Array.isArray(arr) ? arr[0] : rawCat; } catch {}
-                  }
-                  if (Array.isArray(rawCat)) return rawCat[0] || '';
-                  return rawCat;
-                })();
-                return (
-                <div key={e.event_id || e.venue_id || i} style={{
-                  display: 'grid', gridTemplateColumns: '22px 72px 1fr auto', gap: 10,
-                  padding: '10px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'center',
-                  minHeight: 88,
-                  cursor: e.event_id ? 'pointer' : 'default',
-                }} onClick={() => {
-                  if (!e.event_id) return;
-                  trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'tonight_list' });
-                  router.push(`/${city}/event/${e.event_id}`);
-                }}>
-                  {/* Number */}
-                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  {/* Thumbnail — left */}
-                  <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden', borderRadius: 4 }}>
-                    {(hasVideo || hasImage) ? (
-                      <EventMedia
-                        src={e.media_url_1}
-                        mediaType={e.media_type_1}
-                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                        alt={e.venue_name || ''}
-                        sizes="96px"
-                        fill
-                        lazyVideo
-                      />
-                    ) : (
-                      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
-                    )}
-                  </div>
-                  {/* Text */}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
-                      {e.area || ''}{catLabel ? ` · ${catLabel}` : ''}
-                    </div>
-                    <div style={{
-                      fontFamily: serif, fontStyle: 'italic', fontSize: 18, fontWeight: 400,
-                      color: T.ink, letterSpacing: '-0.015em', lineHeight: 1.1, marginTop: 2,
-                    }}>
-                      {e.name || e.venue}
-                    </div>
-                    {/* Always reserve this row — keeps height consistent across cards */}
-                    <div style={{ fontSize: 11, color: T.inkMuted, marginTop: 3, minHeight: 16 }}>
-                      {e.event_name || ''}
-                    </div>
-                    <div style={{ display: 'flex', gap: 10, marginTop: 2, fontFamily: mono, fontSize: 9, color: T.inkMuted, fontWeight: 500, letterSpacing: '0.5px', minHeight: 13 }}>
-                      {e.event_time && <span>{e.event_time}</span>}
-                      {e.rating && <span>★ {e.rating}</span>}
-                    </div>
-                  </div>
-                  {/* Like — top right */}
-                  <button
-                    onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
-                    style={{ width: 28, height: 28, border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
-                    aria-label="Like"
-                  >
-                    <Heart style={{ width: 13, height: 13, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
-                  </button>
-                </div>
-                );
-              })}
-              {tonightVisible < tonightEvents.length && (
-                <button
-                  onClick={() => setTonightVisible(v => v + 4)}
-                  style={{
-                    width: '100%', marginTop: 10, padding: '10px 0',
-                    border: `1px solid ${T.line}`, background: 'transparent',
-                    fontFamily: mono, fontSize: 10, fontWeight: 600,
-                    letterSpacing: '1px', textTransform: 'uppercase',
-                    color: T.accent, cursor: 'pointer',
-                  }}
-                >
-                  See More · {tonightEvents.length - tonightVisible} remaining
-                </button>
-              )}
-              {tonightVisible > 4 && (
-                <button
-                  onClick={() => setTonightVisible(4)}
-                  style={{
-                    width: '100%', marginTop: 6, padding: '10px 0',
-                    border: `1px solid ${T.line}`, background: 'transparent',
-                    fontFamily: mono, fontSize: 10, fontWeight: 600,
-                    letterSpacing: '1px', textTransform: 'uppercase',
-                    color: T.inkMuted, cursor: 'pointer',
-                  }}
-                >
-                  See Less
-                </button>
-              )}
-            </>
-          ) : (
-            <div style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, padding: '20px 0', textAlign: 'center' }}>
-              No events found for tonight
-            </div>
-          )}
-        </div>
-
-        {/* § C — Pick your vibe */}
-        <div style={{ padding: '28px 18px 0' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 10,
-          }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
-              Pick your vibe
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
-            {vibeGrid.map((v) => {
-              const Icon = v.Icon;
-              return (
-                <div key={v.id}
-                  onClick={() => {
-                    trackEvent('vibe_pill_click', { vibe: v.id, city });
-                    router.push(`/${city}/vibe/${v.id}`);
-                  }}
-                  style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 12px', borderRadius: 999,
-                  border: `1px solid ${T.line}`, background: T.surface,
-                  cursor: 'pointer',
-                }}>
-                  <div style={{
-                    width: 26, height: 26, borderRadius: '50%', background: v.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <Icon style={{ width: 13, height: 13, color: '#0a0a14' }} />
-                  </div>
-                  <span style={{
-                    fontFamily: serif, fontStyle: 'italic', fontSize: 14, fontWeight: 400,
-                    color: T.ink, letterSpacing: '-0.01em', lineHeight: 1, flex: 1,
-                  }}>{v.label}</span>
-                  <span style={{
-                    fontFamily: mono, fontSize: 10, fontWeight: 700,
-                    color: v.color, lineHeight: 1, flexShrink: 0,
-                  }}>{loading ? '—' : v.count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* § D — Weekend Vibes */}
-        <div style={{ padding: '28px 18px 0' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 12,
-          }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
-              Weekend Vibes
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}>
-            {loading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} style={{ flexShrink: 0, width: 180 }}>
-                  <div style={{ ...skeletonStyle(180, undefined), aspectRatio: '3/4' }} />
-                  <div style={{ ...skeletonStyle(140, 10), marginTop: 8 }} />
-                </div>
-              ))
-              : weekendEvents.length > 0
-                ? weekendEvents.map((e, idx) => {
-                  const d = new Date(e.event_date);
-                  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                  const dayLabel = days[d.getUTCDay()];
-                  const dateNum = d.getUTCDate();
-                  const hasVideo = e.media_type_1 === 'video' && e.media_url_1;
-                  const hasImage = e.media_url_1 && e.media_type_1 !== 'video';
-                  const color = ['#f4c430', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
-                  return (
-                    <div key={`${e.venue_id}-${e._ds}`} style={{ flexShrink: 0, width: 180, cursor: e.event_id ? 'pointer' : 'default' }} onClick={() => {
-                      if (!e.event_id) return;
-                      trackEvent('view_event', { event_id: e.event_id, venue_id: e.venue_id, place_id: e.place_id, event_date: e.event_date, source: 'weekend_carousel' });
-                      router.push(`/${city}/event/${e.event_id}`);
-                    }}>
-                      <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
-                        {(hasVideo || hasImage) ? (
-                          <EventMedia
-                            src={e.media_url_1}
-                            mediaType={e.media_type_1}
-                            poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                            alt={e.venue_name || ''}
-                            sizes="(max-width: 430px) 40vw, 172px"
-                            fill
-                            lazyVideo
-                          />
-                        ) : null}
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(10,10,20,0.85))' }} />
-                        <div style={{
-                          position: 'absolute', top: 8, left: 8, background: T.chipLight, color: T.inkInverse,
-                          padding: '4px 8px', fontFamily: mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.5px',
-                        }}>{dayLabel} {dateNum}</div>
-                        <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8 }}>
-                          <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: color, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
-                            {e.area || ''}
-                          </div>
-                          <div style={{
-                            fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: T.ink, lineHeight: 1.05, marginTop: 2,
-                          }}>{e.name || e.venue}</div>
-                        </div>
-                      </div>
-                      {e.event_name && (
-                        <div style={{ fontSize: 10, color: T.inkMuted, marginTop: 6, lineHeight: 1.3 }}>
-                          {e.event_name}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-                : (
-                  <div style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, padding: '20px 0' }}>
-                    No weekend events found
-                  </div>
-                )
-            }
-          </div>
-        </div>
-
-        {/* § E — Areas */}
-        <div style={{ padding: '28px 18px 0' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 4,
-          }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4 }}>
-              Areas
-            </div>
-          </div>
-          {loading
-            ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}` }}>
-                <div style={skeletonStyle(20, 10)} />
-                <div style={skeletonStyle(120, 16)} />
-                <div style={skeletonStyle(60, 10)} />
-                <div style={skeletonStyle(13, 13)} />
-              </div>
-            ))
-            : areas.map((a, i) => (
-              <div key={a.label}
-                onClick={() => {
-                  trackEvent('area_row_click', { area: a.label, city });
-                  router.push(`/${city}/area/${slugifyArea(a.label)}`);
-                }}
-                style={{
-                display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
-                padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer',
-              }}>
-                <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: T.ink, letterSpacing: '-0.01em' }}>
-                  {a.label}
-                </span>
-                <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
-                  {a.count} events
-                </span>
-                <ArrowUpRight size={13} strokeWidth={2} style={{ color: T.inkFaint, flexShrink: 0 }} />
-              </div>
-            ))
-          }
         </div>
 
         {/* The method */}

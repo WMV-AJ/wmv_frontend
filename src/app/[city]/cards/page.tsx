@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useMemo, useRef, useLayoutEffect, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
@@ -16,22 +16,64 @@ import {
   transformVenueDataToStackedCards
 } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
+import { getCityDateString } from '@/lib/city-date';
+import { getVibeDataById } from '@/config/vibes-data';
 
-export default function CityCardsPage() {
+function CardsInner() {
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
   const cityConfig = getCityConfig(city);
+  const searchParams = useSearchParams();
 
-  const [filters, setFilters] = useState<HierarchicalFilterState>({
-    selectedPrimaries: { genres: [], vibes: [] },
-    selectedSecondaries: { genres: {}, vibes: {} },
-    expandedPrimaries: { genres: [], vibes: [] },
-    eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
-    attributes: { venue: [], energy: [], timing: [], status: [] },
-    selectedAreas: [cityConfig.defaultAreaLabel], // "All Dubai" / "All Bangalore"
-    activeDates: [new Date().toDateString()], // Default to today on page load
-    activeOffers: [],
-    searchQuery: ''
+  const [filters, setFilters] = useState<HierarchicalFilterState>(() => {
+    // Deep-link seeds (initializer-only — the URL seeds state, it is not
+    // two-way-bound): ?cat=Club+Night (repeatable), ?area=Indiranagar,
+    // ?date=today|tomorrow|YYYY-MM-DD, ?vibe=brunch, ?q=search text.
+    // Same contract as the map page (MapPageClient).
+    const catParams = searchParams?.getAll('cat') ?? [];
+    const vibeParam = searchParams?.get('vibe');
+    const areaParam = searchParams?.get('area');
+    const dateParam = searchParams?.get('date');
+    const qParam = searchParams?.get('q');
+
+    const seededCategories = [...catParams];
+    if (vibeParam) {
+      const vibe = getVibeDataById(vibeParam);
+      if (vibe) seededCategories.push(...vibe.categories);
+    }
+
+    // "Today" is the CITY's today, not the viewer's — building the entry via
+    // UTC midnight matches how event dates parse for comparison in any
+    // viewer timezone. (Viewer-local `new Date()` made an IST viewer's list
+    // show zero Dubai events between IST- and Dubai-midnight.)
+    const cityTodayEntry = (offsetDays = 0) => {
+      const d = new Date(`${getCityDateString(city)}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + offsetDays);
+      return d.toDateString();
+    };
+    let seededDates = [cityTodayEntry(0)];
+    if (dateParam === 'tomorrow') {
+      seededDates = [cityTodayEntry(1)];
+    } else if (dateParam && dateParam !== 'today') {
+      const d = new Date(dateParam);
+      if (!Number.isNaN(d.getTime())) seededDates = [d.toDateString()];
+    }
+
+    return {
+      selectedPrimaries: { genres: [], vibes: [] },
+      selectedSecondaries: { genres: {}, vibes: {} },
+      expandedPrimaries: { genres: [], vibes: [] },
+      eventCategories: {
+        selectedPrimaries: Array.from(new Set(seededCategories)),
+        selectedSecondaries: {},
+        expandedPrimaries: [],
+      },
+      attributes: { venue: [], energy: [], timing: [], status: [] },
+      selectedAreas: [areaParam || cityConfig.defaultAreaLabel],
+      activeDates: seededDates,
+      activeOffers: [],
+      searchQuery: qParam ?? '',
+    };
   });
 
   const { allVenues, filteredVenues, isLoading } = useClientSideVenues(filters);
@@ -212,5 +254,14 @@ export default function CityCardsPage() {
       </main>
       </div>
     </ThemeProvider>
+  );
+}
+
+// useSearchParams requires a Suspense boundary for `next build` (CSR bailout).
+export default function CityCardsPage() {
+  return (
+    <Suspense fallback={null}>
+      <CardsInner />
+    </Suspense>
   );
 }
