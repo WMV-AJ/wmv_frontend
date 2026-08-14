@@ -16,7 +16,6 @@ import HomeMasthead from '@/components/navigation/HomeMasthead';
 import NavPill from '@/components/navigation/NavPill';
 import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
-import { slugifyArea } from '@/lib/areas';
 import { getEventCategories } from '@/lib/category-utils';
 import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
 
@@ -368,21 +367,25 @@ export default function CityHome() {
     return !!so && !so.toLowerCase().includes('no special');
   });
 
-  // Upcoming Fri / Sat / Sun anchored to the CITY's calendar (today counts
-  // if it is one of them). Replaces the old hardcoded Dubai +4h offset.
+  // THIS weekend only (Fri/Sat/Sun of the current week, city-anchored).
+  // Once the weekend is underway, only the remaining days show — e.g. on a
+  // Saturday you get Saturday + Sunday, never next week's Friday.
   const weekendByDay = (() => {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const anchor = new Date(`${todayStr}T00:00:00Z`);
-    return [5, 6, 0]
-      .map(dow => {
+    const dow = anchor.getUTCDay();
+    // Offset from today to THIS weekend's Friday (negative once the weekend
+    // has started: Sat → -1, Sun → -2).
+    const fridayOffset = dow === 6 ? -1 : dow === 0 ? -2 : 5 - dow;
+    return [0, 1, 2]
+      .map(i => {
         const d = new Date(anchor);
-        const delta = (dow - d.getUTCDay() + 7) % 7;
-        d.setUTCDate(d.getUTCDate() + delta);
+        d.setUTCDate(d.getUTCDate() + fridayOffset + i);
         const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-        return { ds, label: `${dayNames[dow]} · ${d.getUTCDate()} ${monthNames[d.getUTCMonth()]}` };
+        return { ds, label: `${dayNames[d.getUTCDay()]} · ${d.getUTCDate()} ${monthNames[d.getUTCMonth()]}` };
       })
-      .sort((a, b) => (a.ds < b.ds ? -1 : 1))
+      .filter(({ ds }) => ds >= todayStr) // drop weekend days already past
       .map(({ ds, label }) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const map = new Map<string, any>();
@@ -909,40 +912,46 @@ export default function CityHome() {
               {dealsTonight.slice(0, 12).map((e: any) => {
                 const deal = Array.isArray(e.deals) && e.deals.length > 0 ? e.deals[0] : null;
                 const cfg = DEAL_LABELS[deal?.type as string] || DEAL_LABELS.special_offer;
+                const dealText = deal?.description || (e.special_offers ? String(e.special_offers) : '') || cfg.label;
                 return (
                   <div
                     key={e.event_id || e.venue_id}
                     onClick={() => openEvent(e, 'deals_rail')}
                     style={{
-                      flex: '0 0 200px', scrollSnapAlign: 'start',
+                      flex: '0 0 210px', scrollSnapAlign: 'start',
                       padding: '12px 12px 14px', borderRadius: 8,
                       background: T.surface, border: `1px solid ${T.line}`,
                       cursor: e.event_id ? 'pointer' : 'default',
+                      display: 'flex', flexDirection: 'column',
                     }}
                   >
-                    <span style={{
-                      display: 'inline-block', padding: '3px 8px', borderRadius: 999,
-                      background: `rgba(${cfg.rgb}, 0.15)`, border: `1px solid rgba(${cfg.rgb}, 0.35)`,
-                      color: `rgb(${cfg.rgb})`, fontFamily: mono, fontSize: 8, fontWeight: 700,
-                      letterSpacing: '0.06em', textTransform: 'uppercase',
-                    }}>
-                      {cfg.label}
-                    </span>
+                    {/* The actual deal, first and biggest */}
                     <div style={{
                       fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: T.ink,
-                      lineHeight: 1.15, marginTop: 8, letterSpacing: '-0.01em',
-                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      lineHeight: 1.2, letterSpacing: '-0.01em',
+                      display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                     }}>
-                      {e.event_name || e.name}
+                      {dealText}
                     </div>
-                    <div style={{ fontFamily: mono, fontSize: 9, color: T.inkMuted, marginTop: 6, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {e.name || ''}{e.event_time ? ` · ${e.event_time}` : ''}
+                    <div style={{ marginTop: 8 }}>
+                      <span style={{
+                        display: 'inline-block', padding: '3px 8px', borderRadius: 999,
+                        background: `rgba(${cfg.rgb}, 0.15)`, border: `1px solid rgba(${cfg.rgb}, 0.35)`,
+                        color: `rgb(${cfg.rgb})`, fontFamily: mono, fontSize: 8, fontWeight: 700,
+                        letterSpacing: '0.06em', textTransform: 'uppercase',
+                      }}>
+                        {cfg.label}
+                      </span>
                     </div>
-                    {deal?.timing && (
-                      <div style={{ fontFamily: mono, fontSize: 8, color: T.inkFaint, marginTop: 3, letterSpacing: '0.5px' }}>
-                        {deal.timing}
-                      </div>
-                    )}
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {e.event_name || ''}
+                    </div>
+                    <div style={{ fontFamily: mono, fontSize: 9, color: T.accent, marginTop: 4, letterSpacing: '0.5px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {e.name || ''}
+                    </div>
+                    <div style={{ fontFamily: mono, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
+                      {e.event_time || ''}{deal?.timing ? ` · ${deal.timing}` : ''}
+                    </div>
                   </div>
                 );
               })}
@@ -1126,7 +1135,9 @@ export default function CityHome() {
               <div key={a.label}
                 onClick={() => {
                   trackEvent('area_row_click', { area: a.label, city });
-                  router.push(`/${city}/area/${slugifyArea(a.label)}`);
+                  // Map view seeds ?area= into its filters — a spatial pick
+                  // belongs on the map, not the list.
+                  router.push(`/${city}/map?area=${encodeURIComponent(a.label)}`);
                 }}
                 style={{
                 display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
