@@ -887,27 +887,26 @@ export default function CityMapPage() {
               <OfferBanner venue={highlightedVenue} offer={highlightedOffer} color={getVenueColor(highlightedVenue)} />
             )}
 
-            {/* Live "you are here" dot (only inside city bounds) */}
+            {/* Live "you are here" marker (only inside city bounds).
+                A navigation ARROW, not a dot — every venue marker on this map
+                is a circle, so any circular shape here reads as a venue. */}
             {liveLocation.pos && (
               <MapMarker longitude={liveLocation.pos.lng} latitude={liveLocation.pos.lat}>
                 <MarkerContent>
-                  <div style={{ position: 'relative', width: 22, height: 22 }}>
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      // Blue "you are here" dot — deliberately NOT the venue
-                      // palette (nightclub markers are the same gold this dot
-                      // used to be, which made your own position read as a
-                      // venue).
-                      background: '#4285f4', opacity: 0.3,
-                      animation: 'wmv-loc-pulse 2s ease-in-out infinite',
-                    }} />
-                    <div style={{
-                      position: 'absolute', inset: 5, borderRadius: '50%',
-                      background: '#4285f4', border: '2.5px solid #fff',
-                      boxShadow: '0 1px 6px rgba(0,0,0,0.5)',
-                    }} />
+                  <div style={{
+                    width: 30, height: 30,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    animation: 'wmv-loc-bob 2s ease-in-out infinite',
+                  }}>
+                    <svg width="26" height="26" viewBox="0 0 24 24"
+                      fill="#4285f4" stroke="#fff" strokeWidth="1.6"
+                      strokeLinejoin="round"
+                      style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.55))' }}
+                    >
+                      <path d="M3 11l19-9-9 19-2-8-8-2z" />
+                    </svg>
                   </div>
-                  <style>{`@keyframes wmv-loc-pulse { 0%,100% { transform: scale(1); opacity: 0.25 } 50% { transform: scale(1.8); opacity: 0.08 } }`}</style>
+                  <style>{`@keyframes wmv-loc-bob { 0%,100% { transform: scale(1) } 50% { transform: scale(1.15) } }`}</style>
                 </MarkerContent>
               </MapMarker>
             )}
