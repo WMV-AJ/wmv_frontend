@@ -858,8 +858,16 @@
 }
 
 @media (max-width: 768px) {
-  .stacked-card:not(.expanded) {
+  /* SAME padding expanded and collapsed. This used to apply 16px only to
+     :not(.expanded), so tapping a card dropped it to the 18px rule — the
+     text column lost 4px and titles that just fit re-wrapped, which read
+     as "the card shrinks when clicked". */
+  .stacked-card {
     padding: 16px;
+    padding-bottom: 18px;
+  }
+
+  .stacked-card:not(.expanded) {
     height: 230px;
   }
 
