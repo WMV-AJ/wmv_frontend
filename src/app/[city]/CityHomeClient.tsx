@@ -660,7 +660,8 @@ export default function CityHome() {
                     key={e.event_id || e.venue_id}
                     onClick={() => openEvent(e, 'happening_now')}
                     style={{
-                      flex: '0 0 130px', scrollSnapAlign: 'start', position: 'relative',
+                      flex: '0 0 130px', width: 130, minWidth: 130, maxWidth: 130,
+                      scrollSnapAlign: 'start', position: 'relative',
                       aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
                       background: `linear-gradient(135deg, ${T.live}22, ${T.bg})`,
                       border: `1px solid ${T.line}`, cursor: e.event_id ? 'pointer' : 'default',
@@ -741,7 +742,8 @@ export default function CityHome() {
                         key={e.event_id || e.venue_id}
                         onClick={() => openEvent(e, 'tonight_scroller')}
                         style={{
-                          flex: '0 0 48%', scrollSnapAlign: 'start', position: 'relative',
+                          flex: '0 0 48%', width: '48%', minWidth: '48%', maxWidth: '48%',
+                          scrollSnapAlign: 'start', position: 'relative',
                           aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
                           background: 'linear-gradient(135deg, #1c1c2a, #0a0a14)',
                           border: `1px solid ${T.line}`, cursor: e.event_id ? 'pointer' : 'default',
@@ -901,7 +903,9 @@ export default function CityHome() {
                     key={e.event_id || e.venue_id}
                     onClick={() => openEvent(e, 'deals_rail')}
                     style={{
-                      flex: '0 0 210px', scrollSnapAlign: 'start',
+                      flex: '0 0 210px', width: 210, minWidth: 210, maxWidth: 210,
+                      boxSizing: 'border-box', overflow: 'hidden',
+                      scrollSnapAlign: 'start',
                       padding: '12px 12px 14px', borderRadius: 8,
                       background: T.surface, border: `1px solid ${T.line}`,
                       cursor: e.event_id ? 'pointer' : 'default',
@@ -911,7 +915,7 @@ export default function CityHome() {
                     {/* The actual deal, first — mono, swapped with the venue's serif */}
                     <div style={{
                       fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.ink,
-                      lineHeight: 1.45, letterSpacing: '0.4px',
+                      lineHeight: 1.45, letterSpacing: '0.4px', overflowWrap: 'anywhere',
                       display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                     }}>
                       {dealText}
@@ -1023,7 +1027,7 @@ export default function CityHome() {
                         <div
                           key={`${e.venue_id}-${ds}`}
                           onClick={() => openEvent(e, 'weekend_rail')}
-                          style={{ flex: '0 0 180px', scrollSnapAlign: 'start', cursor: e.event_id ? 'pointer' : 'default' }}
+                          style={{ flex: '0 0 180px', width: 180, minWidth: 180, maxWidth: 180, scrollSnapAlign: 'start', cursor: e.event_id ? 'pointer' : 'default' }}
                         >
                           <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6, background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
                             {e.media_url_1 ? (
