@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { ShareModal } from '@/components/shared/ShareModal';
+import { shortenLocation } from '@/lib/format-location';
 import './StackedEventCards.css';
 
 // ===========================================
@@ -365,20 +366,29 @@ const EventCard: React.FC<EventCardProps> = ({
             {event.event_name}
           </h2>
 
-          {/* Line 2 — Date & Time */}
-          <div className="stacked-card-time-row" style={{ marginTop: '5px' }}>
-            <CalendarIcon />
-            <span style={{ marginRight: '6px' }}>{dateDisplay}</span>
-            {(event.event_time_start || event.event_time_end) && (
-              <>
-                <span style={{ color: 'rgba(144,238,144,0.4)', marginRight: '6px' }}>·</span>
-                <ClockIcon />
-                <span>
-                  {formatTime(event.event_time_start)}
-                  {event.event_time_end && ` - ${formatTime(event.event_time_end)}`}
+          {/* Line 2 — Date & Time. Each chunk is nowrap so a tight column
+              can only break BETWEEN date and time, never inside "14 Aug 26"
+              or between "6:00" and "PM". */}
+          <div className="stacked-card-time-row" style={{ marginTop: '5px', flexWrap: 'wrap', rowGap: '2px' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', marginRight: '6px' }}>
+              <CalendarIcon />
+              {dateDisplay}
+            </span>
+            {(() => {
+              const startT = formatTime(event.event_time_start);
+              const endT = formatTime(event.event_time_end);
+              if (!startT && !endT) return null;
+              return (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                  <span style={{ color: 'rgba(144,238,144,0.4)' }}>·</span>
+                  <ClockIcon />
+                  <span>
+                    {startT || endT}
+                    {startT && endT && ` - ${endT}`}
+                  </span>
                 </span>
-              </>
-            )}
+              );
+            })()}
           </div>
 
           {/* Line 3 — Venue name */}
@@ -390,7 +400,7 @@ const EventCard: React.FC<EventCardProps> = ({
             <span className="stacked-card-rating-value">{venue.venue_rating}</span>
             <span className="stacked-card-review-count">({venue.venue_review_count.toLocaleString()})</span>
             <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 2px' }}>|</span>
-            <span style={{ color: 'rgba(200, 200, 220, 0.7)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{venue.venue_location}</span>
+            <span style={{ color: 'rgba(200, 200, 220, 0.7)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortenLocation(venue.venue_location)}</span>
           </div>
 
           {/* Line 5 — Smart subtitle (category tags / attributes) */}

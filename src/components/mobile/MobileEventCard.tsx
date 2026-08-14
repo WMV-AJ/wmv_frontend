@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
+import { shortenLocation } from '@/lib/format-location';
 import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
@@ -421,7 +422,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>({venue.venue_review_count?.toLocaleString()})</span>
             <span className={`text-[10px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
             <MapPin className={`w-3 h-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <span className={`text-[11px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{venue.venue_location}</span>
+            <span className={`text-[11px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{shortenLocation(venue.venue_location)}</span>
           </div>
         </div>
 
@@ -1045,7 +1046,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           <span className={`text-[10px] md:text-[8px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
           <span className={`text-[10px] md:text-[8px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
           <MapPin className={`w-2.5 h-2.5 md:w-2 md:h-2 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-          <span className={`text-[11px] md:text-[9px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{venue.venue_location}</span>
+          <span className={`text-[11px] md:text-[9px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{shortenLocation(venue.venue_location)}</span>
         </div>
       </div>
 
