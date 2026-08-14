@@ -374,6 +374,14 @@ export default function EventPageRedesign({
                   background: 'linear-gradient(180deg, rgba(10,10,20,0.5) 0%, transparent 100%)',
                 }}
               />
+              {/* bottom fade into the page so the title can start on the
+                  image's last ~20% and read cleanly */}
+              <div
+                style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, pointerEvents: 'none',
+                  background: `linear-gradient(180deg, transparent 0%, rgba(10,10,20,0.55) 55%, ${T.bg} 100%)`,
+                }}
+              />
 
               {/* back / save / share */}
               <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 3 }}>
@@ -419,8 +427,9 @@ export default function EventPageRedesign({
 
             </div>
 
-            {/* title block — below the media, on the page background */}
-            <div style={{ padding: '16px 20px 0' }}>
+            {/* title block — starts on the image's bottom ~20% (the hero's
+                bottom fade keeps it readable) and flows below */}
+            <div style={{ padding: '0 20px 0', marginTop: -104, position: 'relative', zIndex: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {isLive && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 9px', borderRadius: 5, background: T.live, whiteSpace: 'nowrap' }}>
@@ -778,9 +787,16 @@ export default function EventPageRedesign({
             position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
             padding: '12px 14px max(16px, env(safe-area-inset-bottom))',
             background: 'linear-gradient(180deg, rgba(10,10,20,0) 0%, rgba(10,10,20,0.94) 34%)',
-            display: 'flex', alignItems: 'center', gap: 7,
           }}
         >
+          <div
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: 6, borderRadius: 999,
+              background: 'rgba(28,28,42,0.97)', border: `1px solid ${T.line}`,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}
+          >
           {event.venue_final_instagram && (
             <CircleAction label="Instagram" color={IG} onClick={openInstagram}>
               <Instagram className="w-[18px] h-[18px]" />
@@ -813,6 +829,7 @@ export default function EventPageRedesign({
             <primary.Icon className="w-[15px] h-[15px] flex-shrink-0" />
             {primary.label}
           </button>
+          </div>
         </div>
       </main>
 
