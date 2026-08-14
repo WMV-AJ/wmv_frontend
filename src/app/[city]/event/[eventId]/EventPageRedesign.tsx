@@ -378,8 +378,8 @@ export default function EventPageRedesign({
                   image's last ~20% and read cleanly */}
               <div
                 style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, pointerEvents: 'none',
-                  background: `linear-gradient(180deg, transparent 0%, rgba(10,10,20,0.55) 55%, ${T.bg} 100%)`,
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: 230, pointerEvents: 'none',
+                  background: `linear-gradient(180deg, transparent 0%, rgba(10,10,20,0.72) 38%, rgba(10,10,20,0.95) 72%, ${T.bg} 100%)`,
                 }}
               />
 
@@ -679,7 +679,7 @@ export default function EventPageRedesign({
             {/* ── VENUE ────────────────────────────────────────────────────── */}
             <div style={{ padding: '22px 20px 0' }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.ink, borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 6 }}>
-                {venueName}
+                Venue details
               </div>
               {event.venue_address && (
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderBottom: `1px solid ${T.lineFaint}` }}>
