@@ -345,18 +345,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     }
   };
 
-  // Uniform muted styling for the expanded card's detail rows — one neutral
-  // treatment instead of a different accent color per section.
-  const iconBadgeStyle: React.CSSProperties = {
-    background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-    border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.06)',
-  };
-  const mutedIcon = darkMode ? '#a8a2b8' : '#6b7280';
-  const chipStyle: React.CSSProperties = {
-    background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-    color: darkMode ? '#d6d3e0' : '#374151',
-    border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.08)',
-  };
+  // Per-section accent styling for the expanded card's detail rows.
+  const accentBadge = (rgb: string): React.CSSProperties => ({
+    background: `rgba(${rgb}, 0.15)`,
+    border: `1px solid rgba(${rgb}, 0.1)`,
+  });
+  const accentChip = (rgb: string, darkText: string, lightText: string): React.CSSProperties => ({
+    background: `rgba(${rgb}, 0.15)`,
+    color: darkMode ? darkText : lightText,
+    border: `1px solid rgba(${rgb}, 0.25)`,
+  });
   const labelCls = `text-[10px] uppercase tracking-[0.12em] font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`;
   const valueCls = `text-[14px] font-medium mt-0.5 ${darkMode ? 'text-white' : 'text-gray-900'}`;
 
@@ -541,8 +539,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           <div className="space-y-4">
             {/* Date & Time — one line */}
             <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
-                <Calendar className="w-4 h-4" style={{ color: mutedIcon }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('212, 160, 23')}>
+                <Calendar className="w-4 h-4 text-amber-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={labelCls}>Date & Time</p>
@@ -560,14 +558,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Artists */}
             {event.artist && (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
-                  <Music className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('147, 51, 234')}>
+                  <Music className="w-4 h-4 text-purple-400" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>Artists</p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {event.artist.split(/[|,]/).map((artist, idx) => (
-                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={chipStyle}>
+                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
+                        style={accentChip('147, 51, 234', 'rgb(196, 167, 255)', 'rgb(109, 40, 217)')}>
                         {artist.trim()}
                       </span>
                     ))}
@@ -579,14 +578,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Music Genres */}
             {event.music_genre && (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
-                  <Music className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('59, 130, 246')}>
+                  <Music className="w-4 h-4 text-blue-500" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>Music</p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {event.music_genre.split(',').map((genre, idx) => (
-                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={chipStyle}>
+                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
+                        style={accentChip('59, 130, 246', 'rgb(147, 197, 253)', 'rgb(37, 99, 235)')}>
                         {genre.trim()}
                       </span>
                     ))}
@@ -598,14 +598,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Vibes */}
             {event.event_vibe && (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
-                  <Sparkles className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('236, 72, 153')}>
+                  <Sparkles className="w-4 h-4 text-pink-500" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>Vibes</p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {event.event_vibe.split('|').map((vibe, idx) => (
-                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium" style={chipStyle}>
+                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
+                        style={accentChip('236, 72, 153', 'rgb(249, 168, 212)', 'rgb(190, 24, 93)')}>
                         {vibe.trim()}
                       </span>
                     ))}
@@ -617,26 +618,28 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Offers */}
             {event.deals && event.deals.length > 0 ? (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
-                  <Gift className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('251, 191, 36')}>
+                  <Gift className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>Offers</p>
                   <div className="mt-1.5 space-y-2">
                     {event.deals.map((deal, idx) => {
-                      const dealLabels: Record<string, string> = {
-                        ladies_night: 'Ladies Night',
-                        '2for1': 'Buy 1 Get 1',
-                        happy_hour: 'Happy Hour',
-                        discount: 'Discount',
-                        free_entry: 'Free Entry',
-                        special_offer: 'Special Offer',
+                      const dealConfig: Record<string, { label: string; rgb: string; darkText: string; lightText: string }> = {
+                        ladies_night: { label: 'Ladies Night', rgb: '236, 72, 153', darkText: 'rgb(249, 168, 212)', lightText: 'rgb(190, 24, 93)' },
+                        '2for1': { label: 'Buy 1 Get 1', rgb: '16, 185, 129', darkText: 'rgb(110, 231, 183)', lightText: 'rgb(5, 150, 105)' },
+                        happy_hour: { label: 'Happy Hour', rgb: '251, 191, 36', darkText: 'rgb(253, 224, 71)', lightText: 'rgb(180, 130, 20)' },
+                        discount: { label: 'Discount', rgb: '59, 130, 246', darkText: 'rgb(147, 197, 253)', lightText: 'rgb(37, 99, 235)' },
+                        free_entry: { label: 'Free Entry', rgb: '34, 197, 94', darkText: 'rgb(134, 239, 172)', lightText: 'rgb(22, 163, 74)' },
+                        special_offer: { label: 'Special Offer', rgb: '249, 115, 22', darkText: 'rgb(253, 186, 116)', lightText: 'rgb(194, 80, 10)' },
                       };
+                      const config = dealConfig[deal.type] || dealConfig.special_offer;
                       return (
                         <div key={idx} className="rounded-lg px-2.5 py-2" style={{ background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0, 0, 0, 0.02)', border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.05)' }}>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={chipStyle}>
-                              {dealLabels[deal.type] || dealLabels.special_offer}
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                              style={accentChip(config.rgb, config.darkText, config.lightText)}>
+                              {config.label}
                             </span>
                             {deal.timing && (
                               <span className={`text-[10px] font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{deal.timing}</span>
@@ -651,8 +654,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               </div>
             ) : event.event_offers && !event.event_offers.toLowerCase().includes('no special offers') ? (
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
-                  <Gift className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('251, 191, 36')}>
+                  <Gift className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>Offers</p>
@@ -663,8 +666,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
             {/* Entry */}
             <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
-                <DollarSign className="w-4 h-4" style={{ color: mutedIcon }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('16, 185, 129')}>
+                <DollarSign className="w-4 h-4 text-emerald-500" />
               </div>
               <div className="flex-1">
                 <p className={labelCls}>Entry</p>
@@ -675,8 +678,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Event type (e.g. Club Night) */}
             {event.event_categories && event.event_categories.length > 0 && (
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={iconBadgeStyle}>
-                  <Tag className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('20, 184, 166')}>
+                  <Tag className="w-4 h-4 text-teal-500" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>
@@ -692,14 +695,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             {/* Details */}
             {event.analysis_notes && (
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={iconBadgeStyle}>
-                  <FileText className="w-4 h-4" style={{ color: mutedIcon }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('251, 191, 36')}>
+                  <FileText className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
                   <p className={labelCls}>Details</p>
                   <p
-                    className={`text-[12px] mt-1 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                    className="text-[12px] mt-1 leading-relaxed"
                     style={{
+                      color: darkMode ? 'rgba(253, 224, 71, 0.85)' : 'rgb(120, 100, 50)',
+                      fontStyle: 'italic',
                       display: '-webkit-box',
                       WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
                       WebkitBoxOrient: 'vertical',
@@ -710,7 +715,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   </p>
                   {event.analysis_notes.length > 120 && (
                     <button
-                      className={`text-[10px] font-semibold mt-1.5 transition-colors ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                      className="text-[10px] font-semibold mt-1.5 transition-colors"
+                      style={{ color: darkMode ? 'rgba(253, 224, 71, 0.7)' : 'rgb(140, 120, 60)' }}
                       onClick={(e) => { e.stopPropagation(); setIsDetailsExpanded(prev => !prev); }}
                     >
                       {isDetailsExpanded ? 'Show less' : 'Show more'}
