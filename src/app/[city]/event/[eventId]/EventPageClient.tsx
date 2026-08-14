@@ -28,6 +28,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import { formatDateLabel, formatTimeClean, isEventHappeningNow } from '@/lib/time-utils';
+import { videoThumbUrl } from '@/components/shared/EventMedia';
 
 // ===== Types =====
 
@@ -485,6 +486,15 @@ export default function EventDetailPage() {
 
   const hasSecondImage = !!event.media_url_2 && event.media_url_2 !== event.media_url_1;
 
+  // Sibling image (if any): the video-thumb API falls back to it when frame
+  // extraction fails, instead of a generic placeholder.
+  const isVidUrl = (u?: string | null) => !!u && /\.(mp4|mov|webm)$/i.test(u);
+  const siblingImageUrl = !isVidUrl(event.media_url_2)
+    ? event.media_url_2
+    : !isVidUrl(event.media_url_1)
+      ? event.media_url_1
+      : undefined;
+
   const iconColor = 'rgba(168,162,184,0.6)';
 
   return (
@@ -502,6 +512,7 @@ export default function EventDetailPage() {
               loop
               playsInline
               preload="metadata"
+              poster={videoThumbUrl(heroImage, siblingImageUrl)}
               onClick={() => setLightboxMedia({ url: heroImage, isVideo: true })}
               onError={(e) => { (e.target as HTMLVideoElement).style.display = 'none'; }}
             />
@@ -722,7 +733,7 @@ export default function EventDetailPage() {
             <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_1, isVideo: event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) })}>
               {event.media_type_1?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_1) ? (
                 <img
-                  src={`/api/video-thumb?src=${encodeURIComponent(event.media_url_1)}`}
+                  src={videoThumbUrl(event.media_url_1, !isVidUrl(event.media_url_2) ? event.media_url_2 : undefined)}
                   alt=""
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -740,7 +751,7 @@ export default function EventDetailPage() {
             <div className="relative flex-1 rounded-xl overflow-hidden cursor-pointer" style={{ height: '160px' }} onClick={() => setLightboxMedia({ url: event.media_url_2, isVideo: event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) })}>
               {event.media_type_2?.toUpperCase() === 'VIDEO' || /\.(mp4|mov|webm)$/i.test(event.media_url_2) ? (
                 <img
-                  src={`/api/video-thumb?src=${encodeURIComponent(event.media_url_2)}`}
+                  src={videoThumbUrl(event.media_url_2, !isVidUrl(event.media_url_1) ? event.media_url_1 : undefined)}
                   alt=""
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -950,7 +961,7 @@ export default function EventDetailPage() {
                       {r.media_url_1 && !/\.(mp4|mov|webm)$/i.test(r.media_url_1) ? (
                         <Image src={r.media_url_1} alt={r.event_name || ''} fill sizes="128px" className="object-cover" />
                       ) : r.media_url_1 ? (
-                        <img src={`/api/video-thumb?src=${encodeURIComponent(r.media_url_1)}`} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        <img src={videoThumbUrl(r.media_url_1)} alt="" className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Music className="w-5 h-5 text-[#5f5a70]" />
@@ -1006,6 +1017,7 @@ export default function EventDetailPage() {
                 autoPlay
                 loop
                 playsInline
+                poster={videoThumbUrl(lightboxMedia.url, siblingImageUrl)}
               />
             ) : (
               <img

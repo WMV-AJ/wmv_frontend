@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
@@ -18,7 +18,6 @@ import {
 import { getCityConfig } from '@/config/cities.config';
 
 export default function CityCardsPage() {
-  const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
   const cityConfig = getCityConfig(city);
@@ -162,8 +161,6 @@ export default function CityCardsPage() {
             selectedDates: filters.activeDates,
             onDateChange: handleDateChange,
           }}
-          onListToggle={() => router.push(`/${city}/map`)}
-          isListView={true}
           onHeightChange={setNavHeight}
           darkMode={true}
         />

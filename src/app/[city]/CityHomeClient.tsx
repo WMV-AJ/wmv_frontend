@@ -620,6 +620,7 @@ export default function CityHome() {
                         alt={e.venue_name || ''}
                         sizes="(max-width: 430px) 100vw, 430px"
                         fill
+                        priority
                         style={{ filter: 'saturate(1.1)' }}
                       />
                     ) : (

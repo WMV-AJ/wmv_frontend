@@ -70,9 +70,30 @@ async function extractFrame(src: string, outPath: string): Promise<Buffer | null
   }
 }
 
+// Extraction failed (ffmpeg missing, undecodable video). Never serve the
+// branded placeholder as if it were a real thumbnail — that read as a
+// "random default thumbnail" on every video. Prefer the caller-provided
+// sibling image; otherwise 404 and let the client's onError decide.
+function failureResponse(fallback: string | null) {
+  if (fallback && fallback.startsWith(ALLOWED_PREFIX)) {
+    return NextResponse.redirect(fallback, {
+      status: 302,
+      // Short-lived, never immutable: once ffmpeg is available the real
+      // frame should replace this within minutes, not after a cached week.
+      headers: { 'Cache-Control': 'public, max-age=300' },
+    });
+  }
+  return new NextResponse(null, {
+    status: 404,
+    headers: { 'Cache-Control': 'no-store' },
+  });
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const src = searchParams.get('src') || '';
+  // Same allow-list as src (SSRF guard applies to the fallback too).
+  const fallback = (searchParams.get('fallback') || '').split('#')[0] || null;
 
   // Strip any media-fragment before validating/fetching.
   const cleanSrc = src.split('#')[0];
@@ -95,10 +116,10 @@ export async function GET(request: Request) {
     return new NextResponse(new Uint8Array(cached), { headers });
   } catch { /* miss */ }
 
-  // Recently failed → placeholder immediately, no ffmpeg re-run.
+  // Recently failed → fallback immediately, no ffmpeg re-run.
   const lastFail = failedAt.get(key);
   if (lastFail && Date.now() - lastFail < FAIL_TTL_MS) {
-    return NextResponse.redirect(new URL('/placeholder-event.jpg', request.url), 302);
+    return failureResponse(fallback);
   }
 
   // Extract (deduped)
@@ -114,7 +135,6 @@ export async function GET(request: Request) {
     return new NextResponse(new Uint8Array(frame), { headers });
   }
 
-  // ffmpeg unavailable/failed → branded placeholder so tiles never break.
   failedAt.set(key, Date.now());
-  return NextResponse.redirect(new URL('/placeholder-event.jpg', request.url), 302);
+  return failureResponse(fallback);
 }

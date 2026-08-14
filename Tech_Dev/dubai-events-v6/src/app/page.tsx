@@ -244,8 +244,6 @@ export default function Home() {
                 inlineMode={true}
               />
             }
-            onListToggle={() => setDesktopListView(prev => !prev)}
-            isListView={desktopListView}
             onPresetRangeDatesChange={handlePresetRangeDatesChange}
           />
 
@@ -303,8 +301,6 @@ export default function Home() {
                 inlineMode={true}
               />
             }
-            onListToggle={() => setMobileView(prev => prev === 'map' ? 'list' : 'map')}
-            isListView={mobileView === 'list'}
             onPresetRangeDatesChange={handlePresetRangeDatesChange}
             onHeightChange={setNavHeight}
           />

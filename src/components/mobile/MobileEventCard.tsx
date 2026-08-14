@@ -103,8 +103,9 @@ interface MobileEventCardProps {
   darkMode?: boolean;
 }
 
+import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
-import EventMedia from '@/components/shared/EventMedia';
+import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
 function parseToArray(value: unknown): string[] {
@@ -243,6 +244,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   if ((event as any).media_url_2) allMedia.push({ url: (event as any).media_url_2, isVideo: isVideoUrl((event as any).media_url_2) });
   const activeImages = allMedia.length > 0 ? allMedia.map(m => m.url) : PLACEHOLDER_IMAGES;
   const activeMediaTypes = allMedia.length > 0 ? allMedia.map(m => m.isVideo) : PLACEHOLDER_IMAGES.map(() => false);
+  // Sibling image in the media pair — the video-thumb API falls back to it if
+  // frame extraction fails, instead of a generic placeholder.
+  const siblingImage = allMedia.find(m => !m.isVideo)?.url;
 
   // Lock body scroll when full-screen
   useEffect(() => {
@@ -389,7 +393,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
         {/* Venue info (fixed with header) */}
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className={`font-semibold text-[15px] ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{venue.venue_name}</p>
+          <p
+            className="font-semibold text-[15px]"
+            style={darkMode
+              ? { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#f4c430', letterSpacing: '-0.01em' }
+              : { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#8a6d0b', letterSpacing: '-0.01em' }}
+          >
+            {venue.venue_name}
+          </p>
           <div className="flex items-center gap-1.5 mt-1">
             <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
             <span className="text-amber-500 text-[12px] font-bold">{venue.venue_rating}</span>
@@ -415,9 +426,27 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               {activeImages.map((src, idx) => (
                 <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
                   {activeMediaTypes[idx] ? (
-                    <video src={src} className="w-full h-auto block" muted playsInline autoPlay loop />
+                    <video
+                      src={src}
+                      className="w-full h-auto block"
+                      muted
+                      playsInline
+                      autoPlay
+                      loop
+                      preload="metadata"
+                      poster={videoThumbUrl(src, siblingImage)}
+                    />
                   ) : (
-                    <img src={src} alt={`${venue.venue_name} ${idx + 1}`} className="w-full h-auto block" draggable={false} />
+                    <Image
+                      src={src}
+                      alt={`${venue.venue_name} ${idx + 1}`}
+                      width={640}
+                      height={800}
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="w-full h-auto block"
+                      style={{ width: '100%', height: 'auto' }}
+                      draggable={false}
+                    />
                   )}
                 </div>
               ))}
@@ -912,12 +941,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   autoPlay
                   loop
                   playsInline
+                  poster={videoThumbUrl(activeImages[fullscreenMediaIdx], siblingImage)}
                 />
               ) : (
-                <img
+                <Image
                   src={activeImages[fullscreenMediaIdx]}
                   alt={`${venue.venue_name} ${fullscreenMediaIdx + 1}`}
+                  width={1080}
+                  height={1350}
+                  sizes="100vw"
                   className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                  style={{ width: 'auto', height: 'auto' }}
                 />
               )}
             </div>
@@ -957,11 +991,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       ref={expandedRef}
       className="rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
       style={darkMode ? {
-        background: 'rgba(12, 12, 28, 0.90)',
+        // Opaque instead of backdrop-blur: the carousel slides these cards
+        // over the live map canvas, and backdrop-filter forces a recomposite
+        // on every scroll frame (same fix as OfferBanner).
+        background: 'rgba(12, 12, 28, 0.96)',
         border: '1px solid rgba(255, 255, 255, 0.18)',
         boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
       } : {
         background: 'rgba(255, 255, 255, 0.97)',
         border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -1019,7 +1054,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
       {/* === Venue info — full width === */}
       <div className="px-3.5 pb-1 md:px-2.5 md:pb-0.5">
-        <p className={`text-[13px] md:text-[11px] font-semibold truncate ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{venue.venue_name}</p>
+        {/* Venue name carries the brand gold + serif (matches .venue-name on
+            the home page) so it reads as the PLACE, distinct from the white
+            sans event headline above. */}
+        <p
+          className="text-[13px] md:text-[11px] font-semibold truncate"
+          style={darkMode
+            ? { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#f4c430', letterSpacing: '-0.01em' }
+            : { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#8a6d0b', letterSpacing: '-0.01em' }}
+        >
+          {venue.venue_name}
+        </p>
         <div className="flex items-center gap-1 mt-0.5">
           <Star className="w-3 h-3 md:w-2.5 md:h-2.5 text-amber-500 fill-amber-500 flex-shrink-0" />
           <span className="text-amber-500 text-[12px] md:text-[10px] font-bold">{venue.venue_rating}</span>
@@ -1116,4 +1161,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   );
 };
 
-export default MobileEventCard;
+// Memoized: the carousel re-renders on focus/scroll state changes; each card
+// only needs to re-render when its own props change.
+export default React.memo(MobileEventCard);

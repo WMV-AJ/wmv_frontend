@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, List, Map as MapIcon, ChevronDown, Home } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { Venue } from '@/types';
 import { parseDateFromFormat } from '@/lib/filters/date-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
@@ -93,8 +92,6 @@ interface TopNavProps {
                          // button in the dropdown is suppressed (used on
                          // map + cards so the sign-out action lives only on
                          // the home page).
-  onListToggle?: () => void; // Toggle between map and list views
-  isListView?: boolean; // Current view mode
   onPresetRangeDatesChange?: (dates: string[]) => void; // Notify parent of preset range dates
   onHeightChange?: (height: number) => void; // Notify parent of nav height (mobile only)
   darkMode?: boolean;
@@ -110,14 +107,10 @@ const TopNav: React.FC<TopNavProps> = ({
   embedded = false,
   hideProfile = false,
   hideSignOut = false,
-  onListToggle,
-  isListView = false,
   onPresetRangeDatesChange,
   onHeightChange,
   darkMode = false,
 }) => {
-  const router = useRouter();
-  const pathname = usePathname();
   const { user } = useAuth();
 
   // Use shared filter options from context — no duplicate fetch
@@ -467,25 +460,6 @@ const TopNav: React.FC<TopNavProps> = ({
             </div>
           </div>
 
-          {/* List/Map Toggle */}
-          {onListToggle && (
-            <button
-              onClick={onListToggle}
-              className="p-2.5 rounded-xl flex-shrink-0 transition-all duration-200"
-              style={{
-                background: isListView ? 'rgba(202, 138, 4, 0.3)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${isListView ? 'rgba(202, 138, 4, 0.5)' : 'rgba(255,255,255,0.08)'}`,
-              }}
-              aria-label={isListView ? 'Show map' : 'Show list'}
-            >
-              {isListView ? (
-                <MapIcon className="w-5 h-5 text-amber-300" />
-              ) : (
-                <List className="w-5 h-5 text-gray-300" />
-              )}
-            </button>
-          )}
-
           {/* Auth slot */}
           {!hideProfile && (user ? <UserMenu variant="desktop" hideSignOut={hideSignOut} /> : <SignInButton variant="desktop" />)}
         </div>
@@ -655,41 +629,6 @@ const TopNav: React.FC<TopNavProps> = ({
               aria-label="Search"
             >
               <Search className={`w-4 h-4 md:w-3 md:h-3 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
-            </button>
-
-            {/* Home */}
-            <button
-              onClick={() => {
-                const citySegment = pathname.split('/').filter(Boolean)[0] || 'dubai';
-                router.push(`/${citySegment}`);
-              }}
-              className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
-              style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
-              aria-label="Home"
-            >
-              <Home className={`w-4 h-4 md:w-3 md:h-3 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
-            </button>
-
-            {/* List/Map toggle */}
-            <button
-              onClick={() => {
-                if (onListToggle) {
-                  onListToggle();
-                } else {
-                  // Pathname-based fallback: cards → map, anything else → cards
-                  const citySegment = pathname.split('/').filter(Boolean)[0] || 'dubai';
-                  router.push(pathname.endsWith('/cards') ? `/${citySegment}/map` : `/${citySegment}/cards`);
-                }
-              }}
-              className="w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
-              style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0, 0, 0, 0.06)' }}
-              aria-label={isListView ? 'Show map' : 'Show event list'}
-            >
-              {isListView ? (
-                <MapIcon className={`w-4 h-4 md:w-3 md:h-3 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
-              ) : (
-                <List className={`w-4 h-4 md:w-3 md:h-3 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`} />
-              )}
             </button>
 
             {/* Auth slot */}

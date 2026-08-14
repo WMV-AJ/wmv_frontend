@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useState, useMemo, useCallback, useEffect, useRef, memo, type MutableRefObject } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import {
   Map as MapView,
   MapMarker,
@@ -24,6 +24,7 @@ import {
   transformVenueDataToStackedCards,
 } from '@/lib/stacked-card-adapter';
 import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/marker-colors';
+import { applyBasemapSimplification } from '@/lib/map/simplify-basemap';
 import { getDisplayName } from '@/lib/category-mappings';
 import { getVibeDataById } from '@/config/vibes-data';
 import { type Venue, type HierarchicalFilterState } from '@/types';
@@ -72,7 +73,7 @@ function GlowingMarker({
             height: glowSize,
             backgroundColor: color,
             opacity: isHighlighted ? 0.25 : 0.2,
-            transition: 'all 0.3s ease',
+            transition: 'opacity 0.3s ease',
           }}
         />
       )}
@@ -96,7 +97,7 @@ function GlowingMarker({
             height: size + 14,
             border: `3px solid ${color}`,
             opacity: 1,
-            transition: 'all 0.3s ease',
+            transition: 'opacity 0.3s ease',
           }}
         />
       )}
@@ -107,18 +108,22 @@ function GlowingMarker({
             width: size + 6,
             height: size + 6,
             border: '2px solid white',
-            transition: 'all 0.3s ease',
+            transition: 'opacity 0.3s ease',
           }}
         />
       )}
+      {/* Fixed 12px dot scaled via transform: size changes stay on the
+          compositor instead of animating width/height (layout) per state
+          change while MapLibre is already retransforming the marker. */}
       <div
         className="relative rounded-full"
         style={{
-          width: size,
-          height: size,
+          width: 12,
+          height: 12,
           backgroundColor: color,
           boxShadow: (isHighlighted || isActive) ? `0 0 ${isHighlighted ? 14 : 10}px ${color}80` : 'none',
-          transition: 'all 0.3s ease',
+          transform: `scale(${size / 12})`,
+          transition: 'transform 0.3s ease',
         }}
       />
     </div>
@@ -176,6 +181,23 @@ function DisableTouchRotation() {
   return null;
 }
 
+// Declutters the Carto basemap (minor roads, road labels, POIs) once loaded,
+// and re-applies after any style reload — applyBasemapSimplification is
+// idempotent, so the repeated styledata firings are harmless.
+function SimplifyBasemap() {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    applyBasemapSimplification(map);
+    const reapply = () => applyBasemapSimplification(map);
+    map.on('styledata', reapply);
+    return () => { map.off('styledata', reapply); };
+  }, [map, isLoaded]);
+
+  return null;
+}
+
 function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
   const { map, isLoaded } = useMap();
 
@@ -203,7 +225,13 @@ function MapClickHandler({ onClick }: { onClick: () => void }) {
   return null;
 }
 
-function PanToVenue({ venue }: { venue: Venue | null }) {
+function PanToVenue({
+  venue,
+  programmaticPanRef,
+}: {
+  venue: Venue | null;
+  programmaticPanRef: MutableRefObject<boolean>;
+}) {
   const { map, isLoaded } = useMap();
   const prevVenueId = useRef<string | null>(null);
   const userDraggingRef = useRef(false);
@@ -227,10 +255,20 @@ function PanToVenue({ venue }: { venue: Venue | null }) {
     const venueIdStr = String(venue.venue_id);
     if (prevVenueId.current === venueIdStr) return;
     prevVenueId.current = venueIdStr;
-    if (venue.lng && venue.lat && !userDraggingRef.current) {
-      // 350ms: quick enough that the map visibly follows each card swipe.
-      // Rapid successive easeTo calls retarget smoothly (MapLibre interrupts
-      // the previous animation), so fast flicks track without queueing.
+    if (!venue.lng || !venue.lat) return;
+    // 150ms debounce: during a fast carousel flick every intermediate card
+    // used to fire its own 350ms easeTo, and each animation frame repositions
+    // every DOM marker on the main thread — competing with the carousel's own
+    // momentum scroll. Debouncing means one pan to the settled card; a single
+    // swipe still feels immediate (150ms is under the follow-perception
+    // threshold).
+    const t = setTimeout(() => {
+      if (userDraggingRef.current) return;
+      // Flag the move as programmatic so MapCenterTracker doesn't treat the
+      // card-follow pan as a user gesture and re-sort the carousel under the
+      // user's finger.
+      programmaticPanRef.current = true;
+      map.once('moveend', () => { programmaticPanRef.current = false; });
       // padding.bottom keeps the target marker centered in the VISIBLE strip
       // above the card carousel instead of hiding underneath it.
       map.easeTo({
@@ -238,8 +276,9 @@ function PanToVenue({ venue }: { venue: Venue | null }) {
         duration: 350,
         padding: { top: 120, bottom: 260, left: 0, right: 0 },
       });
-    }
-  }, [map, isLoaded, venue]);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [map, isLoaded, venue, programmaticPanRef]);
 
   return null;
 }
@@ -331,7 +370,13 @@ function useLiveLocation(city: string) {
 }
 
 // Fly to the user's position once when it first appears.
-function FlyToUser({ pos }: { pos: { lat: number; lng: number } | null }) {
+function FlyToUser({
+  pos,
+  programmaticPanRef,
+}: {
+  pos: { lat: number; lng: number } | null;
+  programmaticPanRef: MutableRefObject<boolean>;
+}) {
   const { map, isLoaded } = useMap();
   const flownRef = useRef(false);
 
@@ -339,13 +384,50 @@ function FlyToUser({ pos }: { pos: { lat: number; lng: number } | null }) {
     if (!map || !isLoaded || !pos) { if (!pos) flownRef.current = false; return; }
     if (flownRef.current) return;
     flownRef.current = true;
+    programmaticPanRef.current = true;
+    map.once('moveend', () => { programmaticPanRef.current = false; });
     map.easeTo({
       center: [pos.lng, pos.lat],
       zoom: Math.max(map.getZoom(), 13),
       duration: 800,
       padding: { top: 120, bottom: 260, left: 0, right: 0 },
     });
-  }, [map, isLoaded, pos]);
+  }, [map, isLoaded, pos, programmaticPanRef]);
+
+  return null;
+}
+
+// Feeds user pans/zooms back into card ordering: once a USER-initiated map
+// move settles, the carousel re-sorts by distance from the new map center
+// ("show me what's here"). Programmatic moves (card-follow easeTo, fly-to-
+// user) are excluded via the shared ref — checking e.originalEvent instead
+// would misclassify drag-inertia frames, which fire without one.
+function MapCenterTracker({
+  programmaticPanRef,
+  onUserCenterChange,
+}: {
+  programmaticPanRef: MutableRefObject<boolean>;
+  onUserCenterChange: (center: [number, number]) => void;
+}) {
+  const { map, isLoaded } = useMap();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    const onMoveEnd = () => {
+      if (programmaticPanRef.current) return;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const c = map.getCenter();
+        onUserCenterChange([c.lng, c.lat]);
+      }, 300);
+    };
+    map.on('moveend', onMoveEnd);
+    return () => {
+      map.off('moveend', onMoveEnd);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [map, isLoaded, programmaticPanRef, onUserCenterChange]);
 
   return null;
 }
@@ -376,8 +458,60 @@ function MapMoveClassToggler() {
   return null;
 }
 
+// Memoized per-venue marker: during a card swipe only the outgoing and
+// incoming highlighted venues change props, so a highlight change re-renders
+// 2 markers instead of every marker on the map.
+const VenueMarkerItem = memo(function VenueMarkerItem({
+  venue,
+  color,
+  isHighlighted,
+  isActive,
+  dimmed,
+  showLabel,
+  onSelect,
+}: {
+  venue: Venue;
+  color: string;
+  isHighlighted: boolean;
+  isActive: boolean;
+  dimmed: boolean;
+  showLabel: boolean;
+  onSelect: (venue: Venue) => void;
+}) {
+  return (
+    <MapMarker
+      longitude={venue.lng}
+      latitude={venue.lat}
+      onClick={() => onSelect(venue)}
+    >
+      <MarkerContent className="flex flex-col items-center">
+        <GlowingMarker
+          color={color}
+          isHighlighted={isHighlighted}
+          isActive={isActive}
+          dimmed={dimmed}
+        />
+      </MarkerContent>
+
+      {showLabel && (
+        <MarkerLabel position="bottom" className="mt-0.5">
+          <span
+            className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
+            style={{
+              color: '#1a1a1a',
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              textShadow: '0 0 3px rgba(255,255,255,0.8)',
+            }}
+          >
+            {venue.name}
+          </span>
+        </MarkerLabel>
+      )}
+    </MapMarker>
+  );
+});
+
 export default function CityMapPage() {
-  const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
@@ -435,6 +569,12 @@ export default function CityMapPage() {
   });
 
   const { allVenues, filteredVenues, isLoading, error } = useClientSideVenues(filters);
+
+  // Card ordering is localized to the map: distance from this center, which
+  // follows USER pans/zooms only (card-follow easeTo pans are flagged
+  // programmatic and ignored, so the order never shifts mid-swipe).
+  const [sortCenter, setSortCenter] = useState<[number, number]>(() => getMapCenter(city));
+  const programmaticPanRef = useRef(false);
 
   const [isReady, setIsReady] = useState(false);
   useEffect(() => {
@@ -539,10 +679,20 @@ export default function CityMapPage() {
         } catch { return true; }
       });
     }
-    return result.sort(
-      (a, b) => (new Date(a.event.event_date).getTime() || 0) - (new Date(b.event.event_date).getTime() || 0),
-    );
-  }, [filteredVenues, filters.activeDates]);
+    // Nearest-to-the-map-center first ("what's around here"), replacing the
+    // old date-ascending order that felt random relative to the viewport.
+    // Squared equirectangular distance — monotonic, so no sqrt needed.
+    const [cLng, cLat] = sortCenter;
+    const latScale = Math.cos((cLat * Math.PI) / 180);
+    const distSq = (card: (typeof result)[0]): number => {
+      const coords = card.venue.venue_coordinates;
+      if (!coords) return Number.POSITIVE_INFINITY; // no coords → last
+      const dLng = (coords.lng - cLng) * latScale;
+      const dLat = coords.lat - cLat;
+      return dLng * dLng + dLat * dLat;
+    };
+    return result.sort((a, b) => distSq(a) - distSq(b));
+  }, [filteredVenues, filters.activeDates, sortCenter]);
 
   const allCards = useMemo(() => {
     const rawCards = transformVenueDataToStackedCards(allVenues);
@@ -604,9 +754,11 @@ export default function CityMapPage() {
     return venues.find((v) => String(v.venue_id) === highlightedVenueId) || null;
   }, [highlightedVenueId, venues]);
 
-  const handleDateChange = (dates: string[]) => {
-    setFilters({ ...filters, activeDates: dates });
-  };
+  // Stable references: MobileEventList is memoized, so its props must not be
+  // recreated when unrelated state (e.g. highlightedVenueId) changes.
+  const handleDateChange = useCallback((dates: string[]) => {
+    setFilters((prev) => ({ ...prev, activeDates: dates }));
+  }, []);
 
   const handlePresetRangeDatesChange = useCallback((dates: string[]) => {
     setPresetRangeDates(dates);
@@ -618,9 +770,13 @@ export default function CityMapPage() {
     setSelectedVenue(venue);
   }, []);
 
-  const handleFiltersChange = (newFilters: HierarchicalFilterState) => {
+  const handleFiltersChange = useCallback((newFilters: HierarchicalFilterState) => {
     setFilters(newFilters);
-  };
+  }, []);
+
+  const handleUserCenterChange = useCallback((center: [number, number]) => {
+    setSortCenter(center);
+  }, []);
 
   const handleZoomChange = useCallback((zoom: number) => {
     setCurrentZoom(zoom);
@@ -674,8 +830,6 @@ export default function CityMapPage() {
             selectedDates: filters.activeDates,
             onDateChange: handleDateChange,
           }}
-          onListToggle={() => router.push(`/${city}/cards`)}
-          isListView={false}
           onPresetRangeDatesChange={handlePresetRangeDatesChange}
           onHeightChange={setNavHeight}
           darkMode={true}
@@ -721,47 +875,30 @@ export default function CityMapPage() {
           >
             <DisableTouchRotation />
             <MapMoveClassToggler />
+            <SimplifyBasemap />
             <ZoomTracker onZoomChange={handleZoomChange} />
-            <PanToVenue venue={highlightedVenue} />
+            <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} />
+            <MapCenterTracker
+              programmaticPanRef={programmaticPanRef}
+              onUserCenterChange={handleUserCenterChange}
+            />
             <MapClickHandler onClick={() => { if (!markerJustClickedRef.current) setMapClickCount((c) => c + 1); }} />
 
             {venues.map((venue) => {
-              const color = getVenueColor(venue);
               const venueIdStr = String(venue.venue_id);
               const isHighlighted = highlightedVenueId === venueIdStr;
-              const hasDimming = !!highlightedVenueId;
-
+              const isActive = selectedVenue?.venue_id === venue.venue_id;
               return (
-                <MapMarker
+                <VenueMarkerItem
                   key={venue.venue_id}
-                  longitude={venue.lng}
-                  latitude={venue.lat}
-                  onClick={() => handleVenueSelect(venue)}
-                >
-                  <MarkerContent className="flex flex-col items-center">
-                    <GlowingMarker
-                      color={color}
-                      isHighlighted={isHighlighted}
-                      isActive={selectedVenue?.venue_id === venue.venue_id}
-                      dimmed={hasDimming && !isHighlighted && selectedVenue?.venue_id !== venue.venue_id}
-                    />
-                  </MarkerContent>
-
-                  {showLabels && (
-                    <MarkerLabel position="bottom" className="mt-0.5">
-                      <span
-                        className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
-                        style={{
-                          color: '#1a1a1a',
-                          backgroundColor: 'rgba(255,255,255,0.85)',
-                          textShadow: '0 0 3px rgba(255,255,255,0.8)',
-                        }}
-                      >
-                        {venue.name}
-                      </span>
-                    </MarkerLabel>
-                  )}
-                </MapMarker>
+                  venue={venue}
+                  color={getVenueColor(venue)}
+                  isHighlighted={isHighlighted}
+                  isActive={isActive}
+                  dimmed={!!highlightedVenueId && !isHighlighted && !isActive}
+                  showLabel={showLabels}
+                  onSelect={handleVenueSelect}
+                />
               );
             })}
 
@@ -789,7 +926,7 @@ export default function CityMapPage() {
                 </MarkerContent>
               </MapMarker>
             )}
-            <FlyToUser pos={liveLocation.pos} />
+            <FlyToUser pos={liveLocation.pos} programmaticPanRef={programmaticPanRef} />
 
             <MapControls position="bottom-right" showZoom={false} showCompass={false} />
           </MapView>

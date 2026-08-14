@@ -53,6 +53,25 @@ jobs:
           port: 22
           script: |
             set -e
+            # /api/video-thumb extracts real video frames with ffmpeg; without
+            # it every video tile degrades to a fallback image.
+            if ! command -v ffmpeg >/dev/null 2>&1; then
+              sudo apt-get update -y && sudo apt-get install -y --no-install-recommends ffmpeg
+            fi
+            ffmpeg -version | head -1
             sudo rsync -a --delete /opt/wmv-frontend-dev2-deploy/.next/standalone/ /opt/wmv-frontend-dev2/.next/standalone/
             sudo pm2 restart wmv-frontend-dev2 || sudo PORT=2312 pm2 start /opt/wmv-frontend-dev2/.next/standalone/server.js --name wmv-frontend-dev2
+            # Smoke check: video thumbnails must be real JPEG frames, not fallbacks.
+            sleep 5
+            MP4_URL=$(curl -s --max-time 20 http://127.0.0.1:2312/api/venues | grep -o 'https://storage.googleapis.com/wmv-ig-images/[^"]*\.mp4' | head -1 || true)
+            if [ -n "$MP4_URL" ]; then
+              CT=$(curl -s -o /dev/null -w '%{content_type}' --max-time 30 -G --data-urlencode "src=$MP4_URL" "http://127.0.0.1:2312/api/video-thumb")
+              echo "video-thumb content-type: $CT"
+              case "$CT" in
+                image/jpeg*) echo "video-thumb OK" ;;
+                *) echo "VIDEO THUMB BROKEN (content-type: $CT)"; exit 1 ;;
+              esac
+            else
+              echo "No mp4 found in /api/venues — skipping video-thumb smoke check"
+            fi
             echo "Dev2 frontend deploy complete — $(date)"

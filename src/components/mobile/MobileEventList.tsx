@@ -74,6 +74,77 @@ interface MobileEventListProps {
 // Two modes: 'list' shows all cards, 'marker' shows single venue card
 type PanelMode = 'list' | 'marker';
 
+const EMPTY_DATE_OPTIONS: DateOption[] = [];
+
+// Memoized carousel slot: without it, every activeCardIndex change re-rendered
+// EVERY card in the strip (fresh closures per parent render). With stable
+// callbacks, an index change re-renders only the two slots whose isFocused
+// flag flipped.
+interface CarouselSlotProps {
+  card: EventCardData;
+  displayCard: EventCardData;
+  displayDates: string[];
+  overrideDates: string[] | null;
+  dateOptions: DateOption[];
+  isSingle: boolean;
+  isFocused: boolean;
+  darkMode: boolean;
+  isPresetRange: boolean;
+  presetRangeDates: string[];
+  getCategoryColor: (category: string) => { hue: number; saturation: number };
+  onExpand: (card: EventCardData, displayCard: EventCardData, overrideDates: string[] | null) => void;
+  onClose: () => void;
+  onMiniDateChange: (venueId: string, dates: string[]) => void;
+  registerRef: (eventId: string, el: HTMLDivElement | null) => void;
+}
+
+const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
+  card,
+  displayCard,
+  displayDates,
+  overrideDates,
+  dateOptions,
+  isSingle,
+  isFocused,
+  darkMode,
+  isPresetRange,
+  presetRangeDates,
+  getCategoryColor,
+  onExpand,
+  onClose,
+  onMiniDateChange,
+  registerRef,
+}) {
+  const handleExpand = () => onExpand(card, displayCard, overrideDates);
+  return (
+    <div
+      ref={(el) => registerRef(card.event.id, el)}
+      className="flex-shrink-0 flex"
+      style={{
+        width: isSingle ? '92%' : '85%',
+        scrollSnapAlign: 'center',
+      }}
+    >
+      <MobileEventCard
+        card={displayCard}
+        getCategoryColor={getCategoryColor}
+        isExpanded={true}
+        onToggle={handleExpand}
+        isFullScreen={false}
+        onFullScreenToggle={handleExpand}
+        onClose={onClose}
+        dateOptions={dateOptions}
+        selectedDates={displayDates}
+        onDateChange={(dates) => onMiniDateChange(card.venue.id, dates)}
+        isPresetRange={isPresetRange}
+        presetRangeDates={presetRangeDates}
+        isFocused={isFocused}
+        darkMode={darkMode}
+      />
+    </div>
+  );
+});
+
 const MobileEventList: React.FC<MobileEventListProps> = ({
   cards,
   allCards = [],
@@ -126,6 +197,18 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   const halfViewportRef = useRef(0);
   const scrollTickingRef = useRef(false);
 
+  // While the strip is actively scrolling, the focused card's auto-scrolling
+  // pills (their own per-frame rAF loop) are paused — two rAF writers plus
+  // the map easing is exactly the recipe for dropped frames on mid-range
+  // phones. Cleared 180ms after the last scroll event.
+  const [isCarouselScrolling, setIsCarouselScrolling] = useState(false);
+  const scrollingRef = useRef(false);
+  const scrollIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current);
+  }, []);
+
   const measureCarousel = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -154,6 +237,16 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   // swipe, not per frame), so the marker highlight + pan can follow it
   // immediately — a settle delay here read as "the marker lags my swipe".
   const handleCarouselScroll = useCallback(() => {
+    if (!scrollingRef.current) {
+      scrollingRef.current = true;
+      setIsCarouselScrolling(true);
+    }
+    if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current);
+    scrollIdleTimerRef.current = setTimeout(() => {
+      scrollingRef.current = false;
+      setIsCarouselScrolling(false);
+    }, 180);
+
     if (scrollTickingRef.current) return;
     scrollTickingRef.current = true;
     requestAnimationFrame(() => {
@@ -361,6 +454,18 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     setListFullScreenVenueId(null);
   }, []);
 
+  // Stable callbacks for the memoized CarouselSlot
+  const handleSlotExpand = useCallback((card: EventCardData, displayCard: EventCardData, overrideDates: string[] | null) => {
+    // Always carry the displayed card into expanded view
+    setExpandedCardOverride(displayCard);
+    if (overrideDates) setExpandedLocalDates(overrideDates);
+    handleListFullScreenToggle(card.venue.id, card.event.id);
+  }, [handleListFullScreenToggle]);
+
+  const registerCardRef = useCallback((eventId: string, el: HTMLDivElement | null) => {
+    if (el) cardRefs.current.set(eventId, el);
+  }, []);
+
   // --- Marker mode handlers ---
   const handleMarkerFullScreenToggle = useCallback(() => {
     setMarkerFullScreen(prev => !prev);
@@ -549,50 +654,25 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                     !activeDates || activeDates.length === 0 ||
                     override.dates.some(d => activeDates.includes(d))
                   );
-                  const displayCard = isOverrideValid ? override.card : card;
-                  const displayDates = isOverrideValid ? override.dates : selectedDates;
                   return (
-                    <div
+                    <CarouselSlot
                       key={`${card.venue.id}-${card.event.id}`}
-                      ref={(el) => {
-                        if (el) cardRefs.current.set(card.event.id, el);
-                      }}
-                      className="flex-shrink-0 flex"
-                      style={{
-                        width: displayCards.length === 1 ? '92%' : '85%',
-                        scrollSnapAlign: 'center',
-                      }}
-                    >
-                      <MobileEventCard
-                        card={displayCard}
-                        getCategoryColor={getCategoryColor}
-                        isExpanded={true}
-                        onToggle={() => {
-                          // Always carry the displayed card into expanded view
-                          setExpandedCardOverride(displayCard);
-                          if (isOverrideValid && override) {
-                            setExpandedLocalDates(override.dates);
-                          }
-                          handleListFullScreenToggle(card.venue.id, card.event.id);
-                        }}
-                        isFullScreen={false}
-                        onFullScreenToggle={() => {
-                          setExpandedCardOverride(displayCard);
-                          if (isOverrideValid && override) {
-                            setExpandedLocalDates(override.dates);
-                          }
-                          handleListFullScreenToggle(card.venue.id, card.event.id);
-                        }}
-                        onClose={handleListDismiss}
-                        dateOptions={venueDateMap.get(card.venue.id) || []}
-                        selectedDates={displayDates}
-                        onDateChange={(dates) => handleMiniCardDateChange(card.venue.id, dates)}
-                        isPresetRange={isPresetRange}
-                        presetRangeDates={presetRangeDates}
-                        isFocused={cardIndex === activeCardIndex}
-                        darkMode={darkMode}
-                      />
-                    </div>
+                      card={card}
+                      displayCard={isOverrideValid ? override.card : card}
+                      displayDates={isOverrideValid ? override.dates : selectedDates}
+                      overrideDates={isOverrideValid ? override.dates : null}
+                      dateOptions={venueDateMap.get(card.venue.id) || EMPTY_DATE_OPTIONS}
+                      isSingle={displayCards.length === 1}
+                      isFocused={cardIndex === activeCardIndex && !isCarouselScrolling}
+                      darkMode={darkMode}
+                      isPresetRange={isPresetRange}
+                      presetRangeDates={presetRangeDates}
+                      getCategoryColor={getCategoryColor}
+                      onExpand={handleSlotExpand}
+                      onClose={handleListDismiss}
+                      onMiniDateChange={handleMiniCardDateChange}
+                      registerRef={registerCardRef}
+                    />
                   );
                 })}
               </div>
@@ -603,7 +683,9 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                   {displayCards.map((_, index) => (
                     <div
                       key={index}
-                      className="rounded-full transition-all duration-200"
+                      // transition-colors only: animating width is a layout
+                      // operation per index change — the width jump is instant.
+                      className="rounded-full transition-colors duration-150"
                       style={{
                         width: index === activeCardIndex ? '16px' : '6px',
                         height: '6px',
@@ -623,4 +705,6 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   );
 };
 
-export default MobileEventList;
+// Memoized: the map page re-renders on every swipe (highlight change), and
+// all props passed to this list are referentially stable across that change.
+export default React.memo(MobileEventList);

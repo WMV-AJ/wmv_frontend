@@ -41,11 +41,12 @@ export default function NavPill({ city, active, bottomOffset = 16 }: NavPillProp
         gap: 2,
         padding: 4,
         borderRadius: 999,
-        background: 'rgba(20,20,31,0.92)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: `1px solid ${T.lineFaint}`,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        // Near-opaque surfaceAlt + real border: the old surface-on-bg fill
+        // was ~4 RGB points from the page background (black-on-black), and
+        // the backdrop blur cost a recomposite per frame over the moving map.
+        background: 'rgba(28,28,42,0.97)',
+        border: `1px solid ${T.line}`,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
       {SEGMENTS.map(({ view, label, Icon, path }) => {
@@ -68,8 +69,8 @@ export default function NavPill({ city, active, bottomOffset = 16 }: NavPillProp
               height: 38,
               padding: isActive ? '0 18px' : '0 13px',
               borderRadius: 999,
-              background: isActive ? T.accent : 'transparent',
-              color: isActive ? T.inkInverse : T.inkFaint,
+              background: isActive ? T.accent : T.overlay,
+              color: isActive ? T.inkInverse : T.inkMuted,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
               fontFamily: mono,

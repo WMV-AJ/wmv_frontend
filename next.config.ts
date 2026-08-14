@@ -37,7 +37,9 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24, // 24h on-disk cache
     // 96 covers the card thumbnails; keeps Sharp jobs per image low.
     imageSizes: [96, 128, 256],
-    deviceSizes: [640, 1080],
+    // 640 covers card galleries, 828 the fullscreen lightbox on phones,
+    // 1080 large/retina viewports.
+    deviceSizes: [640, 828, 1080],
   },
   output: 'standalone',
   eslint: {

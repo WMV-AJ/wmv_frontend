@@ -262,6 +262,7 @@ function TonightStrip({ city }: { city: CitySlug }) {
                   alt={e.name || ''}
                   sizes="132px"
                   fill
+                  priority={i === 0}
                   lazyVideo
                 />
                 <div style={{
