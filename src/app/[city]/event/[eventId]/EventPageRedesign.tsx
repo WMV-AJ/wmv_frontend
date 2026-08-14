@@ -195,6 +195,9 @@ function SpecCell({
     <div style={{
       padding: first ? '14px 12px 14px 0' : '14px 12px',
       borderLeft: first ? 'none' : `1px solid ${T.line}`,
+      // Content-aware width: a cell with a long note (e.g. a wordy deal
+      // under ENTRY) grows instead of being squeezed into a rigid third.
+      flex: '1 1 auto', minWidth: 0, maxWidth: '55%',
     }}>
       <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '1.3px', textTransform: 'uppercase', color: T.inkFaint }}>
         {label}
@@ -470,7 +473,7 @@ export default function EventPageRedesign({
             {/* ── SPEC STRIP ───────────────────────────────────────────────── */}
             <div style={{ padding: '20px 20px 0' }}>
               <div style={{
-                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+                display: 'flex', alignItems: 'stretch',
                 borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}`,
               }}>
                 <SpecCell
