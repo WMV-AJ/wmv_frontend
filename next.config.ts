@@ -30,6 +30,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'storage.googleapis.com', pathname: '/wmv-ig-images/**' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
+      // Ticketing sites host their own posters. Without these the optimizer
+      // answers 400 and every website-sourced event renders with no image,
+      // even though image_url is set on all 399 active listings and reaches
+      // final_1.media_url_1. Measured against production on 2026-08-20:
+      //   highape / allevents  direct 200, /_next/image 400
+      //   storage.googleapis   direct 200, /_next/image 200
+      // The 400 is the tell - an allowed host missing a file answers 404.
+      { protocol: 'https', hostname: 'highape.blr1.cdn.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'cdn-ip.allevents.in' },
       // A chunk of media rows still point at raw Instagram CDN URLs (the
       // scraper hasn't mirrored them to GCS). Without these, the optimizer
       // 400s and the tile shows a broken image.
