@@ -231,18 +231,41 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
     );
   };
 
-  const midpoint = Math.ceil(sortedCategories.length / 2);
-  const row1 = sortedCategories.slice(0, midpoint).map(({ category }) => category);
-  const row2 = sortedCategories.slice(midpoint).map(({ category }) => category);
+  // Three rows, not two. At two rows the ten Bangalore categories ran wider
+  // than the bar and the last few (Workshop, Pop Up) could only be reached by
+  // scrolling sideways - easy to miss entirely on a phone.
+  //
+  // Contiguous chunks rather than round-robin so the count ordering still
+  // reads left-to-right, and sizes are balanced (10 -> 4/3/3, not 4/4/2) so no
+  // single row is much wider than the rest.
+  const PILL_ROWS = 3;
+  const perRow = Math.floor(sortedCategories.length / PILL_ROWS);
+  const remainder = sortedCategories.length % PILL_ROWS;
+  const pillRows: string[][] = [];
+  let taken = 0;
+  for (let r = 0; r < PILL_ROWS; r += 1) {
+    const size = perRow + (r < remainder ? 1 : 0);
+    if (size > 0) {
+      pillRows.push(sortedCategories.slice(taken, taken + size).map(({ category }) => category));
+      taken += size;
+    }
+  }
 
   const pillsContent = (
     <div className="flex flex-col gap-2">
       {/* Primary Category Row with Icons */}
-      <div className="overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div
+        className={wrapPills ? 'pb-0.5' : 'overflow-x-auto scrollbar-hide pb-0.5'}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {wrapPills ? (
           <div className="flex flex-col gap-1.5">
-            <div className="flex gap-1.5">{row1.map(renderPill)}</div>
-            <div className="flex gap-1.5">{row2.map(renderPill)}</div>
+            {/* flex-wrap as well as the row split: a city with longer category
+                names, or a narrow phone, spills onto another line instead of
+                bringing the sideways scroll back. */}
+            {pillRows.map((row, i) => (
+              <div key={i} className="flex flex-wrap gap-1.5">{row.map(renderPill)}</div>
+            ))}
           </div>
         ) : (
           <div className="flex gap-1.5">
