@@ -27,6 +27,9 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: https://wheresmyvibe.com
           NEXT_PUBLIC_APP_URL: https://wheresmyvibe.com
           NODE_ENV: production
+          # GlitchTip (Sentry-compatible) — public browser DSN, inlined at build.
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_SENTRY_ENVIRONMENT: production
         run: |
           npm run build
           cp -r public .next/standalone/

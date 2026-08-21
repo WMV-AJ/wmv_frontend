@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function Error({
   error,
@@ -10,6 +11,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    Sentry.captureException(error);
     // Only log errors in development
     if (process.env.NODE_ENV === 'development') {
       console.error(error);

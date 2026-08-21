@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Tree-shake icon libraries so we pay only for the icons we actually import.
@@ -59,4 +60,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry wraps the config to inject the client/server/edge instrumentation
+// and (only when SENTRY_AUTH_TOKEN is present at build time) upload source
+// maps. Without the token it is a thin pass-through; without
+// NEXT_PUBLIC_SENTRY_DSN at runtime the SDK never initialises.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  disableLogger: true,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  // Route browser events through the app to dodge ad-blockers.
+  tunnelRoute: '/monitoring',
+});
