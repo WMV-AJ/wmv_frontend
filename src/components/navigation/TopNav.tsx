@@ -496,8 +496,26 @@ const TopNav: React.FC<TopNavProps> = ({
         }}
       >
         <div className="flex flex-col gap-1.5">
-          {/* ROW 1: Date pills with inline month labels + Dropdown + Search + List toggle */}
+          {/* ROW 1: Logo + Date pills with inline month labels + Dropdown + Search + List toggle */}
           <div className="flex items-center gap-1.5">
+            {/* WMV Logo - the masthead carries it on the homepage, but this
+                floating nav is the whole header on /map and /cards, so without
+                it those two screens showed no brand mark at all. Same animated
+                GIF and circular crop as HomeMasthead; plain <img> so the
+                browser plays the GIF natively. Not a link - both screens
+                already have a HOME pill fixed at the bottom. */}
+            <img
+              src="/wmv-logo.gif"
+              alt="Where's My Vibe"
+              className="flex-shrink-0"
+              style={{
+                width: '28px',
+                height: '28px',
+                objectFit: 'cover',
+                borderRadius: '50%',
+              }}
+            />
+
             {/* Date pills with inline month separators */}
             {showDatePicker && datePickerProps && (
               <div className="flex-1 min-w-0 flex items-center gap-1" style={{ overflow: 'visible' }}>
