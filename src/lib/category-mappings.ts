@@ -166,7 +166,7 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   orange: "#F8991D",   // Food & Dining — Honey
   green: "#FC4024",    // Live Performance — Spicy
   pink: "#8552A0",     // Club Night — Dessert
-  red: "#00784F",      // Sports Viewing — Basil
+  red: "#1FA86E",      // Sports Viewing — Basil, lifted for contrast on the dark map
   purple: "#EF4782",   // Ladies Night — Femme
   teal: "#9F8D32",     // Happy Hour — Butch
   slate: "#00859C",    // Business Event — Proud
