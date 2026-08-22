@@ -24,6 +24,9 @@ interface CategoryPillsProps {
   inlineMode?: boolean;
   variant?: 'filled' | 'outlined';
   wrapPills?: boolean;
+  /** Max rows when wrapPills is on; pills are dealt across rows evenly and the
+   *  rows scroll horizontally together. Default 3. */
+  wrapRows?: number;
   darkMode?: boolean;
 }
 
@@ -72,6 +75,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   inlineMode = false,
   variant = 'filled',
   wrapPills = false,
+  wrapRows = 3,
   darkMode = false,
 }) => {
   const isOutlined = variant === 'outlined';
@@ -231,18 +235,26 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
     );
   };
 
-  const midpoint = Math.ceil(sortedCategories.length / 2);
-  const row1 = sortedCategories.slice(0, midpoint).map(({ category }) => category);
-  const row2 = sortedCategories.slice(midpoint).map(({ category }) => category);
+  // Wrapped layout: at most `wrapRows` rows (3 by default), filled evenly so
+  // no row is much longer than the others, all scrolling horizontally as one
+  // block. Fewer than ~4 pills per row would look sparse, so the row count
+  // grows with the list: ≤4 pills → 1 row, ≤8 → 2, otherwise the max.
+  const maxRows = Math.max(1, Math.floor(wrapRows));
+  const rowCount = Math.min(maxRows, Math.max(1, Math.ceil(sortedCategories.length / 4)));
+  const perRow = Math.ceil(sortedCategories.length / rowCount);
+  const rows: string[][] = Array.from({ length: rowCount }, (_, i) =>
+    sortedCategories.slice(i * perRow, (i + 1) * perRow).map(({ category }) => category),
+  ).filter(r => r.length > 0);
 
   const pillsContent = (
     <div className="flex flex-col gap-2">
       {/* Primary Category Row with Icons */}
       <div className="overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {wrapPills ? (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex gap-1.5">{row1.map(renderPill)}</div>
-            <div className="flex gap-1.5">{row2.map(renderPill)}</div>
+          <div className="flex flex-col gap-1.5 w-max min-w-full">
+            {rows.map((row, i) => (
+              <div key={`pill-row-${i}`} className="flex gap-1.5">{row.map(renderPill)}</div>
+            ))}
           </div>
         ) : (
           <div className="flex gap-1.5">
