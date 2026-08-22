@@ -152,30 +152,39 @@ export const SECONDARY_CATEGORIES_MAP: Record<string, string[]> = {
   ],
 };
 
-// Hex color mapping for UI — brightened palette for dark theme visibility
+// Hex color mapping for UI — "The Boldest Co." retro palette (Obscurio & Co.,
+// adopted 2026-08-22): Oat #EBDCC7 · Cream #EBDEA6 · Sage #BBC5AB · Peach
+// #F09E7D · Honey #F8991D · Spicy #FC4024 · Femme #EF4782 · Dessert #8552A0 ·
+// Butch #9F8D32 · Basil #00784F · Proud #00859C · Pine #004242.
+//
+// Twelve swatches for twenty-one categories, so: the categories every city
+// shares get one swatch each; city-specific extras get a lighter tint of a
+// swatch, chosen so no two categories that appear together in the same city
+// share a colour. Pine is too dark to read as outlined text on the map, so it
+// is only used as a tint base.
 export const COLOR_HEX_MAP: Record<string, string> = {
-  purple: "#E060A8",   // Ladies Night — bright magenta
-  red: "#8FD14F",      // Sports Viewing — bright lime green
-  yellow: "#FF6B4A",   // Day Party — bright coral-red
-  orange: "#FFB020",   // Food & Dining — bright amber
-  pink: "#9B72D0",     // Club Night — bright purple
-  indigo: "#4BAEE8",   // Brunch — bright sky blue
-  blue: "#2EC495",     // Pool Party — bright emerald
-  green: "#3ECFCC",    // Live Performance — bright cyan-teal
-  teal: "#FFD600",     // Happy Hour — bright yellow
-  gray: "#AAAAAA",     // Comedy Night — lighter gray
-  // ── Added with 046/047 city-specific taxonomies ──
-  violet: "#C77DFF",   // Cocktail Bar Night
-  amber: "#D4A574",    // Pub Night
-  sage: "#9DCC5F",     // Workshop
-  coral: "#FF9AA2",    // Family & Kids
-  mint: "#4ECDC4",     // Activities
-  rose: "#FF6F91",     // Karaoke
-  burgundy: "#E07A5F", // Tasting Event (brightened from #B85450 for dark theme)
-  gold: "#F7B731",     // Pop Up
-  slate: "#7B8CDE",    // Business Event (brightened)
-  saffron: "#FF8C42",  // Bollywood Night
-  lemon: "#F4E04D"     // Standup Comedy
+  orange: "#F8991D",   // Food & Dining — Honey
+  green: "#FC4024",    // Live Performance — Spicy
+  pink: "#8552A0",     // Club Night — Dessert
+  red: "#00784F",      // Sports Viewing — Basil
+  purple: "#EF4782",   // Ladies Night — Femme
+  teal: "#9F8D32",     // Happy Hour — Butch
+  slate: "#00859C",    // Business Event — Proud
+  gray: "#EBDCC7",     // Comedy Night — Oat
+  indigo: "#EBDEA6",   // Brunch — Cream
+  blue: "#BBC5AB",     // Pool Party — Sage
+  yellow: "#F09E7D",   // Day Party & Afterwork — Peach
+  // ── City-specific (046/047) — tints of the palette ──
+  violet: "#F09E7D",   // Cocktail Bar Night — Peach (never co-listed with Day Party)
+  amber: "#BBC5AB",    // Pub Night — Sage (never co-listed with Pool Party)
+  mint: "#EBDEA6",     // Activities — Cream (never co-listed with Brunch)
+  rose: "#B07CC6",     // Karaoke — Dessert tint
+  burgundy: "#2FA372", // Tasting Event — Basil tint
+  sage: "#3BB3C9",     // Workshop — Proud tint
+  coral: "#F7BFA6",    // Family & Kids — Peach tint
+  gold: "#FBB450",     // Pop Up — Honey tint
+  saffron: "#F57BA6",  // Bollywood Night — Femme tint
+  lemon: "#EBDCC7"     // Standup Comedy — Oat (Mumbai's comedy label)
 };
 
 // Google Maps marker color mapping
