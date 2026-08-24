@@ -74,6 +74,24 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
     }
   }, [isOpen]);
 
+  /**
+   * The box at the top of the sheet narrows the lists below it.
+   *
+   * It always searched venues and events, applied on Apply — but it sat
+   * directly above 172 area chips and did nothing to them. Typing
+   * "koramangala" left all 172 on screen, so the only way to reach an area was
+   * to scroll the whole list. Everyone expects a search box to filter what is
+   * underneath it, and here it now does, while still searching the results too.
+   *
+   * A selected value is never hidden: a filter you cannot see is a filter you
+   * cannot remove.
+   */
+  const narrow = (options: string[], selected: string[]): string[] => {
+    const q = (tempFilters.searchQuery || '').trim().toLowerCase();
+    if (!q) return options;
+    return options.filter(o => o.toLowerCase().includes(q) || selected.includes(o));
+  };
+
   const filterSections: FilterSectionConfig[] = [
     {
       id: 'selectedAreas',
@@ -81,7 +99,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       type: 'collapsible',
       isCollapsible: true,
       isExpanded: expandedSections.includes('selectedAreas'),
-      options: filterOptions.areas,
+      options: narrow(filterOptions.areas, tempFilters.selectedAreas),
       selectedValues: tempFilters.selectedAreas
     },
     {
@@ -90,7 +108,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       type: 'collapsible',
       isCollapsible: true,
       isExpanded: expandedSections.includes('activeDates'),
-      options: filterOptions.dates,
+      options: narrow(filterOptions.dates, tempFilters.activeDates),
       selectedValues: tempFilters.activeDates
     },
     {
@@ -99,7 +117,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       type: 'pills',
       isCollapsible: true,
       isExpanded: expandedSections.includes('activeOffers'),
-      options: filterOptions.specialOffers || [],
+      options: narrow(filterOptions.specialOffers || [], tempFilters.activeOffers || []),
       selectedValues: tempFilters.activeOffers || []
     },
     {

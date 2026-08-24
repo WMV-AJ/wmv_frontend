@@ -1,9 +1,11 @@
 // Filter Options API route - areas from WMV backend with hierarchical genre/vibe structure
 import { NextResponse } from 'next/server';
 import { getCached } from '@/lib/server-cache';
+import { DEAL_TYPE_LABELS, collapseAreas } from '@/lib/filter-taxonomy';
 
 interface FilterRecord {
   venue_area?: string;
+  deals?: Array<{ type?: string; timing?: string | null; description?: string }>;
   event_vibe?: string[];
   event_date?: string;
   music_genre_processed?: {
@@ -83,6 +85,9 @@ async function buildFilterOptions(city: string | null): Promise<Record<string, u
         music_genre_processed: r.music_genre_processed,
         venue_category: r.venue_category,
         special_offers: r.special_offers,
+        // The structured form of the same thing. Without it here the offers
+        // filter has nothing to build from but the free-text string.
+        deals: r.deals,
         ticket_price: r.ticket_price,
         venue_price: r.venue_price,
         event_categories: r.event_categories,
@@ -181,9 +186,9 @@ async function buildFilterOptions(city: string | null): Promise<Record<string, u
 
     // Areas: exclude area filter, apply others
     const areaFilteredData = getFilteredDataExcluding('areas');
-    const uniqueAreas = [...new Set(
-      areaFilteredData?.map(record => record.venue_area).filter(area => area && area.trim())
-    )].sort();
+    const uniqueAreas = collapseAreas(
+      (areaFilteredData || []).map(record => record.venue_area).filter((a): a is string => Boolean(a && a.trim())),
+    );
 
     // Extract hierarchical genres from music_genre_processed column
     const genreFilteredData = getFilteredDataExcluding('genres');
@@ -340,18 +345,40 @@ async function buildFilterOptions(city: string | null): Promise<Record<string, u
     });
     const venueCategories = [...new Set(allVenueCategories)].filter(cat => cat && cat.trim()).sort();
 
-    // Extract unique special offers from special_offers array field
-    const allOffers = data.flatMap((record: any) => {
-      if (!record.special_offers) return [];
-      if (Array.isArray(record.special_offers)) return record.special_offers;
-      // If it's a string, split by common delimiters
-      if (typeof record.special_offers === 'string') {
-        return record.special_offers.split(/[,|;]/).map(o => o.trim()).filter(o => o);
+    // Special offers come from the structured `deals` array, not from splitting
+    // the free-text `special_offers` string.
+    //
+    // That split was on /[,|;]/ — including the commas INSIDE numbers. One real
+    // offer, "Recharge ₹5,999, Get ₹13,000 + Free Football", became four filter
+    // options: "Recharge ₹5", "999", "Get ₹13", "000 + Free Football". The live
+    // list held 553 of these, among them "000", "000 CASH", "000 Bonus Points"
+    // and a 201-character SBI credit-card advertisement. Nothing in it was
+    // selectable in any meaningful sense.
+    //
+    // Stage 3 already writes `deals: [{ type, timing, description }]`, and the
+    // type is drawn from a fixed set. Six labels replace five hundred fragments,
+    // and unlike the fragments they can actually be matched against a venue.
+    const dealCounts = new Map<string, number>();
+    for (const record of (data as any[]) || []) {
+      const deals = record?.deals;
+      if (!Array.isArray(deals)) continue;
+      // One event advertising three happy-hour deals is still one event under
+      // "Happy Hour" — count the event, not the deal.
+      const seen = new Set<string>();
+      for (const d of deals) {
+        const type = typeof d?.type === 'string' ? d.type : '';
+        const label = DEAL_TYPE_LABELS[type];
+        if (label && !seen.has(label)) {
+          seen.add(label);
+          dealCounts.set(label, (dealCounts.get(label) || 0) + 1);
+        }
       }
-      return [];
-    }) || [];
-
-    const uniqueOffers = [...new Set(allOffers)].sort();
+    }
+    // Commonest first: the filter is a shortcut, and the useful shortcuts are
+    // the ones that lead somewhere.
+    const uniqueOffers = [...dealCounts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([label]) => label);
 
     // Helper function to categorize time into Morning/Afternoon/Evening/Night
     const categorizeTime = (timeStr: string): string[] => {
