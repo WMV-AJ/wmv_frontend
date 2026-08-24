@@ -44,7 +44,20 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
 }) => {
   // Temporary filter state for apply/cancel functionality
   const [tempFilters, setTempFilters] = useState<HierarchicalFilterState>(filters);
-  const [expandedSections, setExpandedSections] = useState<string[]>(['selectedAreas']);
+  /**
+   * Which filter's options are on screen. One at a time, and the others stay
+   * reachable as tabs rather than being pushed below the fold.
+   *
+   * The sections used to be a two-column grid of accordions sorted
+   * expanded-first. Opening Areas — 77 options — grew that card until Dates and
+   * Rating were off the bottom of the sheet, so the only way to reach a filter
+   * was to close the one you were already using.
+   *
+   * Special Offers opens first: it is the shortest list, every entry is a
+   * reason to go out tonight, and it is the one filter that changes what you
+   * find rather than just where.
+   */
+  const [activeSection, setActiveSection] = useState<string>('activeOffers');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Ref for search input auto-focus
@@ -98,7 +111,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Areas',
       type: 'collapsible',
       isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedAreas'),
+      isExpanded: activeSection === 'selectedAreas',
       options: narrow(filterOptions.areas, tempFilters.selectedAreas),
       selectedValues: tempFilters.selectedAreas
     },
@@ -107,7 +120,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Dates',
       type: 'collapsible',
       isCollapsible: true,
-      isExpanded: expandedSections.includes('activeDates'),
+      isExpanded: activeSection === 'activeDates',
       options: narrow(filterOptions.dates, tempFilters.activeDates),
       selectedValues: tempFilters.activeDates
     },
@@ -116,7 +129,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Special Offers',
       type: 'pills',
       isCollapsible: true,
-      isExpanded: expandedSections.includes('activeOffers'),
+      isExpanded: activeSection === 'activeOffers',
       options: narrow(filterOptions.specialOffers || [], tempFilters.activeOffers || []),
       selectedValues: tempFilters.activeOffers || []
     },
@@ -125,19 +138,15 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Rating',
       type: 'pills',
       isCollapsible: true,
-      isExpanded: expandedSections.includes('selectedRatings'),
+      isExpanded: activeSection === 'selectedRatings',
       options: ['3+ Stars', '4+ Stars', '5 Stars'],
       selectedValues: (tempFilters.selectedRatings || []).map(r => `${r}+ Stars`)
     },
   ];
 
-  const handleSectionToggle = (sectionId: string) => {
-    setExpandedSections(prev =>
-      prev.includes(sectionId)
-        ? prev.filter(id => id !== sectionId)
-        : [sectionId] // Only allow one section expanded at a time
-    );
-  };
+  // A tab is a destination, not a toggle: tapping the one you are already on
+  // must not leave the panel showing nothing.
+  const handleSectionToggle = (sectionId: string) => setActiveSection(sectionId);
 
   const handleFilterChange = (sectionId: string, selectedValues: string[]) => {
     // Special handling for ratings - convert "3+ Stars" to numbers
@@ -397,18 +406,55 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               )}
 
               {/* Filter Content */}
-              <div className="px-4 py-3 flex-1 overflow-y-auto scrollbar-thin">
-                <div className="grid grid-cols-2 gap-2">
+              {/* Tabs: every filter stays on screen, one shows its options.
+                  min-h-0 is load-bearing — a flex child defaults to min-height
+                  auto, which lets the options push the tabs off the top instead
+                  of scrolling within their own box. */}
+              <div className="flex-1 flex flex-col min-h-0">
+                <div
+                  role="tablist"
+                  aria-label="Filter by"
+                  className="flex-shrink-0 flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {filterSections.map((section) => {
+                    const isActive = section.id === activeSection;
+                    const count = section.selectedValues.filter(v => !isAllCitySentinel(v)).length;
+                    return (
+                      <button
+                        key={section.id}
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => handleSectionToggle(section.id)}
+                        className={`flex-shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'bg-white text-black'
+                            : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+                        }`}
+                      >
+                        {section.title}
+                        {count > 0 && (
+                          <span
+                            className={`min-w-[18px] rounded-full px-1 text-xs font-semibold leading-[18px] ${
+                              isActive ? 'bg-black/15 text-black' : 'bg-white/20 text-white'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 pb-3">
                   {filterSections
-                    .sort((a, b) => {
-                      if (a.isExpanded && !b.isExpanded) return -1;
-                      if (!a.isExpanded && b.isExpanded) return 1;
-                      return 0;
-                    })
+                    .filter((section) => section.id === activeSection)
                     .map((section) => (
                       <FilterSection
                         key={section.id}
                         section={section}
+                        hideHeader
                         onToggle={() => handleSectionToggle(section.id)}
                         onSelectionChange={(selectedValues) =>
                           handleFilterChange(section.id, selectedValues)
