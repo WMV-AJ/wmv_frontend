@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
-import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
+import { mergeSameVenueDayCards, transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
 import { trackEvent } from '@/lib/analytics/track';
 import { isUpcomingInCity } from '@/lib/city-date';
@@ -54,7 +54,8 @@ export default function VibeListingPage() {
         eventMap.set(card.event.id, card);
       }
     });
-    return Array.from(eventMap.values());
+    // One venue, one card — same treatment as the map and the list page.
+    return mergeSameVenueDayCards(Array.from(eventMap.values()));
   }, [allVenues, vibe]);
 
   const Icon = vibe?.Icon;

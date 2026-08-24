@@ -43,6 +43,9 @@ interface EventCardData {
       timing?: string[];
     };
   };
+  // Present only on a card that mergeSameVenueDayCards folded together: every
+  // event this venue runs on this date, the first of which is this card.
+  sameDayCards?: EventCardData[];
 }
 
 interface DateOption {
@@ -83,6 +86,8 @@ const EMPTY_DATE_OPTIONS: DateOption[] = [];
 interface CarouselSlotProps {
   card: EventCardData;
   displayCard: EventCardData;
+  sameDayCards?: EventCardData[];
+  onSameDayEventSelect: (primaryEventId: string, picked: EventCardData) => void;
   displayDates: string[];
   overrideDates: string[] | null;
   dateOptions: DateOption[];
@@ -101,6 +106,8 @@ interface CarouselSlotProps {
 const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
   card,
   displayCard,
+  sameDayCards,
+  onSameDayEventSelect,
   displayDates,
   overrideDates,
   dateOptions,
@@ -127,6 +134,8 @@ const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
     >
       <MobileEventCard
         card={displayCard}
+        sameDayCards={sameDayCards}
+        onSameDayEventSelect={(picked) => onSameDayEventSelect(card.event.id, picked)}
         getCategoryColor={getCategoryColor}
         isExpanded={true}
         onToggle={handleExpand}
@@ -174,6 +183,11 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   const [expandedCardOverride, setExpandedCardOverride] = useState<EventCardData | null>(null);
   const [expandedLocalDates, setExpandedLocalDates] = useState<string[]>([]);
   const [miniCardOverrides, setMiniCardOverrides] = useState<Map<string, { card: EventCardData; dates: string[] }>>(new Map());
+  // Which of a merged card's same-day events the viewer picked in the switcher,
+  // keyed by the merged card's own event id. Held here rather than inside the
+  // card so that expanding it, sharing it, and opening its event page all use
+  // the event on screen — the card is rendered from whatever this resolves to.
+  const [sameDayPicks, setSameDayPicks] = useState<Map<string, EventCardData>>(new Map());
   const lastExpandedEventIdRef = useRef<string | null>(null);
 
   // Filter cards: when specific dates are active, only show cards for venues
@@ -462,6 +476,23 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     handleListFullScreenToggle(card.venue.id, card.event.id);
   }, [handleListFullScreenToggle]);
 
+  const handleSameDayEventSelect = useCallback((primaryEventId: string, picked: EventCardData) => {
+    setSameDayPicks(prev => {
+      const next = new Map(prev);
+      next.set(primaryEventId, picked);
+      return next;
+    });
+  }, []);
+
+  // Resolve a card to the same-day event the viewer picked, if any. The pick is
+  // only honoured when it still belongs to this card's group — a date change
+  // swaps the card underneath and its events are different ones.
+  const withSameDayPick = useCallback((primaryEventId: string, base: EventCardData): EventCardData => {
+    const picked = sameDayPicks.get(primaryEventId);
+    if (!picked) return base;
+    return base.sameDayCards?.some(c => c.event.id === picked.event.id) ? picked : base;
+  }, [sameDayPicks]);
+
   const registerCardRef = useCallback((eventId: string, el: HTMLDivElement | null) => {
     if (el) cardRefs.current.set(eventId, el);
   }, []);
@@ -529,6 +560,11 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     ? displayCards.find(c => c.venue.id === markerVenueId)
     : null;
 
+  // Tapping a marker opens the same merged card, so it gets the same switcher —
+  // and the full-screen view follows the pick rather than snapping back to the
+  // venue's first event.
+  const markerDisplayCard = markerCard ? withSameDayPick(markerCard.event.id, markerCard) : null;
+
   // Find card data for list full-screen (use override if user changed date inside card)
   const listFullScreenCard = listFullScreenVenueId
     ? (expandedCardOverride && expandedCardOverride.venue.id === listFullScreenVenueId
@@ -549,7 +585,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
           {/* Full-screen overlay (marker) */}
           {markerFullScreen && (
             <MobileEventCard
-              card={markerCard}
+              card={markerDisplayCard!}
               getCategoryColor={getCategoryColor}
               isExpanded={true}
               onToggle={() => setMarkerFullScreen(false)}
@@ -577,7 +613,9 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
               }}
             >
               <MobileEventCard
-                card={markerCard}
+                card={markerDisplayCard!}
+                sameDayCards={markerCard.sameDayCards}
+                onSameDayEventSelect={(picked) => handleSameDayEventSelect(markerCard.event.id, picked)}
                 getCategoryColor={getCategoryColor}
                 isExpanded={true}
                 onToggle={handleMarkerFullScreenToggle}
@@ -654,11 +692,14 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                     !activeDates || activeDates.length === 0 ||
                     override.dates.some(d => activeDates.includes(d))
                   );
+                  const base = isOverrideValid ? override.card : card;
                   return (
                     <CarouselSlot
                       key={`${card.venue.id}-${card.event.id}`}
                       card={card}
-                      displayCard={isOverrideValid ? override.card : card}
+                      displayCard={withSameDayPick(card.event.id, base)}
+                      sameDayCards={base.sameDayCards}
+                      onSameDayEventSelect={handleSameDayEventSelect}
                       displayDates={isOverrideValid ? override.dates : selectedDates}
                       overrideDates={isOverrideValid ? override.dates : null}
                       dateOptions={venueDateMap.get(card.venue.id) || EMPTY_DATE_OPTIONS}
