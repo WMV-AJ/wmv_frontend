@@ -411,10 +411,16 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                   auto, which lets the options push the tabs off the top instead
                   of scrolling within their own box. */}
               <div className="flex-1 flex flex-col min-h-0">
+                {/* Tabs are flat text on a rule; the values below them are
+                    bordered pills. Both were rounded pills before, which made
+                    "Areas" and "Koramangala" the same kind of object on screen
+                    — one navigates, the other selects, and nothing said so.
+                    Different shape, not just a different colour: a shape reads
+                    before a fill does. */}
                 <div
                   role="tablist"
                   aria-label="Filter by"
-                  className="flex-shrink-0 flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide"
+                  className="flex-shrink-0 flex gap-5 px-4 border-b border-white/10 overflow-x-auto scrollbar-hide"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {filterSections.map((section) => {
@@ -426,28 +432,33 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => handleSectionToggle(section.id)}
-                        className={`flex-shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`relative flex-shrink-0 flex items-center gap-1.5 whitespace-nowrap pb-2.5 pt-0.5 text-[13px] tracking-wide transition-colors ${
                           isActive
-                            ? 'bg-white text-black'
-                            : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
+                            ? 'text-white font-semibold'
+                            : 'text-white/45 font-medium hover:text-white/75'
                         }`}
                       >
                         {section.title}
                         {count > 0 && (
                           <span
-                            className={`min-w-[18px] rounded-full px-1 text-xs font-semibold leading-[18px] ${
-                              isActive ? 'bg-black/15 text-black' : 'bg-white/20 text-white'
+                            className={`min-w-[17px] rounded-full px-1 text-[11px] font-semibold leading-[17px] text-center ${
+                              isActive ? 'bg-white text-black' : 'bg-white/15 text-white/70'
                             }`}
                           >
                             {count}
                           </span>
+                        )}
+                        {/* Sits ON the rule, so the active tab joins the panel
+                            below it rather than floating above it. */}
+                        {isActive && (
+                          <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-white" />
                         )}
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 pb-3">
+                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 pt-3 pb-3">
                   {filterSections
                     .filter((section) => section.id === activeSection)
                     .map((section) => (
