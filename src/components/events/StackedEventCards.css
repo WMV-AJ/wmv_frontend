@@ -893,3 +893,34 @@
 
 /* (Badge and venue-row sizes are now uniform across viewports — see the
    consistent type scale by .stacked-card-info-label.) */
+
+/* ===========================================
+   MERGED VENUE-DAY CARD
+   ===========================================
+   A card holding more than one of a venue's events for the same date carries a
+   switcher row above the header, so its COLLAPSED height has to make room for
+   it — the collapsed card is `overflow: hidden`, and without this the rating
+   and area line was clipped off the bottom. Each value mirrors the plain
+   height for that breakpoint plus the switcher row. Expanded stays auto, and
+   is written last so it wins over the fixed heights above it.
+   Appended at the end of the file so it also outranks the 768px override. */
+
+.stacked-card.has-switcher {
+  height: 288px;
+}
+
+@media (min-width: 768px) {
+  .stacked-card.has-switcher {
+    height: 198px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stacked-card.has-switcher {
+    height: 268px;
+  }
+}
+
+.stacked-card.has-switcher.expanded {
+  height: auto;
+}

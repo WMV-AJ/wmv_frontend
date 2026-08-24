@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { shortenLocation } from '@/lib/format-location';
+import { getCategoryColor as getCategoryColorName, getHexColor } from '@/lib/category-mappings';
 import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
@@ -87,6 +88,16 @@ interface DateOption {
 
 interface MobileEventCardProps {
   card: EventCardData;
+  /**
+   * Every event this venue is running on this card's date, when there is more
+   * than one. The card renders them as a switcher above the event; `card` is
+   * whichever of them is currently selected. Selection is owned by the parent
+   * (via onSameDayEventSelect) so that expanding the card, sharing it, and
+   * opening its event page all follow the switch. Absent for the ordinary
+   * one-event card, which renders exactly as it always has.
+   */
+  sameDayCards?: EventCardData[];
+  onSameDayEventSelect?: (card: EventCardData) => void;
   getCategoryColor: (category: string) => { hue: number; saturation: number };
   isExpanded: boolean;
   onToggle: () => void;
@@ -215,6 +226,8 @@ function AutoScrollPills({ tags, isActive }: { tags: Array<{ label: string; bg: 
 
 const MobileEventCard: React.FC<MobileEventCardProps> = ({
   card,
+  sameDayCards,
+  onSameDayEventSelect,
   getCategoryColor,
   isExpanded,
   onToggle,
@@ -231,6 +244,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   darkMode = false,
 }) => {
   const { event, venue } = card;
+  // One venue, one card: the switcher only appears when this venue really has
+  // more than one event on this date. Anything less and the card is untouched.
+  const switcherCards = sameDayCards && sameDayCards.length > 1 ? sameDayCards : null;
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
   const expandedRef = useRef<HTMLDivElement>(null);
@@ -960,6 +976,86 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   // =============================================
   if (!isExpanded) return null; // Only show when selected
 
+  // Venue identity — name, rating, area. On a merged card it moves above the
+  // switcher so the card reads "this venue, now pick an event"; on every other
+  // card it stays exactly where it has always been, under the event header.
+  const venueBlock = (
+    <div className="px-3.5 pb-1 md:px-2.5 md:pb-0.5">
+      {/* Venue name carries the brand gold + serif (matches .venue-name on
+          the home page) so it reads as the PLACE, distinct from the white
+          sans event headline above. */}
+      <p
+        className="text-[13px] md:text-[11px] font-semibold truncate"
+        style={darkMode
+          ? { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#f4c430', letterSpacing: '-0.01em' }
+          : { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#8a6d0b', letterSpacing: '-0.01em' }}
+      >
+        {venue.venue_name}
+      </p>
+      <div className="flex items-center gap-1 mt-0.5">
+        <Star className="w-3 h-3 md:w-2.5 md:h-2.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+        <span className="text-amber-500 text-[12px] md:text-[10px] font-bold">{venue.venue_rating}</span>
+        <span className={`text-[10px] md:text-[8px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+        <span className={`text-[10px] md:text-[8px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+        <MapPin className={`w-2.5 h-2.5 md:w-2 md:h-2 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+        <span className={`text-[11px] md:text-[9px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{shortenLocation(venue.venue_location)}</span>
+      </div>
+    </div>
+  );
+
+  // The switcher. One button per event on this date, coloured by the event's
+  // own category so the two are told apart at a glance, not just by name.
+  const eventSwitcher = switcherCards && (
+    <div
+      role="tablist"
+      aria-label={`Events at ${venue.venue_name}`}
+      className="flex gap-1.5 px-3.5 pt-1.5 pb-0.5 md:px-2.5 md:pt-1 md:gap-1"
+    >
+      {switcherCards.map((c) => {
+        const isActive = c.event.id === event.id;
+        const hex = getHexColor(
+          getCategoryColorName(c.event.event_categories?.[0]?.primary || c.event.category || '')
+        );
+        return (
+          <button
+            key={c.event.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            title={c.event.event_name}
+            className="flex-1 min-w-0 rounded-lg px-2 py-1 text-left transition-colors md:px-1.5 md:py-0.5"
+            style={{
+              background: isActive
+                ? (darkMode ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.06)')
+                : (darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+              border: `1px solid ${isActive ? `${hex}66` : 'transparent'}`,
+            }}
+            onClick={(e) => {
+              // The card body is itself a click target (it expands), so the
+              // switcher has to keep its taps to itself.
+              e.stopPropagation();
+              if (!isActive) onSameDayEventSelect?.(c);
+            }}
+          >
+            <span
+              className="block truncate text-[10.5px] md:text-[9px] font-bold leading-tight"
+              style={{ color: isActive ? hex : (darkMode ? '#9CA3AF' : '#6B7280') }}
+            >
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full mr-1 align-middle flex-shrink-0"
+                style={{ background: hex }}
+              />
+              {c.event.event_name}
+            </span>
+            <span className={`block truncate text-[9px] md:text-[8px] leading-tight ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              {c.event.event_time_start || 'All day'}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <>
     <div
@@ -979,8 +1075,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       }}
       onClick={onToggle}
     >
+      {/* A merged card states the venue once, up top, then offers its events. */}
+      {switcherCards && <div className="pt-3 md:pt-2">{venueBlock}</div>}
+      {eventSwitcher}
+
       {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
-      <div className="flex gap-3 px-3.5 pt-3 pb-1 md:px-2.5 md:pt-2 md:pb-0.5">
+      <div className={`flex gap-3 px-3.5 pb-1 md:px-2.5 md:pb-0.5 ${switcherCards ? 'pt-2 md:pt-1.5' : 'pt-3 md:pt-2'}`}>
         {/* Left Column */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3 className={`font-bold text-[15px] md:text-[12px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -1028,27 +1128,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       </div>
 
       {/* === Venue info — full width === */}
-      <div className="px-3.5 pb-1 md:px-2.5 md:pb-0.5">
-        {/* Venue name carries the brand gold + serif (matches .venue-name on
-            the home page) so it reads as the PLACE, distinct from the white
-            sans event headline above. */}
-        <p
-          className="text-[13px] md:text-[11px] font-semibold truncate"
-          style={darkMode
-            ? { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#f4c430', letterSpacing: '-0.01em' }
-            : { fontFamily: 'var(--font-fraunces), Georgia, serif', color: '#8a6d0b', letterSpacing: '-0.01em' }}
-        >
-          {venue.venue_name}
-        </p>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Star className="w-3 h-3 md:w-2.5 md:h-2.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-          <span className="text-amber-500 text-[12px] md:text-[10px] font-bold">{venue.venue_rating}</span>
-          <span className={`text-[10px] md:text-[8px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
-          <span className={`text-[10px] md:text-[8px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
-          <MapPin className={`w-2.5 h-2.5 md:w-2 md:h-2 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-          <span className={`text-[11px] md:text-[9px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{shortenLocation(venue.venue_location)}</span>
-        </div>
-      </div>
+      {/* Already stated above the switcher on a merged card. */}
+      {!switcherCards && venueBlock}
 
       {/* === Bottom: Tags + Expand button === */}
       <div className="flex items-center pb-1.5 md:pb-1">
