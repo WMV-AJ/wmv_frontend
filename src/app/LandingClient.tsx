@@ -27,14 +27,14 @@ export default function LandingClient() {
   const stageRef = useRef<StageHandle>(null);
   const [city, setCity] = useState<CitySlug>(DEFAULT_CITY);
 
-  // End-of-intro focus effects (backdrop blur + CTA pop) fire a beat AFTER
-  // the settle, never during playback — and returning visitors (who skip the
-  // video) still get a moment of the sharp settled frame before the blur
-  // lands, so the effect always reads as "the ending".
+  // End-of-intro focus effects (backdrop blur + CTA pop) fire well AFTER the
+  // settle, never during playback — the sharp settled frame holds for over a
+  // second (returning visitors, who skip the video, get the same hold) so
+  // the viewer takes in the map before the blur pulls focus to the buttons.
   const [settledFx, setSettledFx] = useState(false);
   useEffect(() => {
     if (state !== 'done') { setSettledFx(false); return; }
-    const t = setTimeout(() => setSettledFx(true), 400);
+    const t = setTimeout(() => setSettledFx(true), 1200);
     return () => clearTimeout(t);
   }, [state]);
 

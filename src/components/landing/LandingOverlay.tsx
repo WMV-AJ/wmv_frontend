@@ -173,7 +173,7 @@ export function LandingOverlay({ onCityChange, visible = true }: LandingOverlayP
           opacity: visible ? undefined : 0,
           pointerEvents: visible ? 'auto' : 'none',
           animation: visible
-            ? 'wmv-cta-pop 560ms cubic-bezier(0.34, 1.56, 0.64, 1) 200ms both'
+            ? 'wmv-cta-pop 560ms cubic-bezier(0.34, 1.56, 0.64, 1) 450ms both'
             : 'none',
         }}
       >
