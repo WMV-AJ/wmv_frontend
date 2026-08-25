@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { MapPin } from 'lucide-react';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
-import { mergeSameVenueDayCards, transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
+import { transformVenueDataToStackedCards } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
 import { trackEvent } from '@/lib/analytics/track';
 import { isUpcomingInCity } from '@/lib/city-date';
@@ -59,8 +59,7 @@ export default function AreaListingPage() {
         eventMap.set(card.event.id, card);
       }
     });
-    // One venue, one card — same treatment as the map and the list page.
-    return mergeSameVenueDayCards(Array.from(eventMap.values()));
+    return Array.from(eventMap.values());
   }, [allVenues, areaName]);
 
   const title = areaName ?? humanizeSlug(areaSlug);

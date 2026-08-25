@@ -21,7 +21,6 @@ import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import {
   getCategoryColorForStackedCards,
-  mergeSameVenueDayCards,
   transformVenueDataToStackedCards,
 } from '@/lib/stacked-card-adapter';
 import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/marker-colors';
@@ -679,11 +678,7 @@ export default function CityMapPage() {
       const dLat = coords.lat - cLat;
       return dLng * dLng + dLat * dLat;
     };
-    // One venue, one card. Two events at the same venue on the same date were
-    // two cards with an identical venue block (and usually the identical photo,
-    // since both came out of one story). They now share a card with a switcher.
-    // Merging last means the sort above still decides where the card lands.
-    return mergeSameVenueDayCards(result.sort((a, b) => distSq(a) - distSq(b)));
+    return result.sort((a, b) => distSq(a) - distSq(b));
   }, [filteredVenues, filters.activeDates, sortCenter]);
 
   const allCards = useMemo(() => {
@@ -972,7 +967,7 @@ export default function CityMapPage() {
 
         {/* 228 vertically centers the 48px pill on the same line as the 40px
             location toggle (bottom: 232 → shared center at 252). */}
-        <NavPill city={city} active="map" bottomOffset={228} hidden={isFilterSheetOpen} />
+        <NavPill city={city} active="map" bottomOffset={228} />
 
         <MobileEventList
           cards={cards}

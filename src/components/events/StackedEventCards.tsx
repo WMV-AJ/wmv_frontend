@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { ShareModal } from '@/components/shared/ShareModal';
 import { shortenLocation } from '@/lib/format-location';
-import { getCategoryColor as getCategoryColorName, getHexColor } from '@/lib/category-mappings';
 import './StackedEventCards.css';
 
 // ===========================================
@@ -61,9 +60,6 @@ interface Event {
 interface EventCardData {
   event: Event;
   venue: Venue;
-  // Present only on a card that mergeSameVenueDayCards folded together: every
-  // event this venue runs on this date, the first of which is this card.
-  sameDayCards?: EventCardData[];
 }
 
 interface StackedEventCardsProps {
@@ -74,15 +70,6 @@ interface StackedEventCardsProps {
 interface EventCardProps {
   event: Event;
   venue: Venue;
-  /**
-   * Identity of the card in the deck, which is the FIRST event of a merged
-   * venue-day and does not change when the viewer switches events inside it.
-   * Expansion, scroll-into-view and the DOM id all key off this; `event.id` is
-   * the event actually on screen and keeps driving the share link and tracking.
-   */
-  cardId: string;
-  sameDayCards?: EventCardData[];
-  onSameDaySelect?: (picked: EventCardData) => void;
   index: number;
   isExpanded: boolean;
   onCardClick: (id: string) => void;
@@ -277,9 +264,6 @@ const LinkIcon: React.FC = () => (
 const EventCard: React.FC<EventCardProps> = ({
   event,
   venue,
-  cardId,
-  sameDayCards,
-  onSameDaySelect,
   index,
   isExpanded,
   onCardClick,
@@ -289,9 +273,6 @@ const EventCard: React.FC<EventCardProps> = ({
 }) => {
   const cardColor = getCardColor(event.category, venue.venue_rating);
   const dateDisplay = formatDate(event.event_date);
-  // One venue, one card: only a venue-day with more than one event gets the
-  // switcher. Everything else renders on exactly the path it did before.
-  const switcherCards = sameDayCards && sameDayCards.length > 1 ? sameDayCards : null;
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
@@ -371,96 +352,15 @@ const EventCard: React.FC<EventCardProps> = ({
   return (
     <>
     <div
-      id={`card-${cardId}`}
-      className={`stacked-card ${isExpanded ? 'expanded' : ''} ${switcherCards ? 'has-switcher' : ''}`}
+      id={`card-${event.id}`}
+      className={`stacked-card ${isExpanded ? 'expanded' : ''}`}
       style={{
         backgroundColor: cardColor,
         zIndex: isExpanded ? 9999 : index + 1,
         '--content-height': `${contentHeight}px`,
       } as React.CSSProperties}
-      onClick={() => onCardClick(cardId)}
+      onClick={() => onCardClick(event.id)}
     >
-      {/* SWITCHER — this venue's other events on the same date */}
-      {switcherCards && (
-        <div
-          role="tablist"
-          aria-label={`Events at ${venue.venue_name}`}
-          style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}
-        >
-          {switcherCards.map((c) => {
-            const isActive = c.event.id === event.id;
-            const hex = getHexColor(
-              getCategoryColorName(c.event.event_categories?.[0]?.primary || c.event.category || '')
-            );
-            return (
-              <button
-                key={c.event.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                title={c.event.event_name}
-                onClick={(e) => {
-                  // The card body is its own click target (it expands), so the
-                  // switcher has to keep its taps to itself.
-                  e.stopPropagation();
-                  if (!isActive) onSameDaySelect?.(c);
-                }}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  textAlign: 'left',
-                  padding: '4px 9px',
-                  borderRadius: '9px',
-                  cursor: 'pointer',
-                  background: isActive ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.07)',
-                  border: `1px solid ${isActive ? `${hex}88` : 'rgba(255,255,255,0.12)'}`,
-                  transition: 'background 0.15s, border-color 0.15s',
-                }}
-              >
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    lineHeight: 1.3,
-                    color: isActive ? hex : 'rgba(255,255,255,0.6)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '999px',
-                      background: hex,
-                      marginRight: '5px',
-                      verticalAlign: 'middle',
-                    }}
-                  />
-                  {c.event.event_name}
-                </span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '9.5px',
-                    lineHeight: 1.3,
-                    color: 'rgba(255,255,255,0.45)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {formatTime(c.event.event_time_start) || c.event.event_time_start || 'All day'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* HEADER */}
       <div className="stacked-card-header" style={{ alignItems: 'flex-start', gap: '12px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -868,19 +768,12 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
-  // Which of a merged card's same-day events is on screen, keyed by the card's
-  // own (first) event id. Held here rather than in the card so that the deck's
-  // expansion, height measurement and scroll-into-view all keep working off a
-  // card identity that does not change when the viewer switches event.
-  const [sameDayPicks, setSameDayPicks] = useState<Map<string, EventCardData>>(new Map());
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setExpandedId(null);
     setContentHeight(0);
     setVisibleCount(INITIAL_BATCH);
-    // A new card set means new event ids — a stale pick would never match.
-    setSameDayPicks(new Map());
   }, [cards]);
 
   useEffect(() => {
@@ -972,23 +865,11 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
       <div className="stacked-cards-stack">
         {visibleCards.map((cardData, index) => {
           const isExpanded = expandedId === cardData.event.id;
-          // The pick only counts while it still belongs to this card's group.
-          const picked = sameDayPicks.get(cardData.event.id);
-          const shown = picked && cardData.sameDayCards?.some(c => c.event.id === picked.event.id)
-            ? picked
-            : cardData;
           return (
             <div key={cardData.event.id} data-card-id={cardData.event.id}>
               <EventCard
-                event={shown.event}
-                venue={shown.venue}
-                cardId={cardData.event.id}
-                sameDayCards={cardData.sameDayCards}
-                onSameDaySelect={(pick) => setSameDayPicks(prev => {
-                  const next = new Map(prev);
-                  next.set(cardData.event.id, pick);
-                  return next;
-                })}
+                event={cardData.event}
+                venue={cardData.venue}
                 index={index}
                 isExpanded={isExpanded}
                 onCardClick={handleCardClick}
