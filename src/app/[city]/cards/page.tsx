@@ -254,7 +254,7 @@ function CardsInner() {
           onFiltersChange={handleFiltersChange}
           filterOptions={filterOptions}
         />
-        <NavPill city={city} active="cards" hidden={isFilterSheetOpen} />
+        <NavPill city={city} active="cards" />
       </main>
       </div>
     </ThemeProvider>

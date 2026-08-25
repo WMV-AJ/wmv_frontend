@@ -44,20 +44,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
 }) => {
   // Temporary filter state for apply/cancel functionality
   const [tempFilters, setTempFilters] = useState<HierarchicalFilterState>(filters);
-  /**
-   * Which filter's options are on screen. One at a time, and the others stay
-   * reachable as tabs rather than being pushed below the fold.
-   *
-   * The sections used to be a two-column grid of accordions sorted
-   * expanded-first. Opening Areas — 77 options — grew that card until Dates and
-   * Rating were off the bottom of the sheet, so the only way to reach a filter
-   * was to close the one you were already using.
-   *
-   * Special Offers opens first: it is the shortest list, every entry is a
-   * reason to go out tonight, and it is the one filter that changes what you
-   * find rather than just where.
-   */
-  const [activeSection, setActiveSection] = useState<string>('activeOffers');
+  const [expandedSections, setExpandedSections] = useState<string[]>(['selectedAreas']);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Ref for search input auto-focus
@@ -87,32 +74,14 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
     }
   }, [isOpen]);
 
-  /**
-   * The box at the top of the sheet narrows the lists below it.
-   *
-   * It always searched venues and events, applied on Apply — but it sat
-   * directly above 172 area chips and did nothing to them. Typing
-   * "koramangala" left all 172 on screen, so the only way to reach an area was
-   * to scroll the whole list. Everyone expects a search box to filter what is
-   * underneath it, and here it now does, while still searching the results too.
-   *
-   * A selected value is never hidden: a filter you cannot see is a filter you
-   * cannot remove.
-   */
-  const narrow = (options: string[], selected: string[]): string[] => {
-    const q = (tempFilters.searchQuery || '').trim().toLowerCase();
-    if (!q) return options;
-    return options.filter(o => o.toLowerCase().includes(q) || selected.includes(o));
-  };
-
   const filterSections: FilterSectionConfig[] = [
     {
       id: 'selectedAreas',
       title: 'Areas',
       type: 'collapsible',
       isCollapsible: true,
-      isExpanded: activeSection === 'selectedAreas',
-      options: narrow(filterOptions.areas, tempFilters.selectedAreas),
+      isExpanded: expandedSections.includes('selectedAreas'),
+      options: filterOptions.areas,
       selectedValues: tempFilters.selectedAreas
     },
     {
@@ -120,8 +89,8 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Dates',
       type: 'collapsible',
       isCollapsible: true,
-      isExpanded: activeSection === 'activeDates',
-      options: narrow(filterOptions.dates, tempFilters.activeDates),
+      isExpanded: expandedSections.includes('activeDates'),
+      options: filterOptions.dates,
       selectedValues: tempFilters.activeDates
     },
     {
@@ -129,8 +98,8 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Special Offers',
       type: 'pills',
       isCollapsible: true,
-      isExpanded: activeSection === 'activeOffers',
-      options: narrow(filterOptions.specialOffers || [], tempFilters.activeOffers || []),
+      isExpanded: expandedSections.includes('activeOffers'),
+      options: filterOptions.specialOffers || [],
       selectedValues: tempFilters.activeOffers || []
     },
     {
@@ -138,15 +107,19 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       title: 'Rating',
       type: 'pills',
       isCollapsible: true,
-      isExpanded: activeSection === 'selectedRatings',
+      isExpanded: expandedSections.includes('selectedRatings'),
       options: ['3+ Stars', '4+ Stars', '5 Stars'],
       selectedValues: (tempFilters.selectedRatings || []).map(r => `${r}+ Stars`)
     },
   ];
 
-  // A tab is a destination, not a toggle: tapping the one you are already on
-  // must not leave the panel showing nothing.
-  const handleSectionToggle = (sectionId: string) => setActiveSection(sectionId);
+  const handleSectionToggle = (sectionId: string) => {
+    setExpandedSections(prev =>
+      prev.includes(sectionId)
+        ? prev.filter(id => id !== sectionId)
+        : [sectionId] // Only allow one section expanded at a time
+    );
+  };
 
   const handleFilterChange = (sectionId: string, selectedValues: string[]) => {
     // Special handling for ratings - convert "3+ Stars" to numbers
@@ -406,66 +379,18 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               )}
 
               {/* Filter Content */}
-              {/* Tabs: every filter stays on screen, one shows its options.
-                  min-h-0 is load-bearing — a flex child defaults to min-height
-                  auto, which lets the options push the tabs off the top instead
-                  of scrolling within their own box. */}
-              <div className="flex-1 flex flex-col min-h-0">
-                {/* Tabs are flat text on a rule; the values below them are
-                    bordered pills. Both were rounded pills before, which made
-                    "Areas" and "Koramangala" the same kind of object on screen
-                    — one navigates, the other selects, and nothing said so.
-                    Different shape, not just a different colour: a shape reads
-                    before a fill does. */}
-                <div
-                  role="tablist"
-                  aria-label="Filter by"
-                  className="flex-shrink-0 flex gap-5 px-4 border-b border-white/10 overflow-x-auto scrollbar-hide"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {filterSections.map((section) => {
-                    const isActive = section.id === activeSection;
-                    const count = section.selectedValues.filter(v => !isAllCitySentinel(v)).length;
-                    return (
-                      <button
-                        key={section.id}
-                        role="tab"
-                        aria-selected={isActive}
-                        onClick={() => handleSectionToggle(section.id)}
-                        className={`relative flex-shrink-0 flex items-center gap-1.5 whitespace-nowrap pb-2.5 pt-0.5 text-[13px] tracking-wide transition-colors ${
-                          isActive
-                            ? 'text-white font-semibold'
-                            : 'text-white/45 font-medium hover:text-white/75'
-                        }`}
-                      >
-                        {section.title}
-                        {count > 0 && (
-                          <span
-                            className={`min-w-[17px] rounded-full px-1 text-[11px] font-semibold leading-[17px] text-center ${
-                              isActive ? 'bg-white text-black' : 'bg-white/15 text-white/70'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                        )}
-                        {/* Sits ON the rule, so the active tab joins the panel
-                            below it rather than floating above it. */}
-                        {isActive && (
-                          <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-white" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 pt-3 pb-3">
+              <div className="px-4 py-3 flex-1 overflow-y-auto scrollbar-thin">
+                <div className="grid grid-cols-2 gap-2">
                   {filterSections
-                    .filter((section) => section.id === activeSection)
+                    .sort((a, b) => {
+                      if (a.isExpanded && !b.isExpanded) return -1;
+                      if (!a.isExpanded && b.isExpanded) return 1;
+                      return 0;
+                    })
                     .map((section) => (
                       <FilterSection
                         key={section.id}
                         section={section}
-                        hideHeader
                         onToggle={() => handleSectionToggle(section.id)}
                         onSelectionChange={(selectedValues) =>
                           handleFilterChange(section.id, selectedValues)

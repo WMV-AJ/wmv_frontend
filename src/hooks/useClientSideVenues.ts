@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import type { Venue, HierarchicalFilterState, FilterState } from '@/types';
 import { getEventCategories } from '@/lib/category-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
-import { dealLabelsOf } from '@/lib/filter-taxonomy';
 
 interface UseClientSideVenuesResult {
   allVenues: Venue[];
@@ -193,18 +192,8 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const eventName = String((venue as any).event_name || '').toLowerCase();
         const venueCategory = venue.category?.toLowerCase() || venue.venue_category?.toLowerCase() || '';
-        // Area too. Without it, searching the busiest neighbourhood in the city
-        // returned almost nothing: "koramangala" gave 2 results on 24 Aug,
-        // because it was matched against venue names only and no venue happens
-        // to be called that. A place name is the most natural thing to type.
-        const area = String(venue.area || venue.venue_area || '').toLowerCase();
 
-        if (
-          !venueName.includes(query) &&
-          !eventName.includes(query) &&
-          !venueCategory.includes(query) &&
-          !area.includes(query)
-        ) {
+        if (!venueName.includes(query) && !eventName.includes(query) && !venueCategory.includes(query)) {
           return false;
         }
       }
@@ -369,16 +358,9 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
       // Apply special offers filter (Note: special_offers is on events, not venues in current schema)
       // This would require fetching event data for each venue to filter properly
       // For now, we'll skip this as it requires event data which isn't in the venue response
-      // Special offers. This used to log "not yet implemented" and fall through,
-      // so selecting an offer changed nothing at all — the panel offered 553
-      // choices and honoured none of them. The options are now the structured
-      // deal types, which an event can actually be tested against.
       if (flatFilters.activeOffers && flatFilters.activeOffers.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const labels = dealLabelsOf((venue as any).deals);
-        if (!flatFilters.activeOffers.some(selected => labels.includes(selected))) {
-          return false;
-        }
+        console.log('🎁 FILTER - Special offers filter not yet implemented for venues');
+        // TODO: Implement when event data is available with venues
       }
 
       // ===== NEW: Event Time Filter =====
