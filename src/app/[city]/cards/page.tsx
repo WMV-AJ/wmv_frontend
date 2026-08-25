@@ -13,7 +13,6 @@ import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import {
   getCategoryColorForStackedCards,
-  mergeSameVenueDayCards,
   transformVenueDataToStackedCards
 } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
@@ -126,10 +125,7 @@ function CardsInner() {
         eventMap.set(card.event.id, card);
       }
     });
-    // One venue, one card: a venue running two events on the same date was two
-    // cards in the deck with an identical venue block. They now share a card
-    // with a switcher (same treatment as the map).
-    return mergeSameVenueDayCards(Array.from(eventMap.values()));
+    return Array.from(eventMap.values());
   }, [filteredVenues]);
 
   // Clip the overlapping-card stack to the last card's real bottom. The deck's
