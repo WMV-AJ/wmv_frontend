@@ -335,7 +335,7 @@ export function HUDLayer({ time }: { time: number }) {
         style={{
           position: 'absolute',
           left: 50,
-          bottom: 320,
+          bottom: 210,
           width: 8,
           height: 420,
           borderRadius: 6,
@@ -370,12 +370,13 @@ export function HUDLayer({ time }: { time: number }) {
         />
       </div>
 
-      {/* "Pick your vibe" headline */}
+      {/* "Pick your vibe" headline — sits low so the centered login row
+          above it keeps clear breathing room */}
       <div
         style={{
           position: 'absolute',
           left: '50%',
-          bottom: 680,
+          bottom: 570,
           transform: `translate(-50%, ${(1 - pillsP) * 30}px)`,
           opacity: Easing.easeOutCubic(pillsP),
           textAlign: 'center',
@@ -420,7 +421,7 @@ export function HUDLayer({ time }: { time: number }) {
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: 410,
+          bottom: 300,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

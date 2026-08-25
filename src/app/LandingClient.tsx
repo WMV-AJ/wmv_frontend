@@ -63,14 +63,26 @@ export default function LandingClient() {
         style={{ position: 'relative', height: '100dvh', overflow: 'hidden', background: '#000' }}
         onClick={playing ? skip : undefined}
       >
-        <LandingHero
-          settled={state === 'done'}
-          stageRef={stageRef}
-          onComplete={() => {
-            trackEvent('intro_completed');
-            markDone();
+        {/* Once settled, the canvas softens (blur + dim, slight upscale to
+            hide blurred edges) so the login row popping in owns the focus. */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            filter: state === 'done' ? 'blur(7px) brightness(0.7)' : 'none',
+            transform: state === 'done' ? 'scale(1.04)' : 'none',
+            transition: 'filter 900ms ease, transform 900ms ease',
           }}
-        />
+        >
+          <LandingHero
+            settled={state === 'done'}
+            stageRef={stageRef}
+            onComplete={() => {
+              trackEvent('intro_completed');
+              markDone();
+            }}
+          />
+        </div>
 
         {/* Skip pill — visible only while playing */}
         {playing && (
@@ -88,7 +100,7 @@ export default function LandingClient() {
           </button>
         )}
 
-        <LandingOverlay onCityChange={setCity} />
+        <LandingOverlay onCityChange={setCity} visible={state === 'done'} />
 
         {/* Scroll cue once settled */}
         {state === 'done' && (

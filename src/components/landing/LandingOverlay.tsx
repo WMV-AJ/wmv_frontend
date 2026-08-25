@@ -122,9 +122,11 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
 interface LandingOverlayProps {
   /** Reports the picked city so the marketing sections below can follow it. */
   onCityChange?: (city: CitySlug) => void;
+  /** Hidden during the intro; pops in when the animation settles. */
+  visible?: boolean;
 }
 
-export function LandingOverlay({ onCityChange }: LandingOverlayProps = {}) {
+export function LandingOverlay({ onCityChange, visible = true }: LandingOverlayProps = {}) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [city, setCityState] = useState<CitySlug>(DEFAULT_CITY);
@@ -152,8 +154,9 @@ export function LandingOverlay({ onCityChange }: LandingOverlayProps = {}) {
       )}
 
       {/* Center of the hero: [Continue with Google] [city ▾] [→] — locked
-          single row, vertically centered so it reads as the primary action
-          (sits in the gap between the stats block and the vibe pills). */}
+          single row, vertically centered so it reads as the primary action.
+          Hidden during the intro; pops in (springy scale-up) once the
+          animation settles and the backdrop blurs. */}
       <div
         style={{
           position: 'absolute',
@@ -167,8 +170,17 @@ export function LandingOverlay({ onCityChange }: LandingOverlayProps = {}) {
           alignItems: 'center',
           gap: 8,
           whiteSpace: 'nowrap',
+          opacity: visible ? undefined : 0,
+          pointerEvents: visible ? 'auto' : 'none',
+          animation: visible
+            ? 'wmv-cta-pop 560ms cubic-bezier(0.34, 1.56, 0.64, 1) 200ms both'
+            : 'none',
         }}
       >
+        <style>{`@keyframes wmv-cta-pop {
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6) translateY(28px); }
+          100% { opacity: 1; transform: translate(-50%, -50%) scale(1) translateY(0); }
+        }`}</style>
         {!authLoading && !isAuthed && <GoogleSignInPill returnTo={`/${city}`} />}
         <CityPicker value={city} onChange={setCity} />
         <button

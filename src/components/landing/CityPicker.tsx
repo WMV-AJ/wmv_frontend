@@ -75,15 +75,16 @@ export function CityPicker({ value, onChange }: CityPickerProps) {
             zIndex: 100,
           }}
         >
-          {ALL_CITIES.map((slug) => {
+          {/* Only the OTHER cities — the selected one already reads on the
+              pill itself, so repeating it (highlighted) above was noise. */}
+          {ALL_CITIES.filter((slug) => slug !== value).map((slug) => {
             const cfg = CITIES[slug];
-            const isActive = slug === value;
             return (
               <li key={slug}>
                 <button
                   type="button"
                   role="option"
-                  aria-selected={isActive}
+                  aria-selected={false}
                   onMouseDown={(e) => {
                     // mousedown fires before blur, so the picker closes cleanly
                     e.preventDefault();
@@ -98,21 +99,21 @@ export function CityPicker({ value, onChange }: CityPickerProps) {
                     gap: 12,
                     padding: '10px 12px',
                     borderRadius: 8,
-                    background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    background: 'transparent',
                     border: 'none',
-                    color: isActive ? '#fff' : 'rgba(232,236,242,0.85)',
+                    color: 'rgba(232,236,242,0.85)',
                     fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
                     fontSize: 14,
-                    fontWeight: isActive ? 700 : 500,
+                    fontWeight: 500,
                     textAlign: 'left',
                     cursor: 'pointer',
                     transition: 'background 120ms ease',
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
                   }}
                   onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.background = 'transparent';
                   }}
                 >
                   <span>{cfg.displayName}</span>
