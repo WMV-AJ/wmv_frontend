@@ -2,7 +2,7 @@
 
 // Landing page = fast intro + marketing home on one route.
 //
-// First visit: the 3.4s intro plays (skippable, tap-anywhere), body scroll is
+// First visit: the intro plays (skippable, tap-anywhere), body scroll is
 // locked, and on completion the page releases into a scrollable marketing
 // home whose hero background IS the settled final frame (map + dots + HUD).
 // Returning visitors and prefers-reduced-motion render the settled frame
@@ -94,7 +94,7 @@ export default function LandingClient() {
         {state === 'done' && (
           <div
             style={{
-              position: 'absolute', bottom: 88, left: '50%', transform: 'translateX(-50%)',
+              position: 'absolute', bottom: 'max(32px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)',
               color: T.inkFaint, fontFamily: mono, fontSize: 10, letterSpacing: '0.2em',
               textTransform: 'uppercase', pointerEvents: 'none',
               animation: 'wmv-bob 2s ease-in-out infinite',

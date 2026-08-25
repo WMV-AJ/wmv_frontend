@@ -1,15 +1,16 @@
 import { hash } from './animation-core';
 
 // Phase boundaries (seconds). Compressed 2026-07 from the original 16.5s
-// looping cut: the intro now reads as a fast flash of doomscroll-chaos that
-// snaps into the settled map — total 3.4s, non-looping, skippable (see
-// useIntroGate). Returning visitors render the final frame statically.
+// looping cut, then relaxed ~1.5x in 2026-08 (3.4s read as too rushed): the
+// intro is a flash of doomscroll-chaos that snaps into the settled map —
+// total 4.9s, non-looping, skippable (see useIntroGate). Returning visitors
+// render the final frame statically.
 export const DUR = {
-  CHAOS_END: 1.3,
-  COLLAPSE_END: 1.9,
-  BURST_END: 2.3,
-  SETTLE_END: 2.9,
-  TOTAL: 3.4,
+  CHAOS_END: 2.0,
+  COLLAPSE_END: 2.9,
+  BURST_END: 3.5,
+  SETTLE_END: 4.4,
+  TOTAL: 4.9,
 } as const;
 
 export const CANVAS_W = 1080;
@@ -31,7 +32,7 @@ export const VENUE_PALETTE = [
 
 // Bundled branded backdrops (public/landing/cards/*.webp, ~3.5KB each).
 // Previously these were loremflickr.com hotlinks — third-party, slow, and
-// pointless in a 1.3s chaos flash. One image per card, no cycling.
+// pointless in a 2s chaos flash. One image per card, no cycling.
 export const PHOTO_POOL: Record<string, string[]> = {
   nightclub: ['/landing/cards/nightclub-1.webp', '/landing/cards/nightclub-2.webp', '/landing/cards/nightclub-3.webp'],
   beach: ['/landing/cards/beach-1.webp', '/landing/cards/beach-2.webp', '/landing/cards/beach-3.webp'],
@@ -72,7 +73,7 @@ export const CARDS: CardSpec[] = [
   { v: 'Bohemia',      c: 'nightclub',  t: 'TECHNO TUESDAY',    m: '11PM · Underground', seed: 22, r: 560, ang0: 300, dir: -1, variant: 'website' },
   { v: 'Atlantis',     c: 'rooftop',    t: 'SKY HIGH',          m: '10PM · DJ Set',      seed: 24, r: 500, ang0: 335, dir: -1, variant: 'story' },
 ];
-// 12 cards (was 18) — fewer image decodes inside a 1.3s chaos window.
+// 12 cards (was 18) — fewer image decodes inside a 2s chaos window.
 
 // Pre-baked dot positions on the Dubai map (normalized 0..1 over the canvas).
 // Clusters concentrated on the Palm trunk + Marina; mirrors the reference screenshot.

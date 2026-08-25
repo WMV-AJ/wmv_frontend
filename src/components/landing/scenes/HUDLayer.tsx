@@ -128,6 +128,10 @@ interface PillProps {
   pillsP: number;
 }
 
+// Deliberately styled as a static readout, NOT a button: faint border, no
+// glow, no pointer events. These pills are part of the settled hero frame —
+// the real (tappable) vibe filters live on the city pages, and a button-like
+// treatment here kept inviting dead taps.
 function Pill({ cat, delay, pillsP }: PillProps) {
   const pp = clamp((pillsP - delay) / (1 - delay), 0, 1);
   const py = (1 - Easing.easeOutBack(pp)) * 30;
@@ -139,20 +143,23 @@ function Pill({ cat, delay, pillsP }: PillProps) {
         gap: 10,
         padding: '13px 22px',
         borderRadius: 9999,
-        background: 'rgba(10,10,26,0.85)',
+        background: 'rgba(10,10,26,0.72)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: `1.75px solid ${cat.color}`,
+        border: `1px solid ${cat.color}55`,
         color: cat.color,
         fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
         fontSize: 24,
-        fontWeight: 700,
+        fontWeight: 600,
         letterSpacing: '-0.01em',
         lineHeight: 1,
         transform: `translateY(${py}px)`,
-        opacity: pp,
-        boxShadow: `0 0 22px ${cat.color}40, 0 4px 16px rgba(0,0,0,0.55)`,
+        opacity: pp * 0.9,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
         whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+        cursor: 'default',
+        userSelect: 'none',
       }}
     >
       <span style={{ display: 'flex', alignItems: 'center' }}>

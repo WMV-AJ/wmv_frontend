@@ -1,7 +1,7 @@
 'use client';
 
 // Gate for the landing intro animation:
-//   - first visit → play the 3.4s intro once, then mark seen
+//   - first visit → play the intro once, then mark seen
 //   - returning visit / prefers-reduced-motion → render the settled final
 //     frame statically (Stage initialTime = TOTAL, zero animation work)
 //

@@ -151,13 +151,15 @@ export function LandingOverlay({ onCityChange }: LandingOverlayProps = {}) {
         </div>
       )}
 
-      {/* Bottom-center: [Continue with Google] [city ▾] [→] — locked single row */}
+      {/* Center of the hero: [Continue with Google] [city ▾] [→] — locked
+          single row, vertically centered so it reads as the primary action
+          (sits in the gap between the stats block and the vibe pills). */}
       <div
         style={{
           position: 'absolute',
-          bottom: 'max(28px, env(safe-area-inset-bottom))',
+          top: '50%',
           left: '50%',
-          transform: 'translateX(-50%)',
+          transform: 'translate(-50%, -50%)',
           zIndex: 50,
           display: 'flex',
           flexWrap: 'nowrap',
