@@ -27,6 +27,17 @@ export default function LandingClient() {
   const stageRef = useRef<StageHandle>(null);
   const [city, setCity] = useState<CitySlug>(DEFAULT_CITY);
 
+  // End-of-intro focus effects (backdrop blur + CTA pop) fire a beat AFTER
+  // the settle, never during playback — and returning visitors (who skip the
+  // video) still get a moment of the sharp settled frame before the blur
+  // lands, so the effect always reads as "the ending".
+  const [settledFx, setSettledFx] = useState(false);
+  useEffect(() => {
+    if (state !== 'done') { setSettledFx(false); return; }
+    const t = setTimeout(() => setSettledFx(true), 400);
+    return () => clearTimeout(t);
+  }, [state]);
+
   // Remember the last city the visitor actually browsed (written by the city
   // home) so the marketing content follows them on return visits.
   useEffect(() => {
@@ -63,15 +74,16 @@ export default function LandingClient() {
         style={{ position: 'relative', height: '100dvh', overflow: 'hidden', background: '#000' }}
         onClick={playing ? skip : undefined}
       >
-        {/* Once settled, the canvas softens (blur + dim, slight upscale to
-            hide blurred edges) so the login row popping in owns the focus. */}
+        {/* Only after the video finishes: the canvas softens gently (light
+            blur + slight dim, small upscale to hide soft edges) so the login
+            row popping in owns the focus. Never blurred during playback. */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            filter: state === 'done' ? 'blur(7px) brightness(0.7)' : 'none',
-            transform: state === 'done' ? 'scale(1.04)' : 'none',
-            transition: 'filter 900ms ease, transform 900ms ease',
+            filter: settledFx ? 'blur(3px) brightness(0.85)' : 'none',
+            transform: settledFx ? 'scale(1.02)' : 'none',
+            transition: 'filter 700ms ease, transform 700ms ease',
           }}
         >
           <LandingHero
@@ -100,7 +112,7 @@ export default function LandingClient() {
           </button>
         )}
 
-        <LandingOverlay onCityChange={setCity} visible={state === 'done'} />
+        <LandingOverlay onCityChange={setCity} visible={settledFx} />
 
         {/* Scroll cue once settled */}
         {state === 'done' && (
