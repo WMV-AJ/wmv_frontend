@@ -17,6 +17,8 @@ interface NavPillProps {
   active: NavPillView;
   /** Extra px above the safe-area bottom (default 16). */
   bottomOffset?: number;
+  /** Suppressed while a modal owns the screen — see the guard in the body. */
+  hidden?: boolean;
 }
 
 const SEGMENTS: Array<{ view: NavPillView; label: string; Icon: typeof Home; path: (city: string) => string }> = [
@@ -25,8 +27,16 @@ const SEGMENTS: Array<{ view: NavPillView; label: string; Icon: typeof Home; pat
   { view: 'cards', label: 'List', Icon: List, path: (c) => `/${c}/cards` },
 ];
 
-export default function NavPill({ city, active, bottomOffset = 16 }: NavPillProps) {
+export default function NavPill({ city, active, bottomOffset = 16, hidden = false }: NavPillProps) {
   const router = useRouter();
+
+  // A modal owns the screen while it is open. The pill is fixed at z-index 45
+  // and the filter sheet paints at z-40, so the pill sat ON TOP of the sheet's
+  // own options — in the 24 Aug capture the MAP button covered "1st Block
+  // Koramangala" in the middle of the Areas list. Raising the sheet instead
+  // would only move the collision onto its Cancel/Apply bar; the pill should
+  // not be there at all.
+  if (hidden) return null;
 
   return (
     <div
