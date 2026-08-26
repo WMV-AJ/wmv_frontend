@@ -80,7 +80,7 @@ export default function AreaListingPage() {
 
   const emptyState = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: '#f5f2ed' }}>
+      <div style={{ fontFamily: serif, fontSize: 18, color: '#f5f2ed' }}>
         No events in {title} right now
       </div>
       <div style={{ fontFamily: mono, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>

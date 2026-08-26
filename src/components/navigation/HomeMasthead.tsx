@@ -44,7 +44,7 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
         />
         <div>
           <div style={{
-            fontFamily: serif, fontStyle: 'italic', fontWeight: 700, fontSize: 14,
+            fontFamily: serif, fontWeight: 700, fontSize: 14,
             color: T.ink, letterSpacing: '-0.01em', lineHeight: 1,
           }}>Where&rsquo;s My Vibe</div>
         </div>

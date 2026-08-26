@@ -399,12 +399,11 @@ export function HUDLayer({ time }: { time: number }) {
         </div>
         <div
           style={{
-            // Playfair Display italic — the editorial flourish moment, paired
+            // Display face (Space Grotesk via redirected var) — paired
             // against Fraunces for the structured tabular counters below.
             fontFamily: "var(--font-playfair), Georgia, serif",
             fontSize: 96,
             fontWeight: 700,
-            fontStyle: 'italic',
             color: '#fff',
             letterSpacing: '-0.025em',
             lineHeight: 0.95,

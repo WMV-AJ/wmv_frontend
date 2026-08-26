@@ -31,7 +31,7 @@ export default async function ListYourVenuePage() {
     <MarketingShell>
       <div style={{ padding: '32px 18px 8px', position: 'relative', overflow: 'hidden' }}>
         <RadarRings size={260} right={-80} top={-40} />
-        <h1 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
+        <h1 style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
           Your venue is already<br />
           <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>on the radar. Own it.</span>
         </h1>

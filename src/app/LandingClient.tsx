@@ -164,7 +164,7 @@ function ProblemSection() {
   return (
     <section style={{ padding: '56px 0 40px', borderBottom: `1px solid ${T.line}`, position: 'relative' }}>
       <Label>The problem</Label>
-      <h2 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 30, lineHeight: 1.15, color: T.ink, margin: 0 }}>
+      <h2 style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: 0 }}>
         47 stories deep<br />and still no plan.
       </h2>
       <div style={{ margin: '24px 0 22px' }}>
@@ -259,7 +259,7 @@ function TonightStrip({ city }: { city: CitySlug }) {
   return (
     <section ref={ref} style={{ padding: '40px 0', borderBottom: `1px solid ${T.line}` }}>
       <Label>Live right now</Label>
-      <h3 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 22, color: T.ink, margin: '0 0 16px' }}>
+      <h3 style={{ fontFamily: serif, fontSize: 22, color: T.ink, margin: '0 0 16px' }}>
         Tonight in {cityName} — while you&rsquo;re reading this
       </h3>
       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
@@ -361,7 +361,7 @@ function DualCta({ city }: { city: CitySlug }) {
   };
   return (
     <section style={{ padding: '40px 0', borderBottom: `1px solid ${T.line}`, textAlign: 'center' }}>
-      <h3 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 24, color: T.ink, margin: '0 0 6px' }}>
+      <h3 style={{ fontFamily: serif, fontSize: 24, color: T.ink, margin: '0 0 6px' }}>
         The night is already happening.
       </h3>
       <p style={{ color: T.inkMuted, fontSize: 13, margin: '0 0 20px' }}>How do you want to see it?</p>

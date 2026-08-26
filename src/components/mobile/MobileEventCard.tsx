@@ -705,7 +705,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                     className="text-[12px] mt-1 leading-relaxed"
                     style={{
                       color: darkMode ? 'rgba(253, 224, 71, 0.85)' : 'rgb(120, 100, 50)',
-                      fontStyle: 'italic',
                       display: '-webkit-box',
                       WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
                       WebkitBoxOrient: 'vertical',

@@ -57,7 +57,7 @@ export function ListPageHeader({
         {icon}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 16, fontWeight: 400, color: T.ink, lineHeight: 1.05, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontFamily: serif, fontSize: 16, fontWeight: 400, color: T.ink, lineHeight: 1.05, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {title}
         </div>
         <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 3 }}>
@@ -153,7 +153,7 @@ export default function StackedCardsListPage({
 
   const defaultEmpty = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: T.ink }}>
+      <div style={{ fontFamily: serif, fontSize: 18, color: T.ink }}>
         Nothing here right now
       </div>
       <div style={{ fontFamily: mono, fontSize: 11, color: T.inkMuted, marginTop: 8, lineHeight: 1.5 }}>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { Geist, Fraunces, Playfair_Display } from "next/font/google";
+import { Geist, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
@@ -11,27 +11,20 @@ import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-// Three-font stack — body/UI workhorse, structured display, italic editorial.
+// Two-font stack — Geist body/UI workhorse + Space Grotesk display.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-// Font-cut audit (2026-07): every Playfair usage in the codebase is italic at
-// 400/700, and no italic Fraunces exists anywhere. Trimming 13 cuts → 5
-// files saves ~8 render-blocking woff2 downloads on first paint.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Display font swap (2026-08): Space Grotesk (Garnett stand-in) replaces
+// BOTH Fraunces and Playfair italic — no italics anywhere. The legacy
+// --font-fraunces / --font-playfair variables are redirected to it in
+// globals.css so the 20+ existing call sites need no edits.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["600", "700"],
-  style: ["normal"],
-});
-
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  style: ["italic"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const viewport = {
@@ -114,7 +107,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${geistSans.variable} ${fraunces.variable} ${playfairDisplay.variable} antialiased`}
+        className={`${geistSans.variable} ${spaceGrotesk.variable} antialiased`}
       >
         {GA_MEASUREMENT_ID && (
           <>

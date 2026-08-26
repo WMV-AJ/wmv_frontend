@@ -75,7 +75,7 @@ export default function VibeListingPage() {
 
   const emptyState = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: '#f5f2ed' }}>
+      <div style={{ fontFamily: serif, fontSize: 18, color: '#f5f2ed' }}>
         {vibe ? `No ${vibe.label.toLowerCase()} events right now` : 'That vibe doesn’t exist'}
       </div>
       <div style={{ fontFamily: mono, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>

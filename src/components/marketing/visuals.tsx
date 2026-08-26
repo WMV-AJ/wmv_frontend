@@ -135,7 +135,7 @@ export function StoryCollage() {
               color: c.color, textTransform: 'uppercase', marginBottom: 2,
             }}>{c.line}</div>
             <div style={{
-              fontFamily: serif, fontStyle: 'italic', fontSize: 13, color: '#fff', lineHeight: 1.1,
+              fontFamily: serif, fontSize: 13, color: '#fff', lineHeight: 1.1,
             }}>{c.venue}</div>
           </div>
         </div>

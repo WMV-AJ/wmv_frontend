@@ -1,5 +1,12 @@
 'use client';
 
+// FONT-TRIAL VARIANT of ../CityHomeClient.tsx — reachable at /[city]/home2.
+// Same layout/data; only the type changes: Futura for labels/headings/UI,
+// Lyon Text for display titles, Life for body copy. All three are commercial
+// faces, so each stack tries the real font first (Apple devices ship Futura)
+// and falls back to a bundled Google stand-in: Jost / Source Serif 4 /
+// PT Serif. Delete this file when the trial is decided.
+import { Jost, Source_Serif_4, PT_Serif } from 'next/font/google';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
@@ -43,8 +50,15 @@ const T = {
   chipLight: '#f5f2ed',
 };
 
-const mono = "var(--font-geist-sans), ui-monospace, monospace";
-const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
+// Google stand-ins, loaded only on this trial route.
+const jost = Jost({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-jost' });
+const sourceSerif = Source_Serif_4({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-source-serif' });
+const ptSerif = PT_Serif({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-pt-serif' });
+
+// Trial combo: labels/UI = Futura, display titles = Lyon Text, body = Life.
+const mono = "Futura, 'Futura PT', var(--font-jost), sans-serif";
+const serif = "'Lyon Text', var(--font-source-serif), Georgia, serif";
+const life = "Life, 'Life LT Std', var(--font-pt-serif), 'Times New Roman', serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
 // VIBES + matchesVibe live in '@/config/vibes' so the homepage pill counts
@@ -234,7 +248,7 @@ function CategoryPillTag({ primary, small }: { primary: string; small?: boolean 
 }
 
 // ── COMPONENT ─────────────────────────────────────────────────────────
-export default function CityHome() {
+export default function CityHome2() {
   const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
@@ -437,6 +451,7 @@ export default function CityHome() {
 
   return (
     <main
+      className={`${jost.variable} ${sourceSerif.variable} ${ptSerif.variable}`}
       style={{
         position: 'fixed',
         inset: 0,
@@ -445,7 +460,7 @@ export default function CityHome() {
         WebkitOverflowScrolling: 'touch',
         background: T.bg,
         color: T.ink,
-        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        fontFamily: life,
       }}
     >
       <style>{`

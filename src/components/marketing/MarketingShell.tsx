@@ -67,7 +67,6 @@ export default function MarketingShell({ children }: { children: React.ReactNode
             <span
               style={{
                 fontFamily: serif,
-                fontStyle: 'italic',
                 fontWeight: 700,
                 fontSize: 14,
                 color: T.ink,

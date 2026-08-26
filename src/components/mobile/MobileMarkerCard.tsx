@@ -449,7 +449,6 @@ const MobileMarkerCard: React.FC<MobileMarkerCardProps> = ({
                     className="text-[12px] mt-1 leading-relaxed"
                     style={{
                       color: 'rgba(220, 200, 150, 0.9)',
-                      fontStyle: 'italic',
                       display: '-webkit-box',
                       WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
                       WebkitBoxOrient: 'vertical',

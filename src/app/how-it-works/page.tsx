@@ -32,7 +32,7 @@ export default async function HowItWorksPage() {
 
         {/* Hero */}
         <div style={{ position: 'relative' }}>
-          <h1 style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px' }}>
+          <h1 style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px' }}>
             We watch the stories<br />
             <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>so you don&rsquo;t have to.</span>
           </h1>
@@ -106,7 +106,7 @@ export default async function HowItWorksPage() {
 
         {/* CTA */}
         <section style={{ padding: '4px 0 36px', textAlign: 'center' }}>
-          <p style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 20, color: T.ink, margin: '0 0 18px' }}>
+          <p style={{ fontFamily: serif, fontSize: 20, color: T.ink, margin: '0 0 18px' }}>
             Tonight is already mapped.
           </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>

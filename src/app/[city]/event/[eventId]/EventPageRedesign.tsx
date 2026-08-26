@@ -206,7 +206,7 @@ function SpecCell({
       <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '1.3px', textTransform: 'uppercase', color: T.inkFaint }}>
         {label}
       </div>
-      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.1, color: valueColor, marginTop: 6 }}>
+      <div style={{ fontFamily: serif, fontSize: 18, lineHeight: 1.1, color: valueColor, marginTop: 6 }}>
         {value}
       </div>
       {note ? <div style={{ fontSize: 10, color: T.inkMuted, marginTop: 3 }}>{note}</div> : null}
@@ -453,7 +453,7 @@ export default function EventPageRedesign({
                   </span>
                 </div>
 
-                <h1 style={{ fontFamily: serif, fontStyle: 'italic', fontWeight: 400, fontSize: 40, lineHeight: 0.96, letterSpacing: '-0.03em', margin: '12px 0 0', color: T.ink }}>
+                <h1 style={{ fontFamily: serif, fontWeight: 400, fontSize: 40, lineHeight: 0.96, letterSpacing: '-0.03em', margin: '12px 0 0', color: T.ink }}>
                   {event.event_name}
                 </h1>
 
@@ -787,7 +787,7 @@ export default function EventPageRedesign({
                         <div style={{ fontSize: 13, fontWeight: 600, color: T.ink, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {r.event_name}
                         </div>
-                        <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 13, color: T.inkMuted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontFamily: serif, fontSize: 13, color: T.inkMuted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {r.venue_name_original || r.venue_name}
                         </div>
                       </div>

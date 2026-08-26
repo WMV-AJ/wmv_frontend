@@ -33,6 +33,16 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Display font swap (2026-08): Space Grotesk (Garnett stand-in) replaces
+   both Fraunces and Playfair italic. next/font defines --font-space-grotesk
+   on <body>, so the legacy variable names are redirected there — every
+   var(--font-fraunces) / var(--font-playfair) call site resolves to
+   Space Grotesk without per-file edits. No italics anywhere. */
+body {
+  --font-fraunces: var(--font-space-grotesk);
+  --font-playfair: var(--font-space-grotesk);
+}
+
 /* Dark Purple Theme */
 :root {
   --radius: 0.5rem;
