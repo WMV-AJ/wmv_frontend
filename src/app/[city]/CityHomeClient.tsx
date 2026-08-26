@@ -1,5 +1,6 @@
 'use client';
 
+import { Inter, Space_Mono } from 'next/font/google';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
@@ -43,8 +44,16 @@ const T = {
   chipLight: '#f5f2ed',
 };
 
-const mono = "var(--font-geist-sans), ui-monospace, monospace";
-const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
+// Home-page type system (2026-08 trial): three roles —
+//   display (Space Grotesk): venue + event names, hero, numbers
+//   data    (Space Mono):    the uppercase micro-labels, times, counts, badges
+//   body    (Inter):         quiet supporting copy (page default on <main>)
+const interFont = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const spaceMonoFont = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-space-mono' });
+
+const mono = "var(--font-space-mono), ui-monospace, monospace";
+const serif = "var(--font-space-grotesk), 'Space Grotesk', system-ui, sans-serif";
+const body = "var(--font-inter), system-ui, sans-serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
 // VIBES + matchesVibe live in '@/config/vibes' so the homepage pill counts
@@ -437,6 +446,7 @@ export default function CityHome() {
 
   return (
     <main
+      className={`${interFont.variable} ${spaceMonoFont.variable}`}
       style={{
         position: 'fixed',
         inset: 0,
@@ -445,7 +455,7 @@ export default function CityHome() {
         WebkitOverflowScrolling: 'touch',
         background: T.bg,
         color: T.ink,
-        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        fontFamily: body,
       }}
     >
       <style>{`
@@ -857,7 +867,7 @@ export default function CityHome() {
                       {e.name || e.venue}
                     </div>
                     {/* Always reserve this row — keeps height consistent across cards */}
-                    <div style={{ fontSize: 11, color: T.inkMuted, marginTop: 3, minHeight: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: serif, fontSize: 11, color: T.inkMuted, marginTop: 3, minHeight: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.event_name || ''}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, fontFamily: mono, fontSize: 9, color: T.inkMuted, fontWeight: 500, letterSpacing: '0.5px', minHeight: 15, flexWrap: 'wrap' }}>
@@ -948,7 +958,7 @@ export default function CityHome() {
                         {cfg.label}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: serif, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.event_name || ''}
                     </div>
                     {/* Venue — serif italic, white (gold reserved for headings) */}
@@ -1078,7 +1088,7 @@ export default function CityHome() {
                               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                             }}>{e.name || e.venue}</div>
                             {e.event_name && (
-                              <div style={{ fontSize: 10, color: T.inkMuted, marginTop: 3, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
+                              <div style={{ fontFamily: serif, fontSize: 10, color: T.inkMuted, marginTop: 3, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
                                 {e.event_name}
                               </div>
                             )}
