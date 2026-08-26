@@ -5,12 +5,14 @@ import { hash } from './animation-core';
 // intro is a flash of doomscroll-chaos that snaps into the settled map —
 // total 4.9s, non-looping, skippable (see useIntroGate). Returning visitors
 // render the final frame statically.
+// The tail (burst → settle → pills) is stretched further than the front:
+// the chaos flash stays punchy, but the landing on the map breathes.
 export const DUR = {
   CHAOS_END: 2.0,
   COLLAPSE_END: 2.9,
-  BURST_END: 3.5,
-  SETTLE_END: 4.4,
-  TOTAL: 4.9,
+  BURST_END: 3.8,
+  SETTLE_END: 5.2,
+  TOTAL: 6.1,
 } as const;
 
 export const CANVAS_W = 1080;

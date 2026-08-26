@@ -83,7 +83,7 @@ export default function LandingClient() {
             inset: 0,
             filter: settledFx ? 'blur(3px) brightness(0.85)' : 'none',
             transform: settledFx ? 'scale(1.02)' : 'none',
-            transition: 'filter 700ms ease, transform 700ms ease',
+            transition: 'filter 1800ms ease-in-out, transform 1800ms ease-in-out',
           }}
         >
           <LandingHero

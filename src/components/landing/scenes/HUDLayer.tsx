@@ -228,7 +228,7 @@ export function HUDLayer({ time }: { time: number }) {
   const posts = Math.round(eased * 408);
   const events = Math.round(eased * 179);
 
-  const pillsP = phaseProgress(time, DUR.SETTLE_END + 0.1, DUR.SETTLE_END + 0.5);
+  const pillsP = phaseProgress(time, DUR.SETTLE_END + 0.1, DUR.SETTLE_END + 0.9);
 
   if (statsP <= 0 && pillsP <= 0) return null;
 
