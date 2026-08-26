@@ -34,7 +34,7 @@ export default function LandingClient() {
   const [settledFx, setSettledFx] = useState(false);
   useEffect(() => {
     if (state !== 'done') { setSettledFx(false); return; }
-    const t = setTimeout(() => setSettledFx(true), 5200);
+    const t = setTimeout(() => setSettledFx(true), 5700);
     return () => clearTimeout(t);
   }, [state]);
 
