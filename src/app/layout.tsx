@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { Geist, Fraunces, Playfair_Display } from "next/font/google";
+import { Geist, Fraunces, Playfair_Display, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
@@ -31,7 +31,15 @@ const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   style: ["italic"],
-  weight: ["400", "700"],
+  weight: ["400", "500", "700"],
+});
+
+// Space Grotesk — card/list titles + section headings on the city home
+// (2026-08 restyle: Playfair italic retreats to the hero headline only).
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const viewport = {
@@ -114,7 +122,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${geistSans.variable} ${fraunces.variable} ${playfairDisplay.variable} antialiased`}
+        className={`${geistSans.variable} ${fraunces.variable} ${playfairDisplay.variable} ${spaceGrotesk.variable} antialiased`}
       >
         {GA_MEASUREMENT_ID && (
           <>
