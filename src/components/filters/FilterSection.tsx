@@ -23,12 +23,19 @@ interface FilterSectionProps {
   section: FilterSectionConfig;
   onToggle: () => void;
   onSelectionChange: (selectedValues: string[]) => void;
+  /**
+   * Drop the section's own title row. Used when the sheet drives the sections
+   * as tabs — the tab already names the section and carries its count, so
+   * repeating both directly beneath it is noise the panel cannot afford.
+   */
+  hideHeader?: boolean;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
   section,
   onToggle,
-  onSelectionChange
+  onSelectionChange,
+  hideHeader = false
 }) => {
   const params = useParams();
   const currentCity = typeof params?.city === 'string' ? params.city : 'dubai';
@@ -85,6 +92,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   return (
     <div className={`filter-section ${section.isExpanded ? 'col-span-2' : ''}`}>
       {/* Section Header */}
+      {!hideHeader && (
       <div className="flex items-center justify-between mb-1.5 min-h-[28px]">
         <div className="flex items-center space-x-1.5">
           <h3 className="font-geist text-sm font-semibold text-white">
@@ -111,6 +119,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
           </button>
         )}
       </div>
+      )}
 
       {/* Section Content */}
       <AnimatePresence initial={false}>

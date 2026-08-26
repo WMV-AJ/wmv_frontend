@@ -967,7 +967,7 @@ export default function CityMapPage() {
 
         {/* 228 vertically centers the 48px pill on the same line as the 40px
             location toggle (bottom: 232 → shared center at 252). */}
-        <NavPill city={city} active="map" bottomOffset={228} />
+        <NavPill city={city} active="map" bottomOffset={228} hidden={isFilterSheetOpen} />
 
         <MobileEventList
           cards={cards}
