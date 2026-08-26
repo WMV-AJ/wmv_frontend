@@ -148,12 +148,15 @@ function SectionHeader({ label, right, onClick }: {
     <div
       onClick={onClick}
       style={{
+        // Full-bleed gold rule: negative margins escape the 18px content
+        // gutter; matching padding pulls the text back in line.
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: `1px solid ${T.line}`, paddingBottom: 8, marginBottom: 12,
+        borderBottom: '1px solid rgba(244,196,48,0.3)',
+        margin: '0 -18px 12px', padding: '0 18px 9px',
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.accent, paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
         {label}
       </div>
       {right}
@@ -214,14 +217,13 @@ function HScrollRail({ children }: { children: React.ReactNode }) {
 }
 
 // Colored event-category pill — same palette as the list/map CategoryPills.
-// `onMedia` swaps the translucent tint for a solid dark backing so the
-// colored text stays readable on top of photos/videos.
-function CategoryPillTag({ primary, small, onMedia }: { primary: string; small?: boolean; onMedia?: boolean }) {
+// Always the translucent tint: pills now live below the image, never on it.
+function CategoryPillTag({ primary, small }: { primary: string; small?: boolean }) {
   const hex = getHexColor(getCategoryColor(primary));
   return (
     <span style={{
       display: 'inline-block', padding: small ? '2px 7px' : '3px 9px', borderRadius: 999,
-      background: onMedia ? 'rgba(10,10,20,0.78)' : `${hex}1f`,
+      background: `${hex}1f`,
       border: `1px solid ${hex}66`, color: hex,
       fontFamily: mono, fontSize: small ? 8 : 9, fontWeight: 700,
       letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap',
@@ -539,22 +541,22 @@ export default function CityHome() {
                 </span>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button
                 onClick={() => {
                   trackEvent('nav_view_change', { from: 'home', to: 'map', source: 'hero_cta' });
                   router.push(`/${city}/map`);
                 }}
                 style={{
-                  fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
+                  fontFamily: mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
                   textTransform: 'uppercase', cursor: 'pointer', border: 'none',
-                  padding: '7px 11px', borderRadius: 7, lineHeight: 1,
-                  background: T.accent, color: '#0a0a14',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  padding: '13px 18px', borderRadius: 9, lineHeight: 1,
+                  background: '#c9a227', color: '#0a0a14',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 }}
               >
                 Explore on Maps
-                <ArrowUpRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                <ArrowUpRight size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />
               </button>
               <button
                 onClick={() => {
@@ -562,16 +564,16 @@ export default function CityHome() {
                   router.push(`/${city}/cards`);
                 }}
                 style={{
-                  fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '0.5px',
+                  fontFamily: mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
                   textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1,
-                  padding: '7px 11px', borderRadius: 7,
-                  background: 'transparent', color: T.accent,
-                  border: `1px solid ${T.accent}`,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  padding: '13px 18px', borderRadius: 9,
+                  background: 'transparent', color: '#f5f2ed',
+                  border: '1.5px solid #3a3548',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 }}
               >
                 Today&rsquo;s Vibe
-                <ArrowUpRight size={11} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                <ArrowUpRight size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />
               </button>
             </div>
           </div>
@@ -600,7 +602,7 @@ export default function CityHome() {
                 borderLeft: i > 0 ? `1px solid ${T.line}` : 'none',
               }}>
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <div style={{ fontFamily: serif, fontStyle: 'italic', fontWeight: 400, fontSize: 36, color: (s as any).live ? T.live : T.accent, lineHeight: 1 }}>
+                <div style={{ fontFamily: serif, fontStyle: 'italic', fontWeight: 400, fontSize: 28, color: (s as any).live ? T.live : T.ink, lineHeight: 1 }}>
                   {s.n}
                 </div>
                 <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -637,7 +639,7 @@ export default function CityHome() {
           <button type="submit" style={{
             background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
             fontFamily: mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: T.accent,
+            textTransform: 'uppercase', color: T.ink,
           }}>
             Go
           </button>
@@ -664,34 +666,40 @@ export default function CityHome() {
                     onClick={() => openEvent(e, 'happening_now')}
                     style={{
                       flex: '0 0 130px', width: 130, minWidth: 130, maxWidth: 130,
-                      scrollSnapAlign: 'start', position: 'relative',
-                      aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
-                      background: `linear-gradient(135deg, ${T.live}22, ${T.bg})`,
-                      border: `1px solid ${T.line}`, cursor: e.event_id ? 'pointer' : 'default',
+                      scrollSnapAlign: 'start',
+                      cursor: e.event_id ? 'pointer' : 'default',
                     }}
                   >
-                    {e.media_url_1 && (
-                      <EventMedia
-                        src={e.media_url_1}
-                        mediaType={e.media_type_1}
-                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                        alt={e.name || ''}
-                        sizes="140px"
-                        fill
-                        lazyVideo
-                      />
-                    )}
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 45%, rgba(10,10,20,0.9))' }} />
+                    {/* Media block — only the LIVE badge sits on the image */}
                     <div style={{
-                      position: 'absolute', top: 6, left: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
-                      background: T.live, color: '#fff', fontFamily: mono, fontSize: 8, fontWeight: 700,
-                      padding: '2px 5px', letterSpacing: '0.5px', borderRadius: 3,
+                      position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
+                      background: `linear-gradient(135deg, ${T.live}22, ${T.bg})`,
+                      border: `1px solid ${T.line}`,
                     }}>
-                      <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#fff', animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
-                      LIVE
+                      {e.media_url_1 && (
+                        <EventMedia
+                          src={e.media_url_1}
+                          mediaType={e.media_type_1}
+                          poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                          alt={e.name || ''}
+                          sizes="140px"
+                          fill
+                          lazyVideo
+                        />
+                      )}
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
+                      <div style={{
+                        position: 'absolute', top: 6, left: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
+                        background: T.live, color: '#fff', fontFamily: mono, fontSize: 8, fontWeight: 700,
+                        padding: '2px 5px', letterSpacing: '0.5px', borderRadius: 3,
+                      }}>
+                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#fff', animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
+                        LIVE
+                      </div>
                     </div>
-                    <div style={{ position: 'absolute', bottom: 6, left: 6, right: 6 }}>
-                      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 14, color: T.ink, lineHeight: 1.1 }}>
+                    {/* Text below the image */}
+                    <div style={{ paddingTop: 8 }}>
+                      <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 14, color: T.ink, lineHeight: 1.15, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {e.name || ''}
                       </div>
                       {e.event_time && (
@@ -711,7 +719,7 @@ export default function CityHome() {
         <div style={{ padding: '26px 18px 0' }}>
           <SectionHeader
             label={`Tonight in ${getCityConfig(city).displayName}`}
-            right={<span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>{loading ? '—' : `${tonightEvents.length} EVENTS`}</span>}
+            right={<span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>{loading ? '—' : `${tonightEvents.length} EVENTS`}</span>}
           />
 
           {loading ? (
@@ -746,51 +754,57 @@ export default function CityHome() {
                         onClick={() => openEvent(e, 'tonight_scroller')}
                         style={{
                           flex: '0 0 48%', width: '48%', minWidth: '48%', maxWidth: '48%',
-                          scrollSnapAlign: 'start', position: 'relative',
-                          aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
-                          background: 'linear-gradient(135deg, #1c1c2a, #0a0a14)',
-                          border: `1px solid ${T.line}`, cursor: e.event_id ? 'pointer' : 'default',
+                          scrollSnapAlign: 'start',
+                          cursor: e.event_id ? 'pointer' : 'default',
                         }}
                       >
-                        {e.media_url_1 ? (
-                          <EventMedia
-                            src={e.media_url_1}
-                            mediaType={e.media_type_1}
-                            poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                            alt={e.name || ''}
-                            sizes="(max-width: 430px) 48vw, 206px"
-                            fill
-                            lazyVideo
-                          />
-                        ) : (
-                          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
-                        )}
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(10,10,20,0.92))' }} />
-                        {cat && (
-                          <div style={{ position: 'absolute', top: 8, left: 8 }}>
-                            <CategoryPillTag primary={cat} small onMedia />
-                          </div>
-                        )}
-                        <button
-                          onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
-                          style={{
-                            position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 4,
-                            background: 'rgba(20,20,31,0.75)', border: `1px solid ${T.line}`, cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                          }}
-                          aria-label="Like"
-                        >
-                          <Heart style={{ width: 12, height: 12, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
-                        </button>
-                        <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8 }}>
+                        {/* Media block — only the heart stays on the image */}
+                        <div style={{
+                          position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
+                          background: 'linear-gradient(135deg, #1c1c2a, #0a0a14)',
+                          border: `1px solid ${T.line}`,
+                        }}>
+                          {e.media_url_1 ? (
+                            <EventMedia
+                              src={e.media_url_1}
+                              mediaType={e.media_type_1}
+                              poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
+                              alt={e.name || ''}
+                              sizes="(max-width: 430px) 48vw, 206px"
+                              fill
+                              lazyVideo
+                            />
+                          ) : (
+                            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
+                          )}
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
+                          <button
+                            onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
+                            style={{
+                              position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 4,
+                              background: 'rgba(20,20,31,0.75)', border: `1px solid ${T.line}`, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                            }}
+                            aria-label="Like"
+                          >
+                            <Heart style={{ width: 12, height: 12, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
+                          </button>
+                        </div>
+                        {/* Text below the image */}
+                        <div style={{ paddingTop: 9 }}>
+                          {cat && (
+                            <div style={{ marginBottom: 5 }}>
+                              <CategoryPillTag primary={cat} small />
+                            </div>
+                          )}
                           <div style={{
                             fontFamily: serif, fontStyle: 'italic', fontSize: 16, fontWeight: 400,
-                            color: T.ink, lineHeight: 1.05, letterSpacing: '-0.015em',
+                            color: T.ink, lineHeight: 1.15, letterSpacing: '-0.015em',
                             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                           }}>
                             {e.event_name || e.name}
                           </div>
-                          <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.accent, letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {e.name || ''}{e.event_time ? ` · ${e.event_time}` : ''}
                           </div>
                         </div>
@@ -811,7 +825,7 @@ export default function CityHome() {
                   cursor: e.event_id ? 'pointer' : 'default',
                 }} onClick={() => openEvent(e, 'tonight_list')}>
                   {/* Number */}
-                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.accent }}>
+                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   {/* Thumbnail — left */}
@@ -829,6 +843,7 @@ export default function CityHome() {
                     ) : (
                       <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
                     )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
                   </div>
                   {/* Text */}
                   <div style={{ minWidth: 0 }}>
@@ -874,7 +889,7 @@ export default function CityHome() {
                     border: `1px solid ${T.line}`, background: 'transparent',
                     fontFamily: mono, fontSize: 10, fontWeight: 600,
                     letterSpacing: '1px', textTransform: 'uppercase',
-                    color: T.accent, cursor: 'pointer',
+                    color: T.ink, cursor: 'pointer',
                   }}
                 >
                   See all {tonightEvents.length} events tonight →
@@ -893,7 +908,7 @@ export default function CityHome() {
           <div style={{ padding: '26px 18px 0' }}>
             <SectionHeader
               label={"Tonight's deals"}
-              right={<span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>{dealsTonight.length} OFFERS</span>}
+              right={<span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>{dealsTonight.length} OFFERS</span>}
             />
             <HScrollRail>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -936,8 +951,8 @@ export default function CityHome() {
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.event_name || ''}
                     </div>
-                    {/* Venue — gold serif italic (took the deal's old font) */}
-                    <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: T.accent, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {/* Venue — serif italic, white (gold reserved for headings) */}
+                    <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 15, color: T.ink, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.name || ''}
                     </div>
                     <div style={{ fontFamily: mono, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
@@ -1017,7 +1032,7 @@ export default function CityHome() {
                     <span style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 17, color: T.ink, letterSpacing: '-0.01em' }}>
                       {label}
                     </span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
                       {events.length} events
                       <ArrowUpRight size={12} strokeWidth={2.2} />
                     </span>
@@ -1033,12 +1048,8 @@ export default function CityHome() {
                           onClick={() => openEvent(e, 'weekend_rail')}
                           style={{ flex: '0 0 180px', width: 180, minWidth: 180, maxWidth: 180, scrollSnapAlign: 'start', cursor: e.event_id ? 'pointer' : 'default' }}
                         >
+                          {/* Media block — nothing overlays the photo */}
                           <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6, background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
-                            {wCat && (
-                              <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 2 }}>
-                                <CategoryPillTag primary={wCat} small onMedia />
-                              </div>
-                            )}
                             {e.media_url_1 ? (
                               <EventMedia
                                 src={e.media_url_1}
@@ -1050,21 +1061,28 @@ export default function CityHome() {
                                 lazyVideo
                               />
                             ) : null}
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(10,10,20,0.85))' }} />
-                            <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8 }}>
-                              <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: color, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
-                                {e.area || ''}
-                              </div>
-                              <div style={{
-                                fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: T.ink, lineHeight: 1.05, marginTop: 2,
-                              }}>{e.name || e.venue}</div>
-                            </div>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
                           </div>
-                          {e.event_name && (
-                            <div style={{ fontSize: 10, color: T.inkMuted, marginTop: 6, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                              {e.event_name}
+                          {/* Text below the image */}
+                          <div style={{ paddingTop: 8 }}>
+                            {wCat && (
+                              <div style={{ marginBottom: 5 }}>
+                                <CategoryPillTag primary={wCat} small />
+                              </div>
+                            )}
+                            <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                              {e.area || ''}
                             </div>
-                          )}
+                            <div style={{
+                              fontFamily: serif, fontStyle: 'italic', fontSize: 16, color: T.ink, lineHeight: 1.15, marginTop: 2,
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>{e.name || e.venue}</div>
+                            {e.event_name && (
+                              <div style={{ fontSize: 10, color: T.inkMuted, marginTop: 3, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
+                                {e.event_name}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -1105,10 +1123,10 @@ export default function CityHome() {
                 <span style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 18, color: T.ink, letterSpacing: '-0.01em' }}>
                   {a.label}
                 </span>
-                <span style={{ fontFamily: mono, fontSize: 10, color: T.accent, fontWeight: 600 }}>
+                <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
                   {a.count} events
                 </span>
-                <ArrowUpRight size={13} strokeWidth={2} style={{ color: T.inkFaint, flexShrink: 0 }} />
+                <ChevronRight size={14} strokeWidth={2} style={{ color: T.inkMuted, flexShrink: 0 }} />
               </div>
             ))
           }
@@ -1124,44 +1142,54 @@ export default function CityHome() {
               ))
               : storiesData.map((s, i) => (
                 <div key={s.id} style={{
-                  aspectRatio: '3 / 4', position: 'relative', overflow: 'hidden',
-                  background: s.mediaUrl
-                    ? T.bg
-                    : `linear-gradient(${135 + i * 20}deg, ${s.color}, ${s.color}66, ${T.bg})`,
-                  border: `1px solid ${T.line}`,
                   cursor: s.event_id ? 'pointer' : 'default',
                 }} onClick={() => {
                   if (!s.event_id) return;
                   trackEvent('view_event', { event_id: s.event_id, venue_id: s.venue_id, place_id: s.place_id, event_date: s.event_date, source: 'stories_grid' });
                   router.push(`/${city}/event/${s.event_id}`);
                 }}>
-                  {s.mediaUrl ? (
-                    // lazyVideo: <video> only mounts near the viewport; until
-                    // then the sibling image (or placeholder) renders via the
-                    // optimizer. No autoPlay on tiny grid tiles.
-                    <EventMedia
-                      src={s.mediaUrl}
-                      mediaType={s.mediaType}
-                      poster={s.posterUrl}
-                      alt={s.venue}
-                      sizes="(max-width: 430px) 25vw, 107px"
-                      fill
-                      lazyVideo
-                    />
-                  ) : null}
-                  {s.isLive && (
-                    <div style={{
-                      position: 'absolute', top: 4, left: 4,
-                      background: T.live, color: '#fff', fontFamily: mono, fontSize: 7, fontWeight: 700,
-                      padding: '1.5px 3px', letterSpacing: '0.5px',
-                    }}>LIVE</div>
-                  )}
+                  {/* Media block — only the LIVE badge sits on the image */}
                   <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0, padding: '5px 4px',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-                    fontFamily: mono, fontSize: 8, fontWeight: 600, color: '#fff',
-                    letterSpacing: '0.3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>@{s.user}</div>
+                    aspectRatio: '3 / 4', position: 'relative', overflow: 'hidden', borderRadius: 6,
+                    background: s.mediaUrl
+                      ? T.bg
+                      : `linear-gradient(${135 + i * 20}deg, ${s.color}, ${s.color}66, ${T.bg})`,
+                    border: `1px solid ${T.line}`,
+                  }}>
+                    {s.mediaUrl ? (
+                      // lazyVideo: <video> only mounts near the viewport; until
+                      // then the sibling image (or placeholder) renders via the
+                      // optimizer. No autoPlay on tiny grid tiles.
+                      <EventMedia
+                        src={s.mediaUrl}
+                        mediaType={s.mediaType}
+                        poster={s.posterUrl}
+                        alt={s.venue}
+                        sizes="(max-width: 430px) 25vw, 107px"
+                        fill
+                        lazyVideo
+                      />
+                    ) : null}
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
+                    {s.isLive && (
+                      <div style={{
+                        position: 'absolute', top: 4, left: 4,
+                        background: T.live, color: '#fff', fontFamily: mono, fontSize: 7, fontWeight: 700,
+                        padding: '1.5px 3px', letterSpacing: '0.5px', borderRadius: 2,
+                      }}>LIVE</div>
+                    )}
+                  </div>
+                  {/* Venue name + handle below the image */}
+                  <div style={{ paddingTop: 8 }}>
+                    <div style={{
+                      fontFamily: serif, fontStyle: 'italic', fontSize: 11, color: T.ink,
+                      lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>{s.venue}</div>
+                    <div style={{
+                      fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.inkMuted,
+                      letterSpacing: '0.3px', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>@{s.user}</div>
+                  </div>
                 </div>
               ))
             }
@@ -1171,7 +1199,7 @@ export default function CityHome() {
         {/* The method */}
         <div style={{ padding: '24px 18px 0' }}>
           <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 8 }}>
+            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.accent, marginBottom: 8 }}>
               The method
             </div>
             <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 20, fontWeight: 400, color: T.ink, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
