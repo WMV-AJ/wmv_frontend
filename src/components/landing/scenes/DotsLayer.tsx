@@ -45,9 +45,9 @@ export function DotsLayer({ time }: { time: number }) {
             key={i}
             style={{
               position: 'absolute',
-              left: x,
-              top: y,
-              transform: `translate(-50%, -50%) scale(${scale})`,
+              left: 0,
+              top: 0,
+              transform: `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(${scale})`,
               width: d.size,
               height: d.size,
               borderRadius: '50%',

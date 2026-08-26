@@ -143,9 +143,9 @@ function Pill({ cat, delay, pillsP }: PillProps) {
         gap: 10,
         padding: '13px 22px',
         borderRadius: 9999,
-        background: 'rgba(10,10,26,0.72)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        // No backdrop-filter: 12 pills re-blurring animating dots every
+        // frame cost more than the effect was worth; solid tint instead.
+        background: 'rgba(10,10,26,0.88)',
         border: `1px solid ${cat.color}55`,
         color: cat.color,
         fontFamily: "var(--font-geist-sans), system-ui, sans-serif",

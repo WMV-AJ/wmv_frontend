@@ -142,9 +142,8 @@ export function ChaosOverlay({ time }: { time: number }) {
               right: 0,
               top: rayY,
               height: 140,
-              background: 'linear-gradient(180deg, transparent, rgba(239,68,68,0.55), transparent)',
+              background: 'linear-gradient(180deg, transparent, rgba(239,68,68,0.45), transparent)',
               opacity: rayOp,
-              mixBlendMode: 'screen',
             }}
           />
         );
@@ -170,11 +169,10 @@ export function ChaosOverlay({ time }: { time: number }) {
               x2={g.endX}
               y2={g.endY}
               stroke={L.color}
-              strokeWidth={4}
+              strokeWidth={5}
               strokeLinecap="round"
               strokeDasharray="10 10"
               opacity={lineOp}
-              style={{ filter: `drop-shadow(0 0 8px ${L.color}) drop-shadow(0 0 18px ${L.color})` }}
             />
           );
         })}
@@ -204,11 +202,12 @@ export function ChaosOverlay({ time }: { time: number }) {
               minWidth: 280,
               padding: '18px 24px',
               borderRadius: 16,
-              background: 'rgba(255,255,255,0.55)',
-              backdropFilter: 'blur(32px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+              // Solid-ish glass, no backdrop-filter: re-blurring a moving
+              // backdrop every frame was the single biggest jank source.
+              background: 'rgba(255,255,255,0.86)',
               border: `1px solid rgba(255,255,255,0.55)`,
-              boxShadow: `0 0 32px ${L.color}55, 0 12px 36px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(255,255,255,0.18)`,
+              boxShadow: `0 0 32px ${L.color}55, 0 12px 36px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.7)`,
+              willChange: 'transform, opacity',
               display: 'flex',
               flexDirection: 'column',
               alignItems: align,
@@ -320,15 +319,15 @@ export function ChaosOverlay({ time }: { time: number }) {
             key={`dot-${i}`}
             style={{
               position: 'absolute',
-              left: dotX,
-              top: dotY,
-              transform: 'translate(-50%, -50%)',
+              left: 0,
+              top: 0,
+              transform: `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`,
               width: 14,
               height: 14,
               borderRadius: '50%',
               background: L.color,
               opacity: arrivalFade,
-              boxShadow: `0 0 18px ${L.color}, 0 0 40px ${L.color}cc, 0 0 6px #fff`,
+              boxShadow: `0 0 18px ${L.color}, 0 0 6px #fff`,
               willChange: 'transform, opacity',
             }}
           />

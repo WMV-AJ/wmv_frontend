@@ -69,12 +69,14 @@ export function IGStoryCard({
   if (variant === 'website') {
     const domain = venue.toLowerCase().replace(/[^a-z0-9]/g, '') + '.ae';
     const wrapper: CSSProperties = {
+      // Position via transform only (left/top stay 0): per-frame left/top
+      // changes force layout; translate3d stays on the compositor.
       position: 'absolute',
-      left: x,
-      top: y,
+      left: 0,
+      top: 0,
       width,
       height,
-      transform: `translate(-50%, -50%) rotate(${rotate}deg) scale(${scale})`,
+      transform: `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${rotate}deg) scale(${scale})`,
       opacity,
       borderRadius: 14,
       overflow: 'hidden',
@@ -194,12 +196,13 @@ export function IGStoryCard({
 
   // Default IG-story variant
   const storyWrapper: CSSProperties = {
+    // Transform-only positioning — see website variant note above.
     position: 'absolute',
-    left: x,
-    top: y,
+    left: 0,
+    top: 0,
     width,
     height,
-    transform: `translate(-50%, -50%) rotate(${rotate}deg) scale(${scale})`,
+    transform: `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${rotate}deg) scale(${scale})`,
     opacity,
     borderRadius: 18,
     overflow: 'hidden',
