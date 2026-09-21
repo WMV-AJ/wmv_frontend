@@ -1,6 +1,5 @@
 'use client';
 
-import { Inter, Space_Mono } from 'next/font/google';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
@@ -19,6 +18,7 @@ import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
 import { getEventCategories } from '@/lib/category-utils';
 import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
+import { displayFont, bodyFont } from '@/lib/theme/tokens';
 
 // ── THEME TOKENS ─────────────────────────────────────────────────────
 const T = {
@@ -45,15 +45,11 @@ const T = {
 };
 
 // Home-page type system (2026-08 trial): three roles —
-//   display (Space Grotesk): venue + event names, hero, numbers
-//   data    (Space Mono):    the uppercase micro-labels, times, counts, badges
-//   body    (Inter):         quiet supporting copy (page default on <main>)
-const interFont = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const spaceMonoFont = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-space-mono' });
+//   displayFont (SUSE Mono): venue + event names, hero, numbers
+//   bodyFont    (SUSE):      labels, times, counts, badges, supporting copy
+// Both come from @/lib/theme/tokens — this page loads no fonts of its own.
 
-const mono = "var(--font-space-mono), ui-monospace, monospace";
-const serif = "var(--font-space-grotesk), 'Space Grotesk', system-ui, sans-serif";
-const body = "var(--font-inter), system-ui, sans-serif";
+const body = "var(--font-suse), system-ui, -apple-system, sans-serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
 // VIBES + matchesVibe live in '@/config/vibes' so the homepage pill counts
@@ -148,9 +144,10 @@ function getPrimaryCat(e: any): string | null {
 
 // ── SMALL BUILDING BLOCKS ─────────────────────────────────────────────
 
-function SectionHeader({ label, right, onClick }: {
+function SectionHeader({ label, count, onClick }: {
   label: React.ReactNode;
-  right?: React.ReactNode;
+  /** Rendered inline as "Heading - 9 events" so it never reads as a button. */
+  count?: React.ReactNode;
   onClick?: () => void;
 }) {
   return (
@@ -159,16 +156,20 @@ function SectionHeader({ label, right, onClick }: {
       style={{
         // Full-bleed gold rule: negative margins escape the 18px content
         // gutter; matching padding pulls the text back in line.
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'baseline',
         borderBottom: '1px solid rgba(244,196,48,0.3)',
         margin: '0 -18px 12px', padding: '0 18px 9px',
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.accent, paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontFamily: bodyFont, fontSize: 14, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: T.accent, paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
         {label}
       </div>
-      {right}
+      {count != null && (
+        <span style={{ fontFamily: bodyFont, fontSize: 12, fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase', color: T.inkMuted, marginLeft: 6, whiteSpace: 'nowrap' }}>
+          - {count}
+        </span>
+      )}
     </div>
   );
 }
@@ -231,11 +232,11 @@ function CategoryPillTag({ primary, small }: { primary: string; small?: boolean 
   const hex = getHexColor(getCategoryColor(primary));
   return (
     <span style={{
-      display: 'inline-block', padding: small ? '2px 7px' : '3px 9px', borderRadius: 999,
+      display: 'inline-block', padding: small ? '3px 9px' : '4px 11px', borderRadius: 999,
       background: `${hex}1f`,
       border: `1px solid ${hex}66`, color: hex,
-      fontFamily: mono, fontSize: small ? 8 : 9, fontWeight: 700,
-      letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+      fontFamily: bodyFont, fontSize: small ? 10 : 11, fontWeight: 700,
+      letterSpacing: '0.03em', textTransform: 'uppercase', whiteSpace: 'nowrap',
     }}>
       {getDisplayName(primary)}
     </span>
@@ -249,7 +250,6 @@ export default function CityHome() {
   const city = (params?.city as string) || 'dubai';
 
   const [liked, setLiked] = useState<Set<string>>(new Set());
-  const [totalVenues, setTotalVenues] = useState<number>(0);
   const [searchQ, setSearchQ] = useState('');
   const heroRef = useRef<HTMLDivElement | null>(null);
 
@@ -283,10 +283,6 @@ export default function CityHome() {
     });
 
   useEffect(() => {
-    fetch(`/api/venue-count?city=${encodeURIComponent(city)}`)
-      .then(r => r.json())
-      .then(vc => { if (vc.count) setTotalVenues(vc.count); })
-      .catch(console.error);
     // Landing page + marketing sections follow the visitor's last city.
     try { window.localStorage.setItem('wmv_last_city', city); } catch { /* ignore */ }
   }, [city]);
@@ -298,42 +294,6 @@ export default function CityHome() {
     if (!v.event_date) return false;
     return utcDateKey(v.event_date) === todayStr;
   });
-
-  const storiesData = (() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const venueMap = new Map<number, any>();
-    todayVenues.forEach(v => {
-      if (!venueMap.has(v.venue_id)) venueMap.set(v.venue_id, v);
-    });
-    return Array.from(venueMap.values())
-      .sort((a, b) => {
-        const liveA = isLiveNow(a.event_date, a.event_time, todayStr, dubaiHour) ? 1 : 0;
-        const liveB = isLiveNow(b.event_date, b.event_time, todayStr, dubaiHour) ? 1 : 0;
-        if (liveA !== liveB) return liveB - liveA;
-        const startA = parseTimeHours((a.event_time || '').split('-')[0]?.trim() || '') ?? 99;
-        const startB = parseTimeHours((b.event_time || '').split('-')[0]?.trim() || '') ?? 99;
-        if (startA !== startB) return startA - startB;
-        const ra = a.rating ?? 0, rb = b.rating ?? 0;
-        if (ra !== rb) return rb - ra;
-        return (a.venue_id ?? 0) - (b.venue_id ?? 0);
-      })
-      .slice(0, 8)
-      .map(v => ({
-        id: String(v.venue_id ?? v.event_id ?? Math.random()),
-        event_id: v.event_id,
-        venue_id: v.venue_id,
-        place_id: v.place_id,
-        event_date: v.event_date,
-        venue: v.name || 'Venue',
-        user: v.final_instagram ? v.final_instagram.replace(/^@/, '') : (v.name || 'venue').toLowerCase().replace(/\s+/g, ''),
-        color: '#f4c430',
-        mediaUrl: v.media_url_1 || null,
-        mediaType: v.media_type_1 || null,
-        // Sibling image doubles as the poster when slot 1 is a video.
-        posterUrl: v.media_type_2 !== 'video' ? (v.media_url_2 || null) : null,
-        isLive: isLiveNow(v.event_date, v.event_time, todayStr, dubaiHour),
-      }));
-  })();
 
   const tonightEvents = todayVenues
     .filter(v => {
@@ -353,8 +313,6 @@ export default function CityHome() {
       if (ra !== rb) return rb - ra;
       return (a.venue_id ?? 0) - (b.venue_id ?? 0);
     });
-
-  const tonightVenueCount = new Set(tonightEvents.map(e => e.venue_id)).size;
 
   // Events running RIGHT NOW (city clock), deduped by event.
   const happeningNow = (() => {
@@ -446,7 +404,6 @@ export default function CityHome() {
 
   return (
     <main
-      className={`${interFont.variable} ${spaceMonoFont.variable}`}
       style={{
         position: 'fixed',
         inset: 0,
@@ -455,7 +412,7 @@ export default function CityHome() {
         WebkitOverflowScrolling: 'touch',
         background: T.bg,
         color: T.ink,
-        fontFamily: body,
+        fontFamily: bodyFont,
       }}
     >
       <style>{`
@@ -512,13 +469,13 @@ export default function CityHome() {
 
           <div style={{ position: 'relative', zIndex: 1 }}>
             {/* Live badge with the city's actual day + date */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.live }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: bodyFont, fontSize: 9, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.live }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
               Live · {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
             </div>
             {/* City-first headline — the city IS the product */}
             <h1 style={{
-              fontFamily: serif, fontWeight: 400,
+              fontFamily: displayFont, fontWeight: 400,
               fontSize: 54, lineHeight: 0.94, margin: '14px 0 0',
               letterSpacing: '-0.035em', color: T.ink,
             }}>
@@ -528,7 +485,7 @@ export default function CityHome() {
                 textShadow: `0 0 40px ${T.accent}40`,
               }}>{getCityConfig(city).displayName}</span>
             </h1>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 230, lineHeight: 1.5 }}>
+            <div style={{ fontFamily: bodyFont, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 230, lineHeight: 1.5 }}>
               Every venue&rsquo;s stories — scanned, sorted &amp; mapped live.
             </div>
             {/* Source ticker: what feeds the radar */}
@@ -543,7 +500,7 @@ export default function CityHome() {
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '3px 8px', borderRadius: 999,
                   border: `1px solid ${color}44`, background: `${color}12`,
-                  fontFamily: mono, fontSize: 8, fontWeight: 600,
+                  fontFamily: bodyFont, fontSize: 8, fontWeight: 600,
                   letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted,
                 }}>
                   <span style={{ width: 4, height: 4, borderRadius: '50%', background: color as string, boxShadow: `0 0 6px ${color}` }} />
@@ -558,11 +515,11 @@ export default function CityHome() {
                   router.push(`/${city}/map`);
                 }}
                 style={{
-                  fontFamily: mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
+                  fontFamily: bodyFont, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
                   textTransform: 'uppercase', cursor: 'pointer', border: 'none',
-                  padding: '13px 18px', borderRadius: 9, lineHeight: 1,
+                  padding: '13px 14px', borderRadius: 9, lineHeight: 1, whiteSpace: 'nowrap',
                   background: '#c9a227', color: '#0a0a14',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
                 Explore on Maps
@@ -574,12 +531,12 @@ export default function CityHome() {
                   router.push(`/${city}/cards`);
                 }}
                 style={{
-                  fontFamily: mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
+                  fontFamily: bodyFont, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
                   textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1,
-                  padding: '13px 18px', borderRadius: 9,
+                  padding: '13px 14px', borderRadius: 9, whiteSpace: 'nowrap',
                   background: 'transparent', color: '#f5f2ed',
                   border: '1.5px solid #3a3548',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
                 Today&rsquo;s Vibe
@@ -587,42 +544,6 @@ export default function CityHome() {
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Stats strip — real numbers only */}
-        <div style={{
-          margin: '14px 18px 0',
-          borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}`,
-          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-        }}>
-          {loading
-            ? [0, 1, 2].map(i => (
-              <div key={i} style={{ padding: '14px 10px', borderLeft: i > 0 ? `1px solid ${T.line}` : 'none' }}>
-                <div style={skeletonStyle(48, 36)} />
-                <div style={{ ...skeletonStyle(60, 10), marginTop: 8 }} />
-              </div>
-            ))
-            : [
-              { n: tonightEvents.length, l: 'Events tonight' },
-              { n: totalVenues, l: 'Venues tracked' },
-              { n: tonightVenueCount, l: 'Venues live', live: true },
-            ].map((s, i) => (
-              <div key={i} style={{
-                padding: '14px 10px',
-                borderLeft: i > 0 ? `1px solid ${T.line}` : 'none',
-              }}>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <div style={{ fontFamily: serif, fontWeight: 400, fontSize: 28, color: (s as any).live ? T.live : T.ink, lineHeight: 1 }}>
-                  {s.n}
-                </div>
-                <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {(s as any).live && <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />}
-                  {s.l}
-                </div>
-              </div>
-            ))
-          }
         </div>
 
         {/* Search — lands on the list view for today */}
@@ -644,11 +565,11 @@ export default function CityHome() {
             value={searchQ}
             onChange={e => setSearchQ(e.target.value)}
             placeholder="Search venues, events…"
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: T.ink, fontFamily: mono, fontSize: 12, minWidth: 0 }}
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: T.ink, fontFamily: bodyFont, fontSize: 12, minWidth: 0 }}
           />
           <button type="submit" style={{
             background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-            fontFamily: mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+            fontFamily: bodyFont, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase', color: T.ink,
           }}>
             Go
@@ -663,7 +584,7 @@ export default function CityHome() {
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
                 Happening now
               </>}
-              right={<span style={{ fontFamily: mono, fontSize: 10, color: T.live, fontWeight: 600 }}>{loading ? '—' : `${happeningNow.length} LIVE`}</span>}
+              count={loading ? '—' : `${happeningNow.length} live`}
             />
             <HScrollRail>
               {loading
@@ -700,7 +621,7 @@ export default function CityHome() {
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
                       <div style={{
                         position: 'absolute', top: 6, left: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
-                        background: T.live, color: '#fff', fontFamily: mono, fontSize: 8, fontWeight: 700,
+                        background: T.live, color: '#fff', fontFamily: bodyFont, fontSize: 8, fontWeight: 700,
                         padding: '2px 5px', letterSpacing: '0.5px', borderRadius: 3,
                       }}>
                         <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#fff', animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
@@ -709,11 +630,11 @@ export default function CityHome() {
                     </div>
                     {/* Text below the image */}
                     <div style={{ paddingTop: 8 }}>
-                      <div style={{ fontFamily: serif, fontSize: 14, color: T.ink, lineHeight: 1.15, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <div style={{ fontFamily: displayFont, fontSize: 14, color: T.ink, lineHeight: 1.15, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {e.name || ''}
                       </div>
                       {e.event_time && (
-                        <div style={{ fontFamily: mono, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
+                        <div style={{ fontFamily: bodyFont, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
                           {e.event_time}
                         </div>
                       )}
@@ -729,7 +650,7 @@ export default function CityHome() {
         <div style={{ padding: '26px 18px 0' }}>
           <SectionHeader
             label={`Tonight in ${getCityConfig(city).displayName}`}
-            right={<span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>{loading ? '—' : `${tonightEvents.length} EVENTS`}</span>}
+            count={loading ? '—' : `${tonightEvents.length} events`}
           />
 
           {loading ? (
@@ -808,13 +729,13 @@ export default function CityHome() {
                             </div>
                           )}
                           <div style={{
-                            fontFamily: serif, fontSize: 16, fontWeight: 400,
+                            fontFamily: displayFont, fontSize: 16, fontWeight: 400,
                             color: T.ink, lineHeight: 1.15, letterSpacing: '-0.015em',
                             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                           }}>
                             {e.event_name || e.name}
                           </div>
-                          <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontFamily: bodyFont, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {e.name || ''}{e.event_time ? ` · ${e.event_time}` : ''}
                           </div>
                         </div>
@@ -835,7 +756,7 @@ export default function CityHome() {
                   cursor: e.event_id ? 'pointer' : 'default',
                 }} onClick={() => openEvent(e, 'tonight_list')}>
                   {/* Number */}
-                  <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>
+                  <div style={{ fontFamily: bodyFont, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   {/* Thumbnail — left */}
@@ -857,20 +778,20 @@ export default function CityHome() {
                   </div>
                   {/* Text */}
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: mono, fontSize: 9, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                    <div style={{ fontFamily: bodyFont, fontSize: 10, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                       {e.area || ''}
                     </div>
                     <div style={{
-                      fontFamily: serif, fontSize: 18, fontWeight: 400,
+                      fontFamily: displayFont, fontSize: 18, fontWeight: 400,
                       color: T.ink, letterSpacing: '-0.015em', lineHeight: 1.1, marginTop: 2,
                     }}>
                       {e.name || e.venue}
                     </div>
                     {/* Always reserve this row — keeps height consistent across cards */}
-                    <div style={{ fontFamily: serif, fontSize: 11, color: T.inkMuted, marginTop: 3, minHeight: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: bodyFont, fontSize: 13, color: T.inkMuted, marginTop: 3, minHeight: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.event_name || ''}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, fontFamily: mono, fontSize: 9, color: T.inkMuted, fontWeight: 500, letterSpacing: '0.5px', minHeight: 15, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontFamily: bodyFont, fontSize: 11, color: T.inkMuted, fontWeight: 600, letterSpacing: '0.2px', minHeight: 18, flexWrap: 'wrap' }}>
                       {cat && <CategoryPillTag primary={cat} small />}
                       {e.event_time && <span>{e.event_time}</span>}
                       {e.rating && <span>★ {e.rating}</span>}
@@ -897,7 +818,7 @@ export default function CityHome() {
                   style={{
                     width: '100%', marginTop: 10, padding: '10px 0',
                     border: `1px solid ${T.line}`, background: 'transparent',
-                    fontFamily: mono, fontSize: 10, fontWeight: 600,
+                    fontFamily: bodyFont, fontSize: 10, fontWeight: 600,
                     letterSpacing: '1px', textTransform: 'uppercase',
                     color: T.ink, cursor: 'pointer',
                   }}
@@ -907,7 +828,7 @@ export default function CityHome() {
               )}
             </>
           ) : (
-            <div style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, padding: '20px 0', textAlign: 'center' }}>
+            <div style={{ fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, padding: '20px 0', textAlign: 'center' }}>
               No events found for tonight
             </div>
           )}
@@ -918,7 +839,7 @@ export default function CityHome() {
           <div style={{ padding: '26px 18px 0' }}>
             <SectionHeader
               label={"Tonight's deals"}
-              right={<span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>{dealsTonight.length} OFFERS</span>}
+              count={`${dealsTonight.length} offers`}
             />
             <HScrollRail>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -942,7 +863,7 @@ export default function CityHome() {
                   >
                     {/* The actual deal, first — mono, swapped with the venue's serif */}
                     <div style={{
-                      fontFamily: mono, fontSize: 10, fontWeight: 600, color: T.ink,
+                      fontFamily: bodyFont, fontSize: 10, fontWeight: 600, color: T.ink,
                       lineHeight: 1.45, letterSpacing: '0.4px', overflowWrap: 'anywhere',
                       display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                     }}>
@@ -952,20 +873,20 @@ export default function CityHome() {
                       <span style={{
                         display: 'inline-block', padding: '3px 8px', borderRadius: 999,
                         background: `rgba(${cfg.rgb}, 0.15)`, border: `1px solid rgba(${cfg.rgb}, 0.35)`,
-                        color: `rgb(${cfg.rgb})`, fontFamily: mono, fontSize: 8, fontWeight: 700,
+                        color: `rgb(${cfg.rgb})`, fontFamily: bodyFont, fontSize: 8, fontWeight: 700,
                         letterSpacing: '0.06em', textTransform: 'uppercase',
                       }}>
                         {cfg.label}
                       </span>
                     </div>
-                    <div style={{ fontFamily: serif, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: displayFont, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.event_name || ''}
                     </div>
                     {/* Venue — serif italic, white (gold reserved for headings) */}
-                    <div style={{ fontFamily: serif, fontSize: 15, color: T.ink, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: displayFont, fontSize: 15, color: T.ink, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {e.name || ''}
                     </div>
-                    <div style={{ fontFamily: mono, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
+                    <div style={{ fontFamily: bodyFont, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
                       {e.event_time || ''}{deal?.timing ? ` · ${deal.timing}` : ''}
                     </div>
                   </div>
@@ -1000,11 +921,11 @@ export default function CityHome() {
                     <Icon style={{ width: 13, height: 13, color: '#0a0a14' }} />
                   </div>
                   <span style={{
-                    fontFamily: serif, fontSize: 14, fontWeight: 400,
+                    fontFamily: displayFont, fontSize: 14, fontWeight: 400,
                     color: T.ink, letterSpacing: '-0.01em', lineHeight: 1, flex: 1,
                   }}>{v.label}</span>
                   <span style={{
-                    fontFamily: mono, fontSize: 10, fontWeight: 700,
+                    fontFamily: bodyFont, fontSize: 10, fontWeight: 700,
                     color: v.color, lineHeight: 1, flexShrink: 0,
                   }}>{loading ? '—' : v.count}</span>
                 </div>
@@ -1039,10 +960,10 @@ export default function CityHome() {
                       padding: '4px 4px 8px', cursor: 'pointer',
                     }}
                   >
-                    <span style={{ fontFamily: serif, fontSize: 17, color: T.ink, letterSpacing: '-0.01em' }}>
+                    <span style={{ fontFamily: displayFont, fontSize: 17, color: T.ink, letterSpacing: '-0.01em' }}>
                       {label}
                     </span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
                       {events.length} events
                       <ArrowUpRight size={12} strokeWidth={2.2} />
                     </span>
@@ -1080,15 +1001,15 @@ export default function CityHome() {
                                 <CategoryPillTag primary={wCat} small />
                               </div>
                             )}
-                            <div style={{ fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                            <div style={{ fontFamily: bodyFont, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
                               {e.area || ''}
                             </div>
                             <div style={{
-                              fontFamily: serif, fontSize: 16, color: T.ink, lineHeight: 1.15, marginTop: 2,
+                              fontFamily: displayFont, fontSize: 16, color: T.ink, lineHeight: 1.15, marginTop: 2,
                               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                             }}>{e.name || e.venue}</div>
                             {e.event_name && (
-                              <div style={{ fontFamily: serif, fontSize: 10, color: T.inkMuted, marginTop: 3, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
+                              <div style={{ fontFamily: displayFont, fontSize: 10, color: T.inkMuted, marginTop: 3, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
                                 {e.event_name}
                               </div>
                             )}
@@ -1127,13 +1048,13 @@ export default function CityHome() {
                 display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
                 padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer',
               }}>
-                <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
+                <span style={{ fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span style={{ fontFamily: serif, fontSize: 18, color: T.ink, letterSpacing: '-0.01em' }}>
+                <span style={{ fontFamily: displayFont, fontSize: 18, color: T.ink, letterSpacing: '-0.01em' }}>
                   {a.label}
                 </span>
-                <span style={{ fontFamily: mono, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
+                <span style={{ fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
                   {a.count} events
                 </span>
                 <ChevronRight size={14} strokeWidth={2} style={{ color: T.inkMuted, flexShrink: 0 }} />
@@ -1142,77 +1063,13 @@ export default function CityHome() {
           }
         </div>
 
-        {/* § Fresh from instagram — now at the bottom */}
-        <div style={{ padding: '26px 18px 0' }}>
-          <SectionHeader label="Fresh from instagram" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-            {loading
-              ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ aspectRatio: '3/4', ...skeletonStyle('100%', undefined) }} />
-              ))
-              : storiesData.map((s, i) => (
-                <div key={s.id} style={{
-                  cursor: s.event_id ? 'pointer' : 'default',
-                }} onClick={() => {
-                  if (!s.event_id) return;
-                  trackEvent('view_event', { event_id: s.event_id, venue_id: s.venue_id, place_id: s.place_id, event_date: s.event_date, source: 'stories_grid' });
-                  router.push(`/${city}/event/${s.event_id}`);
-                }}>
-                  {/* Media block — only the LIVE badge sits on the image */}
-                  <div style={{
-                    aspectRatio: '3 / 4', position: 'relative', overflow: 'hidden', borderRadius: 6,
-                    background: s.mediaUrl
-                      ? T.bg
-                      : `linear-gradient(${135 + i * 20}deg, ${s.color}, ${s.color}66, ${T.bg})`,
-                    border: `1px solid ${T.line}`,
-                  }}>
-                    {s.mediaUrl ? (
-                      // lazyVideo: <video> only mounts near the viewport; until
-                      // then the sibling image (or placeholder) renders via the
-                      // optimizer. No autoPlay on tiny grid tiles.
-                      <EventMedia
-                        src={s.mediaUrl}
-                        mediaType={s.mediaType}
-                        poster={s.posterUrl}
-                        alt={s.venue}
-                        sizes="(max-width: 430px) 25vw, 107px"
-                        fill
-                        lazyVideo
-                      />
-                    ) : null}
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
-                    {s.isLive && (
-                      <div style={{
-                        position: 'absolute', top: 4, left: 4,
-                        background: T.live, color: '#fff', fontFamily: mono, fontSize: 7, fontWeight: 700,
-                        padding: '1.5px 3px', letterSpacing: '0.5px', borderRadius: 2,
-                      }}>LIVE</div>
-                    )}
-                  </div>
-                  {/* Venue name + handle below the image */}
-                  <div style={{ paddingTop: 8 }}>
-                    <div style={{
-                      fontFamily: serif, fontSize: 11, color: T.ink,
-                      lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>{s.venue}</div>
-                    <div style={{
-                      fontFamily: mono, fontSize: 8, fontWeight: 600, color: T.inkMuted,
-                      letterSpacing: '0.3px', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>@{s.user}</div>
-                  </div>
-                </div>
-              ))
-            }
-          </div>
-        </div>
-
         {/* The method */}
         <div style={{ padding: '24px 18px 0' }}>
           <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>
-            <div style={{ fontFamily: mono, fontSize: 10, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.accent, marginBottom: 8 }}>
+            <div style={{ fontFamily: bodyFont, fontSize: 14, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: T.accent, marginBottom: 8 }}>
               The method
             </div>
-            <div style={{ fontFamily: serif, fontSize: 20, fontWeight: 400, color: T.ink, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+            <div style={{ fontFamily: displayFont, fontSize: 20, fontWeight: 400, color: T.ink, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
               We watch stories.<br />You pick a vibe.<br />The city opens up.
             </div>
           </div>

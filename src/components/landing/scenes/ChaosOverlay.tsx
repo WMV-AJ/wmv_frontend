@@ -114,7 +114,7 @@ export function ChaosOverlay({ time }: { time: number }) {
         />
         <span
           style={{
-            fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
+            fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
             fontSize: 30,
             fontWeight: 800,
             color: '#ef4444',
@@ -228,7 +228,7 @@ export function ChaosOverlay({ time }: { time: number }) {
             >
               <span
                 style={{
-                  fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
+                  fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
                   fontSize: 18,
                   fontWeight: 700,
                   color: 'rgba(15,15,30,0.5)',
@@ -252,7 +252,7 @@ export function ChaosOverlay({ time }: { time: number }) {
             {/* Main label — clean dark-on-glass, color from textColor variant */}
             <div
               style={{
-                fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
+                fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
                 fontSize: 28,
                 fontWeight: 800,
                 color: L.textColor,
@@ -289,7 +289,7 @@ export function ChaosOverlay({ time }: { time: number }) {
               />
               <span
                 style={{
-                  fontFamily: "var(--font-geist-sans), ui-monospace, monospace",
+                  fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
                   fontSize: 17,
                   fontWeight: 600,
                   color: 'rgba(15,15,30,0.65)',

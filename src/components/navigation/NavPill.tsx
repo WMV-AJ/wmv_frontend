@@ -8,7 +8,7 @@
 import { useRouter } from 'next/navigation';
 import { Home, Map as MapIcon, List } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
-import { T, mono } from '@/lib/theme/tokens';
+import { T, bodyFont } from '@/lib/theme/tokens';
 
 export type NavPillView = 'home' | 'map' | 'cards';
 
@@ -83,7 +83,7 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
               color: isActive ? T.inkInverse : T.inkMuted,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
-              fontFamily: mono,
+              fontFamily: bodyFont,
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: '0.08em',

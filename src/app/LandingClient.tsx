@@ -20,7 +20,7 @@ import EventMedia from '@/components/shared/EventMedia';
 import { trackEvent } from '@/lib/analytics/track';
 import { isUpcomingInCity } from '@/lib/city-date';
 import { SourceChips, PipelineTimeline, StoryCollage } from '@/components/marketing/visuals';
-import { T, serif, mono, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
+import { T, displayFont, bodyFont, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 
 export default function LandingClient() {
   const { state, markDone } = useIntroGate();
@@ -104,7 +104,7 @@ export default function LandingClient() {
               position: 'absolute', top: 'max(16px, env(safe-area-inset-top))', right: 16, zIndex: 60,
               padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
               background: 'rgba(10,10,26,0.6)', border: `1px solid ${T.lineFaint}`,
-              color: T.inkMuted, fontFamily: mono, fontSize: 11, letterSpacing: '0.1em',
+              color: T.inkMuted, fontFamily: bodyFont, fontSize: 11, letterSpacing: '0.1em',
               textTransform: 'uppercase',
             }}
           >
@@ -119,7 +119,7 @@ export default function LandingClient() {
           <div
             style={{
               position: 'absolute', bottom: 'max(32px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)',
-              color: T.inkFaint, fontFamily: mono, fontSize: 10, letterSpacing: '0.2em',
+              color: T.inkFaint, fontFamily: bodyFont, fontSize: 10, letterSpacing: '0.2em',
               textTransform: 'uppercase', pointerEvents: 'none',
               animation: 'wmv-bob 2s ease-in-out infinite',
             }}
@@ -153,7 +153,7 @@ export default function LandingClient() {
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      fontFamily: mono, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
+      fontFamily: bodyFont, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
       color: T.inkFaint, marginBottom: 14,
     }}>{children}</div>
   );
@@ -164,7 +164,7 @@ function ProblemSection() {
   return (
     <section style={{ padding: '56px 0 40px', borderBottom: `1px solid ${T.line}`, position: 'relative' }}>
       <Label>The problem</Label>
-      <h2 style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: 0 }}>
+      <h2 style={{ fontFamily: displayFont, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: 0 }}>
         47 stories deep<br />and still no plan.
       </h2>
       <div style={{ margin: '24px 0 22px' }}>
@@ -206,7 +206,7 @@ function HowItWorksMini() {
           router.push('/how-it-works');
         }}
         style={{
-          background: 'none', border: 'none', color: T.accent, fontFamily: mono,
+          background: 'none', border: 'none', color: T.accent, fontFamily: bodyFont,
           fontSize: 12, letterSpacing: '0.06em', cursor: 'pointer', padding: 0,
         }}
       >
@@ -259,7 +259,7 @@ function TonightStrip({ city }: { city: CitySlug }) {
   return (
     <section ref={ref} style={{ padding: '40px 0', borderBottom: `1px solid ${T.line}` }}>
       <Label>Live right now</Label>
-      <h3 style={{ fontFamily: serif, fontSize: 22, color: T.ink, margin: '0 0 16px' }}>
+      <h3 style={{ fontFamily: displayFont, fontSize: 22, color: T.ink, margin: '0 0 16px' }}>
         Tonight in {cityName} — while you&rsquo;re reading this
       </h3>
       <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
@@ -312,7 +312,7 @@ function TonightStrip({ city }: { city: CitySlug }) {
               flexShrink: 0, width: 132, aspectRatio: '3/4', borderRadius: 8,
               border: `1px dashed ${T.accent}66`, display: 'flex', alignItems: 'center',
               justifyContent: 'center', cursor: 'pointer', color: T.accent,
-              fontFamily: mono, fontSize: 12, textAlign: 'center', padding: 10,
+              fontFamily: bodyFont, fontSize: 12, textAlign: 'center', padding: 10,
             }}
           >
             see the<br />whole map →
@@ -361,7 +361,7 @@ function DualCta({ city }: { city: CitySlug }) {
   };
   return (
     <section style={{ padding: '40px 0', borderBottom: `1px solid ${T.line}`, textAlign: 'center' }}>
-      <h3 style={{ fontFamily: serif, fontSize: 24, color: T.ink, margin: '0 0 6px' }}>
+      <h3 style={{ fontFamily: displayFont, fontSize: 24, color: T.ink, margin: '0 0 6px' }}>
         The night is already happening.
       </h3>
       <p style={{ color: T.inkMuted, fontSize: 13, margin: '0 0 20px' }}>How do you want to see it?</p>
@@ -370,7 +370,7 @@ function DualCta({ city }: { city: CitySlug }) {
           onClick={() => go('map')}
           style={{
             padding: '14px 26px', borderRadius: 999, background: T.accent, color: T.inkInverse,
-            fontFamily: mono, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
+            fontFamily: bodyFont, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
             textTransform: 'uppercase', border: 'none', cursor: 'pointer',
           }}
         >
@@ -380,7 +380,7 @@ function DualCta({ city }: { city: CitySlug }) {
           onClick={() => go('cards')}
           style={{
             padding: '14px 26px', borderRadius: 999, background: 'transparent', color: T.ink,
-            fontFamily: mono, fontSize: 12, fontWeight: 600, letterSpacing: '0.08em',
+            fontFamily: bodyFont, fontSize: 12, fontWeight: 600, letterSpacing: '0.08em',
             textTransform: 'uppercase', border: `1px solid ${T.line}`, cursor: 'pointer',
           }}
         >
@@ -407,7 +407,7 @@ function VenueOwnersBand() {
           router.push('/list-your-venue');
         }}
         style={{
-          background: 'none', border: 'none', color: T.accent, fontFamily: mono,
+          background: 'none', border: 'none', color: T.accent, fontFamily: bodyFont,
           fontSize: 12, letterSpacing: '0.06em', cursor: 'pointer', padding: 0,
         }}
       >
@@ -441,7 +441,7 @@ function LandingFooter() {
           </button>
         ))}
       </div>
-      <div style={{ color: T.inkFaint, fontFamily: mono, fontSize: 10, marginTop: 16, letterSpacing: '0.08em' }}>
+      <div style={{ color: T.inkFaint, fontFamily: bodyFont, fontSize: 10, marginTop: 16, letterSpacing: '0.08em' }}>
         WHERE&rsquo;S MY VIBE — WE WATCH THE STORIES. YOU PICK A VIBE.
       </div>
     </footer>

@@ -4,7 +4,7 @@ import CtaButton from '@/components/marketing/CtaButton';
 import { SourceChips, PipelineTimeline, StoryCollage, RadarRings } from '@/components/marketing/visuals';
 import { getActiveCities } from '@/lib/server-data';
 import { DEFAULT_CITY } from '@/config/cities.config';
-import { T, serif, mono } from '@/lib/theme/tokens';
+import { T, displayFont, bodyFont } from '@/lib/theme/tokens';
 
 export const metadata: Metadata = {
   title: "How it works | Where's My Vibe",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      fontFamily: mono, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
+      fontFamily: bodyFont, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
       color: T.inkFaint, marginBottom: 12,
     }}>{children}</div>
   );
@@ -32,7 +32,7 @@ export default async function HowItWorksPage() {
 
         {/* Hero */}
         <div style={{ position: 'relative' }}>
-          <h1 style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px' }}>
+          <h1 style={{ fontFamily: displayFont, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px' }}>
             We watch the stories<br />
             <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>so you don&rsquo;t have to.</span>
           </h1>
@@ -106,7 +106,7 @@ export default async function HowItWorksPage() {
 
         {/* CTA */}
         <section style={{ padding: '4px 0 36px', textAlign: 'center' }}>
-          <p style={{ fontFamily: serif, fontSize: 20, color: T.ink, margin: '0 0 18px' }}>
+          <p style={{ fontFamily: displayFont, fontSize: 20, color: T.ink, margin: '0 0 18px' }}>
             Tonight is already mapped.
           </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>

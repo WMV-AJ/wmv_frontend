@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { FaqItem } from '@/content/faq';
 import { trackEvent } from '@/lib/analytics/track';
-import { T, mono } from '@/lib/theme/tokens';
+import { T, bodyFont } from '@/lib/theme/tokens';
 
 export default function FaqAccordion({ items }: { items: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
@@ -19,7 +19,7 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
         <div key={cat} style={{ marginBottom: 26 }}>
           <div
             style={{
-              fontFamily: mono, fontSize: 10, letterSpacing: '0.16em',
+              fontFamily: bodyFont, fontSize: 10, letterSpacing: '0.16em',
               textTransform: 'uppercase', color: T.inkFaint, marginBottom: 10,
             }}
           >

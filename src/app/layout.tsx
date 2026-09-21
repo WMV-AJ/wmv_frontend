@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { Geist, Space_Grotesk } from "next/font/google";
+import { SUSE } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
@@ -11,20 +12,37 @@ import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-// Two-font stack — Geist body/UI workhorse + Space Grotesk display.
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// ── TYPE SYSTEM (2026-09) ─────────────────────────────────────────────
+// One pair, site-wide: SUSE Mono for display/headlines, SUSE for body/UI.
+// Replaces Geist + Space Grotesk here and the per-page Inter + Space Mono
+// that used to load on /[city]. No other family is loaded anywhere.
+//
+// Both are variable faces on the same 100–800 weight axis and share a
+// skeleton, so they sit together without a third font to bridge them.
+
+// Body / UI. Variable 100–800, no italics in the family.
+const suse = SUSE({
+  variable: "--font-suse",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "sans-serif"],
 });
 
-// Display font swap (2026-08): Space Grotesk (Garnett stand-in) replaces
-// BOTH Fraunces and Playfair italic — no italics anywhere. The legacy
-// --font-fraunces / --font-playfair variables are redirected to it in
-// globals.css so the 20+ existing call sites need no edits.
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Display / headlines. SUSE Mono is not in Next 15.5's bundled Google Fonts
+// metadata, so it is self-hosted from src/fonts (SIL OFL 1.1). Same 100–800
+// variable axis; latin first, latin-ext second for accented venue names.
+const suseMono = localFont({
+  variable: "--font-suse-mono",
+  display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+  // next/font/local cannot emit unicode-range, so both subsets are declared
+  // with identical descriptors and the browser falls through per-glyph.
+  // latin is declared last so it wins the descriptor tie and stays primary;
+  // latin-ext is only consulted for accented names outside Latin-1.
+  src: [
+    { path: "../fonts/SUSEMono-latin-ext.woff2", weight: "100 800", style: "normal" },
+    { path: "../fonts/SUSEMono-latin.woff2", weight: "100 800", style: "normal" },
+  ],
 });
 
 export const viewport = {
@@ -107,7 +125,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${geistSans.variable} ${spaceGrotesk.variable} antialiased`}
+        className={`${suse.variable} ${suseMono.variable} antialiased`}
       >
         {GA_MEASUREMENT_ID && (
           <>

@@ -10,6 +10,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import { isUpcomingInCity } from '@/lib/city-date';
 import { getVibeById, matchesVibe } from '@/config/vibes';
 import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
+import { displayFont, bodyFont } from '@/lib/theme/tokens';
 
 // No filters — we want ALL venues from context, then filter by vibe ourselves
 // so the count matches the homepage "Pick your vibe" pill exactly.
@@ -25,8 +26,6 @@ const EMPTY_FILTERS: HierarchicalFilterState = {
   searchQuery: '',
 };
 
-const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
-const mono = "var(--font-geist-sans), ui-monospace, monospace";
 
 export default function VibeListingPage() {
   const router = useRouter();
@@ -75,10 +74,10 @@ export default function VibeListingPage() {
 
   const emptyState = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: serif, fontSize: 18, color: '#f5f2ed' }}>
+      <div style={{ fontFamily: displayFont, fontSize: 18, color: '#f5f2ed' }}>
         {vibe ? `No ${vibe.label.toLowerCase()} events right now` : 'That vibe doesn’t exist'}
       </div>
-      <div style={{ fontFamily: mono, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
+      <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
         {vibe ? 'Check back soon — the city updates daily.' : 'Pick a vibe from the home page.'}
       </div>
     </div>

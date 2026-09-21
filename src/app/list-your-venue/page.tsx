@@ -3,7 +3,7 @@ import MarketingShell from '@/components/marketing/MarketingShell';
 import CtaButton from '@/components/marketing/CtaButton';
 import { SourceChips, RadarRings } from '@/components/marketing/visuals';
 import { getActiveCities } from '@/lib/server-data';
-import { T, serif, mono } from '@/lib/theme/tokens';
+import { T, displayFont, bodyFont } from '@/lib/theme/tokens';
 
 export const metadata: Metadata = {
   title: "List your venue | Where's My Vibe",
@@ -17,7 +17,7 @@ const CONTACT_EMAIL = 'hello@wheresmyvibe.com';
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      fontFamily: mono, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
+      fontFamily: bodyFont, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase',
       color: T.inkFaint, marginBottom: 12,
     }}>{children}</div>
   );
@@ -31,7 +31,7 @@ export default async function ListYourVenuePage() {
     <MarketingShell>
       <div style={{ padding: '32px 18px 8px', position: 'relative', overflow: 'hidden' }}>
         <RadarRings size={260} right={-80} top={-40} />
-        <h1 style={{ fontFamily: serif, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
+        <h1 style={{ fontFamily: displayFont, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
           Your venue is already<br />
           <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>on the radar. Own it.</span>
         </h1>

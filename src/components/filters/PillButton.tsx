@@ -19,7 +19,7 @@ const PillButton: React.FC<PillButtonProps> = ({
   size = 'md',
   disabled = false
 }) => {
-  const baseStyles = 'font-geist font-medium rounded-full border cursor-pointer select-none';
+  const baseStyles = 'font-sans font-medium rounded-full border cursor-pointer select-none';
 
   const sizeStyles = {
     sm: 'px-2 py-1 text-xs',

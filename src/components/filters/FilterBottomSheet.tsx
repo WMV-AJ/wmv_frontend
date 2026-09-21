@@ -334,14 +334,14 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-geist text-lg font-semibold text-white">
+                    <h2 className="font-sans text-lg font-semibold text-white">
                       Filter by
                     </h2>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={handleClearAll}
-                      className="font-geist text-sm text-white/60 hover:text-white/80 px-2 py-1 rounded-md hover:bg-white/10"
+                      className="font-sans text-sm text-white/60 hover:text-white/80 px-2 py-1 rounded-md hover:bg-white/10"
                     >
                       Clear All
                     </button>
@@ -390,7 +390,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className={`flex items-center border rounded-full px-2 py-0.5 ${filter.color}`}
                       >
-                        <span className="font-geist text-sm text-white/90 mr-1">
+                        <span className="font-sans text-sm text-white/90 mr-1">
                           {filter.label}
                         </span>
                         <button

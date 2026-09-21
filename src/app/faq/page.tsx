@@ -4,7 +4,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import { FAQ_ITEMS } from '@/content/faq';
 import FaqAccordion from './FaqAccordion';
 import { RadarRings } from '@/components/marketing/visuals';
-import { T, serif } from '@/lib/theme/tokens';
+import { T, displayFont } from '@/lib/theme/tokens';
 
 export const metadata: Metadata = {
   title: "FAQ | Where's My Vibe",
@@ -29,7 +29,7 @@ export default function FaqPage() {
       <JsonLd data={faqSchema} />
       <div style={{ padding: '32px 18px 8px', position: 'relative', overflow: 'hidden' }}>
         <RadarRings size={220} right={-70} top={-50} />
-        <h1 style={{ fontFamily: serif, fontSize: 30, color: T.ink, margin: '0 0 6px', position: 'relative' }}>
+        <h1 style={{ fontFamily: displayFont, fontSize: 30, color: T.ink, margin: '0 0 6px', position: 'relative' }}>
           Questions, <span style={{ color: T.accent }}>answered.</span>
         </h1>
         <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, margin: '0 0 26px' }}>

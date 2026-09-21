@@ -5,12 +5,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-sans);
-  --font-display: var(--font-playfair);
-  --font-geist: var(--font-geist-sans);
-  --font-fraunces: var(--font-fraunces);
-  --font-playfair: var(--font-playfair);
+  --font-sans: var(--font-suse);
+  --font-mono: var(--font-suse-mono);
+  --font-display: var(--font-suse-mono);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -33,15 +30,12 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Display font swap (2026-08): Space Grotesk (Garnett stand-in) replaces
-   both Fraunces and Playfair italic. next/font defines --font-space-grotesk
-   on <body>, so the legacy variable names are redirected there — every
-   var(--font-fraunces) / var(--font-playfair) call site resolves to
-   Space Grotesk without per-file edits. No italics anywhere. */
-body {
-  --font-fraunces: var(--font-space-grotesk);
-  --font-playfair: var(--font-space-grotesk);
-}
+/* Type system (2026-09): exactly two faces, site-wide.
+   --font-suse-mono  → display / headlines / uppercase labels
+   --font-suse       → body / UI / everything else
+   Both are defined on <body> by next/font in layout.tsx. The old
+   Geist / Space Grotesk / Fraunces / Playfair / Inter / Space Mono
+   variables are gone — every call site now names one of the two above. */
 
 /* Dark Purple Theme */
 :root {
@@ -393,7 +387,7 @@ body {
 
   /* Venue Name (Large, Left Side) */
   .venue-name {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-suse-mono), ui-monospace, monospace;
     font-size: 22px;
     font-weight: 700;
     color: #f4c430;
@@ -404,7 +398,7 @@ body {
 
   /* Event Title */
   .event-title {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-suse-mono), ui-monospace, monospace;
     font-size: 16px;
     font-weight: 700;
     color: #ffffff;
@@ -414,7 +408,7 @@ body {
 
   /* Event Title Main (Combined with Bold Venue) */
   .event-title-main {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-suse-mono), ui-monospace, monospace;
     font-size: 16px;
     font-weight: 600;
     color: #ffffff;

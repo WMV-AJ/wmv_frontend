@@ -148,7 +148,7 @@ function Pill({ cat, delay, pillsP }: PillProps) {
         background: 'rgba(10,10,26,0.88)',
         border: `1px solid ${cat.color}55`,
         color: cat.color,
-        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
         fontSize: 24,
         fontWeight: 600,
         letterSpacing: '-0.01em',
@@ -186,7 +186,7 @@ function StatCell({ value, label, accent }: { value: number; label: string; acce
     >
       <div
         style={{
-          fontFamily: "var(--font-fraunces), Georgia, serif",
+          fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
           fontSize: 104,
           fontWeight: 700,
           color: '#fff',
@@ -200,7 +200,7 @@ function StatCell({ value, label, accent }: { value: number; label: string; acce
       </div>
       <div
         style={{
-          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+          fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
           fontSize: 24,
           fontWeight: 700,
           color: accent,
@@ -267,7 +267,7 @@ export function HUDLayer({ time }: { time: number }) {
           />
           <span
             style={{
-              fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+              fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
               fontSize: 32,
               fontWeight: 800,
               color: '#fff',
@@ -300,7 +300,7 @@ export function HUDLayer({ time }: { time: number }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 24, marginTop: 14 }}>
           <div
             style={{
-              fontFamily: "var(--font-fraunces), Georgia, serif",
+              fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
               fontSize: 200,
               fontWeight: 700,
               letterSpacing: '-0.045em',
@@ -314,7 +314,7 @@ export function HUDLayer({ time }: { time: number }) {
           </div>
           <div
             style={{
-              fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+              fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
               fontSize: 40,
               fontWeight: 800,
               color: '#fff',
@@ -385,7 +385,7 @@ export function HUDLayer({ time }: { time: number }) {
       >
         <div
           style={{
-            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
             fontSize: 18,
             fontWeight: 700,
             color: '#7dd3fc',
@@ -399,9 +399,9 @@ export function HUDLayer({ time }: { time: number }) {
         </div>
         <div
           style={{
-            // Display face (Space Grotesk via redirected var) — paired
-            // against Fraunces for the structured tabular counters below.
-            fontFamily: "var(--font-playfair), Georgia, serif",
+            // Display face (SUSE Mono) — paired against SUSE for the
+            // structured tabular counters below.
+            fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
             fontSize: 96,
             fontWeight: 700,
             color: '#fff',

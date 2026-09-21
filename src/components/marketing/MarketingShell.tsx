@@ -10,7 +10,7 @@
 // Interactive bits (CTA clicks with analytics) live in small client islands
 // (see CtaButton.tsx / FaqAccordion).
 import Link from 'next/link';
-import { T, serif, mono, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
+import { T, displayFont, bodyFont, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 import { VIBES_DATA } from '@/config/vibes-data';
 import { ALL_CITIES, getCityConfig } from '@/config/cities.config';
 
@@ -66,7 +66,7 @@ export default function MarketingShell({ children }: { children: React.ReactNode
             />
             <span
               style={{
-                fontFamily: serif,
+                fontFamily: displayFont,
                 fontWeight: 700,
                 fontSize: 14,
                 color: T.ink,
@@ -93,7 +93,7 @@ function MarketingFooter() {
     <footer style={{ borderTop: `1px solid ${T.line}`, padding: '24px 18px 32px', marginTop: 40 }}>
       <div
         style={{
-          fontFamily: mono,
+          fontFamily: bodyFont,
           fontSize: 10,
           letterSpacing: '0.14em',
           textTransform: 'uppercase',

@@ -95,7 +95,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       {!hideHeader && (
       <div className="flex items-center justify-between mb-1.5 min-h-[28px]">
         <div className="flex items-center space-x-1.5">
-          <h3 className="font-geist text-sm font-semibold text-white">
+          <h3 className="font-sans text-sm font-semibold text-white">
             {section.title}
           </h3>
           {selectedCount > 0 && (
@@ -159,7 +159,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
             {/* Show helpful text for empty selections */}
             {section.options.length === 0 && (
               <div className="text-center py-4">
-                <p className="font-geist text-sm text-white/60">
+                <p className="font-sans text-sm text-white/60">
                   No {section.title.toLowerCase()} available
                 </p>
               </div>

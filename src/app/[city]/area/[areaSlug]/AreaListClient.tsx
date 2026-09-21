@@ -11,6 +11,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import { isUpcomingInCity } from '@/lib/city-date';
 import { findAreaBySlug, humanizeSlug } from '@/lib/areas';
 import StackedCardsListPage, { ListPageHeader } from '@/components/cards/StackedCardsListPage';
+import { displayFont, bodyFont } from '@/lib/theme/tokens';
 
 // No filters — we want ALL venues from context, then filter by area ourselves so
 // the count matches the homepage "Areas" row exactly.
@@ -26,8 +27,6 @@ const EMPTY_FILTERS: HierarchicalFilterState = {
   searchQuery: '',
 };
 
-const serif = "var(--font-playfair), 'Playfair Display', Georgia, serif";
-const mono = "var(--font-geist-sans), ui-monospace, monospace";
 
 export default function AreaListingPage() {
   const router = useRouter();
@@ -80,10 +79,10 @@ export default function AreaListingPage() {
 
   const emptyState = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: serif, fontSize: 18, color: '#f5f2ed' }}>
+      <div style={{ fontFamily: displayFont, fontSize: 18, color: '#f5f2ed' }}>
         No events in {title} right now
       </div>
-      <div style={{ fontFamily: mono, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
+      <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
         Check back soon — the city updates daily.
       </div>
     </div>

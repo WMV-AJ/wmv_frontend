@@ -5,7 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import type { AnalyticsEventName } from '@/lib/analytics/types';
-import { T, mono } from '@/lib/theme/tokens';
+import { T, bodyFont } from '@/lib/theme/tokens';
 
 interface CtaButtonProps {
   href: string;
@@ -39,7 +39,7 @@ export default function CtaButton({
           borderRadius: 999,
           background: T.accent,
           color: T.inkInverse,
-          fontFamily: mono,
+          fontFamily: bodyFont,
           fontSize: 12,
           fontWeight: 700,
           letterSpacing: '0.08em',
@@ -55,7 +55,7 @@ export default function CtaButton({
           borderRadius: 999,
           background: 'transparent',
           color: T.ink,
-          fontFamily: mono,
+          fontFamily: bodyFont,
           fontSize: 12,
           fontWeight: 600,
           letterSpacing: '0.08em',

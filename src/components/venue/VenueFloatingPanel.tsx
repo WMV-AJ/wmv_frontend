@@ -231,7 +231,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
 
   return (
     <>
-      {/* Custom CSS — fonts now come from next/font in layout.tsx (Geist Sans + Fraunces) */}
+      {/* Custom CSS — fonts come from next/font in layout.tsx (SUSE + SUSE Mono) */}
       <style jsx>{`
         .event-card {
           width: 100%;
@@ -368,7 +368,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                 duration: 0.3
               }}
               className="fixed bottom-1 md:bottom-4 left-1 right-1 md:left-2 md:right-2 z-[60] mx-auto"
-              style={{ fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif" }}
+              style={{ fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className={`event-card ${isCardExpanded ? 'expanded' : ''}`}>
@@ -390,7 +390,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                     <h1
                       ref={venueNameRef}
                       style={{
-                        fontFamily: "var(--font-fraunces), Georgia, serif",
+                        fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
                         fontSize: '22px',
                         fontWeight: 700,
                         color: '#ffffff',

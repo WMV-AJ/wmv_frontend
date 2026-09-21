@@ -28,9 +28,18 @@ export const T = {
   chipLight: '#f5f2ed',
 } as const;
 
-// Font stacks (match the next/font variables wired in src/app/layout.tsx).
-export const mono = 'var(--font-geist-sans), ui-monospace, monospace';
-export const serif = 'var(--font-playfair), Georgia, serif';
+// ── FONT STACKS ───────────────────────────────────────────────────────
+// The two faces wired in src/app/layout.tsx. Nothing else is loaded, and
+// no page defines its own — import these everywhere.
+//
+//   displayFont → SUSE Mono. Headlines, page titles, big numerals.
+//   bodyFont    → SUSE. Copy, UI, labels, micro-text, everything else.
+//
+// Named for their role, not their classification: the old `serif` and
+// `mono` exports pointed at a sans and a proportional face respectively,
+// which is how three dead font names survived in the codebase for months.
+export const displayFont = 'var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace';
+export const bodyFont = 'var(--font-suse), system-ui, -apple-system, sans-serif';
 
 /** Max content width of the phone-frame column used across the app. */
 export const FRAME_MAX_WIDTH = 430;

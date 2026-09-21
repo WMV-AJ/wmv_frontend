@@ -92,12 +92,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
                   unoptimized
                   className="object-contain mx-auto rounded-full"
                 />
-                <h1 className="font-geist text-sm font-bold text-white mt-2 tracking-wide">
+                <h1 className="font-sans text-sm font-bold text-white mt-2 tracking-wide">
                   Where&apos;s My Vibe?
                 </h1>
               </div>
 
-              <p className="font-geist text-sm text-gray-200 leading-relaxed">
+              <p className="font-sans text-sm text-gray-200 leading-relaxed">
                 Here we will help you discover all the events happening around you. Scraped from Instagram, Web and all sources to get you a curated but exhaustive list of places, to match your <span className="font-semibold text-amber-300">VIBE</span>
               </p>
             </div>
@@ -107,12 +107,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
               <Button
                 onClick={onClose}
                 size="lg"
-                className="w-full font-geist font-medium bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 text-white rounded-full transition-all duration-300 shadow-lg border-0 transform hover:scale-105 active:scale-95 animate-pulse hover:animate-none"
+                className="w-full font-sans font-medium bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 text-white rounded-full transition-all duration-300 shadow-lg border-0 transform hover:scale-105 active:scale-95 animate-pulse hover:animate-none"
               >
                 Start Exploring
               </Button>
 
-              <p className="font-geist text-gray-400 text-xs mt-3 tracking-wide">
+              <p className="font-sans text-gray-400 text-xs mt-3 tracking-wide">
                 Default date to today
               </p>
             </div>
@@ -123,7 +123,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
                 <Card className="p-3 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-200">
                   <CardContent className="p-0">
                     <MapPin className="w-5 h-5 text-amber-400 mx-auto mb-2" />
-                    <p className="font-geist text-white text-xs font-medium tracking-wide">
+                    <p className="font-sans text-white text-xs font-medium tracking-wide">
                       Tap markers
                     </p>
                   </CardContent>
@@ -131,7 +131,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
                 <Card className="p-3 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-200">
                   <CardContent className="p-0">
                     <Filter className="w-5 h-5 text-blue-400 mx-auto mb-2" />
-                    <p className="font-geist text-white text-xs font-medium tracking-wide">
+                    <p className="font-sans text-white text-xs font-medium tracking-wide">
                       Use filters
                     </p>
                   </CardContent>
@@ -139,7 +139,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
                 <Card className="p-3 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-200">
                   <CardContent className="p-0">
                     <PartyPopper className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
-                    <p className="font-geist text-white text-xs font-medium tracking-wide">
+                    <p className="font-sans text-white text-xs font-medium tracking-wide">
                       Find events
                     </p>
                   </CardContent>
@@ -149,7 +149,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
 
             {/* Color coding legend */}
             <div>
-              <h2 className="font-geist text-base font-semibold text-white mb-4 text-center tracking-wide">
+              <h2 className="font-sans text-base font-semibold text-white mb-4 text-center tracking-wide">
                 Venue Types
               </h2>
 
@@ -173,10 +173,10 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ isOpen, onClose }) => {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-geist font-medium text-white text-xs leading-tight truncate">
+                        <h3 className="font-sans font-medium text-white text-xs leading-tight truncate">
                           {venue.name}
                         </h3>
-                        <p className="font-geist text-gray-400 text-xs truncate">
+                        <p className="font-sans text-gray-400 text-xs truncate">
                           {venue.description}
                         </p>
                       </div>

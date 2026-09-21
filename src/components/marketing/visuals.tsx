@@ -1,7 +1,7 @@
 // Shared visual elements for the marketing surfaces — the "what we scan"
 // source chips, the pipeline timeline, a tilted story-card collage, and a
 // radar-ring backdrop. Pure presentational markup (server-component safe).
-import { T, mono, serif } from '@/lib/theme/tokens';
+import { T, bodyFont, displayFont } from '@/lib/theme/tokens';
 
 // ── Sources: what the pipeline scans ─────────────────────────────────
 export const SOURCES = [
@@ -43,7 +43,7 @@ export function SourceChips({ compact = false }: { compact?: boolean }) {
               fontWeight: 700, lineHeight: 1.2,
             }}>{s.label}</span>
             <span style={{
-              display: 'block', fontFamily: mono, fontSize: compact ? 8 : 9,
+              display: 'block', fontFamily: bodyFont, fontSize: compact ? 8 : 9,
               letterSpacing: '0.08em', textTransform: 'uppercase', color: s.color,
               marginTop: 1,
             }}>{s.count}</span>
@@ -79,7 +79,7 @@ export function PipelineTimeline({ steps }: { steps: PipelineStep[] }) {
             width: 32, height: 32, borderRadius: '50%',
             background: T.bg, border: `2px solid ${s.color}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: mono, fontSize: 11, fontWeight: 700, color: s.color,
+            fontFamily: bodyFont, fontSize: 11, fontWeight: 700, color: s.color,
             boxShadow: `0 0 14px ${s.color}33`,
           }}>{s.n}</div>
           <div style={{ paddingTop: 4 }}>
@@ -131,11 +131,14 @@ export function StoryCollage() {
           }} />
           <div style={{ position: 'absolute', left: 8, right: 8, bottom: 8 }}>
             <div style={{
-              fontFamily: mono, fontSize: 7, fontWeight: 700, letterSpacing: '0.08em',
+              fontFamily: bodyFont, fontSize: 7, fontWeight: 700, letterSpacing: '0.08em',
               color: c.color, textTransform: 'uppercase', marginBottom: 2,
             }}>{c.line}</div>
             <div style={{
-              fontFamily: serif, fontSize: 13, color: '#fff', lineHeight: 1.1,
+              // 12px, not 13: SUSE Mono's fixed advance puts the longest
+              // mock name ("Iris Rooftop") at 94px inside a 92px card.
+              fontFamily: displayFont, fontSize: 12, color: '#fff', lineHeight: 1.1,
+              whiteSpace: 'nowrap',
             }}>{c.venue}</div>
           </div>
         </div>
@@ -146,7 +149,7 @@ export function StoryCollage() {
         border: `1px dashed ${T.accent}55`, pointerEvents: 'none',
       }} />
       <div style={{
-        position: 'absolute', top: -18, right: -6, fontFamily: mono, fontSize: 8,
+        position: 'absolute', top: -18, right: -6, fontFamily: bodyFont, fontSize: 8,
         letterSpacing: '0.14em', textTransform: 'uppercase', color: T.accent,
       }}>● scanning</div>
     </div>
