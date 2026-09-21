@@ -8,7 +8,6 @@ import { getCityDateString } from '@/lib/city-date';
 import {
   Heart,
   ArrowUpRight,
-  Search,
   ChevronRight,
 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
@@ -48,8 +47,6 @@ const T = {
 //   displayFont (SUSE Mono): venue + event names, hero, numbers
 //   bodyFont    (SUSE):      labels, times, counts, badges, supporting copy
 // Both come from @/lib/theme/tokens — this page loads no fonts of its own.
-
-const body = "var(--font-suse), system-ui, -apple-system, sans-serif";
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────
 // VIBES + matchesVibe live in '@/config/vibes' so the homepage pill counts
@@ -250,7 +247,6 @@ export default function CityHome() {
   const city = (params?.city as string) || 'dubai';
 
   const [liked, setLiked] = useState<Set<string>>(new Set());
-  const [searchQ, setSearchQ] = useState('');
   const heroRef = useRef<HTMLDivElement | null>(null);
 
   // Venue data comes from the shared VenueDataProvider (root layout) — this
@@ -546,35 +542,6 @@ export default function CityHome() {
           </div>
         </div>
 
-        {/* Search — lands on the list view for today */}
-        <form
-          onSubmit={(ev) => {
-            ev.preventDefault();
-            const q = searchQ.trim();
-            trackEvent('home_search_submit', { city, q });
-            router.push(`/${city}/cards?date=today${q ? `&q=${encodeURIComponent(q)}` : ''}`);
-          }}
-          style={{
-            margin: '12px 18px 0', display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 14px', borderRadius: 10,
-            background: T.surface, border: `1px solid ${T.line}`,
-          }}
-        >
-          <Search size={15} style={{ color: T.inkMuted, flexShrink: 0 }} />
-          <input
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
-            placeholder="Search venues, events…"
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: T.ink, fontFamily: bodyFont, fontSize: 12, minWidth: 0 }}
-          />
-          <button type="submit" style={{
-            background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-            fontFamily: bodyFont, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: T.ink,
-          }}>
-            Go
-          </button>
-        </form>
 
         {/* § Happening now — live right now, hidden when empty */}
         {(loading || happeningNow.length > 0) && (
