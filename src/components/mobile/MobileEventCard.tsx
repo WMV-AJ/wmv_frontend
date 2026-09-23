@@ -106,6 +106,7 @@ interface MobileEventCardProps {
 import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
+import { displayFont } from '@/lib/theme/tokens';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
 function parseToArray(value: unknown): string[] {
@@ -411,8 +412,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           <p
             className="font-semibold text-[15px]"
             style={darkMode
-              ? { fontFamily: 'var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace', color: '#f4c430', letterSpacing: '-0.01em' }
-              : { fontFamily: 'var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace', color: '#8a6d0b', letterSpacing: '-0.01em' }}
+              ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
+              : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
           >
             {venue.venue_name}
           </p>
@@ -1034,8 +1035,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         <p
           className="text-[13px] md:text-[11px] font-semibold truncate"
           style={darkMode
-            ? { fontFamily: 'var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace', color: '#f4c430', letterSpacing: '-0.01em' }
-            : { fontFamily: 'var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace', color: '#8a6d0b', letterSpacing: '-0.01em' }}
+            ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
+            : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
         >
           {venue.venue_name}
         </p>

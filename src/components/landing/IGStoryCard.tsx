@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import { hash } from '@/lib/landing/animation-core';
+import { displayFont, bodyFont } from '@/lib/theme/tokens';
 
 const VENUE_COLORS: Record<string, string> = {
   nightclub: '#f4c430',
@@ -115,7 +116,7 @@ export function IGStoryCard({
               alignItems: 'center',
               padding: '0 8px',
               color: 'rgba(255,255,255,0.6)',
-              fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+              fontFamily: bodyFont,
               fontSize: 8,
               overflow: 'hidden',
               whiteSpace: 'nowrap',
@@ -156,7 +157,7 @@ export function IGStoryCard({
               right: 14,
               bottom: 18,
               color: '#fff',
-              fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+              fontFamily: displayFont,
               textShadow: '0 2px 12px rgba(0,0,0,0.7)',
             }}
           >
@@ -164,7 +165,7 @@ export function IGStoryCard({
               style={{
                 fontSize: 10,
                 fontWeight: 700,
-                fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+                fontFamily: bodyFont,
                 textTransform: 'uppercase',
                 letterSpacing: '1.5px',
                 color: accent,
@@ -180,7 +181,7 @@ export function IGStoryCard({
               style={{
                 fontSize: 11,
                 fontWeight: 500,
-                fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+                fontFamily: bodyFont,
                 color: 'rgba(255,255,255,0.85)',
                 marginTop: 4,
                 letterSpacing: 0,
@@ -285,14 +286,14 @@ export function IGStoryCard({
             color: '#fff',
             fontSize: 11,
             fontWeight: 700,
-            fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+            fontFamily: bodyFont,
             letterSpacing: '-0.01em',
             textShadow: '0 1px 4px rgba(0,0,0,0.5)',
           }}
         >
           {venue}
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif" }}>2h</div>
+        <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, fontFamily: bodyFont }}>2h</div>
       </div>
 
       {!image && (
@@ -318,7 +319,7 @@ export function IGStoryCard({
           right: 16,
           bottom: 24,
           color: '#fff',
-          fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+          fontFamily: displayFont,
           fontWeight: 700,
           letterSpacing: '-0.02em',
           textShadow: '0 2px 12px rgba(0,0,0,0.6)',
@@ -328,7 +329,7 @@ export function IGStoryCard({
           style={{
             fontSize: 10,
             fontWeight: 700,
-            fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+            fontFamily: bodyFont,
             textTransform: 'uppercase',
             letterSpacing: '1.5px',
             color: accent,
@@ -342,7 +343,7 @@ export function IGStoryCard({
           style={{
             fontSize: 11,
             fontWeight: 500,
-            fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+            fontFamily: bodyFont,
             color: 'rgba(255,255,255,0.85)',
             letterSpacing: 0,
           }}

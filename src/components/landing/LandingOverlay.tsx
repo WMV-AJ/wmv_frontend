@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import UserMenu from '@/components/auth/UserMenu';
 import { trackEvent } from '@/lib/analytics/track';
 import { CityPicker } from './CityPicker';
+import { bodyFont } from '@/lib/theme/tokens';
 
 // Adaptive viewport check: on phone-narrow screens we collapse the Google
 // pill to "Sign in" instead of "Continue with Google" so the whole row
@@ -56,7 +57,7 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
         background: '#fff',
         border: '1px solid rgba(255,255,255,0.6)',
         color: '#0a0a1a',
-        fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+        fontFamily: bodyFont,
         fontSize: 13,
         fontWeight: 600,
         letterSpacing: '-0.01em',

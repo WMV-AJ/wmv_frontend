@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import type { Venue, Event } from '@/types';
 import { MapPin, Clock, Calendar, DollarSign, Music, Gift } from 'lucide-react';
 import { formatPrice } from '@/config/cities.config';
+import { displayFont } from '@/lib/theme/tokens';
 
 interface ExpandableVenueCardProps {
   venue: Venue;
@@ -44,7 +45,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
       >
         <div className="flex justify-between items-start gap-3">
           <h1 style={{
-            fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+            fontFamily: displayFont,
             fontSize: '22px',
             fontWeight: 700,
             color: '#1a1a1a',
@@ -89,7 +90,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
       <div className="flex justify-between items-start mb-4 gap-3">
         <div className="flex-1 min-w-0">
           <h1 style={{
-            fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+            fontFamily: displayFont,
             fontSize: '22px',
             fontWeight: 700,
             color: '#1a1a1a',
@@ -175,7 +176,7 @@ export const ExpandableVenueCard: React.FC<ExpandableVenueCardProps> = ({
       {/* Event Title */}
       <div style={{ marginBottom: '16px' }}>
         <h2 style={{
-          fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+          fontFamily: displayFont,
           fontSize: '16px',
           fontWeight: 700,
           color: '#1a1a1a',

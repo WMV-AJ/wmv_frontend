@@ -32,14 +32,14 @@ export const T = {
 // The two faces wired in src/app/layout.tsx. Nothing else is loaded, and
 // no page defines its own — import these everywhere.
 //
-//   displayFont → SUSE Mono. Headlines, page titles, big numerals.
-//   bodyFont    → SUSE. Copy, UI, labels, micro-text, everything else.
+//   displayFont → Roboto. Headlines, page titles, big numerals.
+//   bodyFont    → Open Sans. Copy, UI, labels, everything else.
 //
 // Named for their role, not their classification: the old `serif` and
 // `mono` exports pointed at a sans and a proportional face respectively,
 // which is how three dead font names survived in the codebase for months.
-export const displayFont = 'var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace';
-export const bodyFont = 'var(--font-suse), system-ui, -apple-system, sans-serif';
+export const displayFont = 'var(--font-roboto), system-ui, -apple-system, "Helvetica Neue", sans-serif';
+export const bodyFont = 'var(--font-open-sans), system-ui, -apple-system, "Helvetica Neue", sans-serif';
 
 /** Max content width of the phone-frame column used across the app. */
 export const FRAME_MAX_WIDTH = 430;

@@ -5,9 +5,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-suse);
-  --font-mono: var(--font-suse-mono);
-  --font-display: var(--font-suse-mono);
+  --font-sans: var(--font-open-sans);
+  --font-mono: var(--font-roboto);
+  --font-display: var(--font-roboto);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -31,8 +31,8 @@
 }
 
 /* Type system (2026-09): exactly two faces, site-wide.
-   --font-suse-mono  → display / headlines / uppercase labels
-   --font-suse       → body / UI / everything else
+   --font-roboto     → display / headlines
+   --font-open-sans  → body / UI / everything else
    Both are defined on <body> by next/font in layout.tsx. The old
    Geist / Space Grotesk / Fraunces / Playfair / Inter / Space Mono
    variables are gone — every call site now names one of the two above. */
@@ -387,7 +387,7 @@
 
   /* Venue Name (Large, Left Side) */
   .venue-name {
-    font-family: var(--font-suse-mono), ui-monospace, monospace;
+    font-family: var(--font-roboto), system-ui, sans-serif;
     font-size: 22px;
     font-weight: 700;
     color: #f4c430;
@@ -398,7 +398,7 @@
 
   /* Event Title */
   .event-title {
-    font-family: var(--font-suse-mono), ui-monospace, monospace;
+    font-family: var(--font-roboto), system-ui, sans-serif;
     font-size: 16px;
     font-weight: 700;
     color: #ffffff;
@@ -408,7 +408,7 @@
 
   /* Event Title Main (Combined with Bold Venue) */
   .event-title-main {
-    font-family: var(--font-suse-mono), ui-monospace, monospace;
+    font-family: var(--font-roboto), system-ui, sans-serif;
     font-size: 16px;
     font-weight: 600;
     color: #ffffff;

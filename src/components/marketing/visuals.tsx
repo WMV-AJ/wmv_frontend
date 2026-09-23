@@ -135,8 +135,7 @@ export function StoryCollage() {
               color: c.color, textTransform: 'uppercase', marginBottom: 2,
             }}>{c.line}</div>
             <div style={{
-              // 12px, not 13: SUSE Mono's fixed advance puts the longest
-              // mock name ("Iris Rooftop") at 94px inside a 92px card.
+              // 12px, not 13: keeps the longest mock name inside the card.
               fontFamily: displayFont, fontSize: 12, color: '#fff', lineHeight: 1.1,
               whiteSpace: 'nowrap',
             }}>{c.venue}</div>

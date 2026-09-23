@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { SUSE } from "next/font/google";
-import localFont from "next/font/local";
+import { Roboto, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
@@ -13,36 +12,30 @@ import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 // ── TYPE SYSTEM (2026-09) ─────────────────────────────────────────────
-// One pair, site-wide: SUSE Mono for display/headlines, SUSE for body/UI.
-// Replaces Geist + Space Grotesk here and the per-page Inter + Space Mono
-// that used to load on /[city]. No other family is loaded anywhere.
+// One pair, site-wide: Roboto for display, Open Sans for body. Both load
+// from next/font/google; nothing is self-hosted and no page defines a
+// font of its own. To swap the pair again, change these two loaders and
+// the two stacks in src/lib/theme/tokens.ts — call sites reference the
+// roles (displayFont / bodyFont), never a family name.
 //
-// Both are variable faces on the same 100–800 weight axis and share a
-// skeleton, so they sit together without a third font to bridge them.
+// Both are variable faces covering the full weight range this codebase
+// asks for, so unlike the previous pairs nothing collapses: 500 and 600
+// render as themselves rather than snapping to the nearest shipped cut.
 
-// Body / UI. Variable 100–800, no italics in the family.
-const suse = SUSE({
-  variable: "--font-suse",
+// Display. Variable 100–900, mixed case, italics available.
+const roboto = Roboto({
+  variable: "--font-roboto",
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  fallback: ["system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "sans-serif"],
 });
 
-// Display / headlines. SUSE Mono is not in Next 15.5's bundled Google Fonts
-// metadata, so it is self-hosted from src/fonts (SIL OFL 1.1). Same 100–800
-// variable axis; latin first, latin-ext second for accented venue names.
-const suseMono = localFont({
-  variable: "--font-suse-mono",
+// Body. Variable 300–800.
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin", "latin-ext"],
   display: "swap",
-  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
-  // next/font/local cannot emit unicode-range, so both subsets are declared
-  // with identical descriptors and the browser falls through per-glyph.
-  // latin is declared last so it wins the descriptor tie and stays primary;
-  // latin-ext is only consulted for accented names outside Latin-1.
-  src: [
-    { path: "../fonts/SUSEMono-latin-ext.woff2", weight: "100 800", style: "normal" },
-    { path: "../fonts/SUSEMono-latin.woff2", weight: "100 800", style: "normal" },
-  ],
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "sans-serif"],
 });
 
 export const viewport = {
@@ -125,7 +118,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${suse.variable} ${suseMono.variable} antialiased`}
+        className={`${roboto.variable} ${openSans.variable} antialiased`}
       >
         {GA_MEASUREMENT_ID && (
           <>

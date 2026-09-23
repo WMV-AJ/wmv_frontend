@@ -2,6 +2,7 @@
 
 import { Easing, clamp, lerp } from '@/lib/landing/animation-core';
 import { CANVAS_H, CANVAS_W, CENTER_X, CENTER_Y, DUR } from '@/lib/landing/constants';
+import { bodyFont } from '@/lib/theme/tokens';
 
 type Side = 'left' | 'right' | 'center';
 
@@ -114,7 +115,7 @@ export function ChaosOverlay({ time }: { time: number }) {
         />
         <span
           style={{
-            fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+            fontFamily: bodyFont,
             fontSize: 30,
             fontWeight: 800,
             color: '#ef4444',
@@ -228,7 +229,7 @@ export function ChaosOverlay({ time }: { time: number }) {
             >
               <span
                 style={{
-                  fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+                  fontFamily: bodyFont,
                   fontSize: 18,
                   fontWeight: 700,
                   color: 'rgba(15,15,30,0.5)',
@@ -252,7 +253,7 @@ export function ChaosOverlay({ time }: { time: number }) {
             {/* Main label — clean dark-on-glass, color from textColor variant */}
             <div
               style={{
-                fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+                fontFamily: bodyFont,
                 fontSize: 28,
                 fontWeight: 800,
                 color: L.textColor,
@@ -289,7 +290,7 @@ export function ChaosOverlay({ time }: { time: number }) {
               />
               <span
                 style={{
-                  fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+                  fontFamily: bodyFont,
                   fontSize: 17,
                   fontWeight: 600,
                   color: 'rgba(15,15,30,0.65)',

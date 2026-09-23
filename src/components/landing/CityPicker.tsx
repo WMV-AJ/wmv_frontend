@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, MapPin } from 'lucide-react';
 import { ALL_CITIES, CITIES, type CitySlug } from '@/config/cities.config';
+import { bodyFont } from '@/lib/theme/tokens';
 
 interface CityPickerProps {
   value: CitySlug;
@@ -34,7 +35,7 @@ export function CityPicker({ value, onChange }: CityPickerProps) {
           WebkitBackdropFilter: 'blur(20px)',
           border: '1.5px solid rgba(255,255,255,0.25)',
           color: '#fff',
-          fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+          fontFamily: bodyFont,
           fontSize: 13,
           fontWeight: 600,
           letterSpacing: '-0.01em',
@@ -102,7 +103,7 @@ export function CityPicker({ value, onChange }: CityPickerProps) {
                     background: 'transparent',
                     border: 'none',
                     color: 'rgba(232,236,242,0.85)',
-                    fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif",
+                    fontFamily: bodyFont,
                     fontSize: 14,
                     fontWeight: 500,
                     textAlign: 'left',

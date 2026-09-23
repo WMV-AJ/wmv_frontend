@@ -44,8 +44,8 @@ const T = {
 };
 
 // Home-page type system (2026-08 trial): three roles —
-//   displayFont (SUSE Mono): venue + event names, hero, numbers
-//   bodyFont    (SUSE):      labels, times, counts, badges, supporting copy
+//   displayFont (Roboto):    venue + event names, hero, numbers
+//   bodyFont    (Open Sans): labels, times, counts, badges, copy
 // Both come from @/lib/theme/tokens — this page loads no fonts of its own.
 
 // ── VIBE GRID CONFIG ──────────────────────────────────────────────────

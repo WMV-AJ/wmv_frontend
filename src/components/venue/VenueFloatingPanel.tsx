@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { trackEvent } from '@/lib/analytics/track';
 import type { Venue, HierarchicalFilterState, InstagramStory } from '@/types';
 import './VenueFloatingPanel.css';
+import { displayFont, bodyFont } from '@/lib/theme/tokens';
 
 interface VenueFloatingPanelProps {
   venue: Venue | null;
@@ -231,7 +232,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
 
   return (
     <>
-      {/* Custom CSS — fonts come from next/font in layout.tsx (SUSE + SUSE Mono) */}
+      {/* Custom CSS — fonts come from next/font in layout.tsx (Roboto + Open Sans) */}
       <style jsx>{`
         .event-card {
           width: 100%;
@@ -368,7 +369,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                 duration: 0.3
               }}
               className="fixed bottom-1 md:bottom-4 left-1 right-1 md:left-2 md:right-2 z-[60] mx-auto"
-              style={{ fontFamily: "var(--font-suse), system-ui, -apple-system, sans-serif" }}
+              style={{ fontFamily: bodyFont }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className={`event-card ${isCardExpanded ? 'expanded' : ''}`}>
@@ -390,7 +391,7 @@ const VenueFloatingPanel: React.FC<VenueFloatingPanelProps> = ({
                     <h1
                       ref={venueNameRef}
                       style={{
-                        fontFamily: "var(--font-suse-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+                        fontFamily: displayFont,
                         fontSize: '22px',
                         fontWeight: 700,
                         color: '#ffffff',

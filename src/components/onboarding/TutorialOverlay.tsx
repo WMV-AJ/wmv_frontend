@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { bodyFont } from '@/lib/theme/tokens';
 
 interface TutorialOverlayProps {
   isOpen: boolean;
@@ -178,7 +179,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ isOpen, onClose }) =>
                 className="text-white font-semibold leading-snug"
                 style={{
                   fontSize: '13px',
-                  fontFamily: 'var(--font-suse), system-ui, -apple-system, sans-serif',
+                  fontFamily: bodyFont,
                   textAlign: c.align === 'center' ? 'center' : c.align === 'right' ? 'right' : 'left',
                 }}
               >
