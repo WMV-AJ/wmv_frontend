@@ -985,22 +985,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         {/* ── Left: the copy column ───────────────────────────────── */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
 
-          {/* 1. Category — first, so it sits at the card top-left */}
-          {accentCategory && (
-            <span
-              className="self-start mb-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap"
-              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-            >
-              {getShortDisplayName(accentCategory)}
-            </span>
-          )}
-
-          {/* 2. Event name */}
+          {/* 1. Event name */}
           <h3 className={`font-bold text-[16px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {event.event_name}
           </h3>
 
-          {/* 3. Time / date — always rendered so cards keep a steady height */}
+          {/* 2. Time / date — always rendered so cards keep a steady height */}
           <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
             <Clock className="w-3.5 h-3.5 flex-shrink-0" />
             {event.event_time_display
@@ -1008,6 +998,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                     ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
                     : formatDateLabel(event.event_date))}
           </span>
+
+          {/* 3. Category, on its own line */}
+          {accentCategory && (
+            <span
+              className="self-start mt-2 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap"
+              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+            >
+              {getShortDisplayName(accentCategory)}
+            </span>
+          )}
 
           {/* 4. Tags — the event's own subtitle, on the next line */}
           {event.event_subtitle && event.event_subtitle !== event.event_name && (
