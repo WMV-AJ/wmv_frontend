@@ -383,7 +383,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           <p
             className="font-semibold text-[15px]"
             style={darkMode
-              ? { fontFamily: "Home3Tight, 'Inter Tight', Arial, sans-serif", color: '#F080C0', letterSpacing: '-0.02em' }
+              ? { fontFamily: "Home3Tight, 'Inter Tight', Arial, sans-serif", color: '#E2E3E1', letterSpacing: '-0.02em' }
               : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
           >
             {venue.venue_name}
@@ -1035,7 +1035,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                  and the rating follows it, the pair capped at two lines. */}
           <div className="mt-2.5 line-clamp-2 text-[14px] leading-snug">
             <span
-              className={`font-semibold ${darkMode ? 'font-tight tracking-[-0.02em] text-magenta' : ''}`}
+              className={`font-semibold ${darkMode ? 'font-tight tracking-[-0.02em] text-pale' : ''}`}
               style={darkMode ? undefined : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
             >
               {venue.venue_name}
