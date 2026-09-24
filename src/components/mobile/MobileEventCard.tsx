@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
-import { shortenLocation, lastAddressParts } from '@/lib/format-location';
+import { shortenLocation } from '@/lib/format-location';
 import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
@@ -335,10 +335,22 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header + Close Button */}
-        <div className="flex items-center px-4 pt-5 pb-2 flex-shrink-0">
-          <h2 className={`font-bold text-[20px] flex-1 leading-snug ${darkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: '-0.02em' }}>
-            {event.event_name}
-          </h2>
+        <div className="flex items-start px-4 pt-5 pb-2 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            <h2 className={`font-bold text-[20px] leading-snug ${darkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: '-0.02em' }}>
+              {event.event_name}
+            </h2>
+            {/* Same colour path as the collapsed card's chip and the filter
+                pill for this category, so all three agree. */}
+            {accentCategory && (
+              <span
+                className="inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+              >
+                {getShortDisplayName(accentCategory)}
+              </span>
+            )}
+          </div>
           <button
             className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3"
             style={{
@@ -377,6 +389,27 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           className="flex-1 overflow-y-auto px-4 pb-4"
           style={{ scrollbarWidth: 'thin' }}
         >
+          {/* Date & Time sits directly above the media, per the brief. */}
+          {/* Date & Time — one line */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('212, 160, 23')}>
+                <Calendar className="w-4 h-4 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={labelCls}>Date & Time</p>
+                <p className={valueCls}>
+                  {formatDisplayDate(event.event_date) || 'TBA'}
+                  {event.event_time_start && (
+                    <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+                      {' '}· {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+  
+
           {/* Divider + Images side by side */}
           <div style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
           <div className="my-3">
@@ -484,24 +517,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               event type, details, then venue details below. One muted style
               throughout. */}
           <div className="space-y-4">
-            {/* Date & Time — one line */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('212, 160, 23')}>
-                <Calendar className="w-4 h-4 text-amber-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={labelCls}>Date & Time</p>
-                <p className={valueCls}>
-                  {formatDisplayDate(event.event_date) || 'TBA'}
-                  {event.event_time_start && (
-                    <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-                      {' '}· {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-
             {/* Artists */}
             {event.artist && (
               <div className="flex items-start gap-3.5">
@@ -1011,7 +1026,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 and truncates, the rating never shrinks. */}
             <div className="flex items-baseline gap-2 min-w-0">
               <p
-                className="text-[17px] font-bold truncate min-w-0"
+                className="text-[14px] font-semibold truncate min-w-0"
                 style={darkMode
                   ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
                   : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
@@ -1024,24 +1039,26 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
               </span>
             </div>
-            {/* Last 4 parts only — the full feed address runs to five lines
-                and swamped the card. The tail is what people orient by. */}
-            <div className="flex items-start gap-1.5 mt-1">
-              <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-              <span className={`text-[12px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                {lastAddressParts(venue.venue_address || venue.venue_location, 4)}
+            {/* Same rule as the expanded card's header line and as
+                StackedEventCards: shortenLocation(venue_location) at the
+                helper's default 34-char budget. All three agree. */}
+            <div className="flex items-center gap-1.5 mt-1 min-w-0">
+              <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+              <span className={`text-[12px] truncate min-w-0 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                {shortenLocation(venue.venue_location)}
               </span>
             </div>
           </div>
         </div>
 
         {/* ── Right: category tag, then the 9:16 still ── */}
-        <div className="flex-shrink-0 self-stretch flex">
+        <div className="flex-shrink-0 w-[40%]">
           <div
-            className="relative h-full rounded-xl overflow-hidden"
+            className="relative w-full rounded-xl overflow-hidden"
             style={{
-              // height comes from the card, width follows from the ratio —
-              // so raising minHeight widens the still automatically.
+              // Width-driven: the column is 40% of the tile and the height
+              // falls out of the ratio. Height-driven aspect-ratio on a
+              // stretched flex item is far patchier across browsers.
               aspectRatio: '9 / 16',
               border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.06)',
             }}
@@ -1060,7 +1077,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <EventMedia
                   src={primary}
                   alt={venue.venue_name}
-                  sizes="100px"
+                  sizes="(max-width: 430px) 40vw, 130px"
                   fill
                   poster={sibling && !isVid(sibling) ? sibling : null}
                 />

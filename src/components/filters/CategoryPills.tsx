@@ -203,11 +203,11 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
       <button
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
           color: isSelected ? '#ffffff' : hexColor,
-          background: isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
+          background: isSelected ? hexColor : darkMode ? 'rgba(8,8,18,0.92)' : 'rgba(255,255,255,0.9)',
           border: `1.5px solid ${hexColor}`,
         } : {
           color: '#ffffff',
@@ -215,7 +215,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
           border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
         }}
       >
-        {IconComponent && <IconComponent className="w-3.5 h-3.5" />}
+        {IconComponent && <IconComponent className="w-3 h-3" />}
         {label} ({count})
         {isExpanded && ' ↓'}
       </button>
@@ -278,11 +278,11 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                   <button
                     key={`category-${primary}-${secondary}`}
                     onClick={() => handleSecondaryClick(primary, secondary)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''
                     }`}
                     style={isOutlined ? {
                       color: isSelected ? '#ffffff' : hexColor,
-                      background: isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
+                      background: isSelected ? hexColor : darkMode ? 'rgba(8,8,18,0.92)' : 'rgba(255,255,255,0.9)',
                       border: `1.5px solid ${hexColor}`,
                     } : {
                       color: '#ffffff',
