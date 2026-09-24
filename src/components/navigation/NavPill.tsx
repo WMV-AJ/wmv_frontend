@@ -63,8 +63,11 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         // was ~4 RGB points from the page background (black-on-black), and
         // the backdrop blur cost a recomposite per frame over the moving map.
         background: 'rgba(28,28,42,0.97)',
-        border: `1px solid ${T.line}`,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+        // Gold rim + halo so the toggle reads as a control rather than another
+        // dark blob on a dark basemap. T.accent is the same gold as the active
+        // segment, so the pill and its selected state are one object.
+        border: `1.5px solid ${T.accent}`,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 18px ${T.accentSoft}, inset 0 1px 0 rgba(255,255,255,0.06)`,
       }}
     >
       {SEGMENTS.map(({ view, label, Icon, path }) => {
