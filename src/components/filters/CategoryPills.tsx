@@ -13,8 +13,7 @@ import { HierarchicalFilterState, EventCategoryFilterState, Venue } from '@/type
 import {
   getCategoryColor,
   getHexColor,
-  getDisplayName
-} from '@/lib/category-mappings';
+  getDisplayName, SHORT_DISPLAY_NAMES } from '@/lib/category-mappings';
 import { getCityConfig } from '@/config/cities.config';
 
 interface CategoryPillsProps {
@@ -30,17 +29,6 @@ interface CategoryPillsProps {
   darkMode?: boolean;
 }
 
-const SHORT_DISPLAY_NAMES: Record<string, string> = {
-  'Food & Dining': 'Food',
-  'Club Night': 'Clubs',
-  'Cocktail Bar Night': 'Cocktail',
-  'Live Performance': 'Live',
-  'Business Event': 'Business',
-  'Family & Kids': 'Family',
-  'Tasting Event': 'Tasting',
-  'Bollywood Night': 'Bollywood',
-  'Standup Comedy': 'Standup',
-};
 
 // Icon mapping for primary categories — keys match DB event_categories[].primary exactly
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {

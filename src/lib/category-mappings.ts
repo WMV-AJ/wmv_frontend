@@ -219,6 +219,27 @@ export function getDisplayName(dbPrimary: string): string {
   return PRIMARY_CATEGORY_MAP[dbPrimary]?.display || dbPrimary;
 }
 
+/**
+ * Compact labels for tight chrome — the map's filter pills and the bottom
+ * card's category tag. Lived inside CategoryPills until the card needed the
+ * same names: "Food & Dining" overflows an 84px-gutter card, "Food" does not.
+ */
+export const SHORT_DISPLAY_NAMES: Record<string, string> = {
+  'Food & Dining': 'Food',
+  'Club Night': 'Clubs',
+  'Cocktail Bar Night': 'Cocktail',
+  'Live Performance': 'Live',
+  'Business Event': 'Business',
+  'Family & Kids': 'Family',
+  'Tasting Event': 'Tasting',
+  'Bollywood Night': 'Bollywood',
+  'Standup Comedy': 'Standup',
+};
+
+export function getShortDisplayName(dbPrimary: string): string {
+  return SHORT_DISPLAY_NAMES[dbPrimary] || getDisplayName(dbPrimary);
+}
+
 // Get color from database primary name
 export function getCategoryColor(dbPrimary: string): string {
   return PRIMARY_CATEGORY_MAP[dbPrimary]?.color || "gray";
