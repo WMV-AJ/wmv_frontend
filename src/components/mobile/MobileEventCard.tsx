@@ -944,12 +944,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         }}
       />
 
-      {/* flex-1 so the row absorbs the stretch instead of leaving an empty
-          band under the address. */}
-      <div className="flex gap-3 p-3.5 flex-1 min-h-0">
+      {/* flex-1 so the row absorbs the stretch, items-center so what is left
+          of it splits evenly above and below rather than pooling under the
+          address. The carousel stretches every card to the tallest, and the
+          tallest is whichever event name wraps to two lines — so a one-line
+          card carries ~20px of slack no matter what. Centred, that reads as
+          padding; top-aligned it read as a dead band. */}
+      <div className="flex gap-3 p-3.5 flex-1 min-h-0 items-center">
 
         {/* ── Left: the text column ───────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col">
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
 
           {/* 1. Event name */}
           <h3 className={`font-bold text-[16px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
