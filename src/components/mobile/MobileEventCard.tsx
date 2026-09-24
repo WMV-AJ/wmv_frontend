@@ -1014,29 +1014,33 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                     : formatDateLabel(event.event_date))}
           </span>
 
-          {/* 3. Category chip then tags, sharing one row. The chip never
-                 shrinks; the tags take the slack and truncate. */}
-          {(accentCategory || event.event_subtitle) && (
-            <div className="flex items-center gap-2 mt-2 min-w-0">
-              {accentCategory && (
-                <span
-                  className={`flex-shrink-0 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
-                  style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-                >
-                  {getShortDisplayName(accentCategory)}
-                </span>
-              )}
-              {event.event_subtitle && event.event_subtitle !== event.event_name && (
-                <span className={`${H4_LABEL} truncate min-w-0 ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>
-                  {event.event_subtitle}
-                </span>
-              )}
-            </div>
+          {/* 3. Category, on its own line */}
+          {accentCategory && (
+            <span
+              className={`self-start mt-2 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
+              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+            >
+              {getShortDisplayName(accentCategory)}
+            </span>
+          )}
+
+          {/* 4. Tags — the event's own subtitle, on the next line */}
+          {event.event_subtitle && event.event_subtitle !== event.event_name && (
+            <span className={`${H4_LABEL} truncate min-w-0 mt-1.5 ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>
+              {event.event_subtitle}
+            </span>
           )}
 
           {/* 5 + 6. Venue name and rating share one flow: the name wraps
                  and the rating follows it, the pair capped at two lines. */}
-          <div className="mt-2.5 line-clamp-2 text-[14px] leading-snug">
+          {/* Rule separating the event from the venue it is at. */}
+          <div
+            aria-hidden
+            className="mt-2.5"
+            style={{ borderTop: darkMode ? '1px solid rgba(226,227,225,0.14)' : '1px solid rgba(0,0,0,0.10)' }}
+          />
+
+          <div className="mt-2 line-clamp-2 text-[14px] leading-snug">
             {/* Inter at 550, home4's `.faqItems summary strong` register —
                 the one place that system uses Inter above body size at a mid
                 weight. Deliberately NOT Inter Tight, so the venue reads as a
