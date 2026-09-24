@@ -107,7 +107,7 @@ import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 import { displayFont } from '@/lib/theme/tokens';
-import { getCategoryLightBg, mixCategoryTint } from '@/lib/category-mappings';
+import { getCategoryLightBg, mixCategoryTint, getShortDisplayName } from '@/lib/category-mappings';
 import { formatDateLabel } from '@/lib/time-utils';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
@@ -168,7 +168,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0];
     return best?.primary || event.category || '';
   })();
-  const accentBorder = getCategoryLightBg(accentCategory, 0.06, 0.55).border;
+  const accentRgb = getCategoryLightBg(accentCategory).rgb;
+  const accentBorder = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.55)`;
+  const accentSoft = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.16)`;
+  const accentText = getCategoryLightBg(accentCategory).hex;
+  // Thick top + right edge only, per the brief — and loud enough to read at a
+  // glance while the carousel is moving, hence full alpha plus an outer glow.
+  const accentEdge = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.95)`;
+  const accentGlow = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.30)`;
 
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
@@ -902,15 +909,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     <>
     <div
       ref={expandedRef}
-      className="rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
+      className="relative rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
       style={darkMode ? {
         // Opaque instead of backdrop-blur: the carousel slides these cards
         // over the live map canvas, and backdrop-filter forces a recomposite
         // on every scroll frame (same fix as OfferBanner). The category tint
         // is pre-mixed into this flat fill for the same reason.
         background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
-        border: `1.5px solid ${accentBorder}`,
-        boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5)',
+        // Hairline all round; the category colour is carried by the corner
+        // bracket below rather than by the card's own edges.
+        border: '1px solid rgba(255, 255, 255, 0.07)',
+        boxShadow: `0 2px 20px rgba(0, 0, 0, 0.5), 0 0 16px ${accentGlow}`,
       } : {
         background: 'rgba(255, 255, 255, 0.97)',
         border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -918,106 +927,137 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       }}
       onClick={onToggle}
     >
-      {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
-      <div className="flex gap-3 px-3.5 pt-3 pb-1">
-        {/* Left Column */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <h3 className={`font-bold text-[15px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+      {/* Two columns: all copy on the left, a 9:16 still on the right.
+          Reading order is event -> when -> what kind -> where. */}
+      {/* Corner bracket — the category accent, top-right only. The carousel
+          stretches every card to the tallest, so a full-edge border drew
+          attention to that slack; a bracket does not. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-0 right-0 z-10"
+        style={{
+          width: 104,
+          height: 78,
+          borderTop: `3px solid ${accentEdge}`,
+          borderRight: `3px solid ${accentEdge}`,
+          borderTopRightRadius: 16,
+        }}
+      />
+
+      {/* flex-1 so the row absorbs the stretch instead of leaving an empty
+          band under the address. */}
+      <div className="flex gap-3 p-3.5 flex-1 min-h-0">
+
+        {/* ── Left: the text column ───────────────────────────────── */}
+        <div className="flex-1 min-w-0 flex flex-col">
+
+          {/* 1. Event name */}
+          <h3 className={`font-bold text-[16px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {event.event_name}
           </h3>
-          {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <span className={`text-[10px] truncate leading-snug uppercase tracking-wide font-semibold mt-0.5 block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {event.event_subtitle}
-            </span>
-          )}
-          {/* Always rendered so card height doesn't jitter between events
-              that have a parsed time and ones that don't. */}
-          <span className={`text-[11px] font-medium flex items-center gap-1 mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-            <Clock className="w-3 h-3 flex-shrink-0" />
+
+          {/* 2. Timing — always rendered so cards keep a consistent height */}
+          <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
             {event.event_time_display
               || (event.event_time_start
                     ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
                     : formatDateLabel(event.event_date))}
           </span>
+
+          {/* 3. Subtitle. The category pill it used to sit beside now lives
+                 above the image, in the right-hand column. */}
+          {event.event_subtitle && event.event_subtitle !== event.event_name && (
+            <span className={`text-[10px] uppercase tracking-wide font-semibold truncate min-w-0 mt-2 block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {event.event_subtitle}
+            </span>
+          )}
+
+          {/* 4. Venue details, pushed to the bottom of the column */}
+          <div className="mt-auto pt-3">
+            <p
+              className="text-[14px] font-semibold truncate"
+              style={darkMode
+                ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
+                : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
+            >
+              {venue.venue_name}
+            </p>
+            <div className="flex items-center gap-1 mt-1">
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+              <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
+              <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+            </div>
+            {/* Full address — wraps instead of truncating, per the brief. */}
+            <div className="flex items-start gap-1.5 mt-1.5">
+              <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+              <span className={`text-[12px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                {venue.venue_address || venue.venue_location}
+              </span>
+            </div>
+          </div>
         </div>
-        {/* Right Column: Image */}
-        <div className="flex flex-col items-center flex-shrink-0 w-[100px]">
-          <div className="relative w-[96px] h-[96px] rounded-xl overflow-hidden"
-               style={{ border: darkMode ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.06)' }}>
+
+        {/* ── Right: category tag, then the 9:16 still ── */}
+        <div className="flex-shrink-0 w-[84px] flex flex-col gap-2">
+          {accentCategory && (
+            <span
+              className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full text-center truncate"
+              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+            >
+              {getShortDisplayName(accentCategory)}
+            </span>
+          )}
+          <div
+            className="relative w-full rounded-xl overflow-hidden"
+            style={{
+              aspectRatio: '9 / 16',
+              border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.06)',
+            }}
+          >
             {(() => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const u1 = (event as any).media_url_1 as string | undefined;
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const u2 = (event as any).media_url_2 as string | undefined;
               const isVid = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
-              // Same precedence as before: url_1 wins, url_2 fallback. If the
-              // primary is a video and the sibling is an image, the sibling
-              // doubles as the poster frame.
+              // url_1 wins, url_2 is the fallback. If the primary is a video
+              // and the sibling is an image, the sibling is the poster frame.
               const primary = u1 || u2;
               const sibling = primary === u1 ? u2 : undefined;
               return (
                 <EventMedia
                   src={primary}
                   alt={venue.venue_name}
-                  sizes="96px"
+                  sizes="84px"
                   fill
                   poster={sibling && !isVid(sibling) ? sibling : null}
                 />
               );
             })()}
+
+            {/* Expand / close, floating over the still. Scrim behind the glyph
+                keeps it readable on bright photos. */}
+            <button
+              className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={{
+                background: 'rgba(10, 10, 20, 0.62)',
+                border: '1px solid rgba(255, 255, 255, 0.28)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isFullScreen) { onClose(); } else { onFullScreenToggle(); }
+              }}
+              aria-label={isFullScreen ? 'Close' : 'Expand'}
+            >
+              {isFullScreen
+                ? <X className="w-4 h-4 text-white" />
+                : <ChevronUp className="w-4 h-4 text-white" />}
+            </button>
           </div>
         </div>
-      </div>
-
-      {/* === Venue info — full width === */}
-      <div className="px-3.5 pb-1">
-        {/* Venue name carries the brand gold + serif (matches .venue-name on
-            the home page) so it reads as the PLACE, distinct from the white
-            sans event headline above. */}
-        <p
-          className="text-[13px] font-semibold truncate"
-          style={darkMode
-            ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
-            : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
-        >
-          {venue.venue_name}
-        </p>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-          <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
-          <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
-        </div>
-      </div>
-
-      {/* === Bottom: Address + Expand button ===
-          The tag pill row that used to live here was removed: it carried a
-          different colour palette from the rest of the app and pushed the
-          address into a cramped shared row. The address now owns this row. */}
-      <div className="flex items-center gap-1.5 px-3.5 pb-2">
-        <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-        <span className={`text-[12px] truncate flex-1 min-w-0 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-          {/* 48 rather than the shared default of 34: this row is now full
-              width, so it can afford a real street address. */}
-          {shortenLocation(venue.venue_address || venue.venue_location, 48)}
-        </span>
-        <button
-          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2"
-          style={{
-            background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.12)',
-            border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.3)'}`,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isFullScreen) { onClose(); } else { onFullScreenToggle(); }
-          }}
-          aria-label={isFullScreen ? 'Close' : 'Expand'}
-        >
-          {isFullScreen ? (
-            <X className="w-4 h-4 text-red-500" />
-          ) : (
-            <ChevronUp className="w-4 h-4 text-indigo-500" />
-          )}
-        </button>
       </div>
 
 
