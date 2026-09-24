@@ -946,7 +946,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         // Explicit floor rather than letting content decide: the carousel
         // already forces a uniform height, and pinning it keeps the measured
         // panel height — and the nav pill derived from it — stable.
-        minHeight: 204,   // 15% shorter than the previous 240
+        minHeight: 184,   // trimmed a further 10%
         background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
         // Category colour is a single line across the top edge only.
         borderTop: `3px solid ${accentEdge}`,
@@ -995,7 +995,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       {/* Copy left, 30% still right. items-start so text always begins at
           the top of the tile — the carousel stretches every card to the
           tallest, and centring made shorter cards float mid-tile. */}
-      <div className="flex gap-3 p-3.5 pb-4 flex-1 min-h-0 items-start">
+      <div className="flex gap-3 p-2.5 pb-2 flex-1 min-h-0 items-start">
 
         {/* ── Left: the copy column ───────────────────────────────── */}
         <div className="flex-1 min-w-0 flex flex-col">
@@ -1006,7 +1006,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           </h3>
 
           {/* 2. Time / date — always rendered so cards keep a steady height */}
-          <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1.5 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
+          <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
             <Clock className="w-3.5 h-3.5 flex-shrink-0" />
             {event.event_time_display
               || (event.event_time_start
@@ -1017,7 +1017,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           {/* 3. Category, on its own line */}
           {accentCategory && (
             <span
-              className={`self-start mt-2 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
+              className={`self-start mt-1 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
               style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
             >
               {getShortDisplayName(accentCategory)}
@@ -1026,7 +1026,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
           {/* 4. Tags — the event's own subtitle, on the next line */}
           {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <span className={`${H4_LABEL} truncate min-w-0 mt-1.5 ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>
+            <span className={`${H4_LABEL} truncate min-w-0 mt-1 ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>
               {event.event_subtitle}
             </span>
           )}
@@ -1036,12 +1036,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           {/* Rule separating the event from the venue it is at. */}
           <div
             aria-hidden
-            className="mt-2.5"
+            className="mt-1.5"
             style={{ borderTop: darkMode ? '1px solid rgba(226,227,225,0.14)' : '1px solid rgba(0,0,0,0.10)' }}
           />
 
-          <div className="mt-2 line-clamp-2 text-[14px] leading-snug">
-            <MapPin className={`w-3.5 h-3.5 inline align-text-bottom mr-1.5 flex-shrink-0 ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
+          <div className="mt-1 line-clamp-2 text-[14px] leading-snug">
             {/* Inter at 550, home4's `.faqItems summary strong` register —
                 the one place that system uses Inter above body size at a mid
                 weight. Deliberately NOT Inter Tight, so the venue reads as a
@@ -1062,10 +1061,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
           {/* 7. Address — same rule as the expanded card's header line,
                  allowed to run to two lines in this narrower column. */}
-          {/* Address — the pin now sits on the venue line above, so this is
-              plain text, indented to align under the venue name. Two rows. */}
-          <span className={`block mt-1 pl-5 text-[12px] leading-snug line-clamp-2 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
-            {shortenLocation(venue.venue_location)}
+          {/* Address, with the pin back on its own line. Two rows. */}
+          <span className={`flex items-start gap-1.5 mt-0.5 text-[12px] leading-snug ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
+            <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
+            <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
           </span>
         </div>
 

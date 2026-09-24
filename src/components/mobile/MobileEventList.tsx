@@ -683,7 +683,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
 
               {/* Dot indicators */}
               {displayCards.length > 1 && (
-                <div className="flex justify-center gap-1.5 pt-1 pb-0.5">
+                <div className="flex justify-center gap-1.5 pt-0.5 pb-0">
                   {displayCards.map((_, index) => (
                     <div
                       key={index}
