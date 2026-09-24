@@ -29,6 +29,8 @@ const PASSTHROUGH = new Set([
   'favicon.ico',
   // Marketing / SEO surfaces
   'how-it-works',
+  'home3',
+  'home4',
   'faq',
   'list-your-venue',
   'sitemap.xml',
