@@ -203,7 +203,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
       <button
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full font-inter text-[10px] uppercase font-[750] tracking-[0.13em] whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
           color: isSelected ? '#ffffff' : hexColor,

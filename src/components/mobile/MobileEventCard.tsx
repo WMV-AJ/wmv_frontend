@@ -1041,6 +1041,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           />
 
           <div className="mt-2 line-clamp-2 text-[14px] leading-snug">
+            <MapPin className={`w-3.5 h-3.5 inline align-text-bottom mr-1.5 flex-shrink-0 ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
             {/* Inter at 550, home4's `.faqItems summary strong` register —
                 the one place that system uses Inter above body size at a mid
                 weight. Deliberately NOT Inter Tight, so the venue reads as a
@@ -1061,9 +1062,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
           {/* 7. Address — same rule as the expanded card's header line,
                  allowed to run to two lines in this narrower column. */}
-          <span className={`flex items-start gap-1.5 mt-1 text-[12px] leading-snug ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
-            <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
-            <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
+          {/* Address — the pin now sits on the venue line above, so this is
+              plain text, indented to align under the venue name. Two rows. */}
+          <span className={`block mt-1 pl-5 text-[12px] leading-snug line-clamp-2 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
+            {shortenLocation(venue.venue_location)}
           </span>
         </div>
 
