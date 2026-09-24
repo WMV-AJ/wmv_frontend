@@ -389,77 +389,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           className="flex-1 overflow-y-auto px-4 pb-4"
           style={{ scrollbarWidth: 'thin' }}
         >
-          {/* Date & Time sits directly above the media, per the brief. */}
-          {/* Date & Time — one line */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('212, 160, 23')}>
-                <Calendar className="w-4 h-4 text-amber-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={labelCls}>Date & Time</p>
-                <p className={valueCls}>
-                  {formatDisplayDate(event.event_date) || 'TBA'}
-                  {event.event_time_start && (
-                    <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-                      {' '}· {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-  
-
-          {/* Divider + Images side by side */}
-          <div style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
-          <div className="my-3">
-            <div
-              className="flex gap-1.5 rounded-2xl overflow-hidden"
-              style={{ border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.08)' }}
-            >
-              {activeImages.map((src, idx) => (
-                <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
-                  {failedMediaIdx.has(idx) ? (
-                    <Image
-                      src={PLACEHOLDER_IMAGE}
-                      alt={`${venue.venue_name} ${idx + 1}`}
-                      width={640}
-                      height={800}
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className="w-full h-auto block"
-                      style={{ width: '100%', height: 'auto' }}
-                      draggable={false}
-                    />
-                  ) : activeMediaTypes[idx] ? (
-                    <video
-                      src={src}
-                      className="w-full h-auto block"
-                      muted
-                      playsInline
-                      autoPlay
-                      loop
-                      preload="metadata"
-                      poster={videoThumbUrl(src, siblingImage)}
-                      onError={() => markMediaFailed(idx)}
-                    />
-                  ) : (
-                    <Image
-                      src={src}
-                      alt={`${venue.venue_name} ${idx + 1}`}
-                      width={640}
-                      height={800}
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className="w-full h-auto block"
-                      style={{ width: '100%', height: 'auto' }}
-                      draggable={false}
-                      onError={() => markMediaFailed(idx)}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
+          {/* Date picker sits directly above the media, per the brief. */}
           {/* Date Pills */}
           <div className="pb-4 pt-1">
             <div
@@ -513,10 +443,79 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             </div>
           </div>
 
+          {/* Divider + Images side by side */}
+          <div style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
+          <div className="my-3">
+            <div
+              className="flex gap-1.5 rounded-2xl overflow-hidden"
+              style={{ border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.08)' }}
+            >
+              {activeImages.map((src, idx) => (
+                <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
+                  {failedMediaIdx.has(idx) ? (
+                    <Image
+                      src={PLACEHOLDER_IMAGE}
+                      alt={`${venue.venue_name} ${idx + 1}`}
+                      width={640}
+                      height={800}
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="w-full h-auto block"
+                      style={{ width: '100%', height: 'auto' }}
+                      draggable={false}
+                    />
+                  ) : activeMediaTypes[idx] ? (
+                    <video
+                      src={src}
+                      className="w-full h-auto block"
+                      muted
+                      playsInline
+                      autoPlay
+                      loop
+                      preload="metadata"
+                      poster={videoThumbUrl(src, siblingImage)}
+                      onError={() => markMediaFailed(idx)}
+                    />
+                  ) : (
+                    <Image
+                      src={src}
+                      alt={`${venue.venue_name} ${idx + 1}`}
+                      width={640}
+                      height={800}
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="w-full h-auto block"
+                      style={{ width: '100%', height: 'auto' }}
+                      draggable={false}
+                      onError={() => markMediaFailed(idx)}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Detail rows — order: date+time, artists, genre, offers, entry,
               event type, details, then venue details below. One muted style
               throughout. */}
           <div className="space-y-4">
+          {/* Date & Time — one line */}
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('212, 160, 23')}>
+                  <Calendar className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={labelCls}>Date & Time</p>
+                  <p className={valueCls}>
+                    {formatDisplayDate(event.event_date) || 'TBA'}
+                    {event.event_time_start && (
+                      <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+                        {' '}· {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+  
             {/* Artists */}
             {event.artist && (
               <div className="flex items-start gap-3.5">
@@ -979,86 +978,18 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           tallest is whichever event name wraps to two lines — so a one-line
           card carries ~20px of slack no matter what. Centred, that reads as
           padding; top-aligned it read as a dead band. */}
+      {/* Image left at 30%, copy right. items-center so the slack the
+          carousel's stretch leaves over splits evenly top and bottom. */}
       <div className="flex gap-3 p-3.5 pb-4 flex-1 min-h-0 items-center">
 
-        {/* ── Left: the text column ───────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-
-          {/* 1. Event name */}
-          <h3 className={`font-bold text-[16px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            {event.event_name}
-          </h3>
-
-          {/* 2. Timing — always rendered so cards keep a consistent height */}
-          <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-            {event.event_time_display
-              || (event.event_time_start
-                    ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
-                    : formatDateLabel(event.event_date))}
-          </span>
-
-          {/* 3. Category tag + the event's own subtitle, both on the left. */}
-          {(accentCategory || event.event_subtitle) && (
-            <div className="flex items-center gap-2 mt-2 min-w-0">
-              {accentCategory && (
-                <span
-                  className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0"
-                  style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-                >
-                  {getShortDisplayName(accentCategory)}
-                </span>
-              )}
-              {event.event_subtitle && event.event_subtitle !== event.event_name && (
-                <span className={`text-[10px] uppercase tracking-wide font-semibold truncate min-w-0 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {event.event_subtitle}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* 4. Venue details. Deliberately NOT mt-auto: pushing this block
-                 down opened a visible gap under the subtitle whenever the
-                 carousel stretched a short card. Content stays compact and
-                 any residual stretch slack falls below it. */}
-          <div className="mt-3">
-            {/* Venue name and rating share one line: the name takes the slack
-                and truncates, the rating never shrinks. */}
-            <div className="flex items-baseline gap-2 min-w-0">
-              <p
-                className="text-[14px] font-semibold truncate min-w-0"
-                style={darkMode
-                  ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
-                  : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
-              >
-                {venue.venue_name}
-              </p>
-              <span className="flex items-center gap-1 flex-shrink-0">
-                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0 self-center" />
-                <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
-                <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
-              </span>
-            </div>
-            {/* Same rule as the expanded card's header line and as
-                StackedEventCards: shortenLocation(venue_location) at the
-                helper's default 34-char budget. All three agree. */}
-            <div className="flex items-center gap-1.5 mt-1 min-w-0">
-              <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-              <span className={`text-[12px] truncate min-w-0 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                {shortenLocation(venue.venue_location)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right: category tag, then the 9:16 still ── */}
-        <div className="flex-shrink-0 w-[40%]">
+        {/* ── Left: 9:16 still, 30% of the tile ───────────────────── */}
+        <div className="flex-shrink-0 w-[30%]">
           <div
             className="relative w-full rounded-xl overflow-hidden"
             style={{
-              // Width-driven: the column is 40% of the tile and the height
-              // falls out of the ratio. Height-driven aspect-ratio on a
-              // stretched flex item is far patchier across browsers.
+              // Width-driven: the column is 30% and the height falls out of
+              // the ratio. Height-driven aspect-ratio on a stretched flex
+              // item is the patchier of the two across browsers.
               aspectRatio: '9 / 16',
               border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.06)',
             }}
@@ -1077,14 +1008,72 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <EventMedia
                   src={primary}
                   alt={venue.venue_name}
-                  sizes="(max-width: 430px) 40vw, 130px"
+                  sizes="(max-width: 430px) 30vw, 100px"
                   fill
                   poster={sibling && !isVid(sibling) ? sibling : null}
                 />
               );
             })()}
-
           </div>
+        </div>
+
+        {/* ── Right: the copy column ──────────────────────────────── */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+
+          {/* 1. Event name */}
+          <h3 className={`font-bold text-[16px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            {event.event_name}
+          </h3>
+
+          {/* 2. Time / date — always rendered so cards keep a steady height */}
+          <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1.5 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+            {event.event_time_display
+              || (event.event_time_start
+                    ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
+                    : formatDateLabel(event.event_date))}
+          </span>
+
+          {/* 3. Category, on its own line */}
+          {accentCategory && (
+            <span
+              className="self-start mt-2 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap"
+              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+            >
+              {getShortDisplayName(accentCategory)}
+            </span>
+          )}
+
+          {/* 4. Tags — the event's own subtitle, on the next line */}
+          {event.event_subtitle && event.event_subtitle !== event.event_name && (
+            <span className={`text-[10px] uppercase tracking-wide font-semibold truncate min-w-0 mt-1.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {event.event_subtitle}
+            </span>
+          )}
+
+          {/* 5. Venue name */}
+          <p
+            className="text-[14px] font-semibold truncate min-w-0 mt-2.5"
+            style={darkMode
+              ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
+              : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
+          >
+            {venue.venue_name}
+          </p>
+
+          {/* 6. Rating, on the next line */}
+          <span className="flex items-center gap-1 mt-1">
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+            <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
+            <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+          </span>
+
+          {/* 7. Address — same rule as the expanded card's header line,
+                 allowed to run to two lines in this narrower column. */}
+          <span className={`flex items-start gap-1.5 mt-1 text-[12px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+            <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+            <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
+          </span>
         </div>
       </div>
 
