@@ -203,7 +203,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
       <button
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
           color: isSelected ? '#ffffff' : hexColor,
@@ -216,7 +216,12 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
         }}
       >
         {IconComponent && <IconComponent className="w-3 h-3" />}
-        {label} ({count})
+        {/* "FOOD | 64", not "FOOD (64)". The bracket read as an aside; the rule
+            reads as two fields of one label. The separator is dimmed so the
+            count stays subordinate to the category name. */}
+        {label}
+        <span className="opacity-50 font-normal mx-0.5">|</span>
+        {count}
         {isExpanded && ' ↓'}
       </button>
     );
