@@ -89,8 +89,11 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
               height: 38,
               padding: isActive ? '0 18px' : '0 13px',
               borderRadius: 999,
-              background: isActive ? T.accent : T.overlay,
-              color: isActive ? T.inkInverse : T.inkMuted,
+              // Active segment is a pale grey chip, not gold. Home 4's palette
+              // carries no gold, and the map's category colours are the only
+              // accents that should compete for attention here.
+              background: isActive ? '#E2E3E1' : T.overlay,
+              color: isActive ? '#27282B' : T.inkMuted,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
               fontFamily: bodyFont,
