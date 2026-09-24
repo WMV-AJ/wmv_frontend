@@ -916,9 +916,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         // on every scroll frame (same fix as OfferBanner). The category tint
         // is pre-mixed into this flat fill for the same reason.
         background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
-        // Hairline all round; the category colour is carried by the corner
-        // bracket below rather than by the card's own edges.
-        border: '1px solid rgba(255, 255, 255, 0.07)',
+        // Category colour is a single line across the top edge only.
+        borderTop: `3px solid ${accentEdge}`,
+        borderRight: '1px solid rgba(255, 255, 255, 0.07)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.07)',
         boxShadow: `0 2px 20px rgba(0, 0, 0, 0.5), 0 0 16px ${accentGlow}`,
       } : {
         background: 'rgba(255, 255, 255, 0.97)',
@@ -929,20 +931,28 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     >
       {/* Two columns: all copy on the left, a 9:16 still on the right.
           Reading order is event -> when -> what kind -> where. */}
-      {/* Corner bracket — the category accent, top-right only. The carousel
-          stretches every card to the tallest, so a full-edge border drew
-          attention to that slack; a bracket does not. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-0 right-0 z-10"
+      {/* Expand / close — anchored to the card's bottom-right corner. It sat
+          on the still before, which put it over photo content. */}
+      <button
+        className="absolute bottom-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
         style={{
-          width: 104,
-          height: 78,
-          borderTop: `3px solid ${accentEdge}`,
-          borderRight: `3px solid ${accentEdge}`,
-          borderTopRightRadius: 16,
+          // Dark scrim, not a light tint: the card's bottom-right corner
+          // overlaps the still, so the control has to read over a photo.
+          background: isFullScreen ? 'rgba(120, 20, 20, 0.78)' : 'rgba(10, 10, 20, 0.72)',
+          border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.45)' : 'rgba(255, 255, 255, 0.28)'}`,
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
         }}
-      />
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isFullScreen) { onClose(); } else { onFullScreenToggle(); }
+        }}
+        aria-label={isFullScreen ? 'Close' : 'Expand'}
+      >
+        {isFullScreen
+          ? <X className="w-4 h-4 text-white" />
+          : <ChevronUp className="w-4 h-4 text-white" />}
+      </button>
 
       {/* flex-1 so the row absorbs the stretch, items-center so what is left
           of it splits evenly above and below rather than pooling under the
@@ -950,7 +960,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           tallest is whichever event name wraps to two lines — so a one-line
           card carries ~20px of slack no matter what. Centred, that reads as
           padding; top-aligned it read as a dead band. */}
-      <div className="flex gap-3 p-3.5 flex-1 min-h-0 items-center">
+      <div className="flex gap-3 p-3.5 pb-4 flex-1 min-h-0 items-center">
 
         {/* ── Left: the text column ───────────────────────────────── */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -982,18 +992,22 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                  carousel stretched a short card. Content stays compact and
                  any residual stretch slack falls below it. */}
           <div className="mt-3">
-            <p
-              className="text-[14px] font-semibold truncate"
-              style={darkMode
-                ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
-                : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
-            >
-              {venue.venue_name}
-            </p>
-            <div className="flex items-center gap-1 mt-1">
-              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-              <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
-              <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+            {/* Venue name and rating share one line: the name takes the slack
+                and truncates, the rating never shrinks. */}
+            <div className="flex items-baseline gap-2 min-w-0">
+              <p
+                className="text-[14px] font-semibold truncate min-w-0"
+                style={darkMode
+                  ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
+                  : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
+              >
+                {venue.venue_name}
+              </p>
+              <span className="flex items-center gap-1 flex-shrink-0">
+                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0 self-center" />
+                <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
+                <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+              </span>
             </div>
             {/* Last 4 parts only — the full feed address runs to five lines
                 and swamped the card. The tail is what people orient by. */}
@@ -1044,26 +1058,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               );
             })()}
 
-            {/* Expand / close, floating over the still. Scrim behind the glyph
-                keeps it readable on bright photos. */}
-            <button
-              className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
-              style={{
-                background: 'rgba(10, 10, 20, 0.62)',
-                border: '1px solid rgba(255, 255, 255, 0.28)',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isFullScreen) { onClose(); } else { onFullScreenToggle(); }
-              }}
-              aria-label={isFullScreen ? 'Close' : 'Expand'}
-            >
-              {isFullScreen
-                ? <X className="w-4 h-4 text-white" />
-                : <ChevronUp className="w-4 h-4 text-white" />}
-            </button>
           </div>
         </div>
       </div>
