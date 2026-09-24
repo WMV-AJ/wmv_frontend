@@ -915,6 +915,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         // over the live map canvas, and backdrop-filter forces a recomposite
         // on every scroll frame (same fix as OfferBanner). The category tint
         // is pre-mixed into this flat fill for the same reason.
+        // Explicit floor rather than letting content decide: the carousel
+        // already forces a uniform height, and pinning it keeps the measured
+        // panel height — and the nav pill derived from it — stable.
+        minHeight: 240,
         background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
         // Category colour is a single line across the top edge only.
         borderTop: `3px solid ${accentEdge}`,
@@ -979,12 +983,23 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                     : formatDateLabel(event.event_date))}
           </span>
 
-          {/* 3. Subtitle. The category pill it used to sit beside now lives
-                 above the image, in the right-hand column. */}
-          {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <span className={`text-[10px] uppercase tracking-wide font-semibold truncate min-w-0 mt-2 block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {event.event_subtitle}
-            </span>
+          {/* 3. Category tag + the event's own subtitle, both on the left. */}
+          {(accentCategory || event.event_subtitle) && (
+            <div className="flex items-center gap-2 mt-2 min-w-0">
+              {accentCategory && (
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0"
+                  style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+                >
+                  {getShortDisplayName(accentCategory)}
+                </span>
+              )}
+              {event.event_subtitle && event.event_subtitle !== event.event_name && (
+                <span className={`text-[10px] uppercase tracking-wide font-semibold truncate min-w-0 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {event.event_subtitle}
+                </span>
+              )}
+            </div>
           )}
 
           {/* 4. Venue details. Deliberately NOT mt-auto: pushing this block
@@ -996,7 +1011,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 and truncates, the rating never shrinks. */}
             <div className="flex items-baseline gap-2 min-w-0">
               <p
-                className="text-[14px] font-semibold truncate min-w-0"
+                className="text-[17px] font-bold truncate min-w-0"
                 style={darkMode
                   ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
                   : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
@@ -1021,18 +1036,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         </div>
 
         {/* ── Right: category tag, then the 9:16 still ── */}
-        <div className="flex-shrink-0 w-[72px] flex flex-col gap-1.5">
-          {accentCategory && (
-            <span
-              className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full text-center truncate"
-              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-            >
-              {getShortDisplayName(accentCategory)}
-            </span>
-          )}
+        <div className="flex-shrink-0 self-stretch flex">
           <div
-            className="relative w-full rounded-xl overflow-hidden"
+            className="relative h-full rounded-xl overflow-hidden"
             style={{
+              // height comes from the card, width follows from the ratio —
+              // so raising minHeight widens the still automatically.
               aspectRatio: '9 / 16',
               border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.06)',
             }}
@@ -1051,7 +1060,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <EventMedia
                   src={primary}
                   alt={venue.venue_name}
-                  sizes="72px"
+                  sizes="100px"
                   fill
                   poster={sibling && !isVid(sibling) ? sibling : null}
                 />
