@@ -70,8 +70,8 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         // sitting on a grey basemap did nothing visible; a white halo separates
         // it from the map instead. The inset top highlight is unchanged.
         boxShadow: [
-          '0 0 24px 6px rgba(255,255,255,0.26)',
-          '0 0 8px 2px rgba(255,255,255,0.38)',
+          '0 0 22px 5px rgba(255,255,255,0.12)',
+          '0 0 7px 2px rgba(255,255,255,0.18)',
           'inset 0 1px 0 rgba(255,255,255,0.06)',
         ].join(', '),
       }}
@@ -96,7 +96,10 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
               height: 38,
               padding: isActive ? '0 18px' : '0 13px',
               borderRadius: 999,
-              background: isActive ? T.accent : T.overlay,
+              // White, not the brand gold. Gold competed with the map's
+              // category colours; white reads as neutral chrome and lets the
+              // pins own the only saturated colour on the screen.
+              background: isActive ? '#FFFFFF' : T.overlay,
               color: isActive ? T.inkInverse : T.inkMuted,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
