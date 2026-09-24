@@ -231,3 +231,57 @@ export function groupByTimeOfDay<T>(
 
   return result;
 }
+
+/**
+ * Tolerant, DISPLAY-ONLY time label for the map's bottom card.
+ *
+ * `parseEventTime` in stacked-card-adapter is deliberately strict — its output
+ * feeds the card deduplication key, so loosening it would split rows that
+ * currently merge and change card counts across the app. This function is
+ * display-only and never touches that key.
+ *
+ * Real values in the feed look like: "8:00 PM Onwards", "5 PM Onwards",
+ * "All Day", "6:00 PM - 11:00 PM", "8:00 PM - Late", and — confusingly —
+ * date ranges such as "Until 31st October" or "16th Sep - 16th Oct", which
+ * must NOT be rendered as a time.
+ *
+ * Returns '' when the string holds no clock time, so the caller can fall back.
+ */
+export function formatEventTimeLabel(raw: string | null | undefined): string {
+  if (!raw || typeof raw !== 'string') return '';
+  const s = raw.trim();
+  if (!s) return '';
+
+  // Date ranges masquerading as times — reject before looking for clocks.
+  const MONTHS = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b/i;
+  if (MONTHS.test(s) || /\b\d{1,2}(st|nd|rd|th)\b/i.test(s) || /^until\b/i.test(s)) {
+    return '';
+  }
+
+  if (/^all\s*day$/i.test(s)) return 'All day';
+
+  // 12-hour ("8 PM", "8:00 PM") and 24-hour ("20:00") clock tokens.
+  const tokens: string[] = [];
+  const twelve = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\.?\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = twelve.exec(s)) !== null) {
+    const hh = parseInt(m[1], 10);
+    const mm = m[2] ?? '00';
+    tokens.push(`${hh}:${mm} ${m[3].toUpperCase()}M`);
+  }
+  if (tokens.length === 0) {
+    const twentyFour = /\b([01]?\d|2[0-3]):([0-5]\d)\b/g;
+    while ((m = twentyFour.exec(s)) !== null) {
+      const hh = parseInt(m[1], 10);
+      const suffix = hh >= 12 ? 'PM' : 'AM';
+      const h12 = hh % 12 === 0 ? 12 : hh % 12;
+      tokens.push(`${h12}:${m[2]} ${suffix}`);
+    }
+  }
+  if (tokens.length === 0) return '';
+
+  if (tokens.length >= 2) return `${tokens[0]} – ${tokens[1]}`;
+  if (/\bonwards?\b/i.test(s)) return `${tokens[0]} onwards`;
+  if (/\blate\b/i.test(s)) return `${tokens[0]} – late`;
+  return tokens[0];
+}

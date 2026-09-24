@@ -5,6 +5,7 @@
 
 import { getCategoryColor, getHexColor } from '@/lib/category-mappings';
 import { hexToHSL } from '@/lib/card-color-utils';
+import { formatEventTimeLabel } from '@/lib/time-utils';
 
 /**
  * Adapter function that converts your existing category color system
@@ -228,6 +229,9 @@ export function transformVenueDataToStackedCards(
         event_subtitle,
         event_time_start: timing.startTime,
         event_time_end: timing.endTime,
+        // Display-only. parseEventTime stays strict because its output feeds
+        // the dedup key below; this label must never reach that key.
+        event_time_display: formatEventTimeLabel(venue.event_time),
         event_date: venue.event_date || new Date().toISOString().split('T')[0],
         event_entry_price: venue.ticket_price ? `AED ${venue.ticket_price}` : 'Contact for pricing',
         event_offers: venue.special_offers || 'No special offers',

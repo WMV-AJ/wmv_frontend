@@ -11,6 +11,7 @@ interface EventCardData {
     event_subtitle: string;
     event_time_start: string;
     event_time_end: string;
+    event_time_display?: string;
     event_date: string;
     event_entry_price: string;
     event_offers: string;

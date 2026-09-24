@@ -39,6 +39,7 @@ interface EventCardData {
     event_subtitle: string;
     event_time_start: string;
     event_time_end: string;
+    event_time_display?: string;
     event_date: string;
     event_entry_price: string;
     event_offers: string;
@@ -107,6 +108,7 @@ import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 import { displayFont } from '@/lib/theme/tokens';
 import { getCategoryLightBg, mixCategoryTint } from '@/lib/category-mappings';
+import { formatDateLabel } from '@/lib/time-utils';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
 function parseToArray(value: unknown): string[] {
@@ -932,9 +934,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               that have a parsed time and ones that don't. */}
           <span className={`text-[11px] font-medium flex items-center gap-1 mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
             <Clock className="w-3 h-3 flex-shrink-0" />
-            {event.event_time_start
-              ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
-              : (event.event_date || '')}
+            {event.event_time_display
+              || (event.event_time_start
+                    ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
+                    : formatDateLabel(event.event_date))}
           </span>
         </div>
         {/* Right Column: Image */}
