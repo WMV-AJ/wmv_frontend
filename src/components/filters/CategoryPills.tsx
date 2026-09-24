@@ -15,7 +15,6 @@ import {
   getHexColor,
   getDisplayName, SHORT_DISPLAY_NAMES } from '@/lib/category-mappings';
 import { getCityConfig } from '@/config/cities.config';
-import { PILL_TYPE } from '@/lib/theme/tokens';
 
 interface CategoryPillsProps {
   filters: HierarchicalFilterState;
@@ -204,7 +203,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
       <button
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${PILL_TYPE} text-[11px] whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
           color: isSelected ? '#ffffff' : hexColor,
@@ -279,7 +278,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                   <button
                     key={`category-${primary}-${secondary}`}
                     onClick={() => handleSecondaryClick(primary, secondary)}
-                    className={`px-2 py-0.5 rounded-full ${PILL_TYPE} text-[11px] whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''
                     }`}
                     style={isOutlined ? {
                       color: isSelected ? '#ffffff' : hexColor,

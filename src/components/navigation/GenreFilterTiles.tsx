@@ -64,7 +64,7 @@ const GenreFilterTiles: React.FC<GenreFilterTilesProps> = ({
               key={genre}
               onClick={() => handleGenreClick(genre)}
               className={`
-                px-3 py-1 text-xs font-narrow uppercase font-bold tracking-[0.02em] rounded-full
+                px-3 py-1 text-xs font-medium rounded-full
                 backdrop-blur-lg border-2
                 transition-all duration-200 whitespace-nowrap flex-shrink-0
                 relative

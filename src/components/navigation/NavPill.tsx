@@ -1,14 +1,14 @@
 'use client';
 
 // Floating 3-segment navigator (Home / Map / List) shared by the core views.
-// The current view's segment expands to icon + label on a dark chip inside a
-// light grey tray; the other two collapse to bare dim icons. Fixed bottom-center, safe-area
+// The current view's segment expands to icon + label on a gold fill; the
+// other two collapse to bare dim icons. Fixed bottom-center, safe-area
 // aware; per-page bottomOffset keeps it clear of page-specific bottom UI
 // (map card carousel, cards-page filter bar).
 import { useRouter } from 'next/navigation';
 import { Home, Map as MapIcon, List } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
-import { condensedFont } from '@/lib/theme/tokens';
+import { T, bodyFont } from '@/lib/theme/tokens';
 
 export type NavPillView = 'home' | 'map' | 'cards';
 
@@ -59,23 +59,20 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         gap: 2,
         padding: 4,
         borderRadius: 999,
-        // Light grey tray. The pill went from near-black, through Home 4's
-        // slate, to this: the basemap is now grey, and a dark control on a
-        // grey map read as a hole punched in it. Inverting the whole tray
-        // makes it sit ON the map instead. Near-opaque rather than blurred —
-        // a backdrop blur here costs a recomposite per frame while the map
-        // pans, and buys nothing once the fill is this solid.
-        background: 'rgba(214, 216, 214, 0.96)',
+        // Near-opaque surfaceAlt + real border: the old surface-on-bg fill
+        // was ~4 RGB points from the page background (black-on-black), and
+        // the backdrop blur cost a recomposite per frame over the moving map.
+        background: 'rgba(28,28,42,0.97)',
+        // No rim: the basemap is grey now, so the dark pill separates from it
+        // on its own and a border only added noise.
         border: 'none',
-        // Three layers, outermost first: a soft white halo that lifts the pale
-        // tray off the grey basemap (a dark shadow alone muddied its edge into
-        // the map), then a dark drop shadow for depth, then an inset highlight
-        // along the top edge.
+        // White drop shadow, not black. A black shadow under a near-black pill
+        // sitting on a grey basemap did nothing visible; a white halo separates
+        // it from the map instead. The inset top highlight is unchanged.
         boxShadow: [
-          '0 0 24px 6px rgba(255,255,255,0.28)',
-          '0 0 8px 2px rgba(255,255,255,0.40)',
-          '0 8px 28px rgba(0,0,0,0.45)',
-          'inset 0 1px 0 rgba(255,255,255,0.7)',
+          '0 0 24px 6px rgba(255,255,255,0.26)',
+          '0 0 8px 2px rgba(255,255,255,0.38)',
+          'inset 0 1px 0 rgba(255,255,255,0.06)',
         ].join(', '),
       }}
     >
@@ -99,20 +96,14 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
               height: 38,
               padding: isActive ? '0 18px' : '0 13px',
               borderRadius: 999,
-              // Inverted with the tray: the active segment is now the dark
-              // chip and the tray is pale, rather than the other way round.
-              // Home 4's palette carries no gold, and the map's category
-              // colours are the only accents that should compete here.
-              background: isActive ? '#27282B' : 'transparent',
-              color: isActive ? '#E2E3E1' : '#5A5C60',
+              background: isActive ? T.accent : T.overlay,
+              color: isActive ? T.inkInverse : T.inkMuted,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
-              fontFamily: condensedFont,
+              fontFamily: bodyFont,
               fontSize: 11,
               fontWeight: 700,
-              // Tighter than the old 0.08em: Archivo Narrow is condensed, so it
-              // needs far less tracking than the proportional face did.
-              letterSpacing: '0.04em',
+              letterSpacing: '0.08em',
               textTransform: 'uppercase',
               transition: 'background 0.2s ease, color 0.2s ease, padding 0.2s ease',
             }}

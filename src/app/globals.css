@@ -23,8 +23,6 @@
      app stays on Roboto + Open Sans. */
   --font-tight: Home3Tight, 'Inter Tight', Arial, sans-serif;
   --font-inter: Home3Inter, Inter, Arial, sans-serif;
-  /* Condensed labels: filter pills + the card's category chip. */
-  --font-narrow: var(--font-archivo-narrow), 'Archivo Narrow', 'Arial Narrow', sans-serif;
 
   /* Home 4's rendered palette. --champagne is absent on purpose: home4
      overrides all 32 of its uses, so magenta is the real text accent.

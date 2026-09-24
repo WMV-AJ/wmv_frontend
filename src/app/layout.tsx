@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { Roboto, Open_Sans, Archivo_Narrow } from "next/font/google";
+import { Roboto, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
@@ -36,19 +36,6 @@ const openSans = Open_Sans({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   fallback: ["system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "sans-serif"],
-});
-
-// Condensed. Variable 400–700, the narrow cut of Archivo — drawn for dense
-// UI labels, which is exactly what the filter pills and the card's category
-// chip are. Replaces the wide-tracked Inter treatment: at 10px uppercase the
-// pills needed .13em to read, and that tracking pushed the row far wider than
-// the frame. A condensed face reads at .02em, so the same labels fit in
-// roughly 30% less width with no loss of legibility.
-const archivoNarrow = Archivo_Narrow({
-  variable: "--font-archivo-narrow",
-  subsets: ["latin", "latin-ext"],
-  display: "swap",
-  fallback: ["Roboto Condensed", "Arial Narrow", "system-ui", "sans-serif"],
 });
 
 export const viewport = {
@@ -131,7 +118,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${roboto.variable} ${openSans.variable} ${archivoNarrow.variable} antialiased`}
+        className={`${roboto.variable} ${openSans.variable} antialiased`}
       >
         {GA_MEASUREMENT_ID && (
           <>

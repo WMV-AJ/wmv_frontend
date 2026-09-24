@@ -149,9 +149,7 @@ function parseToArray(value: unknown): string[] {
 const H4_DISPLAY = 'font-tight uppercase font-semibold';               // .page h1-h3 (600)
 const H4_KICKER  = 'text-[11px] uppercase font-bold tracking-[0.18em]';  // .kicker 11/700/.18em
 const H4_LABEL   = 'text-[10px] uppercase font-[650] tracking-[0.16em]'; // .heroFine 10/650/.16em
-const H4_CHIP    = 'font-narrow text-[11px] uppercase font-bold tracking-[0.02em]'; // matches the filter pills (Archivo Narrow); a card's chip and its pill
-// must read as the same object, so this constant and CategoryPills' pill
-// class are kept in step deliberately.
+const H4_CHIP    = 'text-[10px] font-bold uppercase tracking-wide'; // start-of-day chip type, deliberately NOT the Home 4 label idiom
 const H4_MICRO   = 'text-[9px] uppercase font-bold tracking-[0.17em]';   // .atlasLabel 9/700/.17em
 
 const MobileEventCard: React.FC<MobileEventCardProps> = ({

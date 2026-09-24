@@ -96,7 +96,7 @@ const AttributePills: React.FC<AttributePillsProps> = ({
         key={`${attributeType}-${value}`}
         onClick={() => handleAttributeClick(attributeType, value)}
         className={`
-          px-2.5 py-1 text-xs font-narrow uppercase font-bold tracking-[0.02em] rounded-full
+          px-2.5 py-1 text-xs font-medium rounded-full
           backdrop-blur-lg border-2
           transition-all duration-200 whitespace-nowrap flex-shrink-0
           ${isSelected
