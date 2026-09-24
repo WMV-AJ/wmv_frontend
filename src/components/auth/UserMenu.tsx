@@ -44,7 +44,7 @@ export default function UserMenu({ variant = 'desktop', hideSignOut = false }: U
 
   const avatarUrl = user.picture;
   const initials = initialsFor(user);
-  const buttonSize = variant === 'compact' ? 'w-8 h-8 md:w-6 md:h-6' : 'w-9 h-9';
+  const buttonSize = variant === 'compact' ? 'w-8 h-8' : 'w-9 h-9';
 
   return (
     <div ref={ref} className="relative flex-shrink-0">
@@ -62,7 +62,7 @@ export default function UserMenu({ variant = 'desktop', hideSignOut = false }: U
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
         ) : (
-          <span className="text-[11px] md:text-[10px] font-bold text-white">{initials}</span>
+          <span className="text-[11px] font-bold text-white">{initials}</span>
         )}
       </button>
       {open && (

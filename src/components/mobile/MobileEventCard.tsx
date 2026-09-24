@@ -99,7 +99,6 @@ interface MobileEventCardProps {
   isPresetRange?: boolean;
   presetRangeDates?: string[];
   navHeight?: number;
-  isFocused?: boolean;
   darkMode?: boolean;
 }
 
@@ -107,6 +106,7 @@ import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 import { displayFont } from '@/lib/theme/tokens';
+import { getCategoryLightBg, mixCategoryTint } from '@/lib/category-mappings';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
 function parseToArray(value: unknown): string[] {
@@ -136,84 +136,6 @@ function parseToArray(value: unknown): string[] {
   return [String(value)];
 }
 
-// Auto-scrolling pills component with continuous seamless loop
-function AutoScrollPills({ tags, isActive }: { tags: Array<{ label: string; bg: string; text: string }>; isActive: boolean }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const isPaused = useRef(false);
-  const animRef = useRef<number>(0);
-  const [hasOverflow, setHasOverflow] = useState(false);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setHasOverflow(el.scrollWidth > el.clientWidth);
-  }, [tags]);
-
-  useEffect(() => {
-    if (!isActive || !hasOverflow) return;
-
-    const el = scrollRef.current;
-    if (!el) return;
-
-    // The inner content is duplicated, so half scrollWidth = one full set
-    const halfWidth = el.scrollWidth / 2;
-
-    const animate = () => {
-      if (!isPaused.current && el) {
-        el.scrollLeft += 0.4;
-        // When we've scrolled past the first set, jump back seamlessly
-        if (el.scrollLeft >= halfWidth) {
-          el.scrollLeft -= halfWidth;
-        }
-      }
-      animRef.current = requestAnimationFrame(animate);
-    };
-
-    const delayTimer = setTimeout(() => {
-      animRef.current = requestAnimationFrame(animate);
-    }, 2000);
-
-    return () => {
-      clearTimeout(delayTimer);
-      cancelAnimationFrame(animRef.current);
-    };
-  }, [isActive, hasOverflow]);
-
-  const handleTouchStart = () => { isPaused.current = true; };
-  const handleTouchEnd = () => {
-    setTimeout(() => { isPaused.current = false; }, 2000);
-  };
-
-  // Duplicate tags for seamless loop
-  const displayTags = hasOverflow ? [...tags, ...tags] : tags;
-
-  return (
-    <div className="py-0.5">
-      <div
-        ref={scrollRef}
-        className="flex items-center gap-1.5 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
-        onMouseLeave={handleTouchEnd}
-      >
-        {displayTags.map((tag, i) => (
-          <span
-            key={i}
-            className="text-[10px] md:text-[8px] font-semibold px-2.5 py-0.5 md:px-2 rounded-full whitespace-nowrap flex-shrink-0"
-            style={{ background: tag.bg, color: tag.text }}
-          >
-            {tag.label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 const MobileEventCard: React.FC<MobileEventCardProps> = ({
   card,
   getCategoryColor,
@@ -228,10 +150,24 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   isPresetRange = false,
   presetRangeDates = [],
   navHeight = 140,
-  isFocused = false,
   darkMode = false,
 }) => {
   const { event, venue } = card;
+
+  // Accent colour for the collapsed card. Mirrors getVenuePrimaryEventCategory
+  // in @/lib/map/marker-colors — highest-confidence primary first — so the card
+  // border, its filter pill and its map marker all resolve to the same hue.
+  // event.category is already event_categories[0].primary (stacked-card-adapter),
+  // so the fallback costs nothing.
+  const accentCategory = (() => {
+    const cats = (event.event_categories ?? []) as Array<{ primary?: string; confidence?: number }>;
+    const best = cats
+      .filter(c => c.primary)
+      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0];
+    return best?.primary || event.category || '';
+  })();
+  const accentBorder = getCategoryLightBg(accentCategory, 0.06, 0.55).border;
+
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
   const expandedRef = useRef<HTMLDivElement>(null);
@@ -968,9 +904,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       style={darkMode ? {
         // Opaque instead of backdrop-blur: the carousel slides these cards
         // over the live map canvas, and backdrop-filter forces a recomposite
-        // on every scroll frame (same fix as OfferBanner).
-        background: 'rgba(12, 12, 28, 0.96)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
+        // on every scroll frame (same fix as OfferBanner). The category tint
+        // is pre-mixed into this flat fill for the same reason.
+        background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
+        border: `1.5px solid ${accentBorder}`,
         boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5)',
       } : {
         background: 'rgba(255, 255, 255, 0.97)',
@@ -980,27 +917,29 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       onClick={onToggle}
     >
       {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
-      <div className="flex gap-3 px-3.5 pt-3 pb-1 md:px-2.5 md:pt-2 md:pb-0.5">
+      <div className="flex gap-3 px-3.5 pt-3 pb-1">
         {/* Left Column */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <h3 className={`font-bold text-[15px] md:text-[12px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h3 className={`font-bold text-[15px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {event.event_name}
           </h3>
           {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <span className={`text-[10px] md:text-[8px] truncate leading-snug uppercase tracking-wide font-semibold mt-0.5 block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <span className={`text-[10px] truncate leading-snug uppercase tracking-wide font-semibold mt-0.5 block ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {event.event_subtitle}
             </span>
           )}
-          {event.event_time_start && (
-            <span className={`text-[10px] md:text-[8px] font-medium flex items-center gap-0.5 mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
-              <Clock className="w-2.5 h-2.5 md:w-2 md:h-2" />
-              {event.event_time_start}{event.event_time_end && ` – ${event.event_time_end}`}
-            </span>
-          )}
+          {/* Always rendered so card height doesn't jitter between events
+              that have a parsed time and ones that don't. */}
+          <span className={`text-[11px] font-medium flex items-center gap-1 mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+            <Clock className="w-3 h-3 flex-shrink-0" />
+            {event.event_time_start
+              ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
+              : (event.event_date || '')}
+          </span>
         </div>
         {/* Right Column: Image */}
-        <div className="flex flex-col items-center flex-shrink-0 w-[100px] md:w-[72px]">
-          <div className="relative w-[96px] h-[96px] md:w-[68px] md:h-[68px] rounded-xl overflow-hidden"
+        <div className="flex flex-col items-center flex-shrink-0 w-[100px]">
+          <div className="relative w-[96px] h-[96px] rounded-xl overflow-hidden"
                style={{ border: darkMode ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.06)' }}>
             {(() => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1028,12 +967,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       </div>
 
       {/* === Venue info — full width === */}
-      <div className="px-3.5 pb-1 md:px-2.5 md:pb-0.5">
+      <div className="px-3.5 pb-1">
         {/* Venue name carries the brand gold + serif (matches .venue-name on
             the home page) so it reads as the PLACE, distinct from the white
             sans event headline above. */}
         <p
-          className="text-[13px] md:text-[11px] font-semibold truncate"
+          className="text-[13px] font-semibold truncate"
           style={darkMode
             ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
             : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
@@ -1041,64 +980,25 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           {venue.venue_name}
         </p>
         <div className="flex items-center gap-1 mt-0.5">
-          <Star className="w-3 h-3 md:w-2.5 md:h-2.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-          <span className="text-amber-500 text-[12px] md:text-[10px] font-bold">{venue.venue_rating}</span>
-          <span className={`text-[10px] md:text-[8px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
-          <span className={`text-[10px] md:text-[8px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
-          <MapPin className={`w-2.5 h-2.5 md:w-2 md:h-2 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-          <span className={`text-[11px] md:text-[9px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{shortenLocation(venue.venue_location)}</span>
+          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+          <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
+          <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
         </div>
       </div>
 
-      {/* === Bottom: Tags + Expand button === */}
-      <div className="flex items-center pb-1.5 md:pb-1">
-        <div className="flex-1 min-w-0 pl-2.5 md:pl-2">
-          {(() => {
-            const tags: Array<{ label: string; bg: string; text: string }> = [];
-
-            if (event.deals && event.deals.length > 0) {
-              const dealLabels: Record<string, { label: string; bg: string; text: string }> = {
-                ladies_night: { label: 'Ladies Night', bg: 'rgba(236, 72, 153, 0.12)', text: 'rgb(190, 24, 93)' },
-                '2for1': { label: 'BOGO', bg: 'rgba(16, 185, 129, 0.12)', text: 'rgb(5, 150, 105)' },
-                happy_hour: { label: 'Happy Hour', bg: 'rgba(251, 191, 36, 0.12)', text: 'rgb(180, 130, 20)' },
-                discount: { label: 'Discount', bg: 'rgba(59, 130, 246, 0.12)', text: 'rgb(37, 99, 235)' },
-                free_entry: { label: 'Free Entry', bg: 'rgba(34, 197, 94, 0.12)', text: 'rgb(22, 163, 74)' },
-                special_offer: { label: 'Special Offer', bg: 'rgba(249, 115, 22, 0.12)', text: 'rgb(194, 80, 10)' },
-              };
-              const d = event.deals[0];
-              const cfg = dealLabels[d.type] || dealLabels.special_offer;
-              tags.push(cfg);
-            }
-
-            if (event.event_categories && event.event_categories.length > 0) {
-              event.event_categories.forEach(c => {
-                if (c.secondary) tags.push({ label: c.secondary, bg: 'rgba(20, 184, 166, 0.1)', text: 'rgb(13, 148, 136)' });
-              });
-            }
-
-            if (event.music_genre) {
-              event.music_genre.split(',').map(g => g.trim()).filter(Boolean).forEach(genre => {
-                tags.push({ label: genre, bg: 'rgba(59, 130, 246, 0.1)', text: 'rgb(37, 99, 235)' });
-              });
-            }
-
-            if (venue.venue_category) {
-              parseToArray(venue.venue_category).forEach(cat => {
-                tags.push({ label: cat, bg: 'rgba(107, 114, 128, 0.1)', text: 'rgb(107, 114, 128)' });
-              });
-            }
-
-            if (!event.deals?.length && event.event_offers && !event.event_offers.toLowerCase().includes('no special')) {
-              tags.push({ label: event.event_offers, bg: 'rgba(249, 115, 22, 0.1)', text: 'rgb(194, 80, 10)' });
-            }
-
-            if (tags.length === 0) return null;
-
-            return <AutoScrollPills tags={tags} isActive={isFocused && !isFullScreen} />;
-          })()}
-        </div>
+      {/* === Bottom: Address + Expand button ===
+          The tag pill row that used to live here was removed: it carried a
+          different colour palette from the rest of the app and pushed the
+          address into a cramped shared row. The address now owns this row. */}
+      <div className="flex items-center gap-1.5 px-3.5 pb-2">
+        <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+        <span className={`text-[12px] truncate flex-1 min-w-0 ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+          {/* 48 rather than the shared default of 34: this row is now full
+              width, so it can afford a real street address. */}
+          {shortenLocation(venue.venue_address || venue.venue_location, 48)}
+        </span>
         <button
-          className="flex-shrink-0 w-9 h-9 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2 md:mr-1.5"
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2"
           style={{
             background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.12)',
             border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.3)'}`,

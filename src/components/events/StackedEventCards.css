@@ -224,64 +224,13 @@
 }
 
 /* Desktop shrink — all sizes reduced for 430px phone-frame on large viewport */
-@media (min-width: 768px) {
-  .stacked-card {
-    height: 160px;
-    padding: 16px;
-    padding-bottom: 18px;
-    margin-top: -44px;
-    border-radius: 18px;
-  }
-
-  .stacked-cards-stack > div:first-child .stacked-card {
-    margin-top: 0;
-  }
-
-  .stacked-card.expanded {
-    height: auto;
-    margin-bottom: 44px;
-  }
-
-  .stacked-card-event-title {
-    font-size: 15px;
-  }
-
-  .stacked-card-venue-name {
-    font-size: 12px;
-  }
-
-  .stacked-card-time-row {
-    font-size: 11px;
-  }
-
-  .stacked-card-time-row svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  .stacked-card-star {
-    font-size: 11px;
-  }
-
-  .stacked-card-rating-value {
-    font-size: 11px;
-  }
-
-  .stacked-card-review-count {
-    font-size: 9px;
-  }
-
-  .stacked-card-thumb {
-    width: 66px;
-    min-height: 82px;
-    border-radius: 9px;
-  }
-
-  .stacked-card-header {
-    margin-bottom: 10px;
-    gap: 10px;
-  }
-}
+/* NOTE: a `@media (min-width: 768px)` block used to live here and SHRANK
+   every card (title 22->15px, venue 16->12px, review count 11->9px, card
+   height 250->160px, thumb 88->66px). The cards view renders inside a fixed
+   430px phone frame, so a min-width query on the VIEWPORT was never a
+   statement about the box the text sits in — on any laptop it produced a
+   430px column rendering 9px type. Removed 2026-09-24. Narrowing rules for
+   genuinely small screens (max-width) below are unaffected. */
 
 /* ===========================================
    EVENT SECTION

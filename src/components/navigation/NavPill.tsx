@@ -19,6 +19,12 @@ interface NavPillProps {
   bottomOffset?: number;
   /** Suppressed while a modal owns the screen — see the guard in the body. */
   hidden?: boolean;
+  /**
+   * Set false when `bottomOffset` is measured from an element that already
+   * includes env(safe-area-inset-bottom) — the map's card carousel does, and
+   * adding it again lifts the pill ~34px on notched iPhones.
+   */
+  safeAreaAware?: boolean;
 }
 
 const SEGMENTS: Array<{ view: NavPillView; label: string; Icon: typeof Home; path: (city: string) => string }> = [
@@ -27,7 +33,7 @@ const SEGMENTS: Array<{ view: NavPillView; label: string; Icon: typeof Home; pat
   { view: 'cards', label: 'List', Icon: List, path: (c) => `/${c}/cards` },
 ];
 
-export default function NavPill({ city, active, bottomOffset = 16, hidden = false }: NavPillProps) {
+export default function NavPill({ city, active, bottomOffset = 16, hidden = false, safeAreaAware = true }: NavPillProps) {
   const router = useRouter();
 
   // A modal owns the screen while it is open. The pill is fixed at z-index 45
@@ -44,7 +50,9 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         position: 'fixed',
         left: '50%',
         transform: 'translateX(-50%)',
-        bottom: `max(${bottomOffset}px, calc(env(safe-area-inset-bottom) + ${bottomOffset}px))`,
+        bottom: safeAreaAware
+          ? `max(${bottomOffset}px, calc(env(safe-area-inset-bottom) + ${bottomOffset}px))`
+          : `${bottomOffset}px`,
         zIndex: 45,
         display: 'flex',
         alignItems: 'center',

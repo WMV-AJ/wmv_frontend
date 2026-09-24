@@ -69,6 +69,12 @@ interface MobileEventListProps {
   presetRangeDates?: string[];
   navHeight?: number;
   darkMode?: boolean;
+  /**
+   * Reports the rendered height of the bottom panel so the caller can sit the
+   * nav pill a fixed distance above it instead of guessing. Emits 0 when the
+   * panel is unmounted (no cards, or a full-screen card is open).
+   */
+  onPanelHeightChange?: (height: number) => void;
 }
 
 // Two modes: 'list' shows all cards, 'marker' shows single venue card
@@ -78,7 +84,7 @@ const EMPTY_DATE_OPTIONS: DateOption[] = [];
 
 // Memoized carousel slot: without it, every activeCardIndex change re-rendered
 // EVERY card in the strip (fresh closures per parent render). With stable
-// callbacks, an index change re-renders only the two slots whose isFocused
+// callbacks, an index change re-renders only the two slots whose props
 // flag flipped.
 interface CarouselSlotProps {
   card: EventCardData;
@@ -87,7 +93,6 @@ interface CarouselSlotProps {
   overrideDates: string[] | null;
   dateOptions: DateOption[];
   isSingle: boolean;
-  isFocused: boolean;
   darkMode: boolean;
   isPresetRange: boolean;
   presetRangeDates: string[];
@@ -105,7 +110,6 @@ const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
   overrideDates,
   dateOptions,
   isSingle,
-  isFocused,
   darkMode,
   isPresetRange,
   presetRangeDates,
@@ -138,7 +142,6 @@ const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
         onDateChange={(dates) => onMiniDateChange(card.venue.id, dates)}
         isPresetRange={isPresetRange}
         presetRangeDates={presetRangeDates}
-        isFocused={isFocused}
         darkMode={darkMode}
       />
     </div>
@@ -160,7 +163,24 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   presetRangeDates = [],
   navHeight = 140,
   darkMode = false,
+  onPanelHeightChange,
 }) => {
+  // Measure the panel so the nav pill, locate button and map padding can be
+  // derived from it. A ref callback (not useRef + effect) because the panel is
+  // conditionally mounted and swaps between list and marker modes.
+  const panelObserverRef = useRef<ResizeObserver | null>(null);
+  const measurePanelRef = useCallback((el: HTMLDivElement | null) => {
+    panelObserverRef.current?.disconnect();
+    panelObserverRef.current = null;
+    if (!el) { onPanelHeightChange?.(0); return; }
+    onPanelHeightChange?.(el.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return; // older Safari
+    const ro = new ResizeObserver(() => onPanelHeightChange?.(el.offsetHeight));
+    ro.observe(el);
+    panelObserverRef.current = ro;
+  }, [onPanelHeightChange]);
+  useEffect(() => () => panelObserverRef.current?.disconnect(), []);
+
   const [mode, setMode] = useState<PanelMode>('list');
   const [markerVenueId, setMarkerVenueId] = useState<string | null>(null);
   const [markerFullScreen, setMarkerFullScreen] = useState(false);
@@ -201,14 +221,6 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   // pills (their own per-frame rAF loop) are paused — two rAF writers plus
   // the map easing is exactly the recipe for dropped frames on mid-range
   // phones. Cleared 180ms after the last scroll event.
-  const [isCarouselScrolling, setIsCarouselScrolling] = useState(false);
-  const scrollingRef = useRef(false);
-  const scrollIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current);
-  }, []);
-
   const measureCarousel = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -237,16 +249,6 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   // swipe, not per frame), so the marker highlight + pan can follow it
   // immediately — a settle delay here read as "the marker lags my swipe".
   const handleCarouselScroll = useCallback(() => {
-    if (!scrollingRef.current) {
-      scrollingRef.current = true;
-      setIsCarouselScrolling(true);
-    }
-    if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current);
-    scrollIdleTimerRef.current = setTimeout(() => {
-      scrollingRef.current = false;
-      setIsCarouselScrolling(false);
-    }, 180);
-
     if (scrollTickingRef.current) return;
     scrollTickingRef.current = true;
     requestAnimationFrame(() => {
@@ -569,6 +571,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
           {/* Bottom slide-up single card (marker) */}
           {!markerFullScreen && (
             <div
+              ref={measurePanelRef}
               className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto px-3"
               style={{
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -624,6 +627,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
           {/* Bottom slide-up carousel */}
           {hasCards && !listFullScreenVenueId && (
             <div
+              ref={measurePanelRef}
               className="absolute bottom-0 left-0 right-0 z-20 flex flex-col pointer-events-auto"
               style={{
                 transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
@@ -647,7 +651,7 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                 } as React.CSSProperties}
                 onScroll={handleCarouselScroll}
               >
-                {displayCards.map((card, cardIndex) => {
+                {displayCards.map((card) => {
                   const override = miniCardOverrides.get(card.venue.id);
                   // Only use override if its date falls within the active date range
                   const isOverrideValid = override && (
@@ -663,7 +667,6 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                       overrideDates={isOverrideValid ? override.dates : null}
                       dateOptions={venueDateMap.get(card.venue.id) || EMPTY_DATE_OPTIONS}
                       isSingle={displayCards.length === 1}
-                      isFocused={cardIndex === activeCardIndex && !isCarouselScrolling}
                       darkMode={darkMode}
                       isPresetRange={isPresetRange}
                       presetRangeDates={presetRangeDates}

@@ -245,7 +245,11 @@ export function getGoogleMapsColor(colorName: string): string {
 }
 
 // Get light background color for cards based on category (8% opacity tint)
-export function getCategoryLightBg(categoryPrimary: string): { bg: string; border: string } {
+export function getCategoryLightBg(
+  categoryPrimary: string,
+  bgAlpha = 0.08,
+  borderAlpha = 0.35,
+): { bg: string; border: string; hex: string; rgb: [number, number, number] } {
   const colorName = getCategoryColor(categoryPrimary);
   const hex = getHexColor(colorName);
   // Parse hex to RGB
@@ -253,7 +257,28 @@ export function getCategoryLightBg(categoryPrimary: string): { bg: string; borde
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return {
-    bg: `rgba(${r},${g},${b},0.08)`,
-    border: `rgba(${r},${g},${b},0.35)`,
+    bg: `rgba(${r},${g},${b},${bgAlpha})`,
+    border: `rgba(${r},${g},${b},${borderAlpha})`,
+    hex,
+    rgb: [r, g, b],
   };
+}
+
+/**
+ * Flatten a category tint onto an opaque backdrop.
+ *
+ * The map's bottom cards slide over a live MapLibre canvas, so they are
+ * deliberately opaque — see the comment on the collapsed card container.
+ * Layering `linear-gradient(tint) , base` would give identical pixels at the
+ * cost of an extra paint layer per card on every scroll frame, so the tint is
+ * pre-mixed into a single flat fill instead.
+ */
+export function mixCategoryTint(
+  categoryPrimary: string,
+  backdrop: [number, number, number],
+  amount = 0.06,
+): string {
+  const [r, g, b] = getCategoryLightBg(categoryPrimary).rgb;
+  const mix = (c: number, base: number) => Math.round(c * amount + base * (1 - amount));
+  return `rgb(${mix(r, backdrop[0])}, ${mix(g, backdrop[1])}, ${mix(b, backdrop[2])})`;
 }

@@ -35,6 +35,9 @@ import {
 } from '@/lib/mapcn-config';
 import { getCityConfig } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
+import { FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
+
+type MapPadding = { top: number; bottom: number; left: number; right: number };
 
 function getVenueColor(venue: Venue): string {
   return getMarkerColorScheme(venue).svgColor;
@@ -149,7 +152,7 @@ function OfferBanner({
       className="wmv-dark-popup max-w-[200px] p-0 rounded-xl border-0 shadow-none bg-transparent"
     >
       <div
-        className="px-[11px] py-[7px] md:px-[8px] md:py-[5px]"
+        className="px-[11px] py-[7px]"
         style={{
           // Opaque instead of backdrop-blur: MapLibre repositions this popup on
           // every pan frame, and backdrop-filter forces a recomposite per frame.
@@ -160,7 +163,7 @@ function OfferBanner({
           boxShadow: `0 4px 20px rgba(0,0,0,0.55), 0 0 12px ${color}22`,
         }}
       >
-        <p className="text-[11px] md:text-[9px] font-semibold leading-snug" style={{ color: '#f0f0ff' }}>{offer.trim()}</p>
+        <p className="text-[11px] font-semibold leading-snug" style={{ color: '#f0f0ff' }}>{offer.trim()}</p>
       </div>
     </MapPopup>
   );
@@ -215,9 +218,11 @@ function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void })
 function PanToVenue({
   venue,
   programmaticPanRef,
+  mapPaddingRef,
 }: {
   venue: Venue | null;
   programmaticPanRef: MutableRefObject<boolean>;
+  mapPaddingRef: MutableRefObject<MapPadding>;
 }) {
   const { map, isLoaded } = useMap();
   const prevVenueId = useRef<string | null>(null);
@@ -261,11 +266,11 @@ function PanToVenue({
       map.easeTo({
         center: [venue.lng, venue.lat],
         duration: 350,
-        padding: { top: 120, bottom: 260, left: 0, right: 0 },
+        padding: mapPaddingRef.current,
       });
     }, 150);
     return () => clearTimeout(t);
-  }, [map, isLoaded, venue, programmaticPanRef]);
+  }, [map, isLoaded, venue, programmaticPanRef, mapPaddingRef]);
 
   return null;
 }
@@ -360,9 +365,11 @@ function useLiveLocation(city: string) {
 function FlyToUser({
   pos,
   programmaticPanRef,
+  mapPaddingRef,
 }: {
   pos: { lat: number; lng: number } | null;
   programmaticPanRef: MutableRefObject<boolean>;
+  mapPaddingRef: MutableRefObject<MapPadding>;
 }) {
   const { map, isLoaded } = useMap();
   const flownRef = useRef(false);
@@ -377,9 +384,9 @@ function FlyToUser({
       center: [pos.lng, pos.lat],
       zoom: Math.max(map.getZoom(), 13),
       duration: 800,
-      padding: { top: 120, bottom: 260, left: 0, right: 0 },
+      padding: mapPaddingRef.current,
     });
-  }, [map, isLoaded, pos, programmaticPanRef]);
+  }, [map, isLoaded, pos, programmaticPanRef, mapPaddingRef]);
 
   return null;
 }
@@ -729,6 +736,35 @@ export default function CityMapPage() {
   const [highlightedOffer, setHighlightedOffer] = useState<string | null>(null);
   const [presetRangeDates, setPresetRangeDates] = useState<string[]>([]);
   const [navHeight, setNavHeight] = useState(140);
+
+  // ── Bottom chrome geometry ──────────────────────────────────────────
+  // The card panel is `absolute bottom-0` with a content-driven height, so
+  // everything that has to sit above it used to be a hand-tuned constant
+  // (228 / 232 / 288 / 260). They drifted apart the moment the panel changed
+  // height. Measure the panel once and derive the rest.
+  const [panelHeight, setPanelHeight] = useState(0);
+  const handlePanelHeight = useCallback(
+    (h: number) => setPanelHeight(prev => (Math.abs(prev - h) < 1 ? prev : Math.round(h))),
+    [],
+  );
+
+  const NAV_PILL_H = 48;   // 38px buttons + 2x4 padding + 2x1 border (NavPill)
+  const LOCATE_H = 40;     // the round locate-me button
+  const GAP = 10;          // the only tunable: clearance above the panel
+
+  const navPillBottom = Math.max(panelHeight + GAP, 16);
+  const locateBottom = navPillBottom + (NAV_PILL_H - LOCATE_H) / 2;
+  const toastBottom = navPillBottom + NAV_PILL_H + 8;
+
+  const mapPaddingRef = useRef<MapPadding>({ top: 120, bottom: 260, left: 0, right: 0 });
+  useEffect(() => {
+    mapPaddingRef.current = {
+      top: navHeight + 12,
+      bottom: navPillBottom + NAV_PILL_H + 12,
+      left: 0,
+      right: 0,
+    };
+  }, [navHeight, navPillBottom]);
   const [currentZoom, setCurrentZoom] = useState(MAPCN_ZOOM);
 
   const showLabels = currentZoom >= 14;
@@ -790,7 +826,7 @@ export default function CityMapPage() {
         }
       `}</style>
       <div className="wmv-phone-frame" style={{
-        maxWidth: 430,
+        maxWidth: FRAME_MAX_WIDTH,
         margin: '0 auto',
         height: '100dvh',
         overflow: 'hidden',
@@ -859,7 +895,7 @@ export default function CityMapPage() {
             <MapMoveClassToggler />
             <SimplifyBasemap />
             <ZoomTracker onZoomChange={handleZoomChange} />
-            <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} />
+            <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} mapPaddingRef={mapPaddingRef} />
             <MapCenterTracker
               programmaticPanRef={programmaticPanRef}
               onUserCenterChange={handleUserCenterChange}
@@ -910,7 +946,7 @@ export default function CityMapPage() {
                 </MarkerContent>
               </MapMarker>
             )}
-            <FlyToUser pos={liveLocation.pos} programmaticPanRef={programmaticPanRef} />
+            <FlyToUser pos={liveLocation.pos} programmaticPanRef={programmaticPanRef} mapPaddingRef={mapPaddingRef} />
 
             <MapControls position="bottom-right" showZoom={false} showCompass={false} />
           </MapView>
@@ -928,7 +964,7 @@ export default function CityMapPage() {
             className="absolute z-20 flex items-center justify-center"
             style={{
               right: 12,
-              bottom: 232,
+              bottom: locateBottom,
               width: 40,
               height: 40,
               borderRadius: '50%',
@@ -953,7 +989,7 @@ export default function CityMapPage() {
             <div
               className="absolute z-30"
               style={{
-                left: '50%', transform: 'translateX(-50%)', bottom: 288,
+                left: '50%', transform: 'translateX(-50%)', bottom: toastBottom,
                 padding: '10px 18px', borderRadius: 999, maxWidth: '85%',
                 background: 'rgba(20,20,31,0.95)', border: '1px solid rgba(255,255,255,0.14)',
                 color: '#f5f2ed', fontSize: 12, fontWeight: 600, textAlign: 'center',
@@ -965,9 +1001,16 @@ export default function CityMapPage() {
           )}
         </div>
 
-        {/* 228 vertically centers the 48px pill on the same line as the 40px
-            location toggle (bottom: 232 → shared center at 252). */}
-        <NavPill city={city} active="map" bottomOffset={228} hidden={isFilterSheetOpen} />
+        {/* bottomOffset is measured from the card panel, which already pays
+            the safe-area inset in its own padding — hence safeAreaAware={false},
+            otherwise notched iPhones would add the inset a second time. */}
+        <NavPill
+          city={city}
+          active="map"
+          bottomOffset={navPillBottom}
+          safeAreaAware={false}
+          hidden={isFilterSheetOpen}
+        />
 
         <MobileEventList
           cards={cards}
@@ -983,6 +1026,7 @@ export default function CityMapPage() {
           presetRangeDates={presetRangeDates}
           navHeight={navHeight}
           darkMode={true}
+          onPanelHeightChange={handlePanelHeight}
         />
 
         <FilterBottomSheet

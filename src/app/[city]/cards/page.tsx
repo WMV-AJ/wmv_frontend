@@ -18,6 +18,7 @@ import {
 import { getCityConfig } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
 import { getVibeDataById } from '@/config/vibes-data';
+import { FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 
 function CardsInner() {
   const params = useParams();
@@ -185,7 +186,7 @@ function CardsInner() {
     <ThemeProvider>
       <style>{`#cards-scroll-container::-webkit-scrollbar { display: none; }`}</style>
       <div className="wmv-phone-frame" style={{
-        maxWidth: 430,
+        maxWidth: FRAME_MAX_WIDTH,
         margin: '0 auto',
         height: '100dvh',
         overflow: 'hidden',
