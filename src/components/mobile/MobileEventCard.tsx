@@ -946,7 +946,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         // Explicit floor rather than letting content decide: the carousel
         // already forces a uniform height, and pinning it keeps the measured
         // panel height — and the nav pill derived from it — stable.
-        minHeight: 240,
+        minHeight: 204,   // 15% shorter than the previous 240
         background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
         // Category colour is a single line across the top edge only.
         borderTop: `3px solid ${accentEdge}`,
@@ -1014,36 +1014,43 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                     : formatDateLabel(event.event_date))}
           </span>
 
-          {/* 3. Category, on its own line */}
-          {accentCategory && (
-            <span
-              className={`self-start mt-2 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
-              style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-            >
-              {getShortDisplayName(accentCategory)}
-            </span>
-          )}
-
-          {/* 4. Tags — the event's own subtitle, on the next line */}
-          {event.event_subtitle && event.event_subtitle !== event.event_name && (
-            <span className={`${H4_LABEL} truncate min-w-0 mt-1.5 ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>
-              {event.event_subtitle}
-            </span>
+          {/* 3. Category chip then tags, sharing one row. The chip never
+                 shrinks; the tags take the slack and truncate. */}
+          {(accentCategory || event.event_subtitle) && (
+            <div className="flex items-center gap-2 mt-2 min-w-0">
+              {accentCategory && (
+                <span
+                  className={`flex-shrink-0 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
+                  style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+                >
+                  {getShortDisplayName(accentCategory)}
+                </span>
+              )}
+              {event.event_subtitle && event.event_subtitle !== event.event_name && (
+                <span className={`${H4_LABEL} truncate min-w-0 ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>
+                  {event.event_subtitle}
+                </span>
+              )}
+            </div>
           )}
 
           {/* 5 + 6. Venue name and rating share one flow: the name wraps
                  and the rating follows it, the pair capped at two lines. */}
           <div className="mt-2.5 line-clamp-2 text-[14px] leading-snug">
+            {/* Inter at 550, home4's `.faqItems summary strong` register —
+                the one place that system uses Inter above body size at a mid
+                weight. Deliberately NOT Inter Tight, so the venue reads as a
+                different rank from the uppercase event name above it. */}
             <span
-              className={`font-semibold ${darkMode ? 'font-tight tracking-[-0.02em] text-pale' : ''}`}
+              className={`${darkMode ? 'font-inter font-[550] text-pale' : 'font-semibold'}`}
               style={darkMode ? undefined : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
             >
               {venue.venue_name}
             </span>
             <span className="whitespace-nowrap">
-              {'\u2009'}
-              <Star className={`w-3.5 h-3.5 inline align-text-bottom ml-1.5 ${darkMode ? 'text-magenta fill-magenta' : 'text-amber-500 fill-amber-500'}`} />
-              <span className={`text-[13px] font-bold ml-1 tabular-nums ${darkMode ? 'text-magenta' : 'text-magenta'}`}>{venue.venue_rating}</span>
+              <span className={`mx-2 ${darkMode ? 'text-silver-dim/50' : 'text-gray-300'}`}>|</span>
+              <Star className={`w-3.5 h-3.5 inline align-text-bottom ${darkMode ? 'text-silver fill-silver' : 'text-amber-500 fill-amber-500'}`} />
+              <span className={`text-[13px] font-bold ml-1 tabular-nums ${darkMode ? 'text-silver' : 'text-amber-500'}`}>{venue.venue_rating}</span>
               <span className={`text-[11px] ml-1 tabular-nums ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
             </span>
           </div>
