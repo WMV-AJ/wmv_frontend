@@ -70,8 +70,8 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         // sitting on a grey basemap did nothing visible; a white halo separates
         // it from the map instead. The inset top highlight is unchanged.
         boxShadow: [
-          '0 0 22px 5px rgba(255,255,255,0.12)',
-          '0 0 7px 2px rgba(255,255,255,0.18)',
+          '0 0 18px 4px rgba(255,255,255,0.06)',
+          '0 0 6px 1px rgba(255,255,255,0.10)',
           'inset 0 1px 0 rgba(255,255,255,0.06)',
         ].join(', '),
       }}

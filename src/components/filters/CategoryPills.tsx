@@ -218,10 +218,18 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
         {IconComponent && <IconComponent className="w-3 h-3" />}
         {/* "FOOD | 64", not "FOOD (64)". The bracket read as an aside; the rule
             reads as two fields of one label. The separator is dimmed so the
-            count stays subordinate to the category name. */}
-        {label}
-        <span className="opacity-50 font-normal mx-0.5">|</span>
-        {count}
+            count stays subordinate to the category name.
+
+            Label, rule and count share ONE span on purpose. As direct children
+            of the button they were flex items, so the button's gap landed on
+            both sides of the rule on top of its own margin — four gaps' worth
+            of air around a single glyph. Inside a plain span the gap no longer
+            applies and the rule's own padding is the only spacing there is. */}
+        <span>
+          {label}
+          <span className="opacity-45 font-normal px-[2px]">|</span>
+          {count}
+        </span>
         {isExpanded && ' ↓'}
       </button>
     );
