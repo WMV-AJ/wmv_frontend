@@ -982,42 +982,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           carousel's stretch leaves over splits evenly top and bottom. */}
       <div className="flex gap-3 p-3.5 pb-4 flex-1 min-h-0 items-center">
 
-        {/* ── Left: 9:16 still, 30% of the tile ───────────────────── */}
-        <div className="flex-shrink-0 w-[30%]">
-          <div
-            className="relative w-full rounded-xl overflow-hidden"
-            style={{
-              // Width-driven: the column is 30% and the height falls out of
-              // the ratio. Height-driven aspect-ratio on a stretched flex
-              // item is the patchier of the two across browsers.
-              aspectRatio: '9 / 16',
-              border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.06)',
-            }}
-          >
-            {(() => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const u1 = (event as any).media_url_1 as string | undefined;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const u2 = (event as any).media_url_2 as string | undefined;
-              const isVid = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
-              // url_1 wins, url_2 is the fallback. If the primary is a video
-              // and the sibling is an image, the sibling is the poster frame.
-              const primary = u1 || u2;
-              const sibling = primary === u1 ? u2 : undefined;
-              return (
-                <EventMedia
-                  src={primary}
-                  alt={venue.venue_name}
-                  sizes="(max-width: 430px) 30vw, 100px"
-                  fill
-                  poster={sibling && !isVid(sibling) ? sibling : null}
-                />
-              );
-            })()}
-          </div>
-        </div>
-
-        {/* ── Right: the copy column ──────────────────────────────── */}
+        {/* ── Left: the copy column ───────────────────────────────── */}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
 
           {/* 1. Event name */}
@@ -1051,22 +1016,24 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             </span>
           )}
 
-          {/* 5. Venue name */}
-          <p
-            className="text-[14px] font-semibold truncate min-w-0 mt-2.5"
-            style={darkMode
-              ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
-              : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
-          >
-            {venue.venue_name}
-          </p>
-
-          {/* 6. Rating, on the next line */}
-          <span className="flex items-center gap-1 mt-1">
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
-            <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
-            <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
-          </span>
+          {/* 5 + 6. Venue name and rating share one flow: the name wraps
+                 and the rating follows it, the pair capped at two lines. */}
+          <div className="mt-2.5 line-clamp-2 text-[14px] leading-snug">
+            <span
+              className="font-semibold"
+              style={darkMode
+                ? { fontFamily: displayFont, color: '#f4c430', letterSpacing: '-0.01em' }
+                : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
+            >
+              {venue.venue_name}
+            </span>
+            <span className="whitespace-nowrap">
+              {'\u2009'}
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 inline align-text-bottom ml-1.5" />
+              <span className="text-amber-500 text-[13px] font-bold ml-1">{venue.venue_rating}</span>
+              <span className={`text-[11px] ml-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+            </span>
+          </div>
 
           {/* 7. Address — same rule as the expanded card's header line,
                  allowed to run to two lines in this narrower column. */}
@@ -1074,6 +1041,41 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
             <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
           </span>
+        </div>
+
+        {/* ── Right: 9:16 still, 30% of the tile ──────────────────── */}
+        <div className="flex-shrink-0 w-[30%]">
+          <div
+            className="relative w-full rounded-xl overflow-hidden"
+            style={{
+              // Width-driven: the column is 30% and the height falls out of
+              // the ratio. Height-driven aspect-ratio on a stretched flex
+              // item is the patchier of the two across browsers.
+              aspectRatio: '9 / 16',
+              border: darkMode ? '1px solid rgba(255,255,255,0.10)' : '1px solid rgba(0,0,0,0.06)',
+            }}
+          >
+            {(() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const u1 = (event as any).media_url_1 as string | undefined;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const u2 = (event as any).media_url_2 as string | undefined;
+              const isVid = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
+              // url_1 wins, url_2 is the fallback. If the primary is a video
+              // and the sibling is an image, the sibling is the poster frame.
+              const primary = u1 || u2;
+              const sibling = primary === u1 ? u2 : undefined;
+              return (
+                <EventMedia
+                  src={primary}
+                  alt={venue.venue_name}
+                  sizes="(max-width: 430px) 30vw, 100px"
+                  fill
+                  poster={sibling && !isVid(sibling) ? sibling : null}
+                />
+              );
+            })()}
+          </div>
         </div>
       </div>
 
