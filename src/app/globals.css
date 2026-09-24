@@ -2,12 +2,36 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Inter + Inter Tight, self-hosted. Declared globally rather than inside
+   home3.module.css / home4.module.css, because a module's @font-face only
+   exists while that module's CSS is loaded — and it is not on the map page,
+   which now uses these faces for its event card. Family names are the aliases
+   the two landing pages already reference. */
+@font-face{font-family:Home3Tight;src:url('/home3/inter-tight-latin.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:Home3Inter;src:url('/home3/inter-latin.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-open-sans);
   --font-mono: var(--font-roboto);
   --font-display: var(--font-roboto);
+
+  /* Home 4 idiom — self-hosted Inter / Inter Tight, used by /home3, /home4
+     and the map's event card. Deliberately NOT --font-sans: the rest of the
+     app stays on Roboto + Open Sans. */
+  --font-tight: Home3Tight, 'Inter Tight', Arial, sans-serif;
+  --font-inter: Home3Inter, Inter, Arial, sans-serif;
+
+  /* Home 4's rendered palette. --champagne is absent on purpose: home4
+     overrides all 32 of its uses, so magenta is the real text accent.
+     No --color-black / --color-slate — both collide with Tailwind builtins. */
+  --color-graphite: #27282B;
+  --color-pale: #E2E3E1;
+  --color-silver: #BFC1C3;
+  --color-silver-dim: #A3A5A6;
+  --color-magenta: #F080C0;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
