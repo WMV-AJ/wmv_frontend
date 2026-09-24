@@ -25,3 +25,21 @@ export function shortenLocation(loc: string | null | undefined, max = 34): strin
   const head = Math.ceil((max - 1) * 0.45);
   return `${clean.slice(0, head)}…${clean.slice(-(max - 1 - head))}`;
 }
+
+/**
+ * Keep only the last N comma-separated parts of an address.
+ *
+ * The map card shows a real street address, and the feed's are long:
+ * "Unit No 206, The Collection, UB City, 24, Vittal Mallya Rd, KG Halli,
+ *  D' Souza Layout, Ashok Nagar, Bengaluru, Karnataka 560001, India"
+ * runs to five lines and dominates the card. The tail is the part people
+ * actually orient by, so the head is dropped rather than middle-elided.
+ *
+ * → "Ashok Nagar, Bengaluru, Karnataka 560001, India"
+ */
+export function lastAddressParts(addr: string | null | undefined, keep = 4): string {
+  if (!addr) return '';
+  const parts = addr.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length <= keep) return parts.join(', ');
+  return parts.slice(-keep).join(', ');
+}

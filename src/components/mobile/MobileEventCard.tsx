@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
-import { shortenLocation } from '@/lib/format-location';
+import { shortenLocation, lastAddressParts } from '@/lib/format-location';
 import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
@@ -973,8 +973,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             </span>
           )}
 
-          {/* 4. Venue details, pushed to the bottom of the column */}
-          <div className="mt-auto pt-3">
+          {/* 4. Venue details. Deliberately NOT mt-auto: pushing this block
+                 down opened a visible gap under the subtitle whenever the
+                 carousel stretched a short card. Content stays compact and
+                 any residual stretch slack falls below it. */}
+          <div className="mt-3">
             <p
               className="text-[14px] font-semibold truncate"
               style={darkMode
@@ -988,18 +991,19 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               <span className="text-amber-500 text-[13px] font-bold">{venue.venue_rating}</span>
               <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
             </div>
-            {/* Full address — wraps instead of truncating, per the brief. */}
-            <div className="flex items-start gap-1.5 mt-1.5">
+            {/* Last 4 parts only — the full feed address runs to five lines
+                and swamped the card. The tail is what people orient by. */}
+            <div className="flex items-start gap-1.5 mt-1">
               <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
               <span className={`text-[12px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                {venue.venue_address || venue.venue_location}
+                {lastAddressParts(venue.venue_address || venue.venue_location, 4)}
               </span>
             </div>
           </div>
         </div>
 
         {/* ── Right: category tag, then the 9:16 still ── */}
-        <div className="flex-shrink-0 w-[84px] flex flex-col gap-2">
+        <div className="flex-shrink-0 w-[72px] flex flex-col gap-1.5">
           {accentCategory && (
             <span
               className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full text-center truncate"
@@ -1029,7 +1033,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <EventMedia
                   src={primary}
                   alt={venue.venue_name}
-                  sizes="84px"
+                  sizes="72px"
                   fill
                   poster={sibling && !isVid(sibling) ? sibling : null}
                 />
