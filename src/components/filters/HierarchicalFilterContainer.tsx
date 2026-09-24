@@ -156,7 +156,7 @@ const HierarchicalFilterContainer: React.FC<HierarchicalFilterContainerProps> = 
         key={`${type}-${category}`}
         onClick={() => handlePrimaryClick(type, category)}
         className={`
-          px-3 py-1.5 text-sm font-medium rounded-full
+          px-3 py-1.5 text-sm font-narrow uppercase font-bold tracking-[0.02em] rounded-full
           backdrop-blur-lg border-2
           transition-all duration-200 whitespace-nowrap flex-shrink-0
           ${isSelected
@@ -187,7 +187,7 @@ const HierarchicalFilterContainer: React.FC<HierarchicalFilterContainerProps> = 
         key={`${type}-${primary}-${secondary}`}
         onClick={() => handleSecondaryClick(type, primary, secondary)}
         className={`
-          px-2 py-1 text-xs font-medium rounded-full
+          px-2 py-1 text-xs font-narrow uppercase font-bold tracking-[0.02em] rounded-full
           backdrop-blur-lg border-2
           transition-all duration-200 whitespace-nowrap flex-shrink-0
           ${isSelected

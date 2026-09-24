@@ -97,7 +97,7 @@ const DatePillsRow: React.FC<DatePillsRowProps> = ({
           <button
             key={opt.dateKey}
             onClick={() => handleDateClick(opt.dateKey)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-narrow uppercase font-bold tracking-[0.02em] whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
               isSelected
                 ? 'bg-amber-600 text-white shadow-[0_2px_10px_rgba(202, 138, 4,0.35)]'
                 : 'bg-white/[0.03] text-gray-400 border border-white/[0.08] hover:bg-white/[0.06] hover:text-gray-300'

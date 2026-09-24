@@ -42,4 +42,28 @@ export const displayFont = 'var(--font-roboto), system-ui, -apple-system, "Helve
 export const bodyFont = 'var(--font-open-sans), system-ui, -apple-system, "Helvetica Neue", sans-serif';
 
 /** Max content width of the phone-frame column used across the app. */
+/**
+ * Condensed labels. Archivo Narrow, loaded in layout.tsx as --font-archivo-narrow
+ * and exposed to Tailwind as the `font-narrow` utility in globals.css.
+ *
+ * Every pill, chip and tag in the app uses this rather than the display or body
+ * face. Pills are uppercase labels at 10-12px packed into a horizontally
+ * scrolling row inside a 430px frame, and a proportional face needs wide
+ * tracking to stay legible at that size — which is exactly what pushed the
+ * filter row to ~950px. A condensed face reads at 0.02em, so the same labels
+ * fit in about 20% less width at a LARGER nominal size.
+ *
+ * Use PILL_TYPE for anything class-based; use this constant only where the
+ * element already carries an inline style object.
+ */
+export const condensedFont = "var(--font-archivo-narrow), 'Archivo Narrow', 'Arial Narrow', system-ui, sans-serif";
+
+/**
+ * The shared pill/chip/tag treatment. Size is deliberately NOT included: pills
+ * range from 9px (card micro-tags) to 12px (date row), and each call site keeps
+ * its own. Everything else — family, casing, weight, tracking — is shared so
+ * the pills read as one family of controls across map, cards and filters.
+ */
+export const PILL_TYPE = 'font-narrow uppercase font-bold tracking-[0.02em]';
+
 export const FRAME_MAX_WIDTH = 430;
