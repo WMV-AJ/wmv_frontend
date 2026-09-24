@@ -978,12 +978,13 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           tallest is whichever event name wraps to two lines — so a one-line
           card carries ~20px of slack no matter what. Centred, that reads as
           padding; top-aligned it read as a dead band. */}
-      {/* Image left at 30%, copy right. items-center so the slack the
-          carousel's stretch leaves over splits evenly top and bottom. */}
-      <div className="flex gap-3 p-3.5 pb-4 flex-1 min-h-0 items-center">
+      {/* Copy left, 30% still right. items-start so text always begins at
+          the top of the tile — the carousel stretches every card to the
+          tallest, and centring made shorter cards float mid-tile. */}
+      <div className="flex gap-3 p-3.5 pb-4 flex-1 min-h-0 items-start">
 
         {/* ── Left: the copy column ───────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <div className="flex-1 min-w-0 flex flex-col">
 
           {/* 1. Event name */}
           <h3 className={`font-bold text-[16px] leading-tight tracking-tight line-clamp-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
