@@ -1051,6 +1051,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             >
               {venue.venue_name}
             </span>
+            {/* Break opportunity. JSX strips the newline between these two
+                spans, so there is NO whitespace where the name ends and the
+                nowrap rating block begins — which makes the name's last word
+                and the entire rating one unbreakable unit. "JB Arena (Just
+                BLR)" then broke after "Just", pushing "BLR)" onto line 2
+                beside the stars even though the name fits a single line with
+                90px to spare. <wbr> restores the break without adding a space;
+                the rule already carries its own margin. */}
+            <wbr />
             <span className="whitespace-nowrap">
               <span className={`mx-2 ${darkMode ? 'text-silver-dim/50' : 'text-gray-300'}`}>|</span>
               <Star className={`w-3.5 h-3.5 inline align-text-bottom ${darkMode ? 'text-silver fill-silver' : 'text-amber-500 fill-amber-500'}`} />
