@@ -136,17 +136,18 @@ function GlowingMarker({
 function OfferBanner({
   venue,
   offer,
-  color,
 }: {
   venue: Venue;
   offer: string;
-  color: string;
 }) {
   return (
     <MapPopup
       longitude={venue.lng}
       latitude={venue.lat}
-      offset={32}
+      // Hangs below the dot. The offset clears the highlighted dot (22px) plus
+      // the venue's own name label, which also sits below it when zoomed in.
+      anchor="top"
+      offset={30}
       closeOnClick={false}
       focusAfterOpen={false}
       className="wmv-dark-popup max-w-[200px] p-0 rounded-xl border-0 shadow-none bg-transparent"
@@ -156,14 +157,14 @@ function OfferBanner({
         style={{
           // Opaque instead of backdrop-blur: MapLibre repositions this popup on
           // every pan frame, and backdrop-filter forces a recomposite per frame.
-          background: 'rgba(10,10,26,0.95)',
-          border: `1px solid ${color}55`,
-          borderLeft: `3px solid ${color}`,
+          // Black, white and grey only — no category colour.
+          background: 'rgba(10,10,10,0.95)',
+          border: '1px solid rgba(255,255,255,0.16)',
           borderRadius: '10px',
-          boxShadow: `0 4px 20px rgba(0,0,0,0.55), 0 0 12px ${color}22`,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.55)',
         }}
       >
-        <p className="text-[11px] font-semibold leading-snug" style={{ color: '#f0f0ff' }}>{offer.trim()}</p>
+        <p className="text-[11px] font-semibold leading-snug" style={{ color: '#f5f5f5' }}>{offer.trim()}</p>
       </div>
     </MapPopup>
   );
@@ -920,7 +921,7 @@ export default function CityMapPage() {
             })}
 
             {highlightedVenue && highlightedOffer && (
-              <OfferBanner venue={highlightedVenue} offer={highlightedOffer} color={getVenueColor(highlightedVenue)} />
+              <OfferBanner venue={highlightedVenue} offer={highlightedOffer} />
             )}
 
             {/* Live "you are here" marker (only inside city bounds).

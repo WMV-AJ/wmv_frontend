@@ -203,7 +203,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
       <button
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        className={`flex items-center gap-[3px] px-2 py-[3px] rounded-full text-[11px] font-semibold uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
           color: isSelected ? '#ffffff' : hexColor,
@@ -251,13 +251,13 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
       {/* Primary Category Row with Icons */}
       <div className="overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {wrapPills ? (
-          <div className="flex flex-col gap-1.5 w-max min-w-full">
+          <div className="flex flex-col gap-1 w-max min-w-full">
             {rows.map((row, i) => (
-              <div key={`pill-row-${i}`} className="flex gap-1.5">{row.map(renderPill)}</div>
+              <div key={`pill-row-${i}`} className="flex gap-1">{row.map(renderPill)}</div>
             ))}
           </div>
         ) : (
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             {sortedCategories.map(({ category }) => renderPill(category))}
           </div>
         )}

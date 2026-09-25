@@ -1053,7 +1053,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           {/* 2. Time / date — always rendered so cards keep a steady height */}
           {/* Same label type as the tags line (H4_LABEL). */}
           <span className={`${H4_LABEL} flex items-center gap-1.5 mt-1 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
-            <Clock className="w-3 h-3 flex-shrink-0" />
+            {/* Tile icons (clock, building, arrow) take the category pill's
+                text colour; the rating star keeps its own. */}
+            <Clock className="w-3 h-3 flex-shrink-0" style={{ color: accentText }} />
             {event.event_time_display
               || (event.event_time_start
                     ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
@@ -1089,7 +1091,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           <div className="mt-1 line-clamp-2 text-[14px] leading-snug">
             <Building2
               aria-hidden
-              className={`w-3.5 h-3.5 inline align-[-2px] mr-1.5 ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`}
+              className="w-3.5 h-3.5 inline align-[-2px] mr-1.5"
+              style={{ color: accentText }}
             />
             {/* Inter at 550, home4's `.faqItems summary strong` register —
                 the one place that system uses Inter above body size at a mid
@@ -1126,7 +1129,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                  allowed to run to two lines in this narrower column. */}
           {/* Address, with the pin back on its own line. Two rows. */}
           <span className={`flex items-start gap-1.5 mt-0.5 text-[12px] leading-snug ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
-            <Navigation2 aria-hidden className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
+            <Navigation2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-px" style={{ color: accentText }} />
             <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
           </span>
         </div>

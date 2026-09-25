@@ -473,10 +473,9 @@ const TopNav: React.FC<TopNavProps> = ({
 
   // --- MOBILE OVERLAY LAYOUT (original) ---
   return (
-    <div ref={mobileNavRef} className="fixed top-1.5 left-1.5 right-1.5 z-50">
+    <div ref={mobileNavRef} className="fixed top-1 left-1.5 right-1.5 z-50">
       <div
-        className={`px-3 rounded-2xl relative ${ showDatePicker ? 'py-2' : 'py-2'
-        }`}
+        className="px-3 py-1.5 rounded-2xl relative"
         style={darkMode ? {
           background: 'rgba(10, 10, 26, 0.88)',
           backdropFilter: 'blur(24px) saturate(180%)',
@@ -522,7 +521,7 @@ const TopNav: React.FC<TopNavProps> = ({
                 >
                   {visibleMonth}
                 </span>
-                <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pt-3 pb-1"
+                <div ref={mobileDateScrollRef} onScroll={handleDateScroll} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pt-2 pb-0.5"
                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {dateOptions.map((dateOption, index) => {
                   const isClicked = isDateSelected(dateOption.dateKey);
@@ -547,7 +546,7 @@ const TopNav: React.FC<TopNavProps> = ({
                         ref={isToday ? todayPillRef : undefined}
                         data-month={currentMonth}
                         onClick={() => handleDateClick(dateOption.dateKey)}
-                        className="flex flex-col items-center px-2.5 pt-1 pb-1 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
+                        className="flex flex-col items-center px-2.5 pt-0.5 pb-0.5 rounded-lg transition-all duration-200 whitespace-nowrap flex-shrink-0 relative"
                         style={{
                           ...(isFullSelected
                             ? { background: darkMode ? 'rgba(255,255,255,0.18)' : 'rgba(0, 0, 0, 0.45)', color: '#fff' }
