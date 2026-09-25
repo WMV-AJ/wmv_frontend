@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { shortenLocation } from '@/lib/format-location';
@@ -29,6 +29,8 @@ import {
   Sunset,
   Moon,
   Ticket,
+  Building2,
+  Navigation2,
 } from 'lucide-react';
 
 interface EventCardData {
@@ -200,6 +202,46 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   // Expired/dead media URLs (old Instagram CDN links 403 once their signature
   // lapses) — swap to the placeholder instead of a broken-image glyph.
   const [failedMediaIdx, setFailedMediaIdx] = useState<ReadonlySet<number>>(new Set());
+
+  // Collapsed tile: when the rating block wraps below the venue name, give
+  // it its own line and drop the "|" that would otherwise lead that line.
+  // CSS cannot detect an inline wrap, so measure the unwrapped layout: if the
+  // rating's top sits below the name's last line box, it wrapped. The result
+  // is keyed to the content, so a new venue measures afresh; a width change
+  // or late font swap resets it to the unwrapped layout to measure again.
+  // Measuring only the unwrapped layout avoids a flip-flop where hiding the
+  // separator frees just enough room for the rating to fit back on line 1.
+  const tileVenueNameRef = useRef<HTMLSpanElement>(null);
+  const tileRatingRef = useRef<HTMLSpanElement>(null);
+  const ratingWrapKey = `${venue.venue_name}|${venue.venue_rating}|${venue.venue_review_count}`;
+  const [ratingWrap, setRatingWrap] = useState<{ key: string; wrapped: boolean } | null>(null);
+  const ratingWrapped = ratingWrap?.key === ratingWrapKey && ratingWrap.wrapped;
+  const ratingMeasured = ratingWrap?.key === ratingWrapKey;
+  useLayoutEffect(() => {
+    const name = tileVenueNameRef.current;
+    const rating = tileRatingRef.current;
+    const row = name?.parentElement;
+    if (!name || !rating || !row) return;
+    if (!ratingMeasured) {
+      const lines = name.getClientRects();
+      const lastLine = lines[lines.length - 1];
+      if (lastLine) {
+        setRatingWrap({ key: ratingWrapKey, wrapped: rating.getBoundingClientRect().top > lastLine.top + 2 });
+      }
+    }
+    let width = row.clientWidth;
+    const remeasure = (): void => setRatingWrap(null);
+    const observer = new ResizeObserver(() => {
+      if (row.clientWidth !== width) { width = row.clientWidth; remeasure(); }
+    });
+    observer.observe(row);
+    // A late web-font swap changes line breaks without changing the width.
+    document.fonts?.addEventListener('loadingdone', remeasure);
+    return () => {
+      observer.disconnect();
+      document.fonts?.removeEventListener('loadingdone', remeasure);
+    };
+  }, [ratingWrapKey, ratingMeasured, isExpanded]);
   const markMediaFailed = (idx: number) => setFailedMediaIdx(prev => {
     if (prev.has(idx)) return prev;
     const next = new Set(prev);
@@ -1001,13 +1043,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         <div className="flex-1 min-w-0 flex flex-col">
 
           {/* 1. Event name */}
-          <h3 className={`${H4_DISPLAY} text-[16px] leading-tight tracking-[-0.04em] line-clamp-2 ${darkMode ? 'text-pale' : 'text-gray-900'}`}>
+          {/* Inter at 600 — the venue name's face, not the condensed Inter
+              Tight, which was too narrow to read in caps at this size. Caps
+              and the extra 50 weight keep it a rank above the venue. */}
+          <h3 className={`font-inter font-semibold uppercase text-[15px] leading-tight tracking-[-0.01em] line-clamp-2 ${darkMode ? 'text-pale' : 'text-gray-900'}`}>
             {event.event_name}
           </h3>
 
           {/* 2. Time / date — always rendered so cards keep a steady height */}
-          <span className={`text-[12px] font-medium flex items-center gap-1.5 mt-1 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
-            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+          {/* Same label type as the tags line (H4_LABEL). */}
+          <span className={`${H4_LABEL} flex items-center gap-1.5 mt-1 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
+            <Clock className="w-3 h-3 flex-shrink-0" />
             {event.event_time_display
               || (event.event_time_start
                     ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}`
@@ -1041,11 +1087,16 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           />
 
           <div className="mt-1 line-clamp-2 text-[14px] leading-snug">
+            <Building2
+              aria-hidden
+              className={`w-3.5 h-3.5 inline align-[-2px] mr-1.5 ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`}
+            />
             {/* Inter at 550, home4's `.faqItems summary strong` register —
                 the one place that system uses Inter above body size at a mid
-                weight. Deliberately NOT Inter Tight, so the venue reads as a
-                different rank from the uppercase event name above it. */}
+                weight. The event name above shares the face; its caps and
+                600 weight keep it a rank above the venue. */}
             <span
+              ref={tileVenueNameRef}
               className={`${darkMode ? 'font-inter font-[550] text-pale' : 'font-semibold'}`}
               style={darkMode ? undefined : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
             >
@@ -1060,8 +1111,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 90px to spare. <wbr> restores the break without adding a space;
                 the rule already carries its own margin. */}
             <wbr />
-            <span className="whitespace-nowrap">
-              <span className={`mx-2 ${darkMode ? 'text-silver-dim/50' : 'text-gray-300'}`}>|</span>
+            {/* Wrapped: own line, no separator (see ratingWrap above). */}
+            <span ref={tileRatingRef} className={ratingWrapped ? 'block whitespace-nowrap' : 'whitespace-nowrap'}>
+              {!ratingWrapped && (
+                <span className={`mx-2 ${darkMode ? 'text-silver-dim/50' : 'text-gray-300'}`}>|</span>
+              )}
               <Star className={`w-3.5 h-3.5 inline align-text-bottom ${darkMode ? 'text-silver fill-silver' : 'text-amber-500 fill-amber-500'}`} />
               <span className={`text-[13px] font-bold ml-1 tabular-nums ${darkMode ? 'text-silver' : 'text-amber-500'}`}>{venue.venue_rating}</span>
               <span className={`text-[11px] ml-1 tabular-nums ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
@@ -1072,7 +1126,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                  allowed to run to two lines in this narrower column. */}
           {/* Address, with the pin back on its own line. Two rows. */}
           <span className={`flex items-start gap-1.5 mt-0.5 text-[12px] leading-snug ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
-            <MapPin className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
+            <Navigation2 aria-hidden className={`w-3.5 h-3.5 flex-shrink-0 mt-px ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`} />
             <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
           </span>
         </div>
