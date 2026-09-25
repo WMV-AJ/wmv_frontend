@@ -20,6 +20,7 @@ import {
   Navigation,
   ChevronUp,
   X,
+  MapPin,
   Globe,
   Tag,
   ChevronLeft,
@@ -149,6 +150,7 @@ function parseToArray(value: unknown): string[] {
 // The faces come from `font-inter` on each card root (globals.css @font-face).
 // NOTE home4 only uppercases h1/h2/h3 in CSS — every other capital there is
 // hardcoded in JSX — so each label below carries `uppercase` explicitly.
+const H4_KICKER  = 'text-[11px] uppercase font-bold tracking-[0.18em]';  // .kicker 11/700/.18em
 const H4_LABEL   = 'text-[10px] uppercase font-[650] tracking-[0.16em]'; // .heroFine 10/650/.16em
 const H4_CHIP    = 'text-[10px] font-bold uppercase tracking-wide'; // start-of-day chip type, deliberately NOT the Home 4 label idiom
 
@@ -653,44 +655,62 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             );
           })()}
 
-          {/* Venue Details — same ruled rows, full width. */}
-          {(() => {
-            const rowText = `text-[13px] leading-snug ${darkMode ? 'text-silver' : 'text-gray-700'}`;
-            const rows: Array<[string, LucideIcon, React.ReactNode]> = [];
-            if (venue.venue_category) rows.push(['category', Tag, <span key="v" className={rowText}>{parseToArray(venue.venue_category).join(', ')}</span>]);
-            if (highlightTags.length > 0) rows.push(['highlights', Star, <span key="v" className={rowText}>{highlightTags.join(', ')}</span>]);
-            if (atmosphereTags.length > 0) rows.push(['atmosphere', Sparkles, <span key="v" className={rowText}>{atmosphereTags.join(', ')}</span>]);
-            if (venue.venue_phone) rows.push(['phone', Phone, <span key="v" className={rowText}>{venue.venue_phone}</span>]);
-            if (venue.venue_address) rows.push(['address', Navigation2, <span key="v" className={rowText}>{venue.venue_address}</span>]);
-            if (venue.venue_website) {
-              rows.push(['website', Globe, (
-                <a
-                  key="v"
-                  href={venue.venue_website.startsWith('http') ? venue.venue_website : `https://${venue.venue_website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-[13px] font-medium truncate underline underline-offset-2 ${darkMode ? 'text-pale decoration-silver-dim' : 'text-gray-900 decoration-gray-400'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {venue.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
-                </a>
-              )]);
-            }
-            if (rows.length === 0) return null;
-            return (
-              <div className="mt-5">
-                <p className={`${labelCls} mb-1.5`}>Venue Details</p>
-                <div style={{ borderBottom: `1px solid ${ruleColor}` }}>
-                  {rows.map(([key, Icon, body]) => (
-                    <div key={key} className="flex items-start gap-2.5 py-2 min-w-0" style={{ borderTop: `1px solid ${ruleColor}` }}>
-                      <Icon aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-[3px]" style={{ color: accentText }} />
-                      {body}
+          {/* Venue Details Section */}
+          {(venue.venue_category || venue.venue_address || highlightTags.length > 0 || atmosphereTags.length > 0 || venue.venue_phone || venue.venue_website) && (
+            <>
+              <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
+              <div>
+                <p className={`${H4_KICKER} mb-3 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>Venue Details</p>
+
+                <div className="space-y-2.5">
+                  {venue.venue_category && (
+                    <div className="flex items-center gap-2.5">
+                      <Tag className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{parseToArray(venue.venue_category).join(', ')}</span>
                     </div>
-                  ))}
+                  )}
+                  {highlightTags.length > 0 && (
+                    <div className="flex items-center gap-2.5">
+                      <Star className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{highlightTags.join(', ')}</span>
+                    </div>
+                  )}
+                  {atmosphereTags.length > 0 && (
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{atmosphereTags.join(', ')}</span>
+                    </div>
+                  )}
+                  {venue.venue_phone && (
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_phone}</span>
+                    </div>
+                  )}
+                  {venue.venue_address && (
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <span className={`text-[13px] leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_address}</span>
+                    </div>
+                  )}
+                  {venue.venue_website && (
+                    <div className="flex items-center gap-2.5">
+                      <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
+                      <a
+                        href={venue.venue_website.startsWith('http') ? venue.venue_website : `https://${venue.venue_website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-[13px] font-medium truncate ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {venue.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
-            );
-          })()}
+            </>
+          )}
         </div>
 
         {/* Fixed Action Buttons at bottom */}
