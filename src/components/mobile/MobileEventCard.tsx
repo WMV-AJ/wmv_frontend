@@ -13,7 +13,6 @@ import {
   Music,
   Sparkles,
   FileText,
-  MapPin,
   Star,
   Instagram,
   Phone,
@@ -29,9 +28,11 @@ import {
   Sunset,
   Moon,
   Ticket,
+  Mic,
   Building2,
   Navigation2,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface EventCardData {
   event: {
@@ -148,11 +149,24 @@ function parseToArray(value: unknown): string[] {
 // The faces come from `font-inter` on each card root (globals.css @font-face).
 // NOTE home4 only uppercases h1/h2/h3 in CSS — every other capital there is
 // hardcoded in JSX — so each label below carries `uppercase` explicitly.
-const H4_DISPLAY = 'font-tight uppercase font-semibold';               // .page h1-h3 (600)
-const H4_KICKER  = 'text-[11px] uppercase font-bold tracking-[0.18em]';  // .kicker 11/700/.18em
 const H4_LABEL   = 'text-[10px] uppercase font-[650] tracking-[0.16em]'; // .heroFine 10/650/.16em
 const H4_CHIP    = 'text-[10px] font-bold uppercase tracking-wide'; // start-of-day chip type, deliberately NOT the Home 4 label idiom
-const H4_MICRO   = 'text-[9px] uppercase font-bold tracking-[0.17em]';   // .atlasLabel 9/700/.17em
+
+// Offer type → label for the expanded card's Offers cell.
+const DEAL_LABELS: Record<string, string> = {
+  ladies_night: 'Ladies Night',
+  '2for1': 'Buy 1 Get 1',
+  happy_hour: 'Happy Hour',
+  discount: 'Discount',
+  free_entry: 'Free Entry',
+  special_offer: 'Special Offer',
+};
+
+// "a | b , high_energy" → "a · b · high energy" for the expanded card's
+// list cells (vibes arrive as snake_case slugs).
+function joinList(value: string, separator: string | RegExp): string {
+  return value.split(separator).map((part) => part.replace(/_/g, ' ').trim()).filter(Boolean).join(' · ');
+}
 
 const MobileEventCard: React.FC<MobileEventCardProps> = ({
   card,
@@ -337,29 +351,77 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
   const datePill = formatDatePill(event.event_date);
 
-  // Format date for display (ISO → readable)
-  const formatDisplayDate = (dateStr: string) => {
+  // "Fri, Sep 25" — short enough for a half-width detail cell.
+  const formatShortDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     } catch {
       return dateStr;
     }
   };
 
-  // Per-section accent styling for the expanded card's detail rows.
-  const accentBadge = (rgb: string): React.CSSProperties => ({
-    background: `rgba(${rgb}, 0.15)`,
-    border: `1px solid rgba(${rgb}, 0.1)`,
-  });
-  const accentChip = (rgb: string, darkText: string, lightText: string): React.CSSProperties => ({
-    background: `rgba(${rgb}, 0.15)`,
-    color: darkMode ? darkText : lightText,
-    border: `1px solid rgba(${rgb}, 0.25)`,
-  });
-  const labelCls = `${H4_LABEL} ${darkMode ? 'text-silver' : 'text-gray-500'}`;
-  const valueCls = `text-[14px] font-medium mt-0.5 ${darkMode ? 'text-pale' : 'text-gray-900'}`;
+  // ── Expanded card: the collapsed tile's type system, laid out in the
+  // Home 4 "vibe index" idiom — items between hairline rules, the selected
+  // one marked by a top rule in the category colour, icons unboxed and
+  // tinted with the category pill's text colour.
+  const ruleColor = darkMode ? 'rgba(226,227,225,0.14)' : 'rgba(0,0,0,0.10)';
+  const labelCls = `${H4_LABEL} ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`;
+  const valueCls = `font-inter font-[550] text-[14px] leading-snug mt-1 ${darkMode ? 'text-pale' : 'text-gray-900'}`;
+  const longCls = `text-[12px] leading-relaxed mt-1 ${darkMode ? 'text-silver' : 'text-gray-600'}`;
+  const timeLabel = event.event_time_display
+    || (event.event_time_start ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}` : '');
+
+  const renderDetailCell = (key: string, Icon: LucideIcon, label: string, body: React.ReactNode, wide = false) => (
+    <div key={key} className={`pt-2.5 pb-3 min-w-0 ${wide ? 'col-span-2' : ''}`} style={{ borderTop: `1px solid ${ruleColor}` }}>
+      <div className="flex items-center gap-1.5">
+        <Icon aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentText }} />
+        <p className={`${labelCls} truncate`}>{label}</p>
+      </div>
+      {body}
+    </div>
+  );
+
+  // Selected: 1px border + 1px inset shadow in the accent = a 2px rule with
+  // no layout shift against the 1px rules beside it. In-range: same, faded.
+  const renderDateItem = (
+    key: string,
+    day: string,
+    date: string,
+    state: 'selected' | 'range' | 'idle',
+    onSelect?: () => void,
+  ) => {
+    const mark = state === 'selected' ? accentText
+      : state === 'range' ? `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.45)`
+      : null;
+    return (
+      <button
+        key={key}
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onSelect?.(); }}
+        className="flex flex-col items-start min-w-[64px] px-0.5 pt-2 pb-2 flex-shrink-0 text-left whitespace-nowrap transition-colors duration-200"
+        style={{
+          borderTop: `1px solid ${mark ?? ruleColor}`,
+          boxShadow: mark ? `inset 0 1px 0 ${mark}` : undefined,
+          borderBottom: `1px solid ${ruleColor}`,
+        }}
+      >
+        <span
+          className={`${H4_LABEL} ${state === 'selected' ? '' : darkMode ? 'text-silver-dim' : 'text-gray-500'}`}
+          style={state === 'selected' ? { color: accentText } : undefined}
+        >
+          {day}
+        </span>
+        <span className={`font-inter font-[550] text-[14px] leading-tight mt-0.5 ${state === 'selected'
+          ? (darkMode ? 'text-pale' : 'text-gray-900')
+          : (darkMode ? 'text-silver' : 'text-gray-600')}`}
+        >
+          {date}
+        </span>
+      </button>
+    );
+  };
 
   // =============================================
   // FULL-SCREEN EXPANDED VIEW
@@ -393,19 +455,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         {/* Header + Close Button */}
         <div className="flex items-start px-4 pt-5 pb-2 flex-shrink-0">
           <div className="flex-1 min-w-0">
-            <h2 className={`${H4_DISPLAY} text-[20px] leading-snug tracking-[-0.045em] ${darkMode ? 'text-pale' : 'text-gray-900'}`}>
+            {/* The tile's face (Inter 600 caps), sized up for a header. */}
+            <h2 className={`font-inter font-semibold uppercase text-[19px] leading-tight tracking-[-0.01em] ${darkMode ? 'text-pale' : 'text-gray-900'}`}>
               {event.event_name}
             </h2>
-            {/* Same colour path as the collapsed card's chip and the filter
-                pill for this category, so all three agree. */}
-            {accentCategory && (
-              <span
-                className="inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
-                style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-              >
-                {getShortDisplayName(accentCategory)}
-              </span>
-            )}
           </div>
           <button
             className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3"
@@ -420,23 +473,33 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           </button>
         </div>
 
-        {/* Venue info (fixed with header) */}
+        {/* Venue: name with the category pill right-aligned on the same row,
+            then rating and address — the collapsed tile's type and icons. */}
         <div className="px-4 pb-2 flex-shrink-0">
-          <p
-            className="font-semibold text-[15px]"
-            style={darkMode
-              ? { fontFamily: "Home3Tight, 'Inter Tight', Arial, sans-serif", color: '#E2E3E1', letterSpacing: '-0.02em' }
-              : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
-          >
-            {venue.venue_name}
-          </p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <Star className="w-3 h-3 text-magenta fill-magenta" />
-            <span className="text-magenta text-[12px] font-bold">{venue.venue_rating}</span>
-            <span className={`text-[11px] ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>({venue.venue_review_count?.toLocaleString()})</span>
-            <span className={`text-[10px] mx-0.5 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
-            <MapPin className={`w-3 h-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-            <span className={`text-[11px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{shortenLocation(venue.venue_location)}</span>
+          <div className="flex items-center gap-2">
+            <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentText }} />
+            <p
+              className={`min-w-0 truncate text-[15px] ${darkMode ? 'font-inter font-[550] text-pale' : 'font-semibold'}`}
+              style={darkMode ? undefined : { fontFamily: displayFont, color: '#8a6d0b', letterSpacing: '-0.01em' }}
+            >
+              {venue.venue_name}
+            </p>
+            {accentCategory && (
+              <span
+                className={`ml-auto flex-shrink-0 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
+                style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+              >
+                {getShortDisplayName(accentCategory)}
+              </span>
+            )}
+          </div>
+          <div className={`flex items-center gap-1 mt-1 min-w-0 text-[12px] ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
+            <Star className={`w-3.5 h-3.5 flex-shrink-0 ${darkMode ? 'text-silver fill-silver' : 'text-amber-500 fill-amber-500'}`} />
+            <span className={`text-[13px] font-bold tabular-nums ${darkMode ? 'text-silver' : 'text-amber-500'}`}>{venue.venue_rating}</span>
+            <span className={`text-[11px] tabular-nums ${darkMode ? 'text-silver-dim' : 'text-gray-400'}`}>({venue.venue_review_count?.toLocaleString()})</span>
+            <span className={`mx-1.5 ${darkMode ? 'text-silver-dim/50' : 'text-gray-300'}`}>|</span>
+            <Navigation2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentText }} />
+            <span className="truncate min-w-0">{shortenLocation(venue.venue_location)}</span>
           </div>
         </div>
 
@@ -446,56 +509,26 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           style={{ scrollbarWidth: 'thin' }}
         >
           {/* Date picker sits directly above the media, per the brief. */}
-          {/* Date Pills */}
+          {/* Dates — ruled items, no boxes (see renderDateItem). */}
           <div className="pb-4 pt-1">
             <div
-              className="flex items-center gap-1.5 overflow-x-auto"
+              className="flex items-stretch gap-3 overflow-x-auto"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {dateOptions.length > 0 ? (
-                dateOptions.map((opt) => {
-                  const isClicked = selectedDates.includes(opt.dateKey);
-                  const isInRange = presetRangeDates.includes(opt.dateKey);
-                  const isFullSelected = isClicked && (!isInRange || selectedDates.length < presetRangeDates.length);
-                  return (
-                    <button
-                      key={opt.dateKey}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onDateChange) {
-                          onDateChange([opt.dateKey]);
-                        }
-                      }}
-                      className="flex flex-col items-center px-3 py-1.5 rounded-xl whitespace-nowrap flex-shrink-0 transition-all duration-200"
-                      style={{
-                        background: isFullSelected
-                          ? (darkMode ? 'rgba(255,255,255,0.20)' : 'rgba(0, 0, 0, 0.45)')
-                          : (darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0, 0, 0, 0.04)'),
-                        border: !isFullSelected && isInRange
-                          ? '2px solid rgba(59, 130, 246, 0.6)'
-                          : `1px solid ${isFullSelected ? (darkMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.1)') : (darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.06)')}`,
-                        boxShadow: isFullSelected ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                      }}
-                    >
-                      <span className={`${H4_MICRO} ${isFullSelected ? 'text-white' : 'text-silver-dim'}`}>
-                        {opt.day}
-                      </span>
-                      <span className={`text-[12px] font-semibold ${isFullSelected ? 'text-white' : (darkMode ? 'text-gray-200' : 'text-gray-600')}`}>
-                        {opt.date}
-                      </span>
-                    </button>
-                  );
-                })
-              ) : (
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
-                  style={{ background: 'rgba(0, 0, 0, 0.45)', border: '1px solid rgba(0, 0, 0, 0.1)' }}
-                >
-                  <Calendar className="w-3 h-3 text-white" />
-                  <span className="text-[10px] text-white font-bold uppercase">{datePill.day}</span>
-                  <span className="text-[12px] text-white font-semibold">{datePill.date}</span>
-                </div>
-              )}
+              {dateOptions.length > 0
+                ? dateOptions.map((opt) => {
+                    const isClicked = selectedDates.includes(opt.dateKey);
+                    const isInRange = presetRangeDates.includes(opt.dateKey);
+                    const isFullSelected = isClicked && (!isInRange || selectedDates.length < presetRangeDates.length);
+                    return renderDateItem(
+                      opt.dateKey,
+                      opt.day,
+                      opt.date,
+                      isFullSelected ? 'selected' : isInRange ? 'range' : 'idle',
+                      onDateChange ? () => onDateChange([opt.dateKey]) : undefined,
+                    );
+                  })
+                : renderDateItem('event-date', datePill.day, datePill.date, 'selected')}
             </div>
           </div>
 
@@ -549,257 +582,115 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             </div>
           </div>
 
-          {/* Detail rows — order: date+time, artists, genre, offers, entry,
-              event type, details, then venue details below. One muted style
-              throughout. */}
-          <div className="space-y-4">
-          {/* Date & Time — one line */}
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('240, 128, 192')}>
-                  <Calendar className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={labelCls}>Date & Time</p>
-                  <p className={valueCls}>
-                    {formatDisplayDate(event.event_date) || 'TBA'}
-                    {event.event_time_start && (
-                      <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-                        {' '}· {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
+          {/* Detail grid — ruled cells, two columns for short facts; offers
+              and notes run full width. An odd last short cell also spans
+              both columns so the grid never ends on a hole. */}
+          {(() => {
+            const shortCells: Array<[string, LucideIcon, string, React.ReactNode]> = [
+              ['date', Calendar, 'Date & Time', (
+                <React.Fragment key="v">
+                  <p className={valueCls}>{formatShortDate(event.event_date) || 'TBA'}</p>
+                  {timeLabel && <p className={longCls}>{timeLabel}</p>}
+                </React.Fragment>
+              )],
+              ['entry', DollarSign, 'Entry', <p key="v" className={valueCls}>{event.event_entry_price || 'TBA'}</p>],
+            ];
+            if (event.event_categories && event.event_categories.length > 0) {
+              shortCells.push(['type', Tag, event.event_categories.map((cat) => cat.primary).join(', '), (
+                <p key="v" className={valueCls}>{event.event_categories.map((cat) => cat.secondary).filter(Boolean).join(', ') || '—'}</p>
+              )]);
+            }
+            if (event.event_vibe) shortCells.push(['vibes', Sparkles, 'Vibes', <p key="v" className={valueCls}>{joinList(event.event_vibe, '|')}</p>]);
+            if (event.music_genre) shortCells.push(['music', Music, 'Music', <p key="v" className={valueCls}>{joinList(event.music_genre, ',')}</p>]);
+            if (event.artist) shortCells.push(['artists', Mic, 'Artists', <p key="v" className={valueCls}>{joinList(event.artist, /[|,]/)}</p>]);
 
-  
-            {/* Artists */}
-            {event.artist && (
-              <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('240, 128, 192')}>
-                  <Music className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>Artists</p>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {event.artist.split(/[|,]/).map((artist, idx) => (
-                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                        style={accentChip('191, 193, 195', '#E2E3E1', 'rgb(85,88,90)')}>
-                        {artist.trim()}
-                      </span>
+            const hasDeals = !!event.deals && event.deals.length > 0;
+            const hasOfferText = !!event.event_offers && !event.event_offers.toLowerCase().includes('no special offers');
+
+            return (
+              <div className="grid grid-cols-2 gap-x-4" style={{ borderBottom: `1px solid ${ruleColor}` }}>
+                {shortCells.map(([key, Icon, label, body], idx) =>
+                  renderDetailCell(key, Icon, label, body, shortCells.length % 2 === 1 && idx === shortCells.length - 1))}
+
+                {hasDeals ? renderDetailCell('offers', Gift, 'Offers', (
+                  <div className="mt-1 space-y-2">
+                    {event.deals!.map((deal, idx) => (
+                      <div key={idx}>
+                        <p className="flex items-baseline gap-2 flex-wrap">
+                          <span className={`${H4_LABEL} ${darkMode ? 'text-pale' : 'text-gray-900'}`}>{DEAL_LABELS[deal.type] ?? DEAL_LABELS.special_offer}</span>
+                          {deal.timing && <span className={`text-[11px] ${darkMode ? 'text-silver-dim' : 'text-gray-500'}`}>{deal.timing}</span>}
+                        </p>
+                        <p className={longCls}>{deal.description}</p>
+                      </div>
                     ))}
                   </div>
-                </div>
-              </div>
-            )}
+                ), true) : hasOfferText ? renderDetailCell('offers', Gift, 'Offers', <p className={longCls}>{event.event_offers}</p>, true) : null}
 
-            {/* Music Genres */}
-            {event.music_genre && (
-              <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('240, 128, 192')}>
-                  <Music className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>Music</p>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {event.music_genre.split(',').map((genre, idx) => (
-                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                        style={accentChip('191, 193, 195', '#E2E3E1', 'rgb(85,88,90)')}>
-                        {genre.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Vibes */}
-            {event.event_vibe && (
-              <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('240, 128, 192')}>
-                  <Sparkles className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>Vibes</p>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    {event.event_vibe.split('|').map((vibe, idx) => (
-                      <span key={idx} className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                        style={accentChip('191, 193, 195', '#E2E3E1', 'rgb(85,88,90)')}>
-                        {vibe.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Offers */}
-            {event.deals && event.deals.length > 0 ? (
-              <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('240, 128, 192')}>
-                  <Gift className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>Offers</p>
-                  <div className="mt-1.5 space-y-2">
-                    {event.deals.map((deal, idx) => {
-                      const dealConfig: Record<string, { label: string; rgb: string; darkText: string; lightText: string }> = {
-                        ladies_night: { label: 'Ladies Night', rgb: '236, 72, 153', darkText: 'rgb(249, 168, 212)', lightText: 'rgb(190, 24, 93)' },
-                        '2for1': { label: 'Buy 1 Get 1', rgb: '16, 185, 129', darkText: 'rgb(110, 231, 183)', lightText: 'rgb(5, 150, 105)' },
-                        happy_hour: { label: 'Happy Hour', rgb: '251, 191, 36', darkText: 'rgb(253, 224, 71)', lightText: 'rgb(180, 130, 20)' },
-                        discount: { label: 'Discount', rgb: '59, 130, 246', darkText: 'rgb(147, 197, 253)', lightText: 'rgb(37, 99, 235)' },
-                        free_entry: { label: 'Free Entry', rgb: '34, 197, 94', darkText: 'rgb(134, 239, 172)', lightText: 'rgb(22, 163, 74)' },
-                        special_offer: { label: 'Special Offer', rgb: '249, 115, 22', darkText: 'rgb(253, 186, 116)', lightText: 'rgb(194, 80, 10)' },
-                      };
-                      const config = dealConfig[deal.type] || dealConfig.special_offer;
-                      return (
-                        <div key={idx} className="rounded-lg px-2.5 py-2" style={{ background: darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0, 0, 0, 0.02)', border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.05)' }}>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                              style={accentChip(config.rgb, config.darkText, config.lightText)}>
-                              {config.label}
-                            </span>
-                            {deal.timing && (
-                              <span className={`text-[10px] font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{deal.timing}</span>
-                            )}
-                          </div>
-                          <p className={`text-[12px] mt-1 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{deal.description}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            ) : event.event_offers && !event.event_offers.toLowerCase().includes('no special offers') ? (
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('240, 128, 192')}>
-                  <Gift className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>Offers</p>
-                  <p className={valueCls}>{event.event_offers}</p>
-                </div>
-              </div>
-            ) : null}
-
-            {/* Entry */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('240, 128, 192')}>
-                <DollarSign className="w-4 h-4 text-magenta" />
-              </div>
-              <div className="flex-1">
-                <p className={labelCls}>Entry</p>
-                <p className={valueCls}>{event.event_entry_price || 'TBA'}</p>
-              </div>
-            </div>
-
-            {/* Event type (e.g. Club Night) */}
-            {event.event_categories && event.event_categories.length > 0 && (
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('240, 128, 192')}>
-                  <Tag className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>
-                    {event.event_categories.map(cat => cat.primary).join(', ')}
-                  </p>
-                  <p className={valueCls}>
-                    {event.event_categories.map(cat => cat.secondary).filter(Boolean).join(', ') || '—'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Details */}
-            {event.analysis_notes && (
-              <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={accentBadge('240, 128, 192')}>
-                  <FileText className="w-4 h-4 text-magenta" />
-                </div>
-                <div className="flex-1">
-                  <p className={labelCls}>Details</p>
-                  <p
-                    className="text-[12px] mt-1 leading-relaxed"
-                    style={{
-                      color: darkMode ? 'rgba(253, 224, 71, 0.85)' : 'rgb(120, 100, 50)',
-                      display: '-webkit-box',
-                      WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: isDetailsExpanded ? 'visible' : 'hidden',
-                    }}
-                  >
-                    {event.analysis_notes}
-                  </p>
-                  {event.analysis_notes.length > 120 && (
-                    <button
-                      className="text-[10px] font-semibold mt-1.5 transition-colors"
-                      style={{ color: darkMode ? 'rgba(253, 224, 71, 0.7)' : 'rgb(140, 120, 60)' }}
-                      onClick={(e) => { e.stopPropagation(); setIsDetailsExpanded(prev => !prev); }}
+                {event.analysis_notes && renderDetailCell('details', FileText, 'Details', (
+                  <>
+                    <p
+                      className={longCls}
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: isDetailsExpanded ? 'visible' : 'hidden',
+                      }}
                     >
-                      {isDetailsExpanded ? 'Show less' : 'Show more'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-          </div>
-
-          {/* Venue Details Section */}
-          {(venue.venue_category || venue.venue_address || highlightTags.length > 0 || atmosphereTags.length > 0 || venue.venue_phone || venue.venue_website) && (
-            <>
-              <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
-              <div>
-                <p className={`${H4_KICKER} mb-3 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>Venue Details</p>
-
-                <div className="space-y-2.5">
-                  {venue.venue_category && (
-                    <div className="flex items-center gap-2.5">
-                      <Tag className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{parseToArray(venue.venue_category).join(', ')}</span>
-                    </div>
-                  )}
-                  {highlightTags.length > 0 && (
-                    <div className="flex items-center gap-2.5">
-                      <Star className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{highlightTags.join(', ')}</span>
-                    </div>
-                  )}
-                  {atmosphereTags.length > 0 && (
-                    <div className="flex items-center gap-2.5">
-                      <Sparkles className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{atmosphereTags.join(', ')}</span>
-                    </div>
-                  )}
-                  {venue.venue_phone && (
-                    <div className="flex items-center gap-2.5">
-                      <Phone className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_phone}</span>
-                    </div>
-                  )}
-                  {venue.venue_address && (
-                    <div className="flex items-start gap-2.5">
-                      <MapPin className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className={`text-[13px] leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_address}</span>
-                    </div>
-                  )}
-                  {venue.venue_website && (
-                    <div className="flex items-center gap-2.5">
-                      <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <a
-                        href={venue.venue_website.startsWith('http') ? venue.venue_website : `https://${venue.venue_website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`text-[13px] font-medium truncate ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
-                        onClick={(e) => e.stopPropagation()}
+                      {event.analysis_notes}
+                    </p>
+                    {event.analysis_notes.length > 120 && (
+                      <button
+                        className={`${H4_LABEL} mt-1.5 transition-colors ${darkMode ? 'text-silver' : 'text-gray-600'}`}
+                        onClick={(e) => { e.stopPropagation(); setIsDetailsExpanded(prev => !prev); }}
                       >
-                        {venue.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
-                      </a>
+                        {isDetailsExpanded ? 'Show less' : 'Show more'}
+                      </button>
+                    )}
+                  </>
+                ), true)}
+              </div>
+            );
+          })()}
+
+          {/* Venue Details — same ruled rows, full width. */}
+          {(() => {
+            const rowText = `text-[13px] leading-snug ${darkMode ? 'text-silver' : 'text-gray-700'}`;
+            const rows: Array<[string, LucideIcon, React.ReactNode]> = [];
+            if (venue.venue_category) rows.push(['category', Tag, <span key="v" className={rowText}>{parseToArray(venue.venue_category).join(', ')}</span>]);
+            if (highlightTags.length > 0) rows.push(['highlights', Star, <span key="v" className={rowText}>{highlightTags.join(', ')}</span>]);
+            if (atmosphereTags.length > 0) rows.push(['atmosphere', Sparkles, <span key="v" className={rowText}>{atmosphereTags.join(', ')}</span>]);
+            if (venue.venue_phone) rows.push(['phone', Phone, <span key="v" className={rowText}>{venue.venue_phone}</span>]);
+            if (venue.venue_address) rows.push(['address', Navigation2, <span key="v" className={rowText}>{venue.venue_address}</span>]);
+            if (venue.venue_website) {
+              rows.push(['website', Globe, (
+                <a
+                  key="v"
+                  href={venue.venue_website.startsWith('http') ? venue.venue_website : `https://${venue.venue_website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-[13px] font-medium truncate underline underline-offset-2 ${darkMode ? 'text-pale decoration-silver-dim' : 'text-gray-900 decoration-gray-400'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {venue.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
+                </a>
+              )]);
+            }
+            if (rows.length === 0) return null;
+            return (
+              <div className="mt-5">
+                <p className={`${labelCls} mb-1.5`}>Venue Details</p>
+                <div style={{ borderBottom: `1px solid ${ruleColor}` }}>
+                  {rows.map(([key, Icon, body]) => (
+                    <div key={key} className="flex items-start gap-2.5 py-2 min-w-0" style={{ borderTop: `1px solid ${ruleColor}` }}>
+                      <Icon aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-[3px]" style={{ color: accentText }} />
+                      {body}
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
-            </>
-          )}
+            );
+          })()}
         </div>
 
         {/* Fixed Action Buttons at bottom */}
