@@ -1,5 +1,6 @@
 'use client';
 
+import { Gift } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect, useRef, memo, type MutableRefObject } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
@@ -164,7 +165,10 @@ function OfferBanner({
           boxShadow: '0 4px 20px rgba(0,0,0,0.55)',
         }}
       >
-        <p className="text-[11px] font-semibold leading-snug" style={{ color: '#f5f5f5' }}>{offer.trim()}</p>
+        <p className="flex items-start gap-1.5 text-[11px] font-semibold leading-snug" style={{ color: '#f5f5f5' }}>
+          <Gift aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-px" style={{ color: 'rgba(255,255,255,0.7)' }} />
+          <span>{offer.trim()}</span>
+        </p>
       </div>
     </MapPopup>
   );

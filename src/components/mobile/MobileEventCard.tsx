@@ -150,7 +150,6 @@ function parseToArray(value: unknown): string[] {
 // The faces come from `font-inter` on each card root (globals.css @font-face).
 // NOTE home4 only uppercases h1/h2/h3 in CSS — every other capital there is
 // hardcoded in JSX — so each label below carries `uppercase` explicitly.
-const H4_KICKER  = 'text-[11px] uppercase font-bold tracking-[0.18em]';  // .kicker 11/700/.18em
 const H4_LABEL   = 'text-[10px] uppercase font-[650] tracking-[0.16em]'; // .heroFine 10/650/.16em
 const H4_CHIP    = 'text-[10px] font-bold uppercase tracking-wide'; // start-of-day chip type, deliberately NOT the Home 4 label idiom
 
@@ -393,6 +392,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     date: string,
     state: 'selected' | 'range' | 'idle',
     onSelect?: () => void,
+    shaded = false,
   ) => {
     const mark = state === 'selected' ? accentText
       : state === 'range' ? `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.45)`
@@ -407,6 +407,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           borderTop: `1px solid ${mark ?? ruleColor}`,
           boxShadow: mark ? `inset 0 1px 0 ${mark}` : undefined,
           borderBottom: `1px solid ${ruleColor}`,
+          // A lone date is always selected and gets a white wash on top.
+          background: shaded ? (darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.05)') : undefined,
+          paddingLeft: shaded ? 10 : undefined,
+          paddingRight: shaded ? 10 : undefined,
         }}
       >
         <span
@@ -461,6 +465,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             <h2 className={`font-inter font-semibold uppercase text-[19px] leading-tight tracking-[-0.01em] ${darkMode ? 'text-pale' : 'text-gray-900'}`}>
               {event.event_name}
             </h2>
+            {/* Category pill under the event name, as on the collapsed tile. */}
+            {accentCategory && (
+              <span
+                className={`inline-block mt-1.5 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
+                style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
+              >
+                {getShortDisplayName(accentCategory)}
+              </span>
+            )}
           </div>
           <button
             className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3"
@@ -475,8 +488,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           </button>
         </div>
 
-        {/* Venue: name with the category pill right-aligned on the same row,
-            then rating and address — the collapsed tile's type and icons. */}
+        {/* Venue name, then rating and address — the collapsed tile's type
+            and icons. */}
         <div className="px-4 pb-2 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentText }} />
@@ -486,14 +499,6 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             >
               {venue.venue_name}
             </p>
-            {accentCategory && (
-              <span
-                className={`ml-auto flex-shrink-0 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
-                style={{ background: accentSoft, color: accentText, border: `1px solid ${accentBorder}` }}
-              >
-                {getShortDisplayName(accentCategory)}
-              </span>
-            )}
           </div>
           <div className={`flex items-center gap-1 mt-1 min-w-0 text-[12px] ${darkMode ? 'text-silver' : 'text-gray-500'}`}>
             <Star className={`w-3.5 h-3.5 flex-shrink-0 ${darkMode ? 'text-silver fill-silver' : 'text-amber-500 fill-amber-500'}`} />
@@ -522,15 +527,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                     const isClicked = selectedDates.includes(opt.dateKey);
                     const isInRange = presetRangeDates.includes(opt.dateKey);
                     const isFullSelected = isClicked && (!isInRange || selectedDates.length < presetRangeDates.length);
+                    const isOnly = dateOptions.length === 1;
                     return renderDateItem(
                       opt.dateKey,
                       opt.day,
                       opt.date,
-                      isFullSelected ? 'selected' : isInRange ? 'range' : 'idle',
+                      isOnly || isFullSelected ? 'selected' : isInRange ? 'range' : 'idle',
                       onDateChange ? () => onDateChange([opt.dateKey]) : undefined,
+                      isOnly,
                     );
                   })
-                : renderDateItem('event-date', datePill.day, datePill.date, 'selected')}
+                : renderDateItem('event-date', datePill.day, datePill.date, 'selected', undefined, true)}
             </div>
           </div>
 
@@ -660,7 +667,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             <>
               <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
               <div>
-                <p className={`${H4_KICKER} mb-3 ${darkMode ? 'text-silver' : 'text-gray-500'}`}>Venue Details</p>
+                <p className={`text-[11px] uppercase font-extrabold tracking-[0.18em] mb-3 ${darkMode ? 'text-pale' : 'text-gray-900'}`}>Venue Details</p>
 
                 <div className="space-y-2.5">
                   {venue.venue_category && (
