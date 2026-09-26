@@ -85,6 +85,10 @@ function CardsInner() {
   const pillsRef = useRef<HTMLDivElement>(null);
   const cardsScrollRef = useRef<HTMLDivElement>(null);
 
+  // Re-runs when loading ends: the page returns a loader first, so on the
+  // first pass the pills don't exist yet. With [] deps the height stayed 0,
+  // the scroll area started under the fixed pills, and an expanded card
+  // scrolled its title underneath them.
   useLayoutEffect(() => {
     const el = pillsRef.current;
     if (!el) return;
@@ -95,7 +99,7 @@ function CardsInner() {
       obs.observe(el);
       return () => obs.disconnect();
     }
-  }, []);
+  }, [isLoading]);
 
   const { filterOptions } = useFilterOptions();
 

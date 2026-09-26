@@ -6,6 +6,42 @@ import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { ShareModal } from '@/components/shared/ShareModal';
 import { shortenLocation } from '@/lib/format-location';
+import { formatDateLabel } from '@/lib/time-utils';
+import { getShortDisplayName } from '@/lib/category-mappings';
+import EventMedia from '@/components/shared/EventMedia';
+import {
+  H4_LABEL,
+  H4_CHIP,
+  TILE_RULE,
+  DEAL_LABELS,
+  joinList,
+  resolveAccentCategory,
+  getCardAccent,
+  useRatingWrap,
+} from '@/components/shared/card-style';
+import {
+  Clock,
+  Building2,
+  Navigation2,
+  Star,
+  Calendar,
+  DollarSign,
+  Tag,
+  Sparkles,
+  Music,
+  Mic,
+  Gift,
+  FileText,
+  MapPin,
+  Link as LinkIcon,
+  Instagram,
+  Phone,
+  Share2,
+  Ticket,
+  Navigation,
+  X,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import './StackedEventCards.css';
 
 // ===========================================
@@ -37,6 +73,7 @@ interface Event {
   event_subtitle: string;
   event_time_start: string;
   event_time_end: string;
+  event_time_display?: string;
   event_date: string;
   event_entry_price: string;
   event_offers: string;
@@ -49,7 +86,8 @@ interface Event {
   confidence_score?: number;
   analysis_notes?: string;
   website_social?: string;
-  event_categories?: any[];
+  event_categories?: Array<{ primary: string; secondary?: string; confidence?: number }>;
+  deals?: Array<{ type: string; timing?: string | null; description: string }>;
   media_url_1?: string;
   media_type_1?: string;
   media_url_2?: string;
@@ -64,7 +102,9 @@ interface EventCardData {
 
 interface StackedEventCardsProps {
   cards: EventCardData[];
-  getCategoryColor: (category: string) => { hue: number; saturation: number };
+  /** @deprecated Cards now take their colour from the category accent
+   *  (card-style.getCardAccent); kept optional so callers need no change. */
+  getCategoryColor?: (category: string) => { hue: number; saturation: number };
 }
 
 interface EventCardProps {
@@ -73,47 +113,13 @@ interface EventCardProps {
   index: number;
   isExpanded: boolean;
   onCardClick: (id: string) => void;
-  getCardColor: (category: string, rating: number) => string;
   contentRef: React.RefObject<HTMLDivElement | null> | null;
   contentHeight: number;
 }
 
 // ===========================================
-// COLOR UTILITY FUNCTION
+// SUBTITLE UTILITY
 // ===========================================
-
-function generateCardColor(
-  categoryColor: { hue: number; saturation: number },
-  venueRating: number
-): string {
-  const clampedRating = Math.max(1.0, Math.min(5.0, venueRating));
-  const normalized = (clampedRating - 1.0) / 4.0;
-  const lightness = 85 - (normalized * 15);
-  const opacity = 0.20 + (normalized * 0.15);
-  return `hsla(${categoryColor.hue}, ${categoryColor.saturation}%, ${lightness}%, ${opacity})`;
-}
-
-// ===========================================
-// DATE/TIME FORMATTING UTILITIES
-// ===========================================
-
-function formatTime(time: string): string {
-  if (!time) return '';
-  const timeRegex = /^(\d{1,2}):(\d{2})\s?(AM|PM)$/i;
-  const match = time.trim().match(timeRegex);
-  if (!match) return '';
-  const [_, hour, minute, period] = match;
-  return `${hour}:${minute} ${period.toUpperCase()}`;
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const month = months[date.getMonth()];
-  const year = date.getFullYear().toString().slice(-2);
-  return `${day} ${month} ${year}`;
-}
 
 function generateSmartSubtitle(
   eventName: string,
@@ -139,125 +145,6 @@ function generateSmartSubtitle(
 }
 
 // ===========================================
-// SVG ICON COMPONENTS
-// ===========================================
-
-const ClockIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10"/>
-    <polyline points="12 6 12 12 16 14"/>
-  </svg>
-);
-
-const CalendarIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-    <line x1="16" y1="2" x2="16" y2="6"/>
-    <line x1="8" y1="2" x2="8" y2="6"/>
-    <line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-);
-
-const DollarIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10"/>
-    <text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" stroke="none">$</text>
-  </svg>
-);
-
-const GiftIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="8" width="18" height="12" rx="2"/>
-    <path d="M12 8v12"/>
-    <path d="M8 8V6a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/>
-    <path d="M16 8V6a2 2 0 0 0-2-2h0a2 2 0 0 0-2 2v2"/>
-  </svg>
-);
-
-const InstagramIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-  </svg>
-);
-
-const PhoneIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-  </svg>
-);
-
-const ShareIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="18" cy="5" r="3"/>
-    <circle cx="6" cy="12" r="3"/>
-    <circle cx="18" cy="19" r="3"/>
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-  </svg>
-);
-
-const NavigationIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-  </svg>
-);
-
-const TicketIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M2 9V7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z"/>
-    <path d="M13 5v2"/>
-    <path d="M13 17v2"/>
-    <path d="M13 11v2"/>
-  </svg>
-);
-
-const MusicIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M9 18V5l12-2v13" />
-    <circle cx="6" cy="18" r="3" />
-    <circle cx="18" cy="16" r="3" />
-  </svg>
-);
-
-const SparklesIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
-  </svg>
-);
-
-const FileTextIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="16" y1="13" x2="8" y2="13" />
-    <line x1="16" y1="17" x2="8" y2="17" />
-    <polyline points="10 9 9 9 8 9" />
-  </svg>
-);
-
-const MapPinIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-);
-
-const StarIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-
-const LinkIcon: React.FC = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-  </svg>
-);
-
-// ===========================================
 // EVENT CARD COMPONENT
 // ===========================================
 
@@ -267,12 +154,23 @@ const EventCard: React.FC<EventCardProps> = ({
   index,
   isExpanded,
   onCardClick,
-  getCardColor,
   contentRef,
   contentHeight,
 }) => {
-  const cardColor = getCardColor(event.category, venue.venue_rating);
-  const dateDisplay = formatDate(event.event_date);
+  // Same accent, type and icons as the map tile (MobileEventCard) — see
+  // @/components/shared/card-style.
+  const accentCategory = resolveAccentCategory(event);
+  const accent = getCardAccent(accentCategory);
+  const {
+    nameRef: venueNameRef,
+    ratingRef,
+    wrapped: ratingWrapped,
+  } = useRatingWrap(`${venue.venue_name}|${venue.venue_rating}|${venue.venue_review_count}`);
+  const timeLabel = event.event_time_display
+    || (event.event_time_start ? `${event.event_time_start}${event.event_time_end ? ` – ${event.event_time_end}` : ''}` : '');
+  // The list can span several dates, so unlike the map tile the date always
+  // leads the time line.
+  const dateTimeLabel = [formatDateLabel(event.event_date), timeLabel].filter(Boolean).join(' · ');
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
@@ -349,295 +247,244 @@ const EventCard: React.FC<EventCardProps> = ({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const labelCls = `${H4_LABEL} text-silver-dim`;
+  const valueCls = 'font-inter font-[550] text-[14px] leading-snug mt-1 text-pale';
+  const longCls = 'text-[12px] leading-relaxed mt-1 text-silver';
+
+  // "Fri, Sep 26" — short enough for a half-width detail cell.
+  const shortDate = (() => {
+    const d = new Date(event.event_date);
+    return isNaN(d.getTime())
+      ? event.event_date
+      : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  })();
+
+  const renderDetailCell = (key: string, Icon: LucideIcon, label: string, body: React.ReactNode, wide = false) => (
+    <div key={key} className={`pt-2.5 pb-3 min-w-0 ${wide ? 'col-span-2' : ''}`} style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+      <div className="flex items-center gap-1.5">
+        <Icon aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent.text }} />
+        <p className={`${labelCls} truncate`}>{label}</p>
+      </div>
+      {body}
+    </div>
+  );
+
+  const shortCells: Array<{ key: string; icon: LucideIcon; label: string; body: React.ReactNode }> = [
+    {
+      key: 'date', icon: Calendar, label: 'Date & Time', body: (
+        <>
+          <p className={valueCls}>{shortDate || 'TBA'}</p>
+          {timeLabel && <p className={longCls}>{timeLabel}</p>}
+        </>
+      ),
+    },
+    { key: 'entry', icon: DollarSign, label: 'Entry', body: <p className={valueCls}>{event.event_entry_price || 'TBA'}</p> },
+  ];
+  if (event.event_categories && event.event_categories.length > 0) {
+    shortCells.push({
+      key: 'type', icon: Tag,
+      label: event.event_categories.map((cat) => cat.primary).join(', '),
+      body: <p className={valueCls}>{event.event_categories.map((cat) => cat.secondary).filter(Boolean).join(', ') || '—'}</p>,
+    });
+  }
+  if (event.event_vibe) shortCells.push({ key: 'vibes', icon: Sparkles, label: 'Vibes', body: <p className={valueCls}>{joinList(event.event_vibe, '|')}</p> });
+  if (event.music_genre) shortCells.push({ key: 'music', icon: Music, label: 'Music', body: <p className={valueCls}>{joinList(event.music_genre, ',')}</p> });
+  if (event.artist) shortCells.push({ key: 'artists', icon: Mic, label: 'Artists', body: <p className={valueCls}>{joinList(event.artist, /[|,]/)}</p> });
+
+  const hasDeals = !!event.deals && event.deals.length > 0;
+  const hasOfferText = !!event.event_offers && !event.event_offers.toLowerCase().includes('no special offers');
+
+  // Venue highlights / atmosphere arrive as JSON arrays of single-key objects
+  // or as plain strings.
+  const parseKeys = (value: string) => {
+    try {
+      const parsed = JSON.parse(value);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return Array.isArray(parsed) ? parsed.map((obj: any) => Object.keys(obj)[0]).join(', ') : value;
+    } catch {
+      return value;
+    }
+  };
+
+  const mediaUrl = event.media_url_1 || event.media_url_2;
+  const mediaType = event.media_url_1 ? event.media_type_1 : event.media_type_2;
+  const siblingUrl = mediaUrl === event.media_url_1 ? event.media_url_2 : undefined;
+  const isVideoUrl = (u: string) => /\.(mp4|mov|webm)(\?.*)?$/i.test(u);
+
   return (
     <>
     <div
       id={`card-${event.id}`}
-      className={`stacked-card ${isExpanded ? 'expanded' : ''}`}
+      className={`stacked-card font-inter antialiased ${isExpanded ? 'expanded' : ''}`}
       style={{
-        backgroundColor: cardColor,
+        // The map tile's flat, category-tinted fill and 3px accent top edge.
+        // In the stack each card's top edge stays visible, so it doubles as
+        // a category stripe.
+        background: accent.tileBg,
+        borderTop: `3px solid ${accent.edge}`,
+        borderRight: '1px solid rgba(255, 255, 255, 0.07)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.07)',
+        boxShadow: `0 2px 20px rgba(0, 0, 0, 0.5), 0 0 16px ${accent.glow}`,
         zIndex: isExpanded ? 9999 : index + 1,
         '--content-height': `${contentHeight}px`,
       } as React.CSSProperties}
       onClick={() => onCardClick(event.id)}
     >
-      {/* HEADER */}
-      <div className="stacked-card-header" style={{ alignItems: 'flex-start', gap: '12px' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Line 1 — Event name */}
-          <h2 className="stacked-card-event-title">
+      {/* HEADER — the map tile's copy column + 25% 9:16 still */}
+      <div className="stacked-card-header">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <h2 className="font-inter font-semibold uppercase text-[15px] leading-tight tracking-[-0.01em] line-clamp-2 text-pale">
             {event.event_name}
           </h2>
 
-          {/* Line 2 — Date & Time. Each chunk is nowrap so a tight column
-              can only break BETWEEN date and time, never inside "14 Aug 26"
-              or between "6:00" and "PM". */}
-          <div className="stacked-card-time-row" style={{ marginTop: '5px', flexWrap: 'wrap', rowGap: '2px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', marginRight: '6px' }}>
-              <CalendarIcon />
-              {dateDisplay}
+          <span className={`${H4_LABEL} flex items-center gap-1.5 mt-1 text-silver`}>
+            <Clock aria-hidden className="w-3 h-3 flex-shrink-0" style={{ color: accent.text }} />
+            <span className="truncate">{dateTimeLabel}</span>
+          </span>
+
+          {accentCategory && (
+            <span
+              className={`self-start mt-1 ${H4_CHIP} px-2.5 py-1 rounded-full whitespace-nowrap`}
+              style={{ background: accent.soft, color: accent.text, border: `1px solid ${accent.border}` }}
+            >
+              {getShortDisplayName(accentCategory)}
             </span>
-            {(() => {
-              const startT = formatTime(event.event_time_start);
-              const endT = formatTime(event.event_time_end);
-              if (!startT && !endT) return null;
-              return (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-                  <span style={{ color: 'rgba(144,238,144,0.4)' }}>·</span>
-                  <ClockIcon />
-                  <span>
-                    {startT || endT}
-                    {startT && endT && ` - ${endT}`}
-                  </span>
-                </span>
-              );
-            })()}
-          </div>
+          )}
 
-          {/* Line 3 — Venue name */}
-          <span className="stacked-card-venue-name" style={{ display: 'block', marginTop: '5px' }}>{venue.venue_name}</span>
-
-          {/* Line 4 — Rating + Area */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px', flexWrap: 'wrap' }}>
-            <span className="stacked-card-star">★</span>
-            <span className="stacked-card-rating-value">{venue.venue_rating}</span>
-            <span className="stacked-card-review-count">({venue.venue_review_count.toLocaleString()})</span>
-            <span style={{ color: 'rgba(255,255,255,0.15)', margin: '0 2px' }}>|</span>
-            <span style={{ color: 'rgba(200, 200, 220, 0.7)', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortenLocation(venue.venue_location)}</span>
-          </div>
-
-          {/* Line 5 — Smart subtitle (category tags / attributes) */}
           {(() => {
-            const smartSubtitle = generateSmartSubtitle(
-              event.event_name,
-              venue.venue_name,
-              event.event_subtitle
-            );
+            const smartSubtitle = generateSmartSubtitle(event.event_name, venue.venue_name, event.event_subtitle);
             if (!smartSubtitle) return null;
             return (
-              <p className="stacked-card-event-subtitle" style={{ marginTop: '6px' }}>
-                {smartSubtitle.toUpperCase()}
-              </p>
+              <span className={`${H4_LABEL} truncate min-w-0 mt-1 text-silver-dim`}>
+                {smartSubtitle}
+              </span>
             );
           })()}
+
+          <div aria-hidden className="mt-1.5" style={{ borderTop: `1px solid ${TILE_RULE}` }} />
+
+          <div className="mt-1 line-clamp-2 text-[14px] leading-snug">
+            <Building2
+              aria-hidden
+              className="w-3.5 h-3.5 inline align-[-2px] mr-1.5"
+              style={{ color: accent.text }}
+            />
+            <span ref={venueNameRef} className="font-inter font-[550] text-pale">
+              {venue.venue_name}
+            </span>
+            {/* Break opportunity between the name and the nowrap rating. */}
+            <wbr />
+            <span ref={ratingRef} className={ratingWrapped ? 'block whitespace-nowrap' : 'whitespace-nowrap'}>
+              {!ratingWrapped && <span className="mx-2 text-silver-dim/50">|</span>}
+              <Star className="w-3.5 h-3.5 inline align-text-bottom text-silver fill-silver" />
+              <span className="text-[13px] font-bold ml-1 tabular-nums text-silver">{venue.venue_rating}</span>
+              <span className="text-[11px] ml-1 tabular-nums text-silver-dim">({venue.venue_review_count?.toLocaleString()})</span>
+            </span>
+          </div>
+
+          <span className="flex items-start gap-1.5 mt-0.5 text-[12px] leading-snug text-silver">
+            <Navigation2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-px" style={{ color: accent.text }} />
+            <span className="line-clamp-2 min-w-0">{shortenLocation(venue.venue_location)}</span>
+          </span>
         </div>
 
         <div
-          style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch', cursor: 'pointer' }}
+          className="flex-shrink-0 w-[25%] self-start cursor-pointer"
           onClick={(e) => {
-            const url = event.media_url_1 || event.media_url_2;
-            if (!url) return; // no media — let the tap toggle the card
+            if (!mediaUrl) return; // no media — let the tap toggle the card
             e.stopPropagation();
-            const type = event.media_url_1 ? event.media_type_1 : event.media_type_2;
-            const isVideo = type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url);
-            setFullscreenMedia({ url, isVideo });
+            setFullscreenMedia({ url: mediaUrl, isVideo: mediaType === 'video' || isVideoUrl(mediaUrl) });
           }}
         >
-          {(() => {
-            const url = event.media_url_1 || event.media_url_2;
-            const type = event.media_url_1 ? event.media_type_1 : event.media_type_2;
-            const thumbStyle: React.CSSProperties = {
-              borderRadius: '12px',
-              objectFit: 'cover',
-              border: '1.5px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.04)',
-            };
-            if (!url) {
-              return <div className="stacked-card-thumb" style={{ ...thumbStyle, height: '110px' }} />;
-            }
-            if (type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url)) {
-              return (
-                <img
-                  // Real server-extracted frame (~20KB) instead of pulling video bytes.
-                  src={`/api/video-thumb?src=${encodeURIComponent(url)}`}
-                  alt=""
-                  className="stacked-card-thumb"
-                  style={thumbStyle}
-                  loading="lazy"
-                />
-              );
-            }
-            return (
-              <Image
-                src={url}
-                alt={event.event_name}
-                width={200}
-                height={250}
-                quality={50}
-                className="stacked-card-thumb"
-                style={thumbStyle}
-                // Only the top card (index 0) is the LCP candidate; lazy-load
-                // the rest so they don't compete for download bandwidth on
-                // the initial paint.
-                loading={index === 0 ? 'eager' : 'lazy'}
-                priority={index === 0}
-                sizes="(max-width: 500px) 96px, 128px"
-                onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }}
-              />
-            );
-          })()}
+          <div
+            className="relative w-full rounded-xl overflow-hidden"
+            style={{ aspectRatio: '9 / 16', border: '1px solid rgba(255,255,255,0.10)' }}
+          >
+            <EventMedia
+              src={mediaUrl}
+              mediaType={mediaType}
+              alt={event.event_name}
+              sizes="(max-width: 430px) 30vw, 100px"
+              fill
+              // Only the top card is the LCP candidate.
+              priority={index === 0}
+              poster={siblingUrl && !isVideoUrl(siblingUrl) ? siblingUrl : null}
+            />
+          </div>
         </div>
       </div>
 
-      {/* ARTISTS SECTION */}
-      {/* EXPANDABLE CONTENT */}
+      {/* EXPANDABLE CONTENT — the map card's ruled 2-column detail grid */}
       <div
         ref={isExpanded ? contentRef : null}
         className="stacked-card-content"
       >
-        {event.artist && (
-          <div className="stacked-card-info-row">
-            <div className="stacked-card-info-icon stacked-card-genre-icon">
-              <MusicIcon />
-            </div>
-            <div className="stacked-card-info-content">
-              <span className="stacked-card-info-label">ARTISTS</span>
-              <div className="stacked-card-artists-badges">
-                {event.artist.split(',').map((artist, idx) => (
-                  <span key={idx} className="stacked-card-artist-badge">
-                    {artist.trim()}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-x-4" style={{ borderBottom: `1px solid ${TILE_RULE}` }}>
+          {shortCells.map((cell, idx) =>
+            renderDetailCell(cell.key, cell.icon, cell.label, cell.body, shortCells.length % 2 === 1 && idx === shortCells.length - 1))}
 
-        <div className="stacked-card-info-row">
-          <div className="stacked-card-info-icon stacked-card-entry-icon">
-            <DollarIcon />
-          </div>
-          <div className="stacked-card-info-content">
-            <span className="stacked-card-info-label">ENTRY</span>
-            <span className="stacked-card-info-value">{event.event_entry_price}</span>
-          </div>
-        </div>
+          {hasDeals ? renderDetailCell('offers', Gift, 'Offers', (
+            <div className="mt-1 space-y-2">
+              {event.deals!.map((deal, idx) => (
+                <div key={idx}>
+                  <p className="flex items-baseline gap-2 flex-wrap">
+                    <span className={`${H4_LABEL} text-pale`}>{DEAL_LABELS[deal.type] ?? DEAL_LABELS.special_offer}</span>
+                    {deal.timing && <span className="text-[11px] text-silver-dim">{deal.timing}</span>}
+                  </p>
+                  <p className={longCls}>{deal.description}</p>
+                </div>
+              ))}
+            </div>
+          ), true) : hasOfferText ? renderDetailCell('offers', Gift, 'Offers', <p className={longCls}>{event.event_offers}</p>, true) : null}
 
-        <div className="stacked-card-info-row">
-          <div className="stacked-card-info-icon stacked-card-offers-icon">
-            <GiftIcon />
-          </div>
-          <div className="stacked-card-info-content">
-            <span className="stacked-card-info-label">OFFERS</span>
-            <span className="stacked-card-offers-text">{event.event_offers}</span>
-          </div>
-        </div>
-
-        {event.music_genre && (
-          <div className="stacked-card-info-row">
-            <div className="stacked-card-info-icon stacked-card-genre-icon">
-              <MusicIcon />
-            </div>
-            <div className="stacked-card-info-content">
-              <span className="stacked-card-info-label">MUSIC GENRES</span>
-              <div className="stacked-card-genre-badges">
-                {event.music_genre.split(',').map((genre, idx) => (
-                  <span key={idx} className="stacked-card-genre-badge">
-                    {genre.trim()}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {event.event_vibe && (
-          <div className="stacked-card-info-row">
-            <div className="stacked-card-info-icon stacked-card-vibe-icon">
-              <SparklesIcon />
-            </div>
-            <div className="stacked-card-info-content">
-              <span className="stacked-card-info-label">VIBES</span>
-              <div className="stacked-card-vibe-badges">
-                {event.event_vibe.split('|').map((vibe, idx) => (
-                  <span key={idx} className="stacked-card-vibe-badge">
-                    {vibe.trim()}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {event.analysis_notes && (
-          <div className="stacked-card-info-row">
-            <div className="stacked-card-info-icon stacked-card-notes-icon">
-              <FileTextIcon />
-            </div>
-            <div className="stacked-card-info-content">
-              <span className="stacked-card-info-label">DETAILS</span>
+          {event.analysis_notes && renderDetailCell('details', FileText, 'Details', (
+            <>
               <p
-                className={`stacked-card-analysis-notes ${
-                  isDetailsExpanded ? 'expanded' : 'collapsed'
-                }`}
+                className={longCls}
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: isDetailsExpanded ? 'unset' : 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: isDetailsExpanded ? 'visible' : 'hidden',
+                }}
               >
                 {event.analysis_notes}
               </p>
-              {event.analysis_notes.length > 150 && (
-                <span
-                  className="stacked-card-details-toggle"
-                  onClick={handleDetailsToggle}
-                >
-                  <strong>{isDetailsExpanded ? 'Show less' : 'Show more'}</strong>
-                </span>
+              {event.analysis_notes.length > 120 && (
+                <button className={`${H4_LABEL} mt-1.5 text-silver`} onClick={handleDetailsToggle}>
+                  {isDetailsExpanded ? 'Show less' : 'Show more'}
+                </button>
               )}
-            </div>
-          </div>
-        )}
+            </>
+          ), true)}
+        </div>
 
+        {/* Venue Details keeps its layout (as on the map card); only the
+            heading and icons follow the new type. */}
         <div className="stacked-card-venue-details">
-          <span className="stacked-card-info-label">VENUE DETAILS</span>
+          <p className="text-[11px] uppercase font-extrabold tracking-[0.18em] text-pale">Venue Details</p>
 
           {venue.venue_address && (
             <div className="stacked-card-venue-detail-row">
-              <MapPinIcon />
+              <MapPin />
               <span>{venue.venue_address}</span>
             </div>
           )}
 
-          {venue.venue_highlights && (() => {
-            try {
-              const parsed = JSON.parse(venue.venue_highlights);
-              const keys = Array.isArray(parsed)
-                ? parsed.map((obj: any) => Object.keys(obj)[0]).join(', ')
-                : venue.venue_highlights;
-              return (
-                <div className="stacked-card-venue-detail-row">
-                  <StarIcon />
-                  <span>{keys}</span>
-                </div>
-              );
-            } catch {
-              return (
-                <div className="stacked-card-venue-detail-row">
-                  <StarIcon />
-                  <span>{venue.venue_highlights}</span>
-                </div>
-              );
-            }
-          })()}
+          {venue.venue_highlights && (
+            <div className="stacked-card-venue-detail-row">
+              <Star />
+              <span>{parseKeys(venue.venue_highlights)}</span>
+            </div>
+          )}
 
-          {venue.venue_atmosphere && (() => {
-            try {
-              const parsed = JSON.parse(venue.venue_atmosphere);
-              const keys = Array.isArray(parsed)
-                ? parsed.map((obj: any) => Object.keys(obj)[0]).join(', ')
-                : venue.venue_atmosphere;
-              return (
-                <div className="stacked-card-venue-detail-row">
-                  <SparklesIcon />
-                  <span>{keys}</span>
-                </div>
-              );
-            } catch {
-              return (
-                <div className="stacked-card-venue-detail-row">
-                  <SparklesIcon />
-                  <span>{venue.venue_atmosphere}</span>
-                </div>
-              );
-            }
-          })()}
+          {venue.venue_atmosphere && (
+            <div className="stacked-card-venue-detail-row">
+              <Sparkles />
+              <span>{parseKeys(venue.venue_atmosphere)}</span>
+            </div>
+          )}
 
           {event.website_social && (
             <div className="stacked-card-venue-detail-row">
@@ -648,26 +495,29 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
       </div>
 
-      {/* FOOTER */}
+      {/* FOOTER — same buttons as the map card's action bar */}
       <div className="stacked-card-footer">
         <div className="stacked-card-action-buttons">
           <button
-            className="stacked-card-action-btn stacked-card-instagram"
+            className="stacked-card-action-btn"
             onClick={handleInstagramClick}
+            aria-label="Instagram"
           >
-            <InstagramIcon />
+            <Instagram className="w-[18px] h-[18px]" style={{ color: '#E1306C' }} />
           </button>
           <button
-            className="stacked-card-action-btn stacked-card-call"
+            className="stacked-card-action-btn"
             onClick={handleCallClick}
+            aria-label="Call"
           >
-            <PhoneIcon />
+            <Phone className="w-[18px] h-[18px]" style={{ color: '#4ADE80' }} />
           </button>
           <button
-            className="stacked-card-action-btn stacked-card-share"
+            className="stacked-card-action-btn"
             onClick={handleShareClick}
+            aria-label="Share"
           >
-            <ShareIcon />
+            <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />
           </button>
         </div>
         {event.swipe_link_url && (
@@ -675,7 +525,7 @@ const EventCard: React.FC<EventCardProps> = ({
             className="stacked-card-book-btn"
             onClick={handleBookClick}
           >
-            <TicketIcon />
+            <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
             <span>Book</span>
           </button>
         )}
@@ -683,7 +533,7 @@ const EventCard: React.FC<EventCardProps> = ({
           className="stacked-card-directions-btn"
           onClick={handleDirectionsClick}
         >
-          <NavigationIcon />
+          <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
           <span>Directions</span>
         </button>
       </div>
@@ -703,9 +553,7 @@ const EventCard: React.FC<EventCardProps> = ({
           onClick={(e) => { e.stopPropagation(); setFullscreenMedia(null); }}
           aria-label="Close"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <X className="w-5 h-5 text-white" />
         </button>
         <div className="max-w-full max-h-full p-4" onClick={(e) => e.stopPropagation()}>
           {fullscreenMedia.isVideo ? (
@@ -760,7 +608,6 @@ const LOAD_TRIGGER_MARGIN = '400px'; // start loading next batch 400px before se
 
 const StackedEventCards: React.FC<StackedEventCardsProps> = ({
   cards,
-  getCategoryColor,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(
     cards.length > 0 ? cards[cards.length - 1].event.id : null
@@ -853,11 +700,6 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
     }, 450);
   };
 
-  const getCardColor = (category: string, rating: number): string => {
-    const categoryColor = getCategoryColor(category);
-    return generateCardColor(categoryColor, rating);
-  };
-
   const visibleCards = cards.slice(0, visibleCount);
 
   return (
@@ -873,7 +715,6 @@ const StackedEventCards: React.FC<StackedEventCardsProps> = ({
                 index={index}
                 isExpanded={isExpanded}
                 onCardClick={handleCardClick}
-                getCardColor={getCardColor}
                 contentRef={isExpanded ? contentRef : null}
                 contentHeight={contentHeight}
               />

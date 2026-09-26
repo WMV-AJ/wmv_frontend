@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { shortenLocation } from '@/lib/format-location';
@@ -111,7 +111,16 @@ import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 import { displayFont } from '@/lib/theme/tokens';
-import { getCategoryLightBg, mixCategoryTint, getShortDisplayName } from '@/lib/category-mappings';
+import { getShortDisplayName } from '@/lib/category-mappings';
+import {
+  H4_LABEL,
+  H4_CHIP,
+  DEAL_LABELS,
+  joinList,
+  resolveAccentCategory,
+  getCardAccent,
+  useRatingWrap,
+} from '@/components/shared/card-style';
 import { formatDateLabel } from '@/lib/time-utils';
 const PLACEHOLDER_IMAGES = [PLACEHOLDER_IMAGE];
 
@@ -142,32 +151,8 @@ function parseToArray(value: unknown): string[] {
   return [String(value)];
 }
 
-// ── HOME 4 TYPE PRESETS ───────────────────────────────────────────────
-// Copied from src/app/home4/home4.module.css. Two idioms only:
-//   display  — Inter Tight, negative tracking, uppercase
-//   label    — Inter, uppercase, 9-11px, weight 650-750, positive tracking;
-//              editorial eyebrows sit at .16-.18em, interactive at .13-.14em
-// The faces come from `font-inter` on each card root (globals.css @font-face).
-// NOTE home4 only uppercases h1/h2/h3 in CSS — every other capital there is
-// hardcoded in JSX — so each label below carries `uppercase` explicitly.
-const H4_LABEL   = 'text-[10px] uppercase font-[650] tracking-[0.16em]'; // .heroFine 10/650/.16em
-const H4_CHIP    = 'text-[10px] font-bold uppercase tracking-wide'; // start-of-day chip type, deliberately NOT the Home 4 label idiom
-
-// Offer type → label for the expanded card's Offers cell.
-const DEAL_LABELS: Record<string, string> = {
-  ladies_night: 'Ladies Night',
-  '2for1': 'Buy 1 Get 1',
-  happy_hour: 'Happy Hour',
-  discount: 'Discount',
-  free_entry: 'Free Entry',
-  special_offer: 'Special Offer',
-};
-
-// "a | b , high_energy" → "a · b · high energy" for the expanded card's
-// list cells (vibes arrive as snake_case slugs).
-function joinList(value: string, separator: string | RegExp): string {
-  return value.split(separator).map((part) => part.replace(/_/g, ' ').trim()).filter(Boolean).join(' · ');
-}
+// Type presets (H4_LABEL, H4_CHIP), DEAL_LABELS and joinList live in
+// @/components/shared/card-style, shared with the list page.
 
 const MobileEventCard: React.FC<MobileEventCardProps> = ({
   card,
@@ -187,26 +172,18 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 }) => {
   const { event, venue } = card;
 
-  // Accent colour for the collapsed card. Mirrors getVenuePrimaryEventCategory
-  // in @/lib/map/marker-colors — highest-confidence primary first — so the card
-  // border, its filter pill and its map marker all resolve to the same hue.
-  // event.category is already event_categories[0].primary (stacked-card-adapter),
-  // so the fallback costs nothing.
-  const accentCategory = (() => {
-    const cats = (event.event_categories ?? []) as Array<{ primary?: string; confidence?: number }>;
-    const best = cats
-      .filter(c => c.primary)
-      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0];
-    return best?.primary || event.category || '';
-  })();
-  const accentRgb = getCategoryLightBg(accentCategory).rgb;
-  const accentBorder = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.55)`;
-  const accentSoft = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.16)`;
-  const accentText = getCategoryLightBg(accentCategory).hex;
-  // Thick top + right edge only, per the brief — and loud enough to read at a
-  // glance while the carousel is moving, hence full alpha plus an outer glow.
-  const accentEdge = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.95)`;
-  const accentGlow = `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.30)`;
+  // Accent colour: see resolveAccentCategory / getCardAccent in
+  // @/components/shared/card-style (shared with the list page).
+  const accentCategory = resolveAccentCategory(event);
+  const {
+    rgb: accentRgb,
+    border: accentBorder,
+    soft: accentSoft,
+    text: accentText,
+    edge: accentEdge,
+    glow: accentGlow,
+    tileBg: accentTileBg,
+  } = getCardAccent(accentCategory);
 
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
@@ -218,45 +195,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   // lapses) — swap to the placeholder instead of a broken-image glyph.
   const [failedMediaIdx, setFailedMediaIdx] = useState<ReadonlySet<number>>(new Set());
 
-  // Collapsed tile: when the rating block wraps below the venue name, give
-  // it its own line and drop the "|" that would otherwise lead that line.
-  // CSS cannot detect an inline wrap, so measure the unwrapped layout: if the
-  // rating's top sits below the name's last line box, it wrapped. The result
-  // is keyed to the content, so a new venue measures afresh; a width change
-  // or late font swap resets it to the unwrapped layout to measure again.
-  // Measuring only the unwrapped layout avoids a flip-flop where hiding the
-  // separator frees just enough room for the rating to fit back on line 1.
-  const tileVenueNameRef = useRef<HTMLSpanElement>(null);
-  const tileRatingRef = useRef<HTMLSpanElement>(null);
-  const ratingWrapKey = `${venue.venue_name}|${venue.venue_rating}|${venue.venue_review_count}`;
-  const [ratingWrap, setRatingWrap] = useState<{ key: string; wrapped: boolean } | null>(null);
-  const ratingWrapped = ratingWrap?.key === ratingWrapKey && ratingWrap.wrapped;
-  const ratingMeasured = ratingWrap?.key === ratingWrapKey;
-  useLayoutEffect(() => {
-    const name = tileVenueNameRef.current;
-    const rating = tileRatingRef.current;
-    const row = name?.parentElement;
-    if (!name || !rating || !row) return;
-    if (!ratingMeasured) {
-      const lines = name.getClientRects();
-      const lastLine = lines[lines.length - 1];
-      if (lastLine) {
-        setRatingWrap({ key: ratingWrapKey, wrapped: rating.getBoundingClientRect().top > lastLine.top + 2 });
-      }
-    }
-    let width = row.clientWidth;
-    const remeasure = (): void => setRatingWrap(null);
-    const observer = new ResizeObserver(() => {
-      if (row.clientWidth !== width) { width = row.clientWidth; remeasure(); }
-    });
-    observer.observe(row);
-    // A late web-font swap changes line breaks without changing the width.
-    document.fonts?.addEventListener('loadingdone', remeasure);
-    return () => {
-      observer.disconnect();
-      document.fonts?.removeEventListener('loadingdone', remeasure);
-    };
-  }, [ratingWrapKey, ratingMeasured, isExpanded]);
+  // Collapsed tile: hide the "|" when the rating wraps (see useRatingWrap).
+  const {
+    nameRef: tileVenueNameRef,
+    ratingRef: tileRatingRef,
+    wrapped: ratingWrapped,
+  } = useRatingWrap(`${venue.venue_name}|${venue.venue_rating}|${venue.venue_review_count}`, isExpanded);
   const markMediaFailed = (idx: number) => setFailedMediaIdx(prev => {
     if (prev.has(idx)) return prev;
     const next = new Set(prev);
@@ -907,7 +851,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         // already forces a uniform height, and pinning it keeps the measured
         // panel height — and the nav pill derived from it — stable.
         minHeight: 176,   // = the 25% still (≈154px) + padding + borders
-        background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
+        background: accentTileBg,
         // Category colour is a single line across the top edge only.
         borderTop: `3px solid ${accentEdge}`,
         borderRight: '1px solid rgba(255, 255, 255, 0.07)',
@@ -1032,7 +976,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 90px to spare. <wbr> restores the break without adding a space;
                 the rule already carries its own margin. */}
             <wbr />
-            {/* Wrapped: own line, no separator (see ratingWrap above). */}
+            {/* Wrapped: own line, no separator (see useRatingWrap). */}
             <span ref={tileRatingRef} className={ratingWrapped ? 'block whitespace-nowrap' : 'whitespace-nowrap'}>
               {!ratingWrapped && (
                 <span className={`mx-2 ${darkMode ? 'text-silver-dim/50' : 'text-gray-300'}`}>|</span>
