@@ -9,6 +9,7 @@ import { shortenLocation } from '@/lib/format-location';
 import { formatDateLabel } from '@/lib/time-utils';
 import { getShortDisplayName } from '@/lib/category-mappings';
 import EventMedia from '@/components/shared/EventMedia';
+import { CardActionBar } from '@/components/shared/CardActionBar';
 import {
   H4_LABEL,
   H4_CHIP,
@@ -495,47 +496,18 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
       </div>
 
-      {/* FOOTER — same buttons as the map card's action bar */}
+      {/* FOOTER — ruled action row, same as the map card (CardActionBar) */}
       <div className="stacked-card-footer">
-        <div className="stacked-card-action-buttons">
-          <button
-            className="stacked-card-action-btn"
-            onClick={handleInstagramClick}
-            aria-label="Instagram"
-          >
-            <Instagram className="w-[18px] h-[18px]" style={{ color: '#E1306C' }} />
-          </button>
-          <button
-            className="stacked-card-action-btn"
-            onClick={handleCallClick}
-            aria-label="Call"
-          >
-            <Phone className="w-[18px] h-[18px]" style={{ color: '#4ADE80' }} />
-          </button>
-          <button
-            className="stacked-card-action-btn"
-            onClick={handleShareClick}
-            aria-label="Share"
-          >
-            <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />
-          </button>
-        </div>
-        {event.swipe_link_url && (
-          <button
-            className="stacked-card-book-btn"
-            onClick={handleBookClick}
-          >
-            <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
-            <span>Book</span>
-          </button>
-        )}
-        <button
-          className="stacked-card-directions-btn"
-          onClick={handleDirectionsClick}
-        >
-          <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
-          <span>Directions</span>
-        </button>
+        <CardActionBar
+          accent={accent.text}
+          actions={[
+            { key: 'instagram', label: 'Instagram', Icon: Instagram, onClick: handleInstagramClick },
+            { key: 'call', label: 'Call', Icon: Phone, onClick: handleCallClick },
+            { key: 'share', label: 'Share', Icon: Share2, onClick: handleShareClick },
+            ...(event.swipe_link_url ? [{ key: 'book', label: 'Book', Icon: Ticket, onClick: handleBookClick }] : []),
+            { key: 'directions', label: 'Directions', Icon: Navigation, onClick: handleDirectionsClick, primary: true },
+          ]}
+        />
       </div>
 
     </div>
