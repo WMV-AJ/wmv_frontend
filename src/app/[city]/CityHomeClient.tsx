@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
+import { useCitiesVersion } from '@/contexts/CitiesProvider';
 import { ALL_CITIES, getCityConfig, isValidCity, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
 import { ArrowUpRight } from 'lucide-react';
@@ -100,6 +101,7 @@ export default function CityHome() {
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
+  useCitiesVersion(); // re-render once the runtime city list arrives
   const [liked, setLiked] = useState<Set<string>>(new Set());
   // The page scrolls inside <main>; section observers use it as their root.
   const mainRef = useRef<HTMLElement | null>(null);
@@ -294,8 +296,8 @@ export default function CityHome() {
   // Section accent for How it works / the atlas: the city's #1 category.
   const cityAccent = topCategories[0] ? getCardAccent(topCategories[0]) : accentFromHex(T.accent);
 
-  // Every live city (ALL_CITIES grows at runtime once /api/cities loads;
-  // CitiesProvider re-renders this subtree when it does).
+  // Every live city. ALL_CITIES grows at runtime once /api/cities loads;
+  // useCitiesVersion() re-renders the page when it does.
   const cityOptions: Array<[string, string]> = ALL_CITIES.map((slug) => [slug, getCityConfig(slug).displayName]);
   const switchCity = (slug: string) => {
     if (slug === city || !isValidCity(slug)) return;

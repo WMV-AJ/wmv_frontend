@@ -1,7 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { loadCitiesFromApi, hasLoadedDynamicCities } from '@/config/cities.config';
+
+// Bumped when the dynamic city load resolves. Re-rendering this provider
+// alone does NOT re-render its descendants — `children` is the same element
+// React already rendered, so it bails out — which left pages built from
+// ALL_CITIES (e.g. the home city picker) stuck on the static Dubai +
+// Bangalore seed whenever /api/cities resolved after their last render.
+// Components that list cities call useCitiesVersion() to subscribe.
+const CitiesVersionContext = createContext(0);
+
+export function useCitiesVersion(): number {
+  return useContext(CitiesVersionContext);
+}
 
 /**
  * Top-level provider that runs the DB-backed city loader once on the
@@ -12,8 +24,8 @@ import { loadCitiesFromApi, hasLoadedDynamicCities } from '@/config/cities.confi
  * Failure is silent — the static Dubai+Bangalore fallback in
  * cities.config.ts keeps the app rendering even if /api/cities is down.
  *
- * Forces a single re-render of its descendants once the dynamic load
- * resolves, so callers of `getCityConfig(slug)` for slugs that weren't in
+ * Publishes a version bump once the dynamic load resolves (see
+ * useCitiesVersion below), so callers of `getCityConfig(slug)` for slugs that weren't in
  * the static seed (e.g. Mumbai) pick up the real config instead of the
  * DEFAULT_CITY fallback that was returned on the SSR / first-paint pass.
  * Without this, the Mumbai /map page would init MapLibre at Dubai's
@@ -21,7 +33,7 @@ import { loadCitiesFromApi, hasLoadedDynamicCities } from '@/config/cities.confi
  * first read, and React would have nothing to invalidate later.
  */
 export function CitiesProvider({ children }: { children: React.ReactNode }) {
-  const [, setVersion] = useState(0);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     if (hasLoadedDynamicCities()) return;
@@ -30,5 +42,5 @@ export function CitiesProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  return <>{children}</>;
+  return <CitiesVersionContext.Provider value={version}>{children}</CitiesVersionContext.Provider>;
 }
