@@ -215,9 +215,11 @@ function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void })
 function PanToVenue({
   venue,
   programmaticPanRef,
+  padding,
 }: {
   venue: Venue | null;
   programmaticPanRef: MutableRefObject<boolean>;
+  padding?: { top: number; bottom: number };
 }) {
   const { map, isLoaded } = useMap();
   const prevVenueId = useRef<string | null>(null);
@@ -261,11 +263,11 @@ function PanToVenue({
       map.easeTo({
         center: [venue.lng, venue.lat],
         duration: 350,
-        padding: { top: 120, bottom: 260, left: 0, right: 0 },
+        padding: { top: padding?.top ?? 120, bottom: padding?.bottom ?? 260, left: 0, right: 0 },
       });
     }, 150);
     return () => clearTimeout(t);
-  }, [map, isLoaded, venue, programmaticPanRef]);
+  }, [map, isLoaded, venue, programmaticPanRef, padding?.top, padding?.bottom]);
 
   return null;
 }
@@ -360,9 +362,11 @@ function useLiveLocation(city: string) {
 function FlyToUser({
   pos,
   programmaticPanRef,
+  padding,
 }: {
   pos: { lat: number; lng: number } | null;
   programmaticPanRef: MutableRefObject<boolean>;
+  padding?: { top: number; bottom: number };
 }) {
   const { map, isLoaded } = useMap();
   const flownRef = useRef(false);
@@ -377,9 +381,9 @@ function FlyToUser({
       center: [pos.lng, pos.lat],
       zoom: Math.max(map.getZoom(), 13),
       duration: 800,
-      padding: { top: 120, bottom: 260, left: 0, right: 0 },
+      padding: { top: padding?.top ?? 120, bottom: padding?.bottom ?? 260, left: 0, right: 0 },
     });
-  }, [map, isLoaded, pos, programmaticPanRef]);
+  }, [map, isLoaded, pos, programmaticPanRef, padding?.top, padding?.bottom]);
 
   return null;
 }
@@ -498,7 +502,8 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
   );
 });
 
-export default function CityMapPage() {
+export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy' | 'map2' }) {
+  const isMap2 = variant === 'map2';
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
@@ -729,6 +734,19 @@ export default function CityMapPage() {
   const [highlightedOffer, setHighlightedOffer] = useState<string | null>(null);
   const [presetRangeDates, setPresetRangeDates] = useState<string[]>([]);
   const [navHeight, setNavHeight] = useState(140);
+  const categoryRailRef = useRef<HTMLDivElement>(null);
+  const [categoryRailHeight, setCategoryRailHeight] = useState(42);
+  const [dockPadding, setDockPadding] = useState(270);
+  useEffect(() => {
+    if (!isMap2 || !categoryRailRef.current) return;
+    const rail = categoryRailRef.current;
+    const measure = () => setCategoryRailHeight(rail.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(rail);
+    return () => observer.disconnect();
+  }, [isMap2]);
+  const map2Padding = isMap2 ? { top: navHeight + categoryRailHeight + 18, bottom: dockPadding + 16 } : undefined;
   const [currentZoom, setCurrentZoom] = useState(MAPCN_ZOOM);
 
   const showLabels = currentZoom >= 14;
@@ -766,10 +784,11 @@ export default function CityMapPage() {
 
   if (error) {
     return (
-      <main className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="retro-surface p-8 max-w-md text-center">
-          <h3 className="text-lg font-semibold mb-2 text-red-400">Error Loading Venues</h3>
+      <main className={`h-screen w-full flex items-center justify-center bg-background ${isMap2 ? 'map2-error-state' : ''}`}>
+        <div className={`p-8 max-w-md text-center ${isMap2 ? 'map2-error-card' : 'retro-surface'}`}>
+          <h3 className="text-lg font-semibold mb-2 text-red-400">{isMap2 ? 'Could not load the map' : 'Error Loading Venues'}</h3>
           <p className="text-muted-foreground">{error}</p>
+          {isMap2 && <button type="button" onClick={() => window.location.reload()}>Try again</button>}
         </div>
       </main>
     );
@@ -789,13 +808,13 @@ export default function CityMapPage() {
           display: none !important;
         }
       `}</style>
-      <div className="wmv-phone-frame" style={{
+      <div className={`wmv-phone-frame ${isMap2 ? 'wmv-map2' : ''}`} style={{
         maxWidth: 430,
         margin: '0 auto',
         height: '100dvh',
         overflow: 'hidden',
         transform: 'translateZ(0)',
-        background: '#0a0a14',
+        background: isMap2 ? '#27282b' : '#0a0a14',
         opacity: isReady ? 1 : 0,
         transition: isReady ? 'opacity 0.3s ease' : 'none',
       }}>
@@ -803,6 +822,8 @@ export default function CityMapPage() {
         <h1 className="sr-only">{getCityConfig(city).displayName} Event Discovery - Map</h1>
 
         <TopNav
+          refined={isMap2}
+          cityLabel={getCityConfig(city).displayName}
           embedded={false}
           hideProfile={true}
           onSearchClick={() => setIsFilterSheetOpen(true)}
@@ -818,10 +839,12 @@ export default function CityMapPage() {
         />
 
         <div
-          className="fixed left-0 right-0 z-30 px-2"
+          ref={categoryRailRef}
+          className={`fixed left-0 right-0 z-30 px-2 ${isMap2 ? 'map2-category-rail' : ''}`}
           style={{ top: navHeight + 6 }}
         >
           <CategoryPills
+            refined={isMap2}
             filters={filters}
             onFiltersChange={handleFiltersChange}
             venues={countVenues}
@@ -859,7 +882,7 @@ export default function CityMapPage() {
             <MapMoveClassToggler />
             <SimplifyBasemap />
             <ZoomTracker onZoomChange={handleZoomChange} />
-            <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} />
+            <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} padding={map2Padding} />
             <MapCenterTracker
               programmaticPanRef={programmaticPanRef}
               onUserCenterChange={handleUserCenterChange}
@@ -910,7 +933,7 @@ export default function CityMapPage() {
                 </MarkerContent>
               </MapMarker>
             )}
-            <FlyToUser pos={liveLocation.pos} programmaticPanRef={programmaticPanRef} />
+            <FlyToUser pos={liveLocation.pos} programmaticPanRef={programmaticPanRef} padding={map2Padding} />
 
             <MapControls position="bottom-right" showZoom={false} showCompass={false} />
           </MapView>
@@ -928,9 +951,9 @@ export default function CityMapPage() {
             className="absolute z-20 flex items-center justify-center"
             style={{
               right: 12,
-              bottom: 232,
-              width: 40,
-              height: 40,
+              bottom: isMap2 ? dockPadding + 18 : 232,
+              width: isMap2 ? 44 : 40,
+              height: isMap2 ? 44 : 40,
               borderRadius: '50%',
               background: liveLocation.enabled ? '#4285f4' : 'rgba(20,20,31,0.9)',
               border: `1px solid ${liveLocation.enabled ? '#4285f4' : 'rgba(255,255,255,0.14)'}`,
@@ -953,7 +976,7 @@ export default function CityMapPage() {
             <div
               className="absolute z-30"
               style={{
-                left: '50%', transform: 'translateX(-50%)', bottom: 288,
+                left: '50%', transform: 'translateX(-50%)', bottom: isMap2 ? dockPadding + 76 : 288,
                 padding: '10px 18px', borderRadius: 999, maxWidth: '85%',
                 background: 'rgba(20,20,31,0.95)', border: '1px solid rgba(255,255,255,0.14)',
                 color: '#f5f2ed', fontSize: 12, fontWeight: 600, textAlign: 'center',
@@ -967,9 +990,12 @@ export default function CityMapPage() {
 
         {/* 228 vertically centers the 48px pill on the same line as the 40px
             location toggle (bottom: 232 → shared center at 252). */}
-        <NavPill city={city} active="map" bottomOffset={228} hidden={isFilterSheetOpen} />
+        <NavPill city={city} active="map" bottomOffset={isMap2 ? 8 : 228} hidden={isFilterSheetOpen} refined={isMap2} />
 
         <MobileEventList
+          refined={isMap2}
+          selectedPrimaryCategories={isMap2 ? filters.eventCategories?.selectedPrimaries : undefined}
+          onDockPaddingChange={isMap2 ? setDockPadding : undefined}
           cards={cards}
           allCards={allCards}
           getCategoryColor={getCategoryColorForStackedCards}
@@ -985,7 +1011,10 @@ export default function CityMapPage() {
           darkMode={true}
         />
 
+        {isMap2 && !isLoading && cards.length === 0 && <div className="map2-empty-state" role="status"><strong>No plans in this view</strong><span>Try another date, area, or category.</span><button type="button" onClick={() => setIsFilterSheetOpen(true)}>Adjust filters</button></div>}
+
         <FilterBottomSheet
+          refined={isMap2}
           isOpen={isFilterSheetOpen}
           onClose={() => setIsFilterSheetOpen(false)}
           filters={filters}

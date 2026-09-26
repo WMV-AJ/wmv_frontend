@@ -13,6 +13,7 @@ import { T, bodyFont } from '@/lib/theme/tokens';
 export type NavPillView = 'home' | 'map' | 'cards';
 
 interface NavPillProps {
+  refined?: boolean;
   city: string;
   active: NavPillView;
   /** Extra px above the safe-area bottom (default 16). */
@@ -27,7 +28,7 @@ const SEGMENTS: Array<{ view: NavPillView; label: string; Icon: typeof Home; pat
   { view: 'cards', label: 'List', Icon: List, path: (c) => `/${c}/cards` },
 ];
 
-export default function NavPill({ city, active, bottomOffset = 16, hidden = false }: NavPillProps) {
+export default function NavPill({ city, active, bottomOffset = 16, hidden = false, refined = false }: NavPillProps) {
   const router = useRouter();
 
   // A modal owns the screen while it is open. The pill is fixed at z-index 45
@@ -40,6 +41,7 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
 
   return (
     <div
+      className={refined ? 'map2-bottom-nav' : undefined}
       style={{
         position: 'fixed',
         left: '50%',
@@ -92,7 +94,7 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
             }}
           >
             <Icon size={15} strokeWidth={isActive ? 2.4 : 2} />
-            {isActive && <span>{label}</span>}
+            {(isActive || refined) && <span>{label}</span>}
           </button>
         );
       })}

@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { shortenLocation } from '@/lib/format-location';
+import { getCategoryColor as getPrimaryCategoryColor, getHexColor } from '@/lib/category-mappings';
 import { ShareModal } from '@/components/shared/ShareModal';
 import {
   Calendar,
@@ -17,9 +18,11 @@ import {
   Star,
   Instagram,
   Phone,
+  Share,
   Share2,
   Navigation,
   ChevronUp,
+  ChevronDown,
   X,
   Globe,
   Tag,
@@ -52,6 +55,8 @@ interface EventCardData {
     event_categories?: Array<{ primary: string; secondary?: string }>;
     deals?: Array<{ type: string; timing?: string | null; description: string }>;
     swipe_link_url?: string | null;
+    media_url_1?: string | null;
+    media_url_2?: string | null;
   };
   venue: {
     id: string;
@@ -86,6 +91,8 @@ interface DateOption {
 }
 
 interface MobileEventCardProps {
+  refined?: boolean;
+  selectedPrimaryCategories?: string[];
   card: EventCardData;
   getCategoryColor: (category: string) => { hue: number; saturation: number };
   isExpanded: boolean;
@@ -215,6 +222,8 @@ function AutoScrollPills({ tags, isActive }: { tags: Array<{ label: string; bg: 
 }
 
 const MobileEventCard: React.FC<MobileEventCardProps> = ({
+  refined = false,
+  selectedPrimaryCategories = [],
   card,
   getCategoryColor,
   isExpanded,
@@ -232,12 +241,43 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   darkMode = false,
 }) => {
   const { event, venue } = card;
+  const matchingSelectedCategory = selectedPrimaryCategories.find((primary) =>
+    event.event_categories?.some((category) => category.primary === primary)
+  );
+  const primaryCategoryHex = refined ? getHexColor(getPrimaryCategoryColor(matchingSelectedCategory || event.category)) : undefined;
+  const categoryRgb = primaryCategoryHex?.match(/[\da-f]{2}/gi)?.map((part) => parseInt(part, 16)) ?? [];
+  const categoryInk = categoryRgb.length === 3 &&
+    (0.2126 * categoryRgb[0] + 0.7152 * categoryRgb[1] + 0.0722 * categoryRgb[2]) < 145
+    ? '#ffffff' : '#27282b';
+  const categoryStyle = refined ? { '--map2-category-color': primaryCategoryHex, '--map2-category-ink': categoryInk } as React.CSSProperties : {};
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
   const expandedRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const detailScrollRef = useRef<HTMLDivElement>(null);
+  const eventSectionRef = useRef<HTMLDivElement>(null);
+  const venueSectionRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const gestureRef = useRef<{ x: number; y: number } | null>(null);
+  const [detailTab, setDetailTab] = useState<'event' | 'venue'>('event');
+  const [detailDatePage, setDetailDatePage] = useState(0);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [galleryInView, setGalleryInView] = useState(true);
+  const detailDatePageCount = Math.ceil(dateOptions.length / 3);
+  useEffect(() => {
+    setDetailDatePage((page) => Math.min(page, Math.max(0, detailDatePageCount - 1)));
+  }, [detailDatePageCount]);
+  useEffect(() => {
+    if (!refined || !selectedDates[0]) return;
+    const selectedIndex = dateOptions.findIndex((option) => option.dateKey === selectedDates[0]);
+    if (selectedIndex >= 0) setDetailDatePage(Math.floor(selectedIndex / 3));
+  }, [refined, dateOptions, selectedDates]);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [fullscreenMediaIdx, setFullscreenMediaIdx] = useState<number | null>(null);
+  const modalStateRef = useRef({ fullscreenMediaIdx, showShareModal, onClose });
+  useEffect(() => { modalStateRef.current = { fullscreenMediaIdx, showShareModal, onClose }; }, [fullscreenMediaIdx, showShareModal, onClose]);
   // Expired/dead media URLs (old Instagram CDN links 403 once their signature
   // lapses) — swap to the placeholder instead of a broken-image glyph.
   const [failedMediaIdx, setFailedMediaIdx] = useState<ReadonlySet<number>>(new Set());
@@ -250,13 +290,87 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
   // Build media list from real DB media, separating images from videos
   const isVideoUrl = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
   const allMedia: Array<{ url: string; isVideo: boolean }> = [];
-  if ((event as any).media_url_1) allMedia.push({ url: (event as any).media_url_1, isVideo: isVideoUrl((event as any).media_url_1) });
-  if ((event as any).media_url_2) allMedia.push({ url: (event as any).media_url_2, isVideo: isVideoUrl((event as any).media_url_2) });
+  if (event.media_url_1) allMedia.push({ url: event.media_url_1, isVideo: isVideoUrl(event.media_url_1) });
+  if (event.media_url_2) allMedia.push({ url: event.media_url_2, isVideo: isVideoUrl(event.media_url_2) });
   const activeImages = allMedia.length > 0 ? allMedia.map(m => m.url) : PLACEHOLDER_IMAGES;
   const activeMediaTypes = allMedia.length > 0 ? allMedia.map(m => m.isVideo) : PLACEHOLDER_IMAGES.map(() => false);
   // Sibling image in the media pair — the video-thumb API falls back to it if
   // frame extraction fails, instead of a generic placeholder.
   const siblingImage = allMedia.find(m => !m.isVideo)?.url;
+
+  useEffect(() => {
+    if (!refined || !isFullScreen) return;
+    const dialog = dialogRef.current;
+    const main = dialog?.closest('main');
+    if (!dialog || !main) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const siblings = Array.from(main.children).filter((child) => child !== dialog) as HTMLElement[];
+    const previous = siblings.map((child) => ({ child, inert: child.inert, aria: child.getAttribute('aria-hidden') }));
+    previous.forEach(({ child }) => { child.inert = true; child.setAttribute('aria-hidden', 'true'); });
+    dialog.querySelector<HTMLElement>('[data-map2-close]')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); if (modalStateRef.current.fullscreenMediaIdx !== null) setFullscreenMediaIdx(null); else if (!modalStateRef.current.showShareModal) modalStateRef.current.onClose(); return; }
+      if (e.key !== 'Tab' || modalStateRef.current.showShareModal) return;
+      const scope = viewerRef.current || dialog;
+      const items = Array.from(scope.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),[tabindex="0"]')).filter((item) => item.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      previous.forEach(({ child, inert, aria }) => { child.inert = inert; if (aria === null) child.removeAttribute('aria-hidden'); else child.setAttribute('aria-hidden', aria); });
+      previousFocus?.focus();
+    };
+  }, [refined, isFullScreen]);
+
+  useEffect(() => {
+    if (!refined || fullscreenMediaIdx === null || !viewerRef.current || !dialogRef.current) return;
+    const viewer = viewerRef.current;
+    const gallery = galleryRef.current;
+    const siblings = Array.from(dialogRef.current.children).filter((child) => child !== viewer) as HTMLElement[];
+    const previous = siblings.map((child) => ({ child, inert: child.inert, aria: child.getAttribute('aria-hidden') }));
+    previous.forEach(({ child }) => { child.inert = true; child.setAttribute('aria-hidden', 'true'); });
+    viewer.querySelector<HTMLElement>('[data-map2-viewer-close]')?.focus();
+    return () => {
+      previous.forEach(({ child, inert, aria }) => { child.inert = inert; if (aria === null) child.removeAttribute('aria-hidden'); else child.setAttribute('aria-hidden', aria); });
+      gallery?.querySelector<HTMLElement>('[role="button"],button')?.focus();
+    };
+  }, [refined, fullscreenMediaIdx]);
+
+  useEffect(() => {
+    if (!refined || !isFullScreen || !galleryRef.current || !detailScrollRef.current) return;
+    const observer = new IntersectionObserver(([entry]) => setGalleryInView(entry.isIntersecting), { root: detailScrollRef.current, threshold: 0.05 });
+    observer.observe(galleryRef.current);
+    return () => observer.disconnect();
+  }, [refined, isFullScreen]);
+  useEffect(() => {
+    galleryRef.current?.querySelectorAll('video').forEach((video) => {
+      if (fullscreenMediaIdx !== null || document.hidden || (refined && !galleryInView)) video.pause();
+      else void video.play().catch(() => {});
+    });
+  }, [fullscreenMediaIdx, galleryIndex, galleryInView, refined]);
+  useEffect(() => {
+    if (!refined || !isFullScreen) return;
+    const onVisibility = () => { if (document.hidden) dialogRef.current?.querySelectorAll('video').forEach((video) => video.pause()); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [refined, isFullScreen]);
+  const jumpToDetailSection = (section: 'event' | 'venue') => {
+    const scroll = detailScrollRef.current;
+    const target = section === 'event' ? eventSectionRef.current : venueSectionRef.current;
+    if (!scroll || !target) return;
+    const top = scroll.scrollTop + target.getBoundingClientRect().top - scroll.getBoundingClientRect().top;
+    scroll.scrollTo({ top, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    setDetailTab(section);
+  };
+  const updateDetailSection = () => {
+    const scroll = detailScrollRef.current;
+    const venueTop = venueSectionRef.current?.getBoundingClientRect().top;
+    if (scroll && venueTop !== undefined) setDetailTab(venueTop <= scroll.getBoundingClientRect().top + 28 ? 'venue' : 'event');
+  };
 
   // Lock body scroll when full-screen
   useEffect(() => {
@@ -309,6 +423,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       : `https://${event.swipe_link_url}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
+
+  const contactWebsite = venue.venue_website;
+  const contactWebsiteUrl = contactWebsite
+    ? (contactWebsite.startsWith('http') ? contactWebsite : `https://${contactWebsite}`)
+    : undefined;
 
   const highlightTags = parseToArray(venue.venue_highlights);
   const atmosphereTags = parseToArray(venue.venue_atmosphere);
@@ -367,8 +486,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     return (
       <>
       <div
-        className="fixed z-[60] flex flex-col rounded-2xl overflow-hidden"
-        style={darkMode ? {
+        ref={dialogRef}
+        role={refined ? 'dialog' : undefined}
+        aria-modal={refined ? true : undefined}
+        aria-label={refined ? `${event.event_name} details` : undefined}
+        className={`fixed z-[60] flex flex-col rounded-2xl overflow-hidden ${refined ? 'map2-detail-dialog' : ''}`}
+        style={{...categoryStyle, ...(darkMode ? {
           background: 'rgba(12, 12, 28, 0.96)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
@@ -386,15 +509,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           bottom: '12px',
           boxShadow: '0 8px 40px rgba(0, 0, 0, 0.15)',
           border: '1px solid rgba(0, 0, 0, 0.08)',
-        }}
+        })}}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header + Close Button */}
-        <div className="flex items-center px-4 pt-5 pb-2 flex-shrink-0">
-          <h2 className={`font-bold text-[20px] flex-1 leading-snug ${darkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: '-0.02em' }}>
-            {event.event_name}
-          </h2>
+        <div className={`flex items-center px-4 pt-5 pb-2 flex-shrink-0 ${refined ? 'map2-detail-heading' : ''}`}>
+          <div className={refined ? 'map2-detail-identity' : 'flex-1'}>
+            <h2 className={`font-bold text-[20px] leading-snug ${darkMode ? 'text-white' : 'text-gray-900'}`} style={{ letterSpacing: '-0.02em' }}>{event.event_name}</h2>
+            {refined && <><p className="map2-detail-subtitle">{event.event_subtitle && event.event_subtitle !== event.event_name ? event.event_subtitle : venue.venue_name}</p><p className="map2-detail-identity-venue">{venue.venue_name} <span>· {venue.venue_rating} ★ · {shortenLocation(venue.venue_location)}</span></p></>}
+          </div>
           <button
+            data-map2-close={refined ? '' : undefined}
             className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ml-3"
             style={{
               background: 'rgba(239, 68, 68, 0.12)',
@@ -403,12 +528,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             aria-label="Close"
           >
-            <X className="w-4 h-4 text-red-500" />
+            <X className="w-[18px] h-[18px] text-red-500" strokeWidth={1.7} />
           </button>
         </div>
-
         {/* Venue info (fixed with header) */}
-        <div className="px-4 pb-2 flex-shrink-0">
+        {!refined && <div className="px-4 pb-2 flex-shrink-0">
           <p
             className="font-semibold text-[15px]"
             style={darkMode
@@ -425,22 +549,29 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             <MapPin className={`w-3 h-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
             <span className={`text-[11px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{shortenLocation(venue.venue_location)}</span>
           </div>
-        </div>
+        </div>}
+
+        {refined && <nav className="map2-detail-tabs" aria-label="Detail sections"><button type="button" aria-current={detailTab === 'event' ? 'location' : undefined} onClick={() => jumpToDetailSection('event')}>Event</button><button type="button" aria-current={detailTab === 'venue' ? 'location' : undefined} onClick={() => jumpToDetailSection('venue')}>Venue</button></nav>}
 
         {/* Scrollable Content */}
         <div
-          className="flex-1 overflow-y-auto px-4 pb-4"
+          ref={detailScrollRef}
+          className={`flex-1 overflow-y-auto px-4 pb-4 ${refined ? 'map2-detail-scroll' : ''}`}
           style={{ scrollbarWidth: 'thin' }}
+          onScroll={refined ? updateDetailSection : undefined}
         >
+          <div ref={eventSectionRef} className={refined ? 'map2-event-panel' : undefined} style={!refined ? { display: 'flex', flexDirection: 'column' } : undefined}>
+          <div className={refined ? "map2-detail-lead" : undefined}>
+          {refined && <div className="map2-detail-facts"><div><span>Date & time</span><strong>{formatDisplayDate(event.event_date) || 'TBA'}{event.event_time_start && <> · {event.event_time_start}{event.event_time_end ? ` — ${event.event_time_end}` : ''}</>}</strong></div><div><span>Entry</span><strong>{event.event_entry_price || 'TBA'}</strong></div></div>}
           {/* Divider + Images side by side */}
           <div style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
-          <div className="my-3">
+          <div ref={galleryRef} className={`my-3 ${refined ? 'map2-gallery' : ''}`}>
             <div
               className="flex gap-1.5 rounded-2xl overflow-hidden"
               style={{ border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.08)' }}
             >
-              {activeImages.map((src, idx) => (
-                <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
+              {activeImages.map((src, idx) => refined && idx !== galleryIndex ? null : (
+                <div key={idx} className="relative flex-1 min-w-0 cursor-pointer" role={refined ? "button" : undefined} tabIndex={refined ? 0 : undefined} aria-label={refined ? `View media ${idx + 1} fullscreen` : undefined} onKeyDown={refined ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFullscreenMediaIdx(idx); } } : undefined} onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(idx); }}>
                   {failedMediaIdx.has(idx) ? (
                     <Image
                       src={PLACEHOLDER_IMAGE}
@@ -480,16 +611,31 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 </div>
               ))}
             </div>
+            {refined && <div className="map2-gallery-controls"><span>Media · {galleryIndex + 1} of {activeImages.length}</span><div><button type="button" aria-label="Previous image" disabled={activeImages.length < 2} onClick={() => setGalleryIndex((galleryIndex - 1 + activeImages.length) % activeImages.length)}><ChevronLeft size={18} strokeWidth={1.6} /></button><button type="button" aria-label="Next image" disabled={activeImages.length < 2} onClick={() => setGalleryIndex((galleryIndex + 1) % activeImages.length)}><ChevronRight size={18} strokeWidth={1.6} /></button><button type="button" aria-label="Open media fullscreen" onClick={() => setFullscreenMediaIdx(galleryIndex)}><ChevronUp size={18} strokeWidth={1.6} /></button></div></div>}
           </div>
 
+
+
+          </div>
+          {refined && (venue.venue_instagram || venue.venue_phone || contactWebsiteUrl) && (
+            <div className="map2-detail-contacts" aria-label="Venue contacts">
+              {venue.venue_instagram && <button type="button" onClick={handleInstagramClick} aria-label={`Instagram ${venue.venue_instagram}`}><Instagram size={17} strokeWidth={1.7} /><span>@{venue.venue_instagram.replace(/^@/, '')}</span></button>}
+              {venue.venue_phone && <button type="button" onClick={handleCallClick} aria-label={`Call ${venue.venue_phone}`}><Phone size={17} strokeWidth={1.7} /><span>Call</span></button>}
+              {contactWebsiteUrl && <a href={contactWebsiteUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} aria-label={`Website ${contactWebsite}`}><Globe size={17} strokeWidth={1.7} /><span>Website</span></a>}
+            </div>
+          )}
+
+          <details className={refined ? 'map2-change-date' : 'map2-legacy-dates'} open={!refined} style={!refined ? { order: -1 } : undefined}>
+            {refined && <summary><Calendar size={17} strokeWidth={1.6} /><span>Change date</span><strong>{formatDisplayDate(event.event_date) || 'TBA'}</strong><ChevronDown size={18} strokeWidth={1.6} /></summary>}
           {/* Date Pills */}
-          <div className="pb-4 pt-1">
+          <div className={`pb-4 pt-1 ${refined ? 'map2-detail-dates' : ''}`}>
             <div
-              className="flex items-center gap-1.5 overflow-x-auto"
+              className={`flex items-center gap-1.5 overflow-x-auto ${refined ? 'map2-detail-date-row' : ''}`}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
+              {refined && detailDatePageCount > 1 && <button type="button" className="map2-detail-date-page" aria-label="Previous event dates" disabled={detailDatePage === 0} onClick={() => setDetailDatePage((page) => Math.max(0, page - 1))}><ChevronLeft size={18} strokeWidth={1.7} /></button>}
               {dateOptions.length > 0 ? (
-                dateOptions.map((opt) => {
+                (refined ? dateOptions.slice(detailDatePage * 3, detailDatePage * 3 + 3) : dateOptions).map((opt) => {
                   const isClicked = selectedDates.includes(opt.dateKey);
                   const isInRange = presetRangeDates.includes(opt.dateKey);
                   const isFullSelected = isClicked && (!isInRange || selectedDates.length < presetRangeDates.length);
@@ -502,7 +648,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                           onDateChange([opt.dateKey]);
                         }
                       }}
-                      className="flex flex-col items-center px-3 py-1.5 rounded-xl whitespace-nowrap flex-shrink-0 transition-all duration-200"
+                      className={`flex flex-col items-center px-3 py-1.5 rounded-xl whitespace-nowrap flex-shrink-0 transition-all duration-200 ${refined ? 'map2-detail-date-option' : ''}`}
                       style={{
                         background: isFullSelected
                           ? (darkMode ? 'rgba(255,255,255,0.20)' : 'rgba(0, 0, 0, 0.45)')
@@ -532,15 +678,18 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <span className="text-[12px] text-white font-semibold">{datePill.date}</span>
                 </div>
               )}
+              {refined && detailDatePageCount > 1 && <button type="button" className="map2-detail-date-page" aria-label="Next event dates" disabled={detailDatePage >= detailDatePageCount - 1} onClick={() => setDetailDatePage((page) => Math.min(detailDatePageCount - 1, page + 1))}><ChevronRight size={18} strokeWidth={1.7} /></button>}
             </div>
           </div>
+
+          </details>
 
           {/* Detail rows — order: date+time, artists, genre, offers, entry,
               event type, details, then venue details below. One muted style
               throughout. */}
           <div className="space-y-4">
             {/* Date & Time — one line */}
-            <div className="flex items-center gap-3.5">
+            <div className={refined ? "map2-original-fact" : "flex items-center gap-3.5"}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('212, 160, 23')}>
                 <Calendar className="w-4 h-4 text-amber-500" />
               </div>
@@ -667,7 +816,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             ) : null}
 
             {/* Entry */}
-            <div className="flex items-center gap-3.5">
+            <div className={refined ? "map2-original-fact" : "flex items-center gap-3.5"}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={accentBadge('16, 185, 129')}>
                 <DollarSign className="w-4 h-4 text-emerald-500" />
               </div>
@@ -729,10 +878,13 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
           </div>
 
+          </div>
           {/* Venue Details Section */}
-          {(venue.venue_category || venue.venue_address || highlightTags.length > 0 || atmosphereTags.length > 0 || venue.venue_phone || venue.venue_website) && (
+          <div ref={venueSectionRef} className={refined ? 'map2-venue-panel' : undefined}>
+          {refined && <div className="map2-venue-intro"><strong>{venue.venue_name}</strong><span>{venue.venue_rating || '—'} ★ · {venue.venue_review_count?.toLocaleString() || '0'} reviews</span><p>{venue.venue_location}</p></div>}
+          {(venue.venue_category || venue.venue_address || highlightTags.length > 0 || atmosphereTags.length > 0 || venue.venue_phone || venue.venue_website || (refined && venue.venue_instagram)) && (
             <>
-              <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />
+              {!refined && <div className="my-4" style={{ borderTop: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0, 0, 0, 0.06)' }} />}
               <div>
                 <p className={`text-[11px] uppercase tracking-wider font-bold mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Venue Details</p>
 
@@ -758,9 +910,10 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   {venue.venue_phone && (
                     <div className="flex items-center gap-2.5">
                       <Phone className="w-[18px] h-[18px] flex-shrink-0" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
-                      <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_phone}</span>
+                      {refined ? <button type="button" className="map2-contact-link" onClick={handleCallClick}>Call · {venue.venue_phone}</button> : <span className={`text-[13px] ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{venue.venue_phone}</span>}
                     </div>
                   )}
+                  {refined && venue.venue_instagram && <div className="flex items-center gap-2.5"><Instagram className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.6} /><button type="button" className="map2-contact-link" onClick={handleInstagramClick}>Instagram · {venue.venue_instagram}</button></div>}
                   {venue.venue_address && (
                     <div className="flex items-start gap-2.5">
                       <MapPin className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" style={{ color: darkMode ? 'rgba(156, 163, 175, 0.6)' : 'rgba(156, 163, 175, 0.8)' }} />
@@ -785,11 +938,13 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               </div>
             </>
           )}
+          {refined && allTags.length > 0 && <div className="map2-attributes"><h3>THE FEEL</h3><div>{allTags.map((tag, idx) => <span key={`${tag.type}-${idx}`}>{tag.label}</span>)}</div></div>}
+          </div>
         </div>
 
         {/* Fixed Action Buttons at bottom */}
         <div
-          className="flex-shrink-0 px-4 py-3 flex items-center gap-3 rounded-b-2xl"
+          className={`flex-shrink-0 px-4 py-3 flex items-center gap-3 rounded-b-2xl ${refined ? 'map2-modal-actions map2-detail-actions' : ''}`}
           style={darkMode ? {
             background: 'rgba(8, 8, 22, 0.95)',
             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
@@ -799,9 +954,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           }}
         >
           {/* Icon buttons left, Get Directions right */}
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              {venue.venue_instagram && (
+          <div className="flex items-center justify-between w-full map2-action-row">
+            <div className="flex items-center gap-3 map2-action-share">
+              {!refined && venue.venue_instagram && (
                 <button
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
                   style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
@@ -810,7 +965,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   <Instagram className="w-[18px] h-[18px]" style={{ color: '#E1306C' }} />
                 </button>
               )}
-              {venue.venue_phone && (
+              {!refined && venue.venue_phone && (
                 <button
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
                   style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
@@ -824,15 +979,17 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
                 onClick={handleShareClick}
               >
-                <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />
+                {refined ? <Share className="w-[18px] h-[18px]" strokeWidth={1.7} /> : <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />}
               </button>
             </div>
 
             {/* Book + Directions pill buttons */}
-            <div className="flex items-center gap-2">
-              {event.swipe_link_url && (
+            <div className="flex items-center gap-2 map2-action-main">
+              {(event.swipe_link_url || refined) && (
                 <button
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95 map2-book-action"
+                  disabled={refined && !event.swipe_link_url}
+                  aria-describedby={refined && !event.swipe_link_url ? 'map2-book-status' : undefined}
                   style={{
                     background: 'rgba(90, 90, 90, 0.75)',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
@@ -840,12 +997,12 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   }}
                   onClick={handleBookClick}
                 >
-                  <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
+                  <Ticket className="w-4 h-4" strokeWidth={1.7} style={{ color: refined ? undefined : '#E1306C' }} />
                   <span>Book</span>
                 </button>
               )}
               <button
-                className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95 map2-directions-action"
                 style={{
                   background: 'rgba(90, 90, 90, 0.75)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
@@ -853,21 +1010,27 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 }}
                 onClick={handleDirectionsClick}
               >
-                <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
+                <Navigation className="w-4 h-4" strokeWidth={1.7} style={{ color: refined ? undefined : '#4ADE80' }} />
                 <span>Directions</span>
               </button>
             </div>
           </div>
+          {refined && !event.swipe_link_url && <p id="map2-book-status" className="map2-book-status">No booking link provided</p>}
         </div>
 
         {/* Fullscreen Media Viewer */}
         {fullscreenMediaIdx !== null && (
           <div
+            ref={viewerRef}
+            role={refined ? 'dialog' : undefined}
+            aria-modal={refined ? true : undefined}
+            aria-label={refined ? `Media ${fullscreenMediaIdx + 1} of ${activeImages.length}` : undefined}
             className="fixed inset-0 z-[100] flex items-center justify-center"
             style={{ background: 'rgba(0, 0, 0, 0.95)' }}
             onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(null); }}
           >
             <button
+              data-map2-viewer-close={refined ? '' : undefined}
               className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
               style={{ background: 'rgba(255, 255, 255, 0.15)' }}
               onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(null); }}
@@ -940,6 +1103,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         )}
       </div>
       <ShareModal
+        refined={refined}
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/${city}/${event.id}` : `/${city}/${event.id}`}
@@ -964,8 +1128,8 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     <>
     <div
       ref={expandedRef}
-      className="rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col"
-      style={darkMode ? {
+      className={`rounded-2xl overflow-hidden cursor-pointer w-full flex flex-col ${refined ? 'map2-preview-card' : ''}`}
+      style={{ ...(refined ? { '--map2-category-color': primaryCategoryHex, '--map2-category-ink': categoryInk } as React.CSSProperties : {}), ...(darkMode ? {
         // Opaque instead of backdrop-blur: the carousel slides these cards
         // over the live map canvas, and backdrop-filter forces a recomposite
         // on every scroll frame (same fix as OfferBanner).
@@ -976,8 +1140,19 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         background: 'rgba(255, 255, 255, 0.97)',
         border: '1px solid rgba(0, 0, 0, 0.08)',
         boxShadow: '0 2px 16px rgba(0, 0, 0, 0.12)',
+      }) }}
+      onPointerDown={(e) => { if (refined) gestureRef.current = { x: e.clientX, y: e.clientY }; }}
+      onClick={(e) => {
+        if (!refined) { onToggle(); return; }
+        if (window.getSelection()?.toString()) return;
+        const start = gestureRef.current;
+        if (start && (Math.abs(e.clientX - start.x) > 10 || Math.abs(e.clientY - start.y) > 10)) return;
+        onToggle();
       }}
-      onClick={onToggle}
+      tabIndex={refined ? 0 : undefined}
+      role={refined ? 'button' : undefined}
+      aria-label={refined ? `Open details for ${event.event_name}` : undefined}
+      onKeyDown={refined ? (e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onToggle(); } } : undefined}
     >
       {/* === SECTION 1: Header — Name + Subtitle + Time + Venue + Rating | Image === */}
       <div className="flex gap-3 px-3.5 pt-3 pb-1 md:px-2.5 md:pt-2 md:pb-0.5">
@@ -997,16 +1172,15 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               {event.event_time_start}{event.event_time_end && ` – ${event.event_time_end}`}
             </span>
           )}
+          {refined && <div className="map2-preview-venue-line"><strong>{venue.venue_name}</strong><span>{venue.venue_rating} ★ <i>·</i> {shortenLocation(venue.venue_location)}</span></div>}
         </div>
         {/* Right Column: Image */}
-        <div className="flex flex-col items-center flex-shrink-0 w-[100px] md:w-[72px]">
-          <div className="relative w-[96px] h-[96px] md:w-[68px] md:h-[68px] rounded-xl overflow-hidden"
+        <div className={`flex flex-col items-center flex-shrink-0 w-[100px] md:w-[72px] ${refined ? 'map2-preview-media' : ''}`}>
+          <div className={`relative w-[96px] h-[96px] md:w-[68px] md:h-[68px] rounded-xl overflow-hidden ${refined ? 'map2-preview-artwork' : ''}`}
                style={{ border: darkMode ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.06)' }}>
             {(() => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const u1 = (event as any).media_url_1 as string | undefined;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const u2 = (event as any).media_url_2 as string | undefined;
+              const u1 = event.media_url_1 || undefined;
+              const u2 = event.media_url_2 || undefined;
               const isVid = (u: string) => /\.(mp4|mov|webm)$/i.test(u);
               // Same precedence as before: url_1 wins, url_2 fallback. If the
               // primary is a video and the sibling is an image, the sibling
@@ -1019,6 +1193,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   alt={venue.venue_name}
                   sizes="96px"
                   fill
+                  style={refined ? { objectFit: 'contain' } : undefined}
                   poster={sibling && !isVid(sibling) ? sibling : null}
                 />
               );
@@ -1028,7 +1203,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
       </div>
 
       {/* === Venue info — full width === */}
-      <div className="px-3.5 pb-1 md:px-2.5 md:pb-0.5">
+      {!refined && <div className="px-3.5 pb-1 md:px-2.5 md:pb-0.5">
         {/* Venue name carries the brand gold + serif (matches .venue-name on
             the home page) so it reads as the PLACE, distinct from the white
             sans event headline above. */}
@@ -1048,11 +1223,11 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           <MapPin className={`w-2.5 h-2.5 md:w-2 md:h-2 flex-shrink-0 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
           <span className={`text-[11px] md:text-[9px] truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{shortenLocation(venue.venue_location)}</span>
         </div>
-      </div>
+      </div>}
 
       {/* === Bottom: Tags + Expand button === */}
-      <div className="flex items-center pb-1.5 md:pb-1">
-        <div className="flex-1 min-w-0 pl-2.5 md:pl-2">
+      <div className={`flex items-center pb-1.5 md:pb-1 ${refined ? 'map2-preview-footer' : ''}`}>
+        <div className={`flex-1 min-w-0 pl-2.5 md:pl-2 ${refined ? 'map2-preview-tags' : ''}`}>
           {(() => {
             const tags: Array<{ label: string; bg: string; text: string }> = [];
 
@@ -1098,7 +1273,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           })()}
         </div>
         <button
-          className="flex-shrink-0 w-9 h-9 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2 md:mr-1.5"
+          className={`flex-shrink-0 w-9 h-9 md:w-7 md:h-7 rounded-full flex items-center justify-center transition-all active:scale-90 mr-2 md:mr-1.5 ${refined ? 'map2-preview-details-button' : ''}`}
           style={{
             background: isFullScreen ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.12)',
             border: `1px solid ${isFullScreen ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.3)'}`,
@@ -1107,7 +1282,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             e.stopPropagation();
             if (isFullScreen) { onClose(); } else { onFullScreenToggle(); }
           }}
-          aria-label={isFullScreen ? 'Close' : 'Expand'}
+          aria-label={isFullScreen ? 'Close' : refined ? 'Open event details' : 'Expand'}
         >
           {isFullScreen ? (
             <X className="w-4 h-4 text-red-500" />
@@ -1121,6 +1296,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
     </div>
 
     <ShareModal
+      refined={refined}
       isOpen={showShareModal}
       onClose={() => setShowShareModal(false)}
       shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/${city}/${event.id}` : `/${city}/${event.id}`}

@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Utensils, Laugh, Moon, Music2, Trophy, Sun, Clock, Waves, Sparkles, Coffee,
   // 046/047 city-specific category icons
   Martini, Beer, Wrench, Users, PartyPopper, Mic, Wine, Zap, Briefcase, Film,
-  Tag, // generic fallback for unknown categories
+  Tag, ChevronRight, ChevronLeft, // generic fallback for unknown categories
 } from 'lucide-react';
 import { HierarchicalFilterState, EventCategoryFilterState, Venue } from '@/types';
 import {
@@ -18,6 +18,7 @@ import {
 import { getCityConfig } from '@/config/cities.config';
 
 interface CategoryPillsProps {
+  refined?: boolean;
   filters: HierarchicalFilterState;
   onFiltersChange: (filters: HierarchicalFilterState) => void;
   venues: Venue[];
@@ -69,6 +70,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
 };
 
 const CategoryPills: React.FC<CategoryPillsProps> = ({
+  refined = false,
   filters,
   onFiltersChange,
   venues,
@@ -78,6 +80,9 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   wrapRows = 3,
   darkMode = false,
 }) => {
+  const primaryScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollCategories, setCanScrollCategories] = useState(false);
+  const [atCategoryEnd, setAtCategoryEnd] = useState(false);
   const isOutlined = variant === 'outlined';
   const eventCategories: EventCategoryFilterState = filters.eventCategories || {
     selectedPrimaries: [],
@@ -202,6 +207,20 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
     .filter(({ count }) => count > 0)
     .sort((a, b) => b.count - a.count);
 
+  useEffect(() => {
+    if (!refined || !wrapPills || !primaryScrollRef.current) return;
+    const el = primaryScrollRef.current;
+    const update = () => {
+      setCanScrollCategories(el.scrollWidth > el.clientWidth + 2);
+      setAtCategoryEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 3);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    el.addEventListener('scroll', update, { passive: true });
+    return () => { observer.disconnect(); el.removeEventListener('scroll', update); };
+  }, [refined, wrapPills, sortedCategories.length]);
+
   const renderPill = (category: string) => {
     const isSelected = eventCategories.selectedPrimaries.includes(category);
     const isExpanded = eventCategories.expandedPrimaries.includes(category);
@@ -213,22 +232,24 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
 
     return (
       <button
+        aria-pressed={isSelected}
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-1 px-2.5 md:px-2 py-1 md:py-0.5 rounded-full text-[10px] md:text-[8px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
-          isSelected ? 'shadow-md' : 'hover:shadow-sm'
+        className={`flex items-center gap-1 px-2.5 md:px-2 py-1 md:py-0.5 rounded-full text-[10px] md:text-[8px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${refined ? 'map2-category-pill' : ''} ${
+          refined ? '' : isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
-          color: isSelected ? '#ffffff' : hexColor,
-          background: isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
-          border: `1.5px solid ${hexColor}`,
+          color: refined ? '#e2e3e1' : isSelected ? '#ffffff' : hexColor,
+          background: refined ? isSelected ? `${hexColor}33` : 'transparent' : isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
+          border: refined ? '0' : `1.5px solid ${hexColor}`,
+          ...(refined ? { '--map2-pill-color': hexColor } as React.CSSProperties : {}),
         } : {
           color: '#ffffff',
           background: isSelected ? hexColor : `${hexColor}CC`,
           border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
         }}
       >
-        {IconComponent && <IconComponent className="w-3 h-3" />}
+        {IconComponent && <IconComponent className="w-3 h-3" style={refined && !isSelected ? { color: hexColor } : undefined} />}
         {label} ({count})
         {isExpanded && ' ↓'}
       </button>
@@ -249,8 +270,13 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   const pillsContent = (
     <div className="flex flex-col gap-2">
       {/* Primary Category Row with Icons */}
-      <div className="overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {wrapPills ? (
+      <div className={refined && wrapPills ? 'map2-primary-viewport' : undefined}>
+      <div ref={refined && wrapPills ? primaryScrollRef : undefined} className={`overflow-x-auto scrollbar-hide pb-0.5 ${refined && wrapPills ? 'map2-primary-scroll' : ''}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {wrapPills && refined ? (
+          <div className="map2-primary-grid w-max min-w-full">
+            {sortedCategories.map(({ category }) => renderPill(category))}
+          </div>
+        ) : wrapPills ? (
           <div className="flex flex-col gap-1.5 w-max min-w-full">
             {rows.map((row, i) => (
               <div key={`pill-row-${i}`} className="flex gap-1.5">{row.map(renderPill)}</div>
@@ -261,6 +287,8 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
             {sortedCategories.map(({ category }) => renderPill(category))}
           </div>
         )}
+      </div>
+      {refined && wrapPills && canScrollCategories && <button type="button" className="map2-category-page" aria-label={atCategoryEnd ? 'Earlier categories' : 'More categories'} onClick={() => { const el = primaryScrollRef.current; if (el) el.scrollTo({ left: atCategoryEnd ? 0 : Math.min(el.scrollWidth - el.clientWidth, el.scrollLeft + el.clientWidth), behavior: 'smooth' }); }} >{atCategoryEnd ? <ChevronLeft size={18}/> : <ChevronRight size={18}/>}</button>}
       </div>
 
       {/* Secondary Category Row - Animated */}
@@ -281,7 +309,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
               height: { duration: 0.22, ease: 'easeOut' },
               opacity: { duration: 0.15, delay: 0.15 },
             }}
-            className="overflow-hidden"
+            className={`overflow-hidden ${refined ? 'map2-secondary-rail' : ''}`}
           >
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 pt-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {expandedSecondaries.map(({ primary, secondary }) => {
@@ -289,15 +317,17 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                 const hexColor = getHexColor(getCategoryColor(primary));
                 return (
                   <button
+                    aria-pressed={isSelected}
                     key={`category-${primary}-${secondary}`}
                     onClick={() => handleSecondaryClick(primary, secondary)}
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${
-                      isSelected ? 'shadow-lg scale-105' : ''
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${refined ? 'map2-category-pill' : ''} ${
+                      !refined && isSelected ? 'shadow-lg scale-105' : ''
                     }`}
                     style={isOutlined ? {
-                      color: isSelected ? '#ffffff' : hexColor,
-                      background: isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
-                      border: `1.5px solid ${hexColor}`,
+                      color: refined ? '#e2e3e1' : isSelected ? '#ffffff' : hexColor,
+                      background: refined ? isSelected ? `${hexColor}33` : 'transparent' : isSelected ? hexColor : darkMode ? 'rgba(10,10,26,0.75)' : 'rgba(255,255,255,0.9)',
+                      border: refined ? '0' : `1.5px solid ${hexColor}`,
+                      ...(refined ? { '--map2-pill-color': hexColor } as React.CSSProperties : {}),
                     } : {
                       color: '#ffffff',
                       background: isSelected ? hexColor : `${hexColor}99`,
