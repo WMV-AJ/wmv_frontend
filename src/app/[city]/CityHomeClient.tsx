@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
-import { getCityConfig, type CitySlug } from '@/config/cities.config';
+import { ALL_CITIES, getCityConfig, isValidCity, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
 import { ArrowUpRight } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
@@ -14,6 +14,8 @@ import { T } from '@/lib/theme/tokens';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
 import HomeHero from '@/components/home/HomeHero';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
+import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
+import CityAtlas from '@/components/home/CityAtlas';
 import {
   HomeSectionHeader,
   HScrollRail,
@@ -264,6 +266,40 @@ export default function CityHome() {
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c]) => c);
   }, [venues]);
 
+  // How it works: live totals from the rows already loaded (no extra fetch).
+  const howStats = useMemo<HowStats>(() => {
+    const venueIds = new Set<string>();
+    const eventIds = new Set<string>();
+    const areaSet = new Set<string>();
+    let latest = '';
+    venues.forEach((v) => {
+      if (v.venue_id != null) venueIds.add(String(v.venue_id));
+      if (v.event_id != null) eventIds.add(String(v.event_id));
+      if (v.area) areaSet.add(v.area);
+      if (typeof v.scrape_date === 'string' && v.scrape_date > latest) latest = v.scrape_date;
+    });
+    let refreshed: string | null = null;
+    if (latest) {
+      try {
+        refreshed = new Date(latest).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: getCityConfig(city).timezone });
+      } catch { refreshed = null; }
+    }
+    return { venues: venueIds.size, events: eventIds.size, areas: areaSet.size, refreshed };
+  }, [venues, city]);
+
+  // Section accent for How it works / the atlas: the city's #1 category.
+  const cityAccent = topCategories[0] ? getCardAccent(topCategories[0]) : accentFromHex(T.accent);
+
+  // Every live city (ALL_CITIES grows at runtime once /api/cities loads;
+  // CitiesProvider re-renders this subtree when it does).
+  const cityOptions: Array<[string, string]> = ALL_CITIES.map((slug) => [slug, getCityConfig(slug).displayName]);
+  const switchCity = (slug: string) => {
+    if (slug === city || !isValidCity(slug)) return;
+    trackEvent('home_city_switch', { from: city, to: slug });
+    try { window.localStorage.setItem('wmv_last_city', slug); } catch { /* ignore */ }
+    router.push(`/${slug}`);
+  };
+
   const cityConfig = getCityConfig(city);
   const cityName = cityConfig.displayName;
   // The city's calendar day, not the viewer's.
@@ -510,15 +546,28 @@ export default function CityHome() {
             ))}
         </section>
 
-        {/* The method */}
-        <section className="px-[18px] pt-7">
-          <div className="pt-4" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
-            <p className="text-[11px] uppercase font-extrabold tracking-[0.18em] text-pale mb-2">The method</p>
-            <p className="font-tight font-semibold uppercase text-[24px] leading-[0.95] tracking-[-0.04em] text-pale">
-              We watch stories.<br /><span className="text-silver">You pick a vibe.</span><br />The city opens up.
-            </p>
-          </div>
-        </section>
+        {/* § How it works — Find / Sort / Go + live stats (from Home 4) */}
+        <HowItWorks
+          cityName={cityName}
+          stats={howStats}
+          loading={loading}
+          accent={cityAccent}
+          kicker={{ index: 2, total: 3 }}
+          scrollRoot={mainRef}
+        />
+
+        {/* § Your city — picker + atlas (from Home 4) */}
+        <CityAtlas
+          city={city}
+          cities={cityOptions}
+          accent={cityAccent}
+          pinCategories={topCategories}
+          kicker={{ index: 3, total: 3 }}
+          scrollRoot={mainRef}
+          onChangeCity={switchCity}
+          onMap={() => goMap('city_atlas_map')}
+          onList={() => goList('city_atlas_list')}
+        />
       </div>
 
       <NavPill city={city} active="home" />

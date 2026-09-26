@@ -24,6 +24,7 @@ export type AnalyticsEventName =
   | 'home_search_submit'
   | 'home_category_click'
   | 'home_weekend_day_click'
+  | 'home_city_switch'
   // Landing intro + marketing funnels
   //   Visitor funnel: page_view(/) → intro_completed|intro_skipped →
   //     landing_cta_click → page_view(/{city}) → nav_view_change → view_event
