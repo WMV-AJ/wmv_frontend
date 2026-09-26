@@ -5,7 +5,7 @@
 // (StackedEventCards) cannot drift apart.
 
 import { useLayoutEffect, useRef, useState } from 'react';
-import { getCategoryLightBg, mixCategoryTint } from '@/lib/category-mappings';
+import { getCategoryLightBg } from '@/lib/category-mappings';
 
 // Home 4 label idiom: Inter, uppercase, 9-11px, weight 650-750, positive
 // tracking. Every label carries `uppercase` explicitly.
@@ -60,9 +60,10 @@ export interface CardAccent {
   tileBg: string;
 }
 
-export function getCardAccent(category: string): CardAccent {
-  const { rgb, hex } = getCategoryLightBg(category);
+function buildAccent(rgb: [number, number, number], hex: string): CardAccent {
   const rgba = (a: number) => `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+  // Same 6% wash over the tile backdrop as mixCategoryTint.
+  const mix = (c: number, base: number) => Math.round(c * 0.06 + base * 0.94);
   return {
     rgb,
     text: hex,
@@ -70,8 +71,23 @@ export function getCardAccent(category: string): CardAccent {
     border: rgba(0.55),
     edge: rgba(0.95),
     glow: rgba(0.30),
-    tileBg: mixCategoryTint(category, [12, 12, 28], 0.06),
+    tileBg: `rgb(${mix(rgb[0], 12)}, ${mix(rgb[1], 12)}, ${mix(rgb[2], 28)})`,
   };
+}
+
+export function getCardAccent(category: string): CardAccent {
+  const { rgb, hex } = getCategoryLightBg(category);
+  return buildAccent(rgb, hex);
+}
+
+/** Accent from a raw hex colour — for things with no event category
+ *  (e.g. the Rooftops vibe, which matches on keywords only). */
+export function accentFromHex(hex: string): CardAccent {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
+  const rgb: [number, number, number] = m
+    ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)]
+    : [244, 196, 48];
+  return buildAccent(rgb, m ? `#${m[1]}${m[2]}${m[3]}` : '#f4c430');
 }
 
 // When the rating block wraps below the venue name, give it its own line and

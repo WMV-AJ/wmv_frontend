@@ -5,72 +5,30 @@ import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
 import { getCityConfig, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
-import {
-  Heart,
-  ArrowUpRight,
-  ChevronRight,
-} from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import NavPill from '@/components/navigation/NavPill';
-import EventMedia from '@/components/shared/EventMedia';
 import { VIBES, matchesVibe } from '@/config/vibes';
-import { getEventCategories } from '@/lib/category-utils';
-import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
-import { displayFont, bodyFont } from '@/lib/theme/tokens';
+import { T } from '@/lib/theme/tokens';
+import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
+import HomeHero from '@/components/home/HomeHero';
+import {
+  HomeSectionHeader,
+  HScrollRail,
+  EventTile,
+  EventRow,
+  DealCard,
+  NumberedRow,
+  primaryCategory,
+  BTN_SECONDARY,
+  BTN_SECONDARY_STYLE,
+} from '@/components/home/HomeParts';
 
-// ── THEME TOKENS ─────────────────────────────────────────────────────
-const T = {
-  bg: '#0a0a14',
-  surface: '#14141f',
-  surfaceAlt: '#1c1c2a',
-  overlay: 'rgba(255,255,255,0.04)',
-
-  ink: '#f5f2ed',
-  inkMuted: '#a8a2b8',
-  inkFaint: '#5f5a70',
-  inkInverse: '#0a0a14',
-
-  line: '#2a2638',
-  lineFaint: 'rgba(255,255,255,0.08)',
-  crosshair: 'rgba(255,255,255,0.06)',
-
-  accent: '#f4c430',
-  accentSoft: 'rgba(244, 196, 48,0.18)',
-  live: '#ef4444',
-  pink: '#ec4899',
-
-  chipLight: '#f5f2ed',
-};
-
-// Home-page type system (2026-08 trial): three roles —
-//   displayFont (Roboto):    venue + event names, hero, numbers
-//   bodyFont    (Open Sans): labels, times, counts, badges, copy
-// Both come from @/lib/theme/tokens — this page loads no fonts of its own.
-
-// ── VIBE GRID CONFIG ──────────────────────────────────────────────────
-// VIBES + matchesVibe live in '@/config/vibes' so the homepage pill counts
-// and the /[city]/vibe/[vibeId] listing page stay in sync.
-
-const RADAR_DOTS = [
-  { t: '22%', l: '32%', c: '#f4c430' },
-  { t: '58%', l: '68%', c: '#22d3ee' },
-  { t: '38%', l: '78%', c: '#f97316' },
-  { t: '72%', l: '38%', c: '#84cc16' },
-  { t: '50%', l: '22%', c: '#f472b6' },
-  { t: '28%', l: '58%', c: '#ec4899' },
-  { t: '68%', l: '82%', c: '#f4c430' },
-];
-
-// Deal chip labels/colors — mirrors MobileEventCard's dealConfig.
-const DEAL_LABELS: Record<string, { label: string; rgb: string }> = {
-  ladies_night: { label: 'Ladies Night', rgb: '236, 72, 153' },
-  '2for1': { label: 'Buy 1 Get 1', rgb: '16, 185, 129' },
-  happy_hour: { label: 'Happy Hour', rgb: '251, 191, 36' },
-  discount: { label: 'Discount', rgb: '59, 130, 246' },
-  free_entry: { label: 'Free Entry', rgb: '34, 197, 94' },
-  special_offer: { label: 'Special Offer', rgb: '249, 115, 22' },
-};
+// Type, colour and components follow the map tile / list page system
+// (@/components/shared/card-style, @/components/home/*). Fonts: Inter /
+// Inter Tight via `font-inter` / `font-tight` (globals.css @font-face),
+// preloaded in ./page.tsx.
 
 // ── HELPERS ───────────────────────────────────────────────────────────
 
@@ -132,114 +90,6 @@ function utcDateKey(eventDate: string): string | null {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getPrimaryCat(e: any): string | null {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cats = getEventCategories(e as any);
-  return cats[0]?.primary ?? null;
-}
-
-// ── SMALL BUILDING BLOCKS ─────────────────────────────────────────────
-
-function SectionHeader({ label, count, onClick }: {
-  label: React.ReactNode;
-  /** Rendered inline as "Heading - 9 events" so it never reads as a button. */
-  count?: React.ReactNode;
-  onClick?: () => void;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        // Full-bleed gold rule: negative margins escape the 18px content
-        // gutter; matching padding pulls the text back in line.
-        display: 'flex', alignItems: 'baseline',
-        borderBottom: '1px solid rgba(244,196,48,0.3)',
-        margin: '0 -18px 12px', padding: '0 18px 9px',
-        cursor: onClick ? 'pointer' : 'default',
-      }}
-    >
-      <div style={{ fontFamily: bodyFont, fontSize: 14, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: T.accent, paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-        {label}
-      </div>
-      {count != null && (
-        <span style={{ fontFamily: bodyFont, fontSize: 12, fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase', color: T.inkMuted, marginLeft: 6, whiteSpace: 'nowrap' }}>
-          - {count}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// Horizontal rail with a right-edge fade + chevron so it's obvious the row
-// scrolls. Affordance hides once the user reaches the end (or when the
-// content doesn't overflow at all).
-function HScrollRail({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [showHint, setShowHint] = useState(false);
-
-  const update = () => {
-    const el = ref.current;
-    if (!el) return;
-    const overflowing = el.scrollWidth > el.clientWidth + 8;
-    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-    setShowHint(overflowing && !atEnd);
-  };
-
-  // Re-measure whenever the rendered children change (data arriving).
-  useEffect(() => { update(); });
-
-  return (
-    <div style={{ position: 'relative' }}>
-      <div
-        ref={ref}
-        onScroll={update}
-        style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', scrollSnapType: 'x mandatory', paddingBottom: 4 }}
-      >
-        {children}
-      </div>
-      {showHint && (
-        <>
-          <div style={{
-            position: 'absolute', top: 0, bottom: 4, right: 0, width: 44,
-            pointerEvents: 'none',
-            background: `linear-gradient(to left, ${T.bg}, transparent)`,
-          }} />
-          <button
-            aria-label="Scroll right"
-            onClick={() => ref.current?.scrollBy({ left: (ref.current?.clientWidth ?? 200) * 0.8, behavior: 'smooth' })}
-            style={{
-              position: 'absolute', top: '50%', right: 4, transform: 'translateY(-50%)',
-              width: 28, height: 28, borderRadius: '50%', padding: 0,
-              background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-            }}
-          >
-            <ChevronRight size={15} color="#fff" />
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-// Colored event-category pill — same palette as the list/map CategoryPills.
-// Always the translucent tint: pills now live below the image, never on it.
-function CategoryPillTag({ primary, small }: { primary: string; small?: boolean }) {
-  const hex = getHexColor(getCategoryColor(primary));
-  return (
-    <span style={{
-      display: 'inline-block', padding: small ? '3px 9px' : '4px 11px', borderRadius: 999,
-      background: `${hex}1f`,
-      border: `1px solid ${hex}66`, color: hex,
-      fontFamily: bodyFont, fontSize: small ? 10 : 11, fontWeight: 700,
-      letterSpacing: '0.03em', textTransform: 'uppercase', whiteSpace: 'nowrap',
-    }}>
-      {getDisplayName(primary)}
-    </span>
-  );
-}
-
 // ── COMPONENT ─────────────────────────────────────────────────────────
 export default function CityHome() {
   const router = useRouter();
@@ -247,7 +97,8 @@ export default function CityHome() {
   const city = (params?.city as string) || 'dubai';
 
   const [liked, setLiked] = useState<Set<string>>(new Set());
-  const heroRef = useRef<HTMLDivElement | null>(null);
+  // The page scrolls inside <main>; section observers use it as their root.
+  const mainRef = useRef<HTMLElement | null>(null);
 
   // Venue data comes from the shared VenueDataProvider (root layout) — this
   // page used to fire its own /api/venues fetch concurrently with the
@@ -379,7 +230,30 @@ export default function CityHome() {
   const vibeGrid = VIBES.map(v => ({
     ...v,
     count: venues.filter(venue => matchesVibe(venue, v)).length,
+    accent: v.categories[0] ? getCardAccent(v.categories[0]) : accentFromHex(v.color),
   }));
+
+  // The city's top event categories by count — colours the hero radar (and,
+  // later on the page, the atlas pins).
+  const topCategories = useMemo(() => {
+    const counts = new Map<string, number>();
+    venues.forEach((v) => {
+      const c = primaryCategory(v);
+      if (c) counts.set(c, (counts.get(c) || 0) + 1);
+    });
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c]) => c);
+  }, [venues]);
+
+  const cityConfig = getCityConfig(city);
+  const cityName = cityConfig.displayName;
+  // The city's calendar day, not the viewer's.
+  const dateLabel = (() => {
+    try {
+      return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: cityConfig.timezone });
+    } catch {
+      return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+    }
+  })();
 
   const skeletonStyle = (w: string | number, h: string | number | undefined, extra?: React.CSSProperties): React.CSSProperties => ({
     width: w,
@@ -398,8 +272,19 @@ export default function CityHome() {
     router.push(`/${city}/event/${e.event_id}`);
   };
 
+  const goMap = (source: string) => {
+    trackEvent('nav_view_change', { from: 'home', to: 'map', source });
+    router.push(`/${city}/map`);
+  };
+  const goList = (source: string) => {
+    trackEvent('nav_view_change', { from: 'home', to: 'cards', source });
+    router.push(`/${city}/cards`);
+  };
+
   return (
     <main
+      ref={mainRef}
+      className="font-inter antialiased"
       style={{
         position: 'fixed',
         inset: 0,
@@ -408,7 +293,6 @@ export default function CityHome() {
         WebkitOverflowScrolling: 'touch',
         background: T.bg,
         color: T.ink,
-        fontFamily: bodyFont,
       }}
     >
       <style>{`
@@ -417,138 +301,27 @@ export default function CityHome() {
         @keyframes wmv-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
       `}</style>
 
-      <div style={{ maxWidth: 430, margin: '0 auto', paddingBottom: 40 }}>
+      <div style={{ maxWidth: 430, margin: '0 auto', paddingBottom: 96 }}>
 
-        {/* Masthead */}
         <HomeMasthead city={city} from="home" />
 
-        {/* Hero — radar + title */}
-        <div ref={heroRef} style={{ position: 'relative', padding: '20px 18px 0' }}>
-          <div style={{
-            position: 'absolute', top: 6, right: -70, width: 300, height: 300,
-            pointerEvents: 'none', opacity: 0.9,
-          }}>
-            {[0, 1, 2, 3, 4].map(i => (
-              <div key={i} style={{
-                position: 'absolute', inset: `${i * 24}px`, borderRadius: '50%',
-                border: `1px solid rgba(255,255,255,${0.14 - i * 0.022})`,
-              }} />
-            ))}
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%', width: 12, height: 12,
-              marginTop: -6, marginLeft: -6, borderRadius: '50%',
-              background: T.accent, boxShadow: `0 0 16px ${T.accent}80`,
-              animation: 'wmv-pulse 2s infinite',
-            }} />
-            {RADAR_DOTS.map((d, i) => (
-              <div key={i} style={{
-                position: 'absolute', top: d.t, left: d.l, width: 7, height: 7, borderRadius: '50%',
-                background: d.c, boxShadow: `0 0 10px ${d.c}`,
-                animation: `wmv-pulse 2s infinite ${i * 0.25}s`,
-              }} />
-            ))}
-            <div style={{
-              position: 'absolute', inset: 0, borderRadius: '50%',
-              background: `conic-gradient(from 0deg, transparent 82%, ${T.accent}33 95%, ${T.accent}66 100%)`,
-              animation: 'wmv-spin 4s linear infinite',
-            }} />
-            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: T.crosshair }} />
-            <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: T.crosshair }} />
-          </div>
-
-          {/* Warm gold glow behind the headline */}
-          <div aria-hidden style={{
-            position: 'absolute', left: -60, top: -20, width: 320, height: 300,
-            background: `radial-gradient(ellipse 60% 50% at 35% 40%, ${T.accent}14, transparent 70%)`,
-            pointerEvents: 'none',
-          }} />
-
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            {/* Live badge with the city's actual day + date */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: bodyFont, fontSize: 9, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.live }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
-              Live · {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
-            </div>
-            {/* City-first headline — the city IS the product */}
-            <h1 style={{
-              fontFamily: displayFont, fontWeight: 400,
-              fontSize: 54, lineHeight: 0.94, margin: '14px 0 0',
-              letterSpacing: '-0.035em', color: T.ink,
-            }}>
-              Tonight in<br />
-              <span style={{
-                color: T.accent,
-                textShadow: `0 0 40px ${T.accent}40`,
-              }}>{getCityConfig(city).displayName}</span>
-            </h1>
-            <div style={{ fontFamily: bodyFont, fontSize: 10, fontWeight: 500, letterSpacing: '0.8px', textTransform: 'uppercase', color: T.inkMuted, marginTop: 14, maxWidth: 230, lineHeight: 1.5 }}>
-              Every venue&rsquo;s stories — scanned, sorted &amp; mapped live.
-            </div>
-            {/* Source ticker: what feeds the radar */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12, maxWidth: 250 }}>
-              {[
-                ['IG stories', '#ec4899'],
-                ['IG posts', '#eab308'],
-                ['Ticketing', '#10b981'],
-                ['Venue sites', '#f97316'],
-              ].map(([label, color]) => (
-                <span key={label} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '3px 8px', borderRadius: 999,
-                  border: `1px solid ${color}44`, background: `${color}12`,
-                  fontFamily: bodyFont, fontSize: 8, fontWeight: 600,
-                  letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted,
-                }}>
-                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: color as string, boxShadow: `0 0 6px ${color}` }} />
-                  {label}
-                </span>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-              <button
-                onClick={() => {
-                  trackEvent('nav_view_change', { from: 'home', to: 'map', source: 'hero_cta' });
-                  router.push(`/${city}/map`);
-                }}
-                style={{
-                  fontFamily: bodyFont, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
-                  textTransform: 'uppercase', cursor: 'pointer', border: 'none',
-                  padding: '13px 14px', borderRadius: 9, lineHeight: 1, whiteSpace: 'nowrap',
-                  background: '#c9a227', color: '#0a0a14',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
-              >
-                Explore on Maps
-                <ArrowUpRight size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-              </button>
-              <button
-                onClick={() => {
-                  trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'hero_cta' });
-                  router.push(`/${city}/cards`);
-                }}
-                style={{
-                  fontFamily: bodyFont, fontSize: 12, fontWeight: 700, letterSpacing: '0.8px',
-                  textTransform: 'uppercase', cursor: 'pointer', lineHeight: 1,
-                  padding: '13px 14px', borderRadius: 9, whiteSpace: 'nowrap',
-                  background: 'transparent', color: '#f5f2ed',
-                  border: '1.5px solid #3a3548',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
-              >
-                Today&rsquo;s Vibe
-                <ArrowUpRight size={13} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-              </button>
-            </div>
-          </div>
-        </div>
-
+        <HomeHero
+          cityName={cityName}
+          dateLabel={dateLabel}
+          tonightCount={tonightEvents.length}
+          liveCount={happeningNow.length}
+          loading={loading}
+          topCategories={topCategories}
+          onMap={() => goMap('hero_cta')}
+          onList={() => goList('hero_cta')}
+        />
 
         {/* § Happening now — live right now, hidden when empty */}
         {(loading || happeningNow.length > 0) && (
-          <div style={{ padding: '26px 18px 0' }}>
-            <SectionHeader
+          <section className="px-[18px] pt-7">
+            <HomeSectionHeader
               label={<>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.live, animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
+                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
                 Happening now
               </>}
               count={loading ? '—' : `${happeningNow.length} live`}
@@ -556,491 +329,183 @@ export default function CityHome() {
             <HScrollRail>
               {loading
                 ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined) }} />
+                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
                 ))
                 : happeningNow.map((e) => (
-                  <div
-                    key={e.event_id || e.venue_id}
-                    onClick={() => openEvent(e, 'happening_now')}
-                    style={{
-                      flex: '0 0 130px', width: 130, minWidth: 130, maxWidth: 130,
-                      scrollSnapAlign: 'start',
-                      cursor: e.event_id ? 'pointer' : 'default',
-                    }}
-                  >
-                    {/* Media block — only the LIVE badge sits on the image */}
-                    <div style={{
-                      position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
-                      background: `linear-gradient(135deg, ${T.live}22, ${T.bg})`,
-                      border: `1px solid ${T.line}`,
-                    }}>
-                      {e.media_url_1 && (
-                        <EventMedia
-                          src={e.media_url_1}
-                          mediaType={e.media_type_1}
-                          poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                          alt={e.name || ''}
-                          sizes="140px"
-                          fill
-                          lazyVideo
-                        />
-                      )}
-                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
-                      <div style={{
-                        position: 'absolute', top: 6, left: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
-                        background: T.live, color: '#fff', fontFamily: bodyFont, fontSize: 8, fontWeight: 700,
-                        padding: '2px 5px', letterSpacing: '0.5px', borderRadius: 3,
-                      }}>
-                        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#fff', animation: 'wmv-pulse 1.5s infinite', display: 'inline-block' }} />
-                        LIVE
-                      </div>
-                    </div>
-                    {/* Text below the image */}
-                    <div style={{ paddingTop: 8 }}>
-                      <div style={{ fontFamily: displayFont, fontSize: 14, color: T.ink, lineHeight: 1.15, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {e.name || ''}
-                      </div>
-                      {e.event_time && (
-                        <div style={{ fontFamily: bodyFont, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
-                          {e.event_time}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              }
+                  <EventTile key={e.event_id || e.venue_id} event={e} width={130} sizes="140px" live
+                    onOpen={() => openEvent(e, 'happening_now')} />
+                ))}
             </HScrollRail>
-          </div>
+          </section>
         )}
 
         {/* § Tonight in <city> */}
-        <div style={{ padding: '26px 18px 0' }}>
-          <SectionHeader
-            label={`Tonight in ${getCityConfig(city).displayName}`}
+        <section className="px-[18px] pt-7">
+          <HomeSectionHeader
+            label={`Tonight in ${cityName}`}
             count={loading ? '—' : `${tonightEvents.length} events`}
           />
-
           {loading ? (
             <>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+              <div className="flex gap-3 mb-3.5">
                 {[0, 1].map(i => (
-                  <div key={i} style={{ flex: '0 0 48%', aspectRatio: '3/4', ...skeletonStyle('100%', undefined) }} />
+                  <div key={i} style={{ flex: '0 0 48%', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
                 ))}
               </div>
               {[0, 1, 2].map(i => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '22px 1fr auto', gap: 10, padding: '12px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'start' }}>
+                <div key={i} className="grid gap-3 py-3 items-start" style={{ gridTemplateColumns: '20px 72px 1fr', borderTop: `1px solid ${TILE_RULE}` }}>
                   <div style={skeletonStyle(18, 12)} />
+                  <div style={skeletonStyle(72, 72, { borderRadius: 8 })} />
                   <div>
                     <div style={skeletonStyle(80, 10)} />
-                    <div style={{ ...skeletonStyle(120, 16), marginTop: 6 }} />
+                    <div style={{ ...skeletonStyle(140, 16), marginTop: 6 }} />
                     <div style={{ ...skeletonStyle(100, 10), marginTop: 6 }} />
                   </div>
-                  <div style={skeletonStyle(28, 28)} />
                 </div>
               ))}
             </>
           ) : tonightEvents.length > 0 ? (
             <>
-              {/* 2-up portrait scroller */}
-              <div style={{ marginBottom: 14 }}>
+              <div className="mb-3.5">
                 <HScrollRail>
-                  {tonightEvents.map((e) => {
-                    const cat = getPrimaryCat(e);
-                    return (
-                      <div
-                        key={e.event_id || e.venue_id}
-                        onClick={() => openEvent(e, 'tonight_scroller')}
-                        style={{
-                          flex: '0 0 48%', width: '48%', minWidth: '48%', maxWidth: '48%',
-                          scrollSnapAlign: 'start',
-                          cursor: e.event_id ? 'pointer' : 'default',
-                        }}
-                      >
-                        {/* Media block — only the heart stays on the image */}
-                        <div style={{
-                          position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6,
-                          background: 'linear-gradient(135deg, #1c1c2a, #0a0a14)',
-                          border: `1px solid ${T.line}`,
-                        }}>
-                          {e.media_url_1 ? (
-                            <EventMedia
-                              src={e.media_url_1}
-                              mediaType={e.media_type_1}
-                              poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                              alt={e.name || ''}
-                              sizes="(max-width: 430px) 48vw, 206px"
-                              fill
-                              lazyVideo
-                            />
-                          ) : (
-                            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
-                          )}
-                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
-                          <button
-                            onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
-                            style={{
-                              position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 4,
-                              background: 'rgba(20,20,31,0.75)', border: `1px solid ${T.line}`, cursor: 'pointer',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                            }}
-                            aria-label="Like"
-                          >
-                            <Heart style={{ width: 12, height: 12, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
-                          </button>
-                        </div>
-                        {/* Text below the image */}
-                        <div style={{ paddingTop: 9 }}>
-                          {cat && (
-                            <div style={{ marginBottom: 5 }}>
-                              <CategoryPillTag primary={cat} small />
-                            </div>
-                          )}
-                          <div style={{
-                            fontFamily: displayFont, fontSize: 16, fontWeight: 400,
-                            color: T.ink, lineHeight: 1.15, letterSpacing: '-0.015em',
-                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                          }}>
-                            {e.event_name || e.name}
-                          </div>
-                          <div style={{ fontFamily: bodyFont, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.6px', textTransform: 'uppercase', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {e.name || ''}{e.event_time ? ` · ${e.event_time}` : ''}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {tonightEvents.map((e) => (
+                    <EventTile key={e.event_id || e.venue_id} event={e} width="48%" sizes="(max-width: 430px) 48vw, 206px"
+                      liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
+                      onOpen={() => openEvent(e, 'tonight_scroller')} />
+                  ))}
                 </HScrollRail>
               </div>
-
-              {/* List — first 4 */}
-              {tonightEvents.slice(0, 4).map((e, i) => {
-                const cat = getPrimaryCat(e);
-                return (
-                <div key={e.event_id || e.venue_id || i} style={{
-                  display: 'grid', gridTemplateColumns: '22px 72px 1fr auto', gap: 10,
-                  padding: '10px 0', borderTop: `1px solid ${T.lineFaint}`, alignItems: 'center',
-                  minHeight: 88,
-                  cursor: e.event_id ? 'pointer' : 'default',
-                }} onClick={() => openEvent(e, 'tonight_list')}>
-                  {/* Number */}
-                  <div style={{ fontFamily: bodyFont, fontSize: 10, fontWeight: 600, color: T.inkMuted }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  {/* Thumbnail — left */}
-                  <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, background: `linear-gradient(135deg, #1c1c2a, #0a0a14)`, border: `1px solid ${T.line}`, overflow: 'hidden', borderRadius: 4 }}>
-                    {e.media_url_1 ? (
-                      <EventMedia
-                        src={e.media_url_1}
-                        mediaType={e.media_type_1}
-                        poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                        alt={e.name || ''}
-                        sizes="96px"
-                        fill
-                        lazyVideo
-                      />
-                    ) : (
-                      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.accent}22, ${T.bg})` }} />
-                    )}
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
-                  </div>
-                  {/* Text */}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: bodyFont, fontSize: 10, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                      {e.area || ''}
-                    </div>
-                    <div style={{
-                      fontFamily: displayFont, fontSize: 18, fontWeight: 400,
-                      color: T.ink, letterSpacing: '-0.015em', lineHeight: 1.1, marginTop: 2,
-                    }}>
-                      {e.name || e.venue}
-                    </div>
-                    {/* Always reserve this row — keeps height consistent across cards */}
-                    <div style={{ fontFamily: bodyFont, fontSize: 13, color: T.inkMuted, marginTop: 3, minHeight: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {e.event_name || ''}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontFamily: bodyFont, fontSize: 11, color: T.inkMuted, fontWeight: 600, letterSpacing: '0.2px', minHeight: 18, flexWrap: 'wrap' }}>
-                      {cat && <CategoryPillTag primary={cat} small />}
-                      {e.event_time && <span>{e.event_time}</span>}
-                      {e.rating && <span>★ {e.rating}</span>}
-                    </div>
-                  </div>
-                  {/* Like — top right */}
-                  <button
-                    onClick={(ev) => { ev.stopPropagation(); toggle(String(e.venue_id)); }}
-                    style={{ width: 28, height: 28, border: `1px solid ${T.line}`, background: T.surface, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
-                    aria-label="Like"
-                  >
-                    <Heart style={{ width: 13, height: 13, color: liked.has(String(e.venue_id)) ? T.pink : T.ink, fill: liked.has(String(e.venue_id)) ? T.pink : 'transparent' }} />
-                  </button>
-                </div>
-                );
-              })}
-              {/* See all → list view for today */}
+              {tonightEvents.slice(0, 4).map((e, i) => (
+                <EventRow key={e.event_id || e.venue_id || i} event={e} index={i}
+                  liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
+                  onOpen={() => openEvent(e, 'tonight_list')} />
+              ))}
               {tonightEvents.length > 4 && (
                 <button
                   onClick={() => {
                     trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'tonight_see_all' });
                     router.push(`/${city}/cards?date=today`);
                   }}
-                  style={{
-                    width: '100%', marginTop: 10, padding: '10px 0',
-                    border: `1px solid ${T.line}`, background: 'transparent',
-                    fontFamily: bodyFont, fontSize: 10, fontWeight: 600,
-                    letterSpacing: '1px', textTransform: 'uppercase',
-                    color: T.ink, cursor: 'pointer',
-                  }}
+                  className={`${BTN_SECONDARY} w-full mt-3`}
+                  style={BTN_SECONDARY_STYLE}
                 >
-                  See all {tonightEvents.length} events tonight →
+                  See all {tonightEvents.length} events tonight
+                  <ArrowUpRight className="w-4 h-4" />
                 </button>
               )}
             </>
           ) : (
-            <div style={{ fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, padding: '20px 0', textAlign: 'center' }}>
-              No events found for tonight
-            </div>
+            <p className={`${H4_LABEL} text-silver-dim text-center py-5`}>No events found for tonight</p>
           )}
-        </div>
+        </section>
 
         {/* § Tonight's deals — hidden when empty */}
         {!loading && dealsTonight.length > 0 && (
-          <div style={{ padding: '26px 18px 0' }}>
-            <SectionHeader
-              label={"Tonight's deals"}
-              count={`${dealsTonight.length} offers`}
-            />
+          <section className="px-[18px] pt-7">
+            <HomeSectionHeader label="Tonight's deals" count={`${dealsTonight.length} offers`} />
             <HScrollRail>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {dealsTonight.map((e: any) => {
-                const deal = Array.isArray(e.deals) && e.deals.length > 0 ? e.deals[0] : null;
-                const cfg = DEAL_LABELS[deal?.type as string] || DEAL_LABELS.special_offer;
-                const dealText = deal?.description || (e.special_offers ? String(e.special_offers) : '') || cfg.label;
-                return (
-                  <div
-                    key={e.event_id || e.venue_id}
-                    onClick={() => openEvent(e, 'deals_rail')}
-                    style={{
-                      flex: '0 0 210px', width: 210, minWidth: 210, maxWidth: 210,
-                      boxSizing: 'border-box', overflow: 'hidden',
-                      scrollSnapAlign: 'start',
-                      padding: '12px 12px 14px', borderRadius: 8,
-                      background: T.surface, border: `1px solid ${T.line}`,
-                      cursor: e.event_id ? 'pointer' : 'default',
-                      display: 'flex', flexDirection: 'column',
-                    }}
-                  >
-                    {/* The actual deal, first — mono, swapped with the venue's serif */}
-                    <div style={{
-                      fontFamily: bodyFont, fontSize: 10, fontWeight: 600, color: T.ink,
-                      lineHeight: 1.45, letterSpacing: '0.4px', overflowWrap: 'anywhere',
-                      display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                    }}>
-                      {dealText}
-                    </div>
-                    <div style={{ marginTop: 8 }}>
-                      <span style={{
-                        display: 'inline-block', padding: '3px 8px', borderRadius: 999,
-                        background: `rgba(${cfg.rgb}, 0.15)`, border: `1px solid rgba(${cfg.rgb}, 0.35)`,
-                        color: `rgb(${cfg.rgb})`, fontFamily: bodyFont, fontSize: 8, fontWeight: 700,
-                        letterSpacing: '0.06em', textTransform: 'uppercase',
-                      }}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                    <div style={{ fontFamily: displayFont, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 7, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {e.event_name || ''}
-                    </div>
-                    {/* Venue — serif italic, white (gold reserved for headings) */}
-                    <div style={{ fontFamily: displayFont, fontSize: 15, color: T.ink, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {e.name || ''}
-                    </div>
-                    <div style={{ fontFamily: bodyFont, fontSize: 8, color: T.inkMuted, marginTop: 3, letterSpacing: '0.5px' }}>
-                      {e.event_time || ''}{deal?.timing ? ` · ${deal.timing}` : ''}
-                    </div>
-                  </div>
-                );
-              })}
+              {dealsTonight.map((e: any) => (
+                <DealCard key={e.event_id || e.venue_id} event={e} onOpen={() => openEvent(e, 'deals_rail')} />
+              ))}
             </HScrollRail>
-          </div>
+          </section>
         )}
 
         {/* § Pick your vibe */}
-        <div style={{ padding: '26px 18px 0' }}>
-          <SectionHeader label="Pick your vibe" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 2 }}>
-            {vibeGrid.map((v) => {
-              const Icon = v.Icon;
-              return (
-                <div key={v.id}
-                  onClick={() => {
-                    trackEvent('vibe_pill_click', { vibe: v.id, city });
-                    router.push(`/${city}/vibe/${v.id}`);
-                  }}
-                  style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 12px', borderRadius: 999,
-                  border: `1px solid ${T.line}`, background: T.surface,
-                  cursor: 'pointer',
-                }}>
-                  <div style={{
-                    width: 26, height: 26, borderRadius: '50%', background: v.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <Icon style={{ width: 13, height: 13, color: '#0a0a14' }} />
-                  </div>
-                  <span style={{
-                    fontFamily: displayFont, fontSize: 14, fontWeight: 400,
-                    color: T.ink, letterSpacing: '-0.01em', lineHeight: 1, flex: 1,
-                  }}>{v.label}</span>
-                  <span style={{
-                    fontFamily: bodyFont, fontSize: 10, fontWeight: 700,
-                    color: v.color, lineHeight: 1, flexShrink: 0,
-                  }}>{loading ? '—' : v.count}</span>
-                </div>
-              );
-            })}
+        <section className="px-[18px] pt-7">
+          <HomeSectionHeader label="Pick your vibe" />
+          <div className="grid grid-cols-2 gap-x-4">
+            {vibeGrid.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => {
+                  trackEvent('vibe_pill_click', { vibe: v.id, city });
+                  router.push(`/${city}/vibe/${v.id}`);
+                }}
+                className="flex items-center justify-between gap-2 py-3 text-left"
+                style={{ borderBottom: `1px solid ${TILE_RULE}` }}
+              >
+                <span className="font-inter font-[550] text-[15px] text-pale">{v.label}</span>
+                <span className={`${H4_LABEL} tabular-nums`} style={{ color: v.accent.text }}>{loading ? '—' : v.count}</span>
+              </button>
+            ))}
           </div>
-        </div>
+        </section>
 
         {/* § Weekend — one row per day (Fri / Sat / Sun) */}
         {(loading || weekendByDay.some(d => d.events.length > 0)) && (
-          <div style={{ padding: '26px 18px 0' }}>
-            <SectionHeader label="Weekend Vibes" />
+          <section className="px-[18px] pt-7">
+            <HomeSectionHeader label="Weekend vibes" />
             {loading ? (
-              <div style={{ display: 'flex', gap: 10, overflowX: 'hidden' }}>
+              <div className="flex gap-3 overflow-x-hidden">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ flexShrink: 0, width: 180 }}>
-                    <div style={{ ...skeletonStyle(180, undefined), aspectRatio: '3/4' }} />
+                  <div key={i} className="flex-shrink-0 w-[180px]">
+                    <div style={{ ...skeletonStyle(180, undefined, { borderRadius: 12 }), aspectRatio: '3/4' }} />
                     <div style={{ ...skeletonStyle(140, 10), marginTop: 8 }} />
                   </div>
                 ))}
               </div>
             ) : (
               weekendByDay.filter(d => d.events.length > 0).map(({ ds, label, events }) => (
-                <div key={ds} style={{ marginBottom: 18 }}>
-                  <div
+                <div key={ds} className="mb-5">
+                  <button
                     onClick={() => {
                       trackEvent('home_weekend_day_click', { city, date: ds });
                       router.push(`/${city}/cards?date=${ds}`);
                     }}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '4px 4px 8px', cursor: 'pointer',
-                    }}
+                    className="w-full flex items-center justify-between pb-2.5"
                   >
-                    <span style={{ fontFamily: displayFont, fontSize: 17, color: T.ink, letterSpacing: '-0.01em' }}>
-                      {label}
-                    </span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
+                    <span className="font-inter font-[550] text-[16px] text-pale">{label}</span>
+                    <span className={`${H4_LABEL} inline-flex items-center gap-1 text-silver`}>
                       {events.length} events
-                      <ArrowUpRight size={12} strokeWidth={2.2} />
+                      <ArrowUpRight className="w-3.5 h-3.5" />
                     </span>
-                  </div>
+                  </button>
                   <HScrollRail>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {events.map((e: any, idx: number) => {
-                      const color = ['#f4c430', '#22d3ee', '#f472b6', '#84cc16'][idx % 4];
-                      const wCat = getPrimaryCat(e);
-                      return (
-                        <div
-                          key={`${e.venue_id}-${ds}`}
-                          onClick={() => openEvent(e, 'weekend_rail')}
-                          style={{ flex: '0 0 180px', width: 180, minWidth: 180, maxWidth: 180, scrollSnapAlign: 'start', cursor: e.event_id ? 'pointer' : 'default' }}
-                        >
-                          {/* Media block — nothing overlays the photo */}
-                          <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', borderRadius: 6, background: `linear-gradient(135deg, ${color}22, #0a0a14)` }}>
-                            {e.media_url_1 ? (
-                              <EventMedia
-                                src={e.media_url_1}
-                                mediaType={e.media_type_1}
-                                poster={e.media_type_2 !== 'video' ? e.media_url_2 : null}
-                                alt={e.name || ''}
-                                sizes="(max-width: 430px) 40vw, 172px"
-                                fill
-                                lazyVideo
-                              />
-                            ) : null}
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,16,0.16)' }} />
-                          </div>
-                          {/* Text below the image */}
-                          <div style={{ paddingTop: 8 }}>
-                            {wCat && (
-                              <div style={{ marginBottom: 5 }}>
-                                <CategoryPillTag primary={wCat} small />
-                              </div>
-                            )}
-                            <div style={{ fontFamily: bodyFont, fontSize: 8, fontWeight: 600, color: T.inkMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>
-                              {e.area || ''}
-                            </div>
-                            <div style={{
-                              fontFamily: displayFont, fontSize: 16, color: T.ink, lineHeight: 1.15, marginTop: 2,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}>{e.name || e.venue}</div>
-                            {e.event_name && (
-                              <div style={{ fontFamily: displayFont, fontSize: 10, color: T.inkMuted, marginTop: 3, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                                {e.event_name}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {events.map((e: any) => (
+                      <EventTile key={`${e.venue_id}-${ds}`} event={e} width={180} sizes="(max-width: 430px) 40vw, 172px"
+                        onOpen={() => openEvent(e, 'weekend_rail')} />
+                    ))}
                   </HScrollRail>
                 </div>
               ))
             )}
-          </div>
+          </section>
         )}
 
         {/* § Areas */}
-        <div style={{ padding: '26px 18px 0' }}>
-          <SectionHeader label="Areas" />
+        <section className="px-[18px] pt-7">
+          <HomeSectionHeader label="Areas" />
           {loading
             ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}` }}>
-                <div style={skeletonStyle(20, 10)} />
-                <div style={skeletonStyle(120, 16)} />
+              <div key={i} className="grid items-center gap-3 py-3" style={{ gridTemplateColumns: '20px 1fr auto', borderBottom: `1px solid ${TILE_RULE}` }}>
+                <div style={skeletonStyle(18, 10)} />
+                <div style={skeletonStyle(140, 16)} />
                 <div style={skeletonStyle(60, 10)} />
-                <div style={skeletonStyle(13, 13)} />
               </div>
             ))
             : areas.map((a, i) => (
-              <div key={a.label}
+              <NumberedRow key={a.label} index={i} label={a.label} meta={`${a.count} events`}
                 onClick={() => {
                   trackEvent('area_row_click', { area: a.label, city });
                   // Map view seeds ?area= into its filters — a spatial pick
                   // belongs on the map, not the list.
                   router.push(`/${city}/map?area=${encodeURIComponent(a.label)}`);
-                }}
-                style={{
-                display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12,
-                padding: '11px 0', borderBottom: `1px solid ${T.lineFaint}`, cursor: 'pointer',
-              }}>
-                <span style={{ fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, fontWeight: 500 }}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span style={{ fontFamily: displayFont, fontSize: 18, color: T.ink, letterSpacing: '-0.01em' }}>
-                  {a.label}
-                </span>
-                <span style={{ fontFamily: bodyFont, fontSize: 10, color: T.inkMuted, fontWeight: 600 }}>
-                  {a.count} events
-                </span>
-                <ChevronRight size={14} strokeWidth={2} style={{ color: T.inkMuted, flexShrink: 0 }} />
-              </div>
-            ))
-          }
-        </div>
+                }} />
+            ))}
+        </section>
 
         {/* The method */}
-        <div style={{ padding: '24px 18px 0' }}>
-          <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14 }}>
-            <div style={{ fontFamily: bodyFont, fontSize: 14, fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: T.accent, marginBottom: 8 }}>
-              The method
-            </div>
-            <div style={{ fontFamily: displayFont, fontSize: 20, fontWeight: 400, color: T.ink, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-              We watch stories.<br />You pick a vibe.<br />The city opens up.
-            </div>
+        <section className="px-[18px] pt-7">
+          <div className="pt-4" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+            <p className="text-[11px] uppercase font-extrabold tracking-[0.18em] text-pale mb-2">The method</p>
+            <p className="font-tight font-semibold uppercase text-[24px] leading-[0.95] tracking-[-0.04em] text-pale">
+              We watch stories.<br /><span className="text-silver">You pick a vibe.</span><br />The city opens up.
+            </p>
           </div>
-        </div>
+        </section>
       </div>
 
       <NavPill city={city} active="home" />
