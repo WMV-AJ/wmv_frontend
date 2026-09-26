@@ -16,6 +16,7 @@ import HomeHero from '@/components/home/HomeHero';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
 import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
 import CityAtlas from '@/components/home/CityAtlas';
+import { HomeFaq, VenueCta, HomeFooter } from '@/components/home/HomeClosing';
 import {
   HomeSectionHeader,
   HScrollRail,
@@ -286,6 +287,9 @@ export default function CityHome() {
     }
     return { venues: venueIds.size, events: eventIds.size, areas: areaSet.size, refreshed };
   }, [venues, city]);
+
+  // FAQ, venue call to action and footer carry the brand gold.
+  const brandAccent = accentFromHex(T.accent);
 
   // Section accent for How it works / the atlas: the city's #1 category.
   const cityAccent = topCategories[0] ? getCardAccent(topCategories[0]) : accentFromHex(T.accent);
@@ -567,6 +571,16 @@ export default function CityHome() {
           onChangeCity={switchCity}
           onMap={() => goMap('city_atlas_map')}
           onList={() => goList('city_atlas_list')}
+        />
+
+        {/* § Good to know, venue call to action, footer (from Home 4) */}
+        <HomeFaq accent={brandAccent} onExpand={(q) => trackEvent('faq_expand', { q, source: 'home' })} />
+        <VenueCta accent={brandAccent} onClick={() => trackEvent('venue_lead_click', { source: 'home_cta' })} />
+        <HomeFooter
+          city={city}
+          cities={cityOptions}
+          accent={brandAccent}
+          onBackToTop={() => mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
         />
       </div>
 
