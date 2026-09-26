@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { shortenLocation } from '@/lib/format-location';
 import { ShareModal } from '@/components/shared/ShareModal';
-import { CardActionBar } from '@/components/shared/CardActionBar';
 import {
   Calendar,
   Clock,
@@ -667,7 +666,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
 
         {/* Fixed Action Buttons at bottom */}
         <div
-          className="flex-shrink-0 px-4 pt-2 pb-3 flex items-center rounded-b-2xl"
+          className="flex-shrink-0 px-4 py-3 flex items-center gap-3 rounded-b-2xl"
           style={darkMode ? {
             background: 'rgba(8, 8, 22, 0.95)',
             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
@@ -676,18 +675,66 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             borderTop: '1px solid rgba(0, 0, 0, 0.08)',
           }}
         >
-          {/* Ruled action row — same idiom as the dates (CardActionBar). */}
-          <CardActionBar
-            className="w-full"
-            accent={accentText}
-            actions={[
-              ...(venue.venue_instagram ? [{ key: 'instagram', label: 'Instagram', Icon: Instagram, onClick: handleInstagramClick }] : []),
-              ...(venue.venue_phone ? [{ key: 'call', label: 'Call', Icon: Phone, onClick: handleCallClick }] : []),
-              { key: 'share', label: 'Share', Icon: Share2, onClick: handleShareClick },
-              ...(event.swipe_link_url ? [{ key: 'book', label: 'Book', Icon: Ticket, onClick: handleBookClick }] : []),
-              { key: 'directions', label: 'Directions', Icon: Navigation, onClick: handleDirectionsClick, primary: true },
-            ]}
-          />
+          {/* Icon buttons left, Get Directions right */}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              {venue.venue_instagram && (
+                <button
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+                  style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
+                  onClick={handleInstagramClick}
+                >
+                  <Instagram className="w-[18px] h-[18px]" style={{ color: '#E1306C' }} />
+                </button>
+              )}
+              {venue.venue_phone && (
+                <button
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+                  style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
+                  onClick={handleCallClick}
+                >
+                  <Phone className="w-[18px] h-[18px]" style={{ color: '#4ADE80' }} />
+                </button>
+              )}
+              <button
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+                style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
+                onClick={handleShareClick}
+              >
+                <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />
+              </button>
+            </div>
+
+            {/* Book + Directions pill buttons */}
+            <div className="flex items-center gap-2">
+              {event.swipe_link_url && (
+                <button
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                  style={{
+                    background: 'rgba(90, 90, 90, 0.75)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                    color: '#ffffff',
+                  }}
+                  onClick={handleBookClick}
+                >
+                  <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
+                  <span>Book</span>
+                </button>
+              )}
+              <button
+                className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                style={{
+                  background: 'rgba(90, 90, 90, 0.75)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                  color: '#ffffff',
+                }}
+                onClick={handleDirectionsClick}
+              >
+                <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
+                <span>Directions</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Fullscreen Media Viewer */}
