@@ -14,17 +14,29 @@ export interface VibeData {
   categories: string[];
   /** Plural noun used in SEO titles, e.g. "Brunches in Dubai". */
   seoNoun: string;
+  /** One-line feeling, shown on the home page's vibe fan. */
+  description: string;
+  /** Local photo (public/home3) for the fan when no live event image exists. */
+  fallbackImage: string;
 }
 
 export const VIBES_DATA: VibeData[] = [
-  { id: 'clubs',   label: 'Clubs',        color: '#f4c430', keywords: ['nightclub', 'club', 'dance'], categories: ['Club Night'],                       seoNoun: 'Club nights' },
-  { id: 'brunch',  label: 'Brunch',       color: '#34d399', keywords: ['brunch'],                     categories: ['Brunch'],                           seoNoun: 'Brunches' },
-  { id: 'rooftops',label: 'Rooftops',     color: '#f472b6', keywords: ['rooftop', 'terrace'],         categories: [],                                   seoNoun: 'Rooftop nights' },
-  { id: 'ladies',  label: 'Ladies Night', color: '#ec4899', keywords: ['ladies night', 'ladies'],     categories: ['Ladies Night'],                     seoNoun: 'Ladies nights' },
-  { id: 'beach',   label: 'Beach Clubs',  color: '#22d3ee', keywords: ['beach', 'pool'],              categories: ['Pool Party'],                       seoNoun: 'Beach club days' },
-  { id: 'happy',   label: 'Happy Hour',   color: '#f59e0b', keywords: ['happy hour'],                 categories: ['Happy Hour'],                       seoNoun: 'Happy hours' },
-  { id: 'pool',    label: 'Pool Party',   color: '#06b6d4', keywords: ['pool party'],                 categories: ['Pool Party', 'Day Party & Afterwork'], seoNoun: 'Pool parties' },
-  { id: 'live',    label: 'Live Music',   color: '#84cc16', keywords: ['live music', 'live'],         categories: ['Live Performance'],                 seoNoun: 'Live music nights' },
+  { id: 'clubs',   label: 'Clubs',        color: '#f4c430', keywords: ['nightclub', 'club', 'dance'], categories: ['Club Night'],                       seoNoun: 'Club nights',
+    description: 'A floor to disappear into. One more song before you leave.', fallbackImage: '/home3/club-entry.webp' },
+  { id: 'brunch',  label: 'Brunch',       color: '#34d399', keywords: ['brunch'],                     categories: ['Brunch'],                           seoNoun: 'Brunches',
+    description: 'A long table, good company, and nowhere else to be.', fallbackImage: '/home3/brunch.webp' },
+  { id: 'rooftops',label: 'Rooftops',     color: '#f472b6', keywords: ['rooftop', 'terrace'],         categories: [],                                   seoNoun: 'Rooftop nights',
+    description: 'Go a little higher. See the evening differently.', fallbackImage: '/home3/rooftop.webp' },
+  { id: 'ladies',  label: 'Ladies Night', color: '#ec4899', keywords: ['ladies night', 'ladies'],     categories: ['Ladies Night'],                     seoNoun: 'Ladies nights',
+    description: 'The right room. The right people. Your kind of night.', fallbackImage: '/home3/friends-night.webp' },
+  { id: 'beach',   label: 'Beach Clubs',  color: '#22d3ee', keywords: ['beach', 'pool'],              categories: ['Pool Party'],                       seoNoun: 'Beach club days',
+    description: 'Sea air, warm lights, and plans that stretch past sunset.', fallbackImage: '/home3/beach-terrace.webp' },
+  { id: 'happy',   label: 'Happy Hour',   color: '#f59e0b', keywords: ['happy hour'],                 categories: ['Happy Hour'],                       seoNoun: 'Happy hours',
+    description: 'A good drink, an easy conversation, another round.', fallbackImage: '/home3/cocktails.webp' },
+  { id: 'pool',    label: 'Pool Party',   color: '#06b6d4', keywords: ['pool party'],                 categories: ['Pool Party', 'Day Party & Afterwork'], seoNoun: 'Pool parties',
+    description: 'Open skies and weekend energy, whenever you need it.', fallbackImage: '/home3/pool-terrace.webp' },
+  { id: 'live',    label: 'Live Music',   color: '#84cc16', keywords: ['live music', 'live'],         categories: ['Live Performance'],                 seoNoun: 'Live music nights',
+    description: 'For the nights you remember because you heard them live.', fallbackImage: '/home3/live-performance.webp' },
 ];
 
 export function getVibeDataById(id: string | null | undefined): VibeData | undefined {

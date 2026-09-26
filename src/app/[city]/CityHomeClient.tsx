@@ -13,6 +13,7 @@ import { VIBES, matchesVibe } from '@/config/vibes';
 import { T } from '@/lib/theme/tokens';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
 import HomeHero from '@/components/home/HomeHero';
+import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
 import {
   HomeSectionHeader,
   HScrollRail,
@@ -227,11 +228,30 @@ export default function CityHome() {
     .slice(0, 6)
     .map(([label, count]) => ({ label, count }));
 
-  const vibeGrid = VIBES.map(v => ({
-    ...v,
-    count: venues.filter(venue => matchesVibe(venue, v)).length,
-    accent: v.categories[0] ? getCardAccent(v.categories[0]) : accentFromHex(v.color),
-  }));
+  // Vibe fan: live count per vibe (same matchesVibe as /[city]/vibe/[id])
+  // and a real upcoming event photo for each card. Photos are preferred over
+  // video frames so the fan doesn't trigger 8 /api/video-thumb extractions.
+  const vibeFan = useMemo<VibeFanItem[]>(() => {
+    const isVideo = (url?: string, type?: string) => type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url || '');
+    return VIBES.map((v) => {
+      const matches = venues.filter((venue) => matchesVibe(venue, v));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const withPhoto = matches.find((m: any) =>
+        (m.media_url_1 && !isVideo(m.media_url_1, m.media_type_1)) || (m.media_url_2 && !isVideo(m.media_url_2, m.media_type_2)));
+      const src = withPhoto
+        ? (withPhoto.media_url_1 && !isVideo(withPhoto.media_url_1, withPhoto.media_type_1) ? withPhoto.media_url_1 : withPhoto.media_url_2)
+        : null;
+      return {
+        id: v.id,
+        label: v.label,
+        description: v.description,
+        count: matches.length,
+        accent: v.categories[0] ? getCardAccent(v.categories[0]) : accentFromHex(v.color),
+        media: src ? { src } : null,
+        fallbackImage: v.fallbackImage,
+      };
+    });
+  }, [venues]);
 
   // The city's top event categories by count — colours the hero radar (and,
   // later on the page, the atlas pins).
@@ -412,26 +432,19 @@ export default function CityHome() {
           </section>
         )}
 
-        {/* § Pick your vibe */}
-        <section className="px-[18px] pt-7">
-          <HomeSectionHeader label="Pick your vibe" />
-          <div className="grid grid-cols-2 gap-x-4">
-            {vibeGrid.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => {
-                  trackEvent('vibe_pill_click', { vibe: v.id, city });
-                  router.push(`/${city}/vibe/${v.id}`);
-                }}
-                className="flex items-center justify-between gap-2 py-3 text-left"
-                style={{ borderBottom: `1px solid ${TILE_RULE}` }}
-              >
-                <span className="font-inter font-[550] text-[15px] text-pale">{v.label}</span>
-                <span className={`${H4_LABEL} tabular-nums`} style={{ color: v.accent.text }}>{loading ? '—' : v.count}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* § What kind of night is it? — vibe fan + index (from Home 4) */}
+        <VibeFan
+          city={city}
+          cityName={cityName}
+          items={vibeFan}
+          loading={loading}
+          kicker={{ index: 1, total: 3 }}
+          onExplore={(vibeId, source) => {
+            trackEvent('vibe_pill_click', { vibe: vibeId, city, source });
+            // The index link navigates itself; the front fan card doesn't.
+            if (source === 'fan_card') router.push(`/${city}/vibe/${vibeId}`);
+          }}
+        />
 
         {/* § Weekend — one row per day (Fri / Sat / Sun) */}
         {(loading || weekendByDay.some(d => d.events.length > 0)) && (

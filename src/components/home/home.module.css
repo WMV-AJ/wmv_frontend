@@ -1,0 +1,50 @@
+/* City home — compositions ported from /home4 (home4.module.css), phone
+   values only, recoloured to the dark map/list palette. Type and colour live
+   in Tailwind (card-style: H4_LABEL, TILE_RULE, …); this file only holds
+   positions, transforms and motion. Section colours arrive as --accent-*
+   custom properties set from a CardAccent on each <section>. */
+
+/* ── Vibe fan ─────────────────────────────────────────────────────── */
+
+.vibeStage {
+  position: relative;
+  height: 360px;
+  margin-top: 6px;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  background: radial-gradient(ellipse at 50% 48%, var(--accent-soft, rgba(209, 211, 209, 0.12)), transparent 64%);
+  transition: background 0.4s;
+}
+
+.vibeStage:active {
+  cursor: grabbing;
+}
+
+.fanCard {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: 175px;
+  height: 279px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #14141f;
+  transform-origin: center bottom;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s, opacity 0.4s;
+}
+
+/* Dragging a photo would start the browser's native image drag, which
+   cancels the pointer gesture the fan uses to change vibe. */
+.fanCard img {
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vibeStage,
+  .fanCard {
+    transition: none !important;
+  }
+}
