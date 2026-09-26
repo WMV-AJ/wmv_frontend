@@ -906,7 +906,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
         // Explicit floor rather than letting content decide: the carousel
         // already forces a uniform height, and pinning it keeps the measured
         // panel height — and the nav pill derived from it — stable.
-        minHeight: 184,   // trimmed a further 10%
+        minHeight: 176,   // = the 25% still (≈154px) + padding + borders
         background: mixCategoryTint(accentCategory, [12, 12, 28], 0.06),
         // Category colour is a single line across the top edge only.
         borderTop: `3px solid ${accentEdge}`,
@@ -952,7 +952,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           tallest is whichever event name wraps to two lines — so a one-line
           card carries ~20px of slack no matter what. Centred, that reads as
           padding; top-aligned it read as a dead band. */}
-      {/* Copy left, 30% still right. items-start so text always begins at
+      {/* Copy left, 25% still right. items-start so text always begins at
           the top of the tile — the carousel stretches every card to the
           tallest, and centring made shorter cards float mid-tile. */}
       <div className="flex gap-3 p-2.5 pb-2 flex-1 min-h-0 items-start">
@@ -1052,12 +1052,14 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
           </span>
         </div>
 
-        {/* ── Right: 9:16 still, 30% of the tile ──────────────────── */}
-        <div className="flex-shrink-0 w-[30%] self-start">
+        {/* ── Right: 9:16 still, 25% of the tile ──────────────────── */}
+        {/* 25%, not 30%: at 30% the 9:16 still stood ~183px tall against
+            ~154px of copy, leaving a dead band under the address. */}
+        <div className="flex-shrink-0 w-[25%] self-start">
           <div
             className="relative w-full rounded-xl overflow-hidden"
             style={{
-              // Width-driven: the column is 30% and the height falls out of
+              // Width-driven: the column is 25% and the height falls out of
               // the ratio. Height-driven aspect-ratio on a stretched flex
               // item is the patchier of the two across browsers.
               aspectRatio: '9 / 16',
