@@ -2,6 +2,16 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import MobileEventCard from './MobileEventCard';
+import MobileEventCardMap2 from './MobileEventCardMap2';
+
+// Map 2 (/[city]/map2) renders Parik's refined card; every other caller gets
+// the default card, which doesn't take the Map-2-only props.
+type VariantCardProps = React.ComponentProps<typeof MobileEventCardMap2>;
+function VariantCard(props: VariantCardProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { refined, selectedPrimaryCategories, isFocused, ...rest } = props;
+  return refined ? <MobileEventCardMap2 {...props} /> : <MobileEventCard {...rest} />;
+}
 
 interface EventCardData {
   event: {
@@ -56,6 +66,9 @@ interface DateOption {
 }
 
 interface MobileEventListProps {
+  refined?: boolean;
+  selectedPrimaryCategories?: string[];
+  onDockPaddingChange?: (height: number) => void;
   cards: EventCardData[];
   allCards?: EventCardData[];
   getCategoryColor: (category: string) => { hue: number; saturation: number };
@@ -88,6 +101,8 @@ const EMPTY_DATE_OPTIONS: DateOption[] = [];
 // callbacks, an index change re-renders only the two slots whose props
 // flag flipped.
 interface CarouselSlotProps {
+  refined: boolean;
+  selectedPrimaryCategories: string[];
   card: EventCardData;
   displayCard: EventCardData;
   displayDates: string[];
@@ -105,6 +120,8 @@ interface CarouselSlotProps {
 }
 
 const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
+  refined,
+  selectedPrimaryCategories,
   card,
   displayCard,
   displayDates,
@@ -130,7 +147,9 @@ const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
         scrollSnapAlign: 'center',
       }}
     >
-      <MobileEventCard
+      <VariantCard
+        refined={refined}
+        selectedPrimaryCategories={selectedPrimaryCategories}
         card={displayCard}
         getCategoryColor={getCategoryColor}
         isExpanded={true}
@@ -150,6 +169,9 @@ const CarouselSlot = React.memo<CarouselSlotProps>(function CarouselSlot({
 });
 
 const MobileEventList: React.FC<MobileEventListProps> = ({
+  refined = false,
+  selectedPrimaryCategories = [],
+  onDockPaddingChange,
   cards,
   allCards = [],
   getCategoryColor,
@@ -189,6 +211,13 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement | null>(null);
+  // The dock carries both measurements: the panel height the map page uses
+  // (measurePanelRef) and Map 2's dock padding (dockRef).
+  const setDockRef = useCallback((el: HTMLDivElement | null) => {
+    measurePanelRef(el);
+    dockRef.current = el;
+  }, [measurePanelRef]);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevSelectedVenueIdRef = useRef<number | null | undefined>(selectedVenueId);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -204,12 +233,30 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
     return cards.filter(card => {
       const dates = venueDateMap.get(card.venue.id);
       if (!dates || dates.length === 0) return false;
-      return dates.some(d => activeDates.includes(d.dateKey));
+      return dates.some((d: DateOption) => activeDates.includes(d.dateKey));
     });
   }, [cards, activeDates, venueDateMap]);
 
   const displayCardsRef = useRef(displayCards);
   const hasCards = displayCards.length > 0;
+
+  useEffect(() => {
+    if (!refined || !onDockPaddingChange) return;
+    const dock = dockRef.current;
+    const frame = dock?.closest('.wmv-phone-frame');
+    if (!dock || !frame) { onDockPaddingChange(72); return; }
+    // The entrance animation translates the dock, so its top rect is not a
+    // stable layout position. Height + CSS bottom stays correct during motion.
+    const measure = () => {
+      const bottom = Number.parseFloat(window.getComputedStyle(dock).bottom) || 0;
+      onDockPaddingChange(Math.max(72, Math.ceil(dock.getBoundingClientRect().height + bottom)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(dock);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [refined, onDockPaddingChange, mode, markerFullScreen, listFullScreenVenueId, hasCards]);
 
   // Layout-read cache: children's offsetLeft/offsetWidth were read in a loop
   // on EVERY scroll event (layout thrash). Centers only change when the card
@@ -551,7 +598,9 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
         <>
           {/* Full-screen overlay (marker) */}
           {markerFullScreen && (
-            <MobileEventCard
+            <VariantCard
+              refined={refined}
+              selectedPrimaryCategories={selectedPrimaryCategories}
               card={markerCard}
               getCategoryColor={getCategoryColor}
               isExpanded={true}
@@ -572,15 +621,18 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
           {/* Bottom slide-up single card (marker) */}
           {!markerFullScreen && (
             <div
-              ref={measurePanelRef}
-              className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto px-3"
+              ref={setDockRef}
+              data-map2-dock={refined ? 'marker' : undefined}
+              className={`absolute bottom-0 left-0 right-0 z-20 pointer-events-auto px-3 ${refined ? 'map2-carousel-dock' : ''}`}
               style={{
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
                 transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
               }}
             >
-              <MobileEventCard
+              <VariantCard
+                refined={refined}
+                selectedPrimaryCategories={selectedPrimaryCategories}
                 card={markerCard}
                 getCategoryColor={getCategoryColor}
                 isExpanded={true}
@@ -607,7 +659,9 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
         <>
           {/* Full-screen overlay (list) */}
           {listFullScreenCard && (
-            <MobileEventCard
+            <VariantCard
+              refined={refined}
+              selectedPrimaryCategories={selectedPrimaryCategories}
               card={listFullScreenCard}
               getCategoryColor={getCategoryColor}
               isExpanded={true}
@@ -628,13 +682,15 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
           {/* Bottom slide-up carousel */}
           {hasCards && !listFullScreenVenueId && (
             <div
-              ref={measurePanelRef}
-              className="absolute bottom-0 left-0 right-0 z-20 flex flex-col pointer-events-auto"
+              ref={setDockRef}
+              data-map2-dock={refined ? 'list' : undefined}
+              className={`absolute bottom-0 left-0 right-0 z-20 flex flex-col pointer-events-auto ${refined ? 'map2-carousel-dock' : ''}`}
               style={{
                 transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
                 transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
               }}
             >
+              {refined && <div className="map2-carousel-heading"><span>IN THE CITY</span><strong>{displayCards.length} {displayCards.length === 1 ? 'PLAN' : 'PLANS'}</strong></div>}
               {/* Horizontal carousel */}
               <div
                 ref={scrollRef}
@@ -661,6 +717,8 @@ const MobileEventList: React.FC<MobileEventListProps> = ({
                   );
                   return (
                     <CarouselSlot
+                      refined={refined}
+                      selectedPrimaryCategories={selectedPrimaryCategories}
                       key={`${card.venue.id}-${card.event.id}`}
                       card={card}
                       displayCard={isOverrideValid ? override.card : card}

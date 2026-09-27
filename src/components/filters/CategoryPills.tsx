@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Utensils, Laugh, Moon, Music2, Trophy, Sun, Clock, Waves, Sparkles, Coffee,
   // 046/047 city-specific category icons
   Martini, Beer, Wrench, Users, PartyPopper, Mic, Wine, Zap, Briefcase, Film,
-  Tag, // generic fallback for unknown categories
+  Tag, ChevronRight, ChevronLeft, // generic fallback for unknown categories
 } from 'lucide-react';
 import { HierarchicalFilterState, EventCategoryFilterState, Venue } from '@/types';
 import {
@@ -17,6 +17,7 @@ import {
 import { getCityConfig } from '@/config/cities.config';
 
 interface CategoryPillsProps {
+  refined?: boolean;
   filters: HierarchicalFilterState;
   onFiltersChange: (filters: HierarchicalFilterState) => void;
   venues: Venue[];
@@ -31,7 +32,7 @@ interface CategoryPillsProps {
 
 
 // Icon mapping for primary categories — keys match DB event_categories[].primary exactly
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   'Food & Dining': Utensils,
   'Sports Viewing': Trophy,
   'Live Performance': Music2,
@@ -57,6 +58,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
 };
 
 const CategoryPills: React.FC<CategoryPillsProps> = ({
+  refined = false,
   filters,
   onFiltersChange,
   venues,
@@ -66,6 +68,9 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   wrapRows = 3,
   darkMode = false,
 }) => {
+  const primaryScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollCategories, setCanScrollCategories] = useState(false);
+  const [atCategoryEnd, setAtCategoryEnd] = useState(false);
   const isOutlined = variant === 'outlined';
   const eventCategories: EventCategoryFilterState = filters.eventCategories || {
     selectedPrimaries: [],
@@ -190,6 +195,20 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
     .filter(({ count }) => count > 0)
     .sort((a, b) => b.count - a.count);
 
+  useEffect(() => {
+    if (!refined || !wrapPills || !primaryScrollRef.current) return;
+    const el = primaryScrollRef.current;
+    const update = () => {
+      setCanScrollCategories(el.scrollWidth > el.clientWidth + 2);
+      setAtCategoryEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 3);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    el.addEventListener('scroll', update, { passive: true });
+    return () => { observer.disconnect(); el.removeEventListener('scroll', update); };
+  }, [refined, wrapPills, sortedCategories.length]);
+
   const renderPill = (category: string) => {
     const isSelected = eventCategories.selectedPrimaries.includes(category);
     const isExpanded = eventCategories.expandedPrimaries.includes(category);
@@ -201,35 +220,45 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
 
     return (
       <button
+        aria-pressed={isSelected}
         key={`category-${category}`}
         onClick={() => handlePrimaryClick(category)}
-        className={`flex items-center gap-[3px] px-2 py-[3px] rounded-full text-[11px] font-semibold uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
-        }`}
-        style={isOutlined ? {
+        className={refined
+          ? 'flex items-center gap-1 px-2.5 md:px-2 py-1 md:py-0.5 rounded-full text-[10px] md:text-[8px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 map2-category-pill'
+          : `flex items-center gap-[3px] px-2 py-[3px] rounded-full text-[11px] font-semibold uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'}`}
+        style={isOutlined ? (refined ? {
+          // Map 2 (/[city]/map2) — Parik's borderless tinted pill.
+          color: '#e2e3e1',
+          background: isSelected ? `${hexColor}33` : 'transparent',
+          border: '0',
+          '--map2-pill-color': hexColor,
+        } as React.CSSProperties : {
           color: isSelected ? '#ffffff' : hexColor,
           background: isSelected ? hexColor : darkMode ? 'rgba(8,8,18,0.92)' : 'rgba(255,255,255,0.9)',
           border: `1.5px solid ${hexColor}`,
-        } : {
+        }) : {
           color: '#ffffff',
           background: isSelected ? hexColor : `${hexColor}CC`,
           border: `1px solid ${isSelected ? hexColor : hexColor + '90'}`,
         }}
       >
-        {IconComponent && <IconComponent className="w-3 h-3" />}
-        {/* "FOOD | 64", not "FOOD (64)". The bracket read as an aside; the rule
-            reads as two fields of one label. The separator is dimmed so the
-            count stays subordinate to the category name.
+        {IconComponent && <IconComponent className="w-3 h-3" style={refined && !isSelected ? { color: hexColor } : undefined} />}
+        {refined ? <>{label} ({count})</> : (
+          /* "FOOD | 64", not "FOOD (64)". The bracket read as an aside; the rule
+             reads as two fields of one label. The separator is dimmed so the
+             count stays subordinate to the category name.
 
-            Label, rule and count share ONE span on purpose. As direct children
-            of the button they were flex items, so the button's gap landed on
-            both sides of the rule on top of its own margin — four gaps' worth
-            of air around a single glyph. Inside a plain span the gap no longer
-            applies and the rule's own padding is the only spacing there is. */}
-        <span>
-          {label}
-          <span className="opacity-45 font-normal px-[2px]">|</span>
-          {count}
-        </span>
+             Label, rule and count share ONE span on purpose. As direct children
+             of the button they were flex items, so the button's gap landed on
+             both sides of the rule on top of its own margin — four gaps' worth
+             of air around a single glyph. Inside a plain span the gap no longer
+             applies and the rule's own padding is the only spacing there is. */
+          <span>
+            {label}
+            <span className="opacity-45 font-normal px-[2px]">|</span>
+            {count}
+          </span>
+        )}
         {isExpanded && ' ↓'}
       </button>
     );
@@ -249,8 +278,13 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
   const pillsContent = (
     <div className="flex flex-col gap-2">
       {/* Primary Category Row with Icons */}
-      <div className="overflow-x-auto scrollbar-hide pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {wrapPills ? (
+      <div className={refined && wrapPills ? 'map2-primary-viewport' : undefined}>
+      <div ref={refined && wrapPills ? primaryScrollRef : undefined} className={`overflow-x-auto scrollbar-hide pb-0.5 ${refined && wrapPills ? 'map2-primary-scroll' : ''}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {wrapPills && refined ? (
+          <div className="map2-primary-grid w-max min-w-full">
+            {sortedCategories.map(({ category }) => renderPill(category))}
+          </div>
+        ) : wrapPills ? (
           <div className="flex flex-col gap-1 w-max min-w-full">
             {rows.map((row, i) => (
               <div key={`pill-row-${i}`} className="flex gap-1">{row.map(renderPill)}</div>
@@ -261,6 +295,8 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
             {sortedCategories.map(({ category }) => renderPill(category))}
           </div>
         )}
+      </div>
+      {refined && wrapPills && canScrollCategories && <button type="button" className="map2-category-page" aria-label={atCategoryEnd ? 'Earlier categories' : 'More categories'} onClick={() => { const el = primaryScrollRef.current; if (el) el.scrollTo({ left: atCategoryEnd ? 0 : Math.min(el.scrollWidth - el.clientWidth, el.scrollLeft + el.clientWidth), behavior: 'smooth' }); }} >{atCategoryEnd ? <ChevronLeft size={18}/> : <ChevronRight size={18}/>}</button>}
       </div>
 
       {/* Secondary Category Row - Animated */}
@@ -281,7 +317,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
               height: { duration: 0.22, ease: 'easeOut' },
               opacity: { duration: 0.15, delay: 0.15 },
             }}
-            className="overflow-hidden"
+            className={`overflow-hidden ${refined ? 'map2-secondary-rail' : ''}`}
           >
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 pt-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {expandedSecondaries.map(({ primary, secondary }) => {
@@ -289,15 +325,22 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                 const hexColor = getHexColor(getCategoryColor(primary));
                 return (
                   <button
+                    aria-pressed={isSelected}
                     key={`category-${primary}-${secondary}`}
                     onClick={() => handleSecondaryClick(primary, secondary)}
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''
-                    }`}
-                    style={isOutlined ? {
+                    className={refined
+                      ? 'px-2 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 map2-category-pill'
+                      : `px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''}`}
+                    style={isOutlined ? (refined ? {
+                      color: '#e2e3e1',
+                      background: isSelected ? `${hexColor}33` : 'transparent',
+                      border: '0',
+                      '--map2-pill-color': hexColor,
+                    } as React.CSSProperties : {
                       color: isSelected ? '#ffffff' : hexColor,
                       background: isSelected ? hexColor : darkMode ? 'rgba(8,8,18,0.92)' : 'rgba(255,255,255,0.9)',
                       border: `1.5px solid ${hexColor}`,
-                    } : {
+                    }) : {
                       color: '#ffffff',
                       background: isSelected ? hexColor : `${hexColor}99`,
                       border: `1px solid ${isSelected ? hexColor : hexColor + '60'}`,
