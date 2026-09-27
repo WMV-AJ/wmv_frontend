@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
 import { useCitiesVersion } from '@/contexts/CitiesProvider';
@@ -18,11 +18,11 @@ import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
 import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
 import CityAtlas from '@/components/home/CityAtlas';
 import { HomeFaq, VenueCta, HomeFooter } from '@/components/home/HomeClosing';
+import PlanBlock, { type PlanWhen, type PlanVibe } from '@/components/home/PlanBlock';
+import { TileRail, TileList, RevealBlock, toTileItems } from '@/components/home/HomeTiles';
 import {
   HomeSectionHeader,
   HScrollRail,
-  EventTile,
-  EventRow,
   DealCard,
   NumberedRow,
   primaryCategory,
@@ -102,7 +102,6 @@ export default function CityHome() {
   const city = (params?.city as string) || 'dubai';
 
   useCitiesVersion(); // re-render once the runtime city list arrives
-  const [liked, setLiked] = useState<Set<string>>(new Set());
   // The page scrolls inside <main>; section observers use it as their root.
   const mainRef = useRef<HTMLElement | null>(null);
 
@@ -126,14 +125,6 @@ export default function CityHome() {
       return !ds || ds >= cityToday;
     });
   }, [allVenues, city]);
-
-  const toggle = (id: string) =>
-    setLiked(s => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
 
   useEffect(() => {
     // Landing page + marketing sections follow the visitor's last city.
@@ -327,6 +318,84 @@ export default function CityHome() {
     ...extra,
   });
 
+  // ── Plan block ("Plan a night in 2 taps") ───────────────────────────
+  // WHEN = today, tomorrow, then the rest of this weekend — all city dates.
+  const planWhens = useMemo<PlanWhen[]>(() => {
+    const shift = (ds: string, n: number) => {
+      const d = new Date(`${ds}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    const dayOf = (ds: string) => new Date(`${ds}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).toUpperCase();
+    const numOf = (ds: string) => String(new Date(`${ds}T00:00:00Z`).getUTCDate());
+    const isWkd = (ds: string) => [0, 5, 6].includes(new Date(`${ds}T00:00:00Z`).getUTCDay());
+    const tomorrow = shift(todayStr, 1);
+    const out: PlanWhen[] = [
+      { id: 'today', day: dayOf(todayStr), date: numOf(todayStr), label: 'Today', isToday: true, isWeekend: isWkd(todayStr) },
+      { id: 'tomorrow', day: dayOf(tomorrow), date: numOf(tomorrow), label: 'Tomorrow', isToday: false, isWeekend: isWkd(tomorrow) },
+    ];
+    weekendByDay.forEach(({ ds }) => {
+      if (ds === todayStr || ds === tomorrow) return;
+      const lbl = new Date(`${ds}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+      out.push({ id: ds, day: dayOf(ds), date: numOf(ds), label: lbl, isToday: false, isWeekend: isWkd(ds) });
+    });
+    return out;
+  // weekendByDay is rebuilt each render from venues + todayStr
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayStr, venues]);
+
+  const planVibes = useMemo<PlanVibe[]>(() => VIBES.map((v) => ({
+    id: v.id,
+    label: v.label,
+    Icon: v.Icon,
+    hex: (v.categories[0] ? getCardAccent(v.categories[0]) : accentFromHex(v.color)).text,
+    filterable: v.categories.length > 0,
+  })), []);
+
+  // Counts use the destination's own filter so the number on the button is
+  // the number you land on: the list/map filter a vibe by its event
+  // categories on the chosen city date; vibes without categories (Rooftops)
+  // open their vibe page, which lists every upcoming match.
+  const planCountFor = useMemo(() => {
+    const cache = new Map<string, number>();
+    const tomorrow = (() => { const d = new Date(`${todayStr}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
+    const uniq = (rows: any[]) => new Set(rows.map((r) => String(r.event_id ?? `${r.venue_id}-${r.event_date}-${r.event_time}`))).size; // eslint-disable-line @typescript-eslint/no-explicit-any
+    return (whenId: string, vibeId: string | null): number => {
+      const key = `${whenId}|${vibeId ?? ''}`;
+      const hit = cache.get(key);
+      if (hit !== undefined) return hit;
+      const vibe = vibeId ? VIBES.find((v) => v.id === vibeId) : null;
+      let n: number;
+      if (vibe && vibe.categories.length === 0) {
+        n = uniq(venues.filter((r) => matchesVibe(r, vibe)));
+      } else {
+        const ds = whenId === 'today' ? todayStr : whenId === 'tomorrow' ? tomorrow : whenId;
+        const onDay = venues.filter((r) => r.event_date && utcDateKey(r.event_date) === ds);
+        n = uniq(vibe
+          ? onDay.filter((r) => (Array.isArray(r.event_categories) ? r.event_categories : []).some((c: { primary?: string }) => c?.primary && vibe.categories.includes(c.primary)))
+          : onDay);
+      }
+      cache.set(key, n);
+      return n;
+    };
+  }, [venues, todayStr]);
+
+  const planGo = (target: 'cards' | 'map', whenId: string, vibe: PlanVibe | null) => {
+    trackEvent('nav_view_change', { from: 'home', to: target, source: 'plan_block', when: whenId, vibe: vibe?.id ?? '' });
+    if (vibe && !vibe.filterable) {
+      router.push(target === 'cards' ? `/${city}/vibe/${vibe.id}` : `/${city}/map?date=${whenId}`);
+      return;
+    }
+    router.push(`/${city}/${target}?date=${encodeURIComponent(whenId)}${vibe ? `&vibe=${vibe.id}` : ''}`);
+  };
+
+  // Tiles: happening-now first; tonight skips what's already shown there.
+  const liveTiles = useMemo(() => toTileItems(happeningNow), [happeningNow]);
+  const tonightTiles = useMemo(() => {
+    const shown = new Set(liveTiles.slice(0, 6).map((t) => String(t.row.event_id)));
+    return toTileItems(tonightEvents.filter((e) => !shown.has(String(e.event_id))));
+  }, [tonightEvents, liveTiles]);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const openEvent = (e: any, source: string) => {
     if (!e.event_id) return;
@@ -374,75 +443,70 @@ export default function CityHome() {
           liveCount={happeningNow.length}
           loading={loading}
           topCategories={topCategories}
-          onMap={() => goMap('hero_cta')}
-          onList={() => goList('hero_cta')}
         />
 
-        {/* § Happening now — live right now, hidden when empty */}
-        {(loading || happeningNow.length > 0) && (
-          <section className="px-[18px] pt-7">
+        {/* § Plan a night in 2 taps — the page's one clear path */}
+        <PlanBlock
+          whens={planWhens}
+          vibes={planVibes}
+          countFor={planCountFor}
+          loading={loading || venues.length === 0}
+          onChange={(when, vibe) => trackEvent('home_plan_change', { city, when, vibe: vibe ?? '' })}
+          onGo={planGo}
+        />
+
+        {/* § Happening now — map tiles in a swipeable rail, hidden when empty */}
+        {(loading || liveTiles.length > 0) && (
+          <section className="px-[18px] pt-8">
             <HomeSectionHeader
               label={<>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
                 Happening now
               </>}
-              count={loading ? '—' : `${happeningNow.length} live`}
+              count={loading ? '—' : `${liveTiles.length} live`}
             />
-            <HScrollRail>
-              {loading
-                ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
-                ))
-                : happeningNow.map((e) => (
-                  <EventTile key={e.event_id || e.venue_id} event={e} width={130} sizes="140px" live
-                    onOpen={() => openEvent(e, 'happening_now')} />
-                ))}
-            </HScrollRail>
+            {loading ? (
+              <div className="flex gap-3 overflow-hidden">
+                <div style={{ flex: '0 0 85%', ...skeletonStyle('100%', 176, { borderRadius: 16 }) }} />
+              </div>
+            ) : (
+              <RevealBlock root={mainRef}>
+                <TileRail
+                  items={liveTiles.slice(0, 6)}
+                  onOpen={(row) => openEvent(row, 'happening_now')}
+                  trailing={liveTiles.length > 6 ? (
+                    <button
+                      onClick={() => {
+                        trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'happening_now_all' });
+                        router.push(`/${city}/cards?date=today`);
+                      }}
+                      className={BTN_SECONDARY}
+                      style={BTN_SECONDARY_STYLE}
+                    >
+                      All {liveTiles.length} live now
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                  ) : undefined}
+                />
+              </RevealBlock>
+            )}
           </section>
         )}
 
-        {/* § Tonight in <city> */}
-        <section className="px-[18px] pt-7">
+        {/* § Tonight in <city> — three map tiles, then everything on the list */}
+        <section className="px-[18px] pt-8">
           <HomeSectionHeader
             label={`Tonight in ${cityName}`}
             count={loading ? '—' : `${tonightEvents.length} events`}
           />
           {loading ? (
-            <>
-              <div className="flex gap-3 mb-3.5">
-                {[0, 1].map(i => (
-                  <div key={i} style={{ flex: '0 0 48%', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
-                ))}
-              </div>
-              {[0, 1, 2].map(i => (
-                <div key={i} className="grid gap-3 py-3 items-start" style={{ gridTemplateColumns: '20px 72px 1fr', borderTop: `1px solid ${TILE_RULE}` }}>
-                  <div style={skeletonStyle(18, 12)} />
-                  <div style={skeletonStyle(72, 72, { borderRadius: 8 })} />
-                  <div>
-                    <div style={skeletonStyle(80, 10)} />
-                    <div style={{ ...skeletonStyle(140, 16), marginTop: 6 }} />
-                    <div style={{ ...skeletonStyle(100, 10), marginTop: 6 }} />
-                  </div>
-                </div>
-              ))}
-            </>
+            <div className="flex flex-col gap-3">
+              {[0, 1, 2].map(i => <div key={i} style={skeletonStyle('100%', 176, { borderRadius: 16 })} />)}
+            </div>
           ) : tonightEvents.length > 0 ? (
-            <>
-              <div className="mb-3.5">
-                <HScrollRail>
-                  {tonightEvents.map((e) => (
-                    <EventTile key={e.event_id || e.venue_id} event={e} width="48%" sizes="(max-width: 430px) 48vw, 206px"
-                      liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
-                      onOpen={() => openEvent(e, 'tonight_scroller')} />
-                  ))}
-                </HScrollRail>
-              </div>
-              {tonightEvents.slice(0, 4).map((e, i) => (
-                <EventRow key={e.event_id || e.venue_id || i} event={e} index={i}
-                  liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
-                  onOpen={() => openEvent(e, 'tonight_list')} />
-              ))}
-              {tonightEvents.length > 4 && (
+            <RevealBlock root={mainRef}>
+              <TileList items={tonightTiles.slice(0, 3)} onOpen={(row) => openEvent(row, 'tonight_list')} />
+              {tonightEvents.length > 3 && (
                 <button
                   onClick={() => {
                     trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'tonight_see_all' });
@@ -455,7 +519,7 @@ export default function CityHome() {
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
               )}
-            </>
+            </RevealBlock>
           ) : (
             <p className={`${H4_LABEL} text-silver-dim text-center py-5`}>No events found for tonight</p>
           )}
@@ -517,13 +581,9 @@ export default function CityHome() {
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </span>
                   </button>
-                  <HScrollRail>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {events.map((e: any) => (
-                      <EventTile key={`${e.venue_id}-${ds}`} event={e} width={180} sizes="(max-width: 430px) 40vw, 172px"
-                        onOpen={() => openEvent(e, 'weekend_rail')} />
-                    ))}
-                  </HScrollRail>
+                  <RevealBlock root={mainRef}>
+                    <TileRail items={toTileItems(events)} onOpen={(row) => openEvent(row, 'weekend_rail')} />
+                  </RevealBlock>
                 </div>
               ))
             )}
