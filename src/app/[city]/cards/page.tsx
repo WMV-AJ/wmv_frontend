@@ -235,7 +235,12 @@ function CardsInner() {
           style={{
             background: '#0a0a1a',
             top: `${navHeight + 6 + pillsHeight + 6}px`,
-            transition: 'top 0.22s ease-out',
+            // Held back until the pills have been measured: before that the
+            // list started ~10px too high and slid under the pills, which
+            // read as the first card overlapping them. Later height changes
+            // (a filter wrapping the pills to another row) still animate.
+            visibility: pillsHeight > 0 ? 'visible' : 'hidden',
+            transition: pillsHeight > 0 ? 'top 0.22s ease-out' : 'none',
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none' as const,

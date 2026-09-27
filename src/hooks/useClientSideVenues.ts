@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { Venue, HierarchicalFilterState, FilterState } from '@/types';
 import { getEventCategories } from '@/lib/category-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
+import { getCityDateString } from '@/lib/city-date';
 import { dealLabelsOf } from '@/lib/filter-taxonomy';
 
 interface UseClientSideVenuesResult {
@@ -54,7 +55,7 @@ function convertHierarchicalToFlat(hierarchicalState: HierarchicalFilterState): 
 
 export function useClientSideVenues(filters: HierarchicalFilterState): UseClientSideVenuesResult {
   // Use shared venue data from context — no duplicate fetches on page navigation
-  const { allVenues, isLoadingVenues: isLoading, venueError: error } = useVenueData();
+  const { allVenues, isLoadingVenues: isLoading, venueError: error, city } = useVenueData();
 
   // Filter venues client-side - this runs instantly
   const filteredVenues = useMemo(() => {
@@ -67,14 +68,19 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
     // city config, that's "All Dubai" / "All Bangalore" / etc.
     const isAllCitySentinel = (s: string) => typeof s === 'string' && /^All\s+/i.test(s);
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    // "Past" is measured against the CITY's calendar day, not the viewer's.
+    // Event dates are UTC midnights, so compare YYYY-MM-DD keys. The old
+    // viewer-local midnight cut-off dropped all of a city's current-day
+    // events whenever the viewer's midnight came first — e.g. an IST viewer
+    // on Dubai between 18:30 and 20:00 UTC every day, which emptied the list
+    // and map while the date filter was (correctly) on Dubai's today.
+    const cityToday = getCityDateString(city);
 
     return allVenues.filter(venue => {
       // Always exclude past events
       if (venue.event_date) {
         const d = new Date(venue.event_date);
-        if (!isNaN(d.getTime()) && d < todayStart) return false;
+        if (!isNaN(d.getTime()) && d.toISOString().slice(0, 10) < cityToday) return false;
       }
 
       // Apply area filter — bypassed when any selectedArea is the "All <City>" sentinel
@@ -546,7 +552,7 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
 
       return true;
     });
-  }, [allVenues, filters]);
+  }, [allVenues, filters, city]);
 
   return {
     allVenues,

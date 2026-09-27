@@ -6,6 +6,7 @@ import { Search, ChevronDown } from 'lucide-react';
 import { Venue } from '@/types';
 import { parseDateFromFormat } from '@/lib/filters/date-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
+import { getCityDateString } from '@/lib/city-date';
 import SignInButton from '@/components/auth/SignInButton';
 import UserMenu from '@/components/auth/UserMenu';
 
@@ -24,11 +25,18 @@ const PRESET_LABELS: Record<DateRangePreset, string> = {
   'next-month': 'Next Month',
 };
 
-function getDateRangeKeys(preset: DateRangePreset): string[] {
+// The city's current calendar day as a toDateString() key — built the same
+// way the list/map pages seed their filter (UTC midnight of the city's
+// YYYY-MM-DD), so "today" on the strip always equals the filtered date.
+function cityTodayKey(city: string): string {
+  return new Date(`${getCityDateString(city)}T00:00:00Z`).toDateString();
+}
+
+function getDateRangeKeys(preset: DateRangePreset, todayKey: string): string[] {
   if (preset === 'all') return [];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Local midnight of the city's calendar day.
+  const today = new Date(todayKey);
 
   if (preset === 'today') return [today.toDateString()];
 
@@ -114,7 +122,8 @@ const TopNav: React.FC<TopNavProps> = ({
   const { user } = useAuth();
 
   // Use shared filter options from context — no duplicate fetch
-  const { filterOptions: sharedFilterOptions } = useVenueData();
+  const { filterOptions: sharedFilterOptions, city } = useVenueData();
+  const todayKey = cityTodayKey(city);
   const filterOptions = { dates: sharedFilterOptions.dates };
   // Derive the initial dropdown preset from the actual selection so the dropdown
   // highlights the right item on load (e.g. cards page defaults to [today] → show
@@ -122,7 +131,7 @@ const TopNav: React.FC<TopNavProps> = ({
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>(() => {
     const sel = datePickerProps?.selectedDates ?? [];
     if (sel.length === 0) return 'all';
-    if (sel.length === 1 && sel[0] === new Date().toDateString()) return 'today';
+    if (sel.length === 1 && sel[0] === todayKey) return 'today';
     return 'all';
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -167,8 +176,7 @@ const TopNav: React.FC<TopNavProps> = ({
   const dateOptions = useMemo(() => {
     if (!hasDatePicker) return [];
     const allDates = filterOptions?.dates || [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date(todayKey);
 
     const dateMap = new Map<string, Date>();
     allDates.forEach((dateStr: string) => {
@@ -194,7 +202,7 @@ const TopNav: React.FC<TopNavProps> = ({
       isSaturday: date.getDay() === 6,
       isSunday: date.getDay() === 0,
     }));
-  }, [filterOptions, hasDatePicker]);
+  }, [filterOptions, hasDatePicker, todayKey]);
 
   // Auto-scroll date pills on initial load (to today) and when dropdown preset changes
   const prevPresetRef = useRef<string>(selectedPreset);
@@ -222,7 +230,7 @@ const TopNav: React.FC<TopNavProps> = ({
         targetIndex = dateOptions.findIndex(d => d.isToday);
       } else {
         // Scroll to the first date of the selected range
-        const rangeDates = getDateRangeKeys(selectedPreset);
+        const rangeDates = getDateRangeKeys(selectedPreset, todayKey);
         if (rangeDates.length > 0) {
           const firstRangeDate = rangeDates[0];
           targetIndex = dateOptions.findIndex(d => d.dateKey === firstRangeDate);
@@ -237,7 +245,7 @@ const TopNav: React.FC<TopNavProps> = ({
         }
       }
     });
-  }, [dateOptions, selectedPreset]);
+  }, [dateOptions, selectedPreset, todayKey]);
 
   // Set initial visible month only once when dates first load
   const monthInitialised = useRef(false);
@@ -265,8 +273,8 @@ const TopNav: React.FC<TopNavProps> = ({
   // Compute the full preset range dates (independent of what's clicked)
   const presetRangeDates = useMemo(() => {
     if (['all', 'today'].includes(selectedPreset)) return [];
-    return getDateRangeKeys(selectedPreset);
-  }, [selectedPreset]);
+    return getDateRangeKeys(selectedPreset, todayKey);
+  }, [selectedPreset, todayKey]);
 
   // Notify parent whenever preset range changes
   useEffect(() => {
@@ -277,7 +285,7 @@ const TopNav: React.FC<TopNavProps> = ({
     if (!datePickerProps) return;
     setSelectedPreset(preset);
     setIsDropdownOpen(false);
-    const dates = getDateRangeKeys(preset);
+    const dates = getDateRangeKeys(preset, todayKey);
     datePickerProps.onDateChange(dates);
   };
 
@@ -306,9 +314,8 @@ const TopNav: React.FC<TopNavProps> = ({
   // Get current selected date label for the desktop pill
   const selectedDateLabel = useMemo(() => {
     if (!datePickerProps || datePickerProps.selectedDates.length === 0) return 'All Dates';
-    const todayStr = new Date().toDateString();
-    if (datePickerProps.selectedDates.includes(todayStr)) {
-      const today = new Date();
+    if (datePickerProps.selectedDates.includes(todayKey)) {
+      const today = new Date(todayKey);
       return `Today — ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
     }
     const first = datePickerProps.selectedDates[0];
@@ -318,7 +325,7 @@ const TopNav: React.FC<TopNavProps> = ({
     } catch {
       return 'Selected';
     }
-  }, [datePickerProps]);
+  }, [datePickerProps, todayKey]);
 
   // --- DESKTOP EMBEDDED LAYOUT ---
   if (embedded) {
