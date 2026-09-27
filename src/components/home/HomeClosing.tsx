@@ -19,7 +19,7 @@ const TITLE = 'font-tight font-semibold uppercase text-[34px] leading-[0.92] tra
 export function HomeFaq({ accent, onExpand }: { accent: CardAccent; onExpand: (question: string) => void }) {
   const items = FAQ_ITEMS.slice(0, 4);
   return (
-    <section className="px-[18px] pt-14" aria-labelledby="home-faq-title">
+    <section className="px-[18px] pt-10" aria-labelledby="home-faq-title">
       <span className={H4_LABEL} style={{ color: accent.text }}>A few good questions / 01—{String(items.length).padStart(2, '0')}</span>
       <h2 id="home-faq-title" className={`${TITLE} mt-4`}>
         Good to<br />know<span style={{ color: accent.text }}>.</span>
@@ -53,7 +53,7 @@ export function HomeFaq({ accent, onExpand }: { accent: CardAccent; onExpand: (q
 export function VenueCta({ accent, onClick }: { accent: CardAccent; onClick: () => void }) {
   return (
     <section
-      className="px-[18px] pt-14 overflow-hidden"
+      className="px-[18px] pt-10 overflow-hidden"
       aria-labelledby="home-venue-title"
       style={{ '--accent-edge': accent.edge, '--accent-glow': accent.glow } as React.CSSProperties}
     >
@@ -61,7 +61,7 @@ export function VenueCta({ accent, onClick }: { accent: CardAccent; onClick: () 
         <div className={styles.venueSpotlight} />
         <div className={styles.venueFrame} />
         <div className={styles.venuePhoto}>
-          <Image src="/home3/live-performance.webp" alt="" fill sizes="230px" className="object-cover" />
+          <Image src="/home3/live-performance.webp" alt="" fill sizes="150px" className="object-cover" />
         </div>
       </div>
       <span className={`${H4_LABEL} block mt-6`} style={{ color: accent.text }}>To the places that make the night</span>
@@ -90,7 +90,7 @@ export function HomeFooter({ city, cities, accent, onBackToTop }: {
   const colHead = `${H4_LABEL} text-silver-dim mb-1`;
   return (
     <footer
-      className="px-[18px] pt-12 mt-14 overflow-hidden"
+      className="px-[18px] pt-10 mt-10 overflow-hidden"
       style={{ borderTop: `1px solid ${TILE_RULE}`, '--accent-border': accent.border } as React.CSSProperties}
     >
       <div className="flex items-start gap-4">

@@ -407,15 +407,6 @@ export default function CityHome() {
     router.push(`/${city}/event/${e.event_id}`);
   };
 
-  const goMap = (source: string) => {
-    trackEvent('nav_view_change', { from: 'home', to: 'map', source });
-    router.push(`/${city}/map`);
-  };
-  const goList = (source: string) => {
-    trackEvent('nav_view_change', { from: 'home', to: 'cards', source });
-    router.push(`/${city}/cards`);
-  };
-
   return (
     <main
       ref={mainRef}
@@ -677,8 +668,6 @@ export default function CityHome() {
           kicker={{ index: 3, total: 3 }}
           scrollRoot={mainRef}
           onChangeCity={switchCity}
-          onMap={() => goMap('city_atlas_map')}
-          onList={() => goList('city_atlas_list')}
         />
 
         {/* § Good to know, venue call to action, footer (from Home 4) */}

@@ -3,19 +3,19 @@
 // "Your next good night starts here." — Home 4's city picker + illustrative
 // atlas, dark and live: the city list is the runtime city config (no
 // hard-coded slugs), picking a city goes straight to that city's home, and
-// the atlas pins take the city's top live categories' colours.
+// the atlas pins take the city's top live categories' colours. The map/list
+// actions live once, in the plan block at the top of the page.
 
-import { ArrowUpRight, ChevronDown, List, Map as MapIcon } from 'lucide-react';
+import { ArrowUpRight, ChevronDown } from 'lucide-react';
 import { H4_LABEL, TILE_RULE, getCardAccent, type CardAccent } from '@/components/shared/card-style';
 import { SectionKicker } from './VibeFan';
-import { BTN_PRIMARY, BTN_SECONDARY, BTN_SECONDARY_STYLE } from './HomeParts';
 import { useRevealOnce } from './useRevealOnce';
 import styles from './home.module.css';
 
 const ROUTE = 'M80 430 C165 370 230 455 285 310 S365 165 460 235 S520 110 580 100';
 const PINS: Array<[number, number, number]> = [[80, 430, 13], [285, 310, 10], [460, 235, 11], [580, 100, 16]];
 
-export default function CityAtlas({ city, cities, accent, pinCategories, kicker, scrollRoot, onChangeCity, onMap, onList }: {
+export default function CityAtlas({ city, cities, accent, pinCategories, kicker, scrollRoot, onChangeCity }: {
   city: string;
   /** [slug, display name] for every live city. */
   cities: Array<[string, string]>;
@@ -24,8 +24,6 @@ export default function CityAtlas({ city, cities, accent, pinCategories, kicker,
   kicker: { index: number; total: number };
   scrollRoot: React.RefObject<HTMLElement | null>;
   onChangeCity: (slug: string) => void;
-  onMap: () => void;
-  onList: () => void;
 }) {
   const atlasRef = useRevealOnce<HTMLDivElement>(scrollRoot, 0.25);
   const cityName = cities.find(([slug]) => slug === city)?.[1] ?? city;
@@ -35,7 +33,7 @@ export default function CityAtlas({ city, cities, accent, pinCategories, kicker,
 
   return (
     <section
-      className="px-[18px] pt-12"
+      className="px-[18px] pt-10"
       aria-labelledby="home-city-title"
       style={{ '--accent-text': accent.text } as React.CSSProperties}
     >
@@ -57,10 +55,6 @@ export default function CityAtlas({ city, cities, accent, pinCategories, kicker,
           {cities.map(([slug, name]) => <option key={slug} value={slug}>{name}</option>)}
         </select>
         <ChevronDown aria-hidden className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: accent.text }} />
-      </div>
-      <div className="flex gap-2 mt-3">
-        <button onClick={onMap} className={`${BTN_PRIMARY} flex-1`}><MapIcon className="w-4 h-4" />See the map</button>
-        <button onClick={onList} className={`${BTN_SECONDARY} flex-1`} style={BTN_SECONDARY_STYLE}><List className="w-4 h-4" />Browse the list</button>
       </div>
       <p className={`${H4_LABEL} text-silver-dim mt-4`}>Free to explore / no account required</p>
 

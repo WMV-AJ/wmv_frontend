@@ -1,11 +1,13 @@
 'use client';
 
-// "From their stories. To your plans." — Home 4's Find / Sort / Go path,
-// ported without Three.js and recoloured dark, with a live stats strip
-// (venues, events, areas and the last refresh) from the data already loaded.
+// "From their stories. To your plans." — Find / Sort / Go, now as three
+// ruled rows beside a compact path that draws itself on reveal (the Home 4
+// scene, condensed), plus the live stats strip (venues, events, areas, last
+// refresh) derived from the rows already loaded.
 
 import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
 import { SectionKicker } from './VibeFan';
+import { SOURCES } from './HomeHero';
 import { useRevealOnce } from './useRevealOnce';
 import styles from './home.module.css';
 
@@ -17,7 +19,11 @@ export interface HowStats {
   refreshed: string | null;
 }
 
-const MOBILE_PATH = 'M60 80 C270 130 290 240 180 360 S120 570 280 700 S240 860 310 900';
+const STEPS: Array<{ n: string; title: string; copy: string }> = [
+  { n: '01', title: 'We find it.', copy: 'Public venue stories, posts, feeds and sites are scanned every day.' },
+  { n: '02', title: 'We sort it.', copy: 'Events become clear choices by vibe, from brunch to live music.' },
+  { n: '03', title: 'You go.', copy: 'Open the map or list. Find tonight’s plan and get out the door.' },
+];
 
 export default function HowItWorks({ cityName, stats, loading, accent, kicker, scrollRoot }: {
   cityName: string;
@@ -27,13 +33,7 @@ export default function HowItWorks({ cityName, stats, loading, accent, kicker, s
   kicker: { index: number; total: number };
   scrollRoot: React.RefObject<HTMLElement | null>;
 }) {
-  const sceneRef = useRevealOnce<HTMLDivElement>(scrollRoot, 0.15);
-  const cssVars = {
-    '--accent-text': accent.text,
-    '--accent-border': accent.border,
-    '--accent-glow': accent.glow,
-  } as React.CSSProperties;
-
+  const stepsRef = useRevealOnce<HTMLDivElement>(scrollRoot, 0.2);
   const statCells: Array<[string, string]> = [
     ['Venues', loading ? '—' : String(stats.venues)],
     ['Events', loading ? '—' : String(stats.events)],
@@ -42,7 +42,7 @@ export default function HowItWorks({ cityName, stats, loading, accent, kicker, s
   ];
 
   return (
-    <section className="px-[18px] pt-12" aria-labelledby="home-how-title" style={cssVars}>
+    <section className="px-[18px] pt-10" aria-labelledby="home-how-title" style={{ '--accent-text': accent.text } as React.CSSProperties}>
       <SectionKicker index={kicker.index} total={kicker.total} title="How it works" />
       <h2 id="home-how-title" className="font-tight font-semibold uppercase text-[34px] leading-[0.92] tracking-[-0.045em] text-pale mt-4">
         From their stories.<br /><span className="text-silver">To your plans.</span>
@@ -61,53 +61,39 @@ export default function HowItWorks({ cityName, stats, loading, accent, kicker, s
         ))}
       </div>
 
-      <div ref={sceneRef} className={styles.howScene}>
-        <svg className={styles.howPath} viewBox="0 0 400 950" preserveAspectRatio="none" aria-hidden="true">
-          <path className={styles.pathBase} d={MOBILE_PATH} />
-          <path className={styles.pathActive} d={MOBILE_PATH} pathLength={1} />
+      {/* Steps beside a path that draws down on reveal */}
+      <div ref={stepsRef} className="relative mt-5 pl-9">
+        <svg className="absolute left-0 top-2 bottom-2 w-6 h-[calc(100%-16px)] overflow-visible" viewBox="0 0 24 300" preserveAspectRatio="none" aria-hidden="true">
+          <path className={styles.pathBase} d="M12 4 C2 60 22 90 12 150 S2 240 12 296" />
+          <path className={styles.pathActive} d="M12 4 C2 60 22 90 12 150 S2 240 12 296" pathLength={1} />
         </svg>
-
-        <div className={`${styles.howStop} ${styles.howFind}`}>
-          <div className={styles.howSources} aria-hidden="true">
-            <span className={`${H4_LABEL} text-silver`}>Venue posts</span>
-            <span className={`${H4_LABEL} text-silver`}>Stories</span>
-            <span className={`${H4_LABEL} text-silver`}>Ticketing feeds</span>
+        {STEPS.map((s, i) => (
+          <div key={s.n} className={`${styles.revealItem} relative py-3.5`} style={{ '--i': i, borderTop: i ? `1px solid ${TILE_RULE}` : undefined } as React.CSSProperties}>
+            <span aria-hidden className="absolute -left-[29px] top-[18px] w-3 h-3 rounded-full"
+              style={{ background: '#0a0a14', border: `2px solid ${accent.text}`, boxShadow: `0 0 10px ${accent.glow}` }} />
+            <span className={H4_LABEL} style={{ color: accent.text }}>{s.n}</span>
+            <h3 className="font-tight font-semibold uppercase text-[22px] leading-[0.95] tracking-[-0.04em] text-pale mt-1.5">{s.title}</h3>
+            <p className="text-[13px] leading-relaxed text-silver mt-1.5">{s.copy}</p>
+            {i === 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {SOURCES.map(([label, color]) => (
+                  <span key={label} className={`${H4_LABEL} inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-silver`}
+                    style={{ border: `1px solid ${color}66`, background: `${color}12`, fontSize: 9 }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          <StepCopy step="01 / Find" title="We find it." accent={accent}>
-            Public venue stories, posts, feeds and sites are scanned every day.
-          </StepCopy>
-        </div>
-
-        <div className={`${styles.howStop} ${styles.howSort}`}>
-          <div className={styles.prism} aria-hidden="true"><span /><span /><span /></div>
-          <StepCopy step="02 / Sort" title="We sort it." accent={accent}>
-            Events become clear choices by vibe, from brunch to live music.
-          </StepCopy>
-        </div>
-
-        <div className={`${styles.howStop} ${styles.howGo}`}>
-          <div className={styles.howMarker} aria-hidden="true"><span /></div>
-          <StepCopy step="03 / Go" title="You go." accent={accent}>
-            Open the map or list. Find tonight&rsquo;s plan and get out the door.
-          </StepCopy>
-        </div>
+        ))}
       </div>
 
-      <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim pt-4`} style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+      <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim pt-4 mt-1`} style={{ borderTop: `1px solid ${TILE_RULE}` }}>
         <span>From scattered signals</span>
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
         <span>To one place to start</span>
       </div>
     </section>
-  );
-}
-
-function StepCopy({ step, title, accent, children }: { step: string; title: string; accent: CardAccent; children: React.ReactNode }) {
-  return (
-    <div className={styles.howStepCopy}>
-      <span className={H4_LABEL} style={{ color: accent.text }}>{step}</span>
-      <h3 className="font-tight font-semibold uppercase text-[28px] leading-[0.95] tracking-[-0.045em] text-pale mt-2">{title}</h3>
-      <p className="text-[13px] leading-relaxed text-silver mt-2">{children}</p>
-    </div>
   );
 }
