@@ -510,8 +510,7 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
   );
 });
 
-export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy' | 'map2' }) {
-  const isMap2 = variant === 'map2';
+export default function CityMapPage() {
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
 
@@ -745,20 +744,6 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
   const [presetRangeDates, setPresetRangeDates] = useState<string[]>([]);
   const [navHeight, setNavHeight] = useState(140);
 
-  // ── Map 2 (/[city]/map2) chrome measurements ─────────────────────
-  const categoryRailRef = useRef<HTMLDivElement>(null);
-  const [categoryRailHeight, setCategoryRailHeight] = useState(42);
-  const [dockPadding, setDockPadding] = useState(270);
-  useEffect(() => {
-    if (!isMap2 || !categoryRailRef.current) return;
-    const rail = categoryRailRef.current;
-    const measure = () => setCategoryRailHeight(rail.getBoundingClientRect().height);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(rail);
-    return () => observer.disconnect();
-  }, [isMap2]);
-
   // ── Bottom chrome geometry ──────────────────────────────────────────
   // The card panel is `absolute bottom-0` with a content-driven height, so
   // everything that has to sit above it used to be a hand-tuned constant
@@ -780,11 +765,13 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
 
   const mapPaddingRef = useRef<MapPadding>({ top: 120, bottom: 260, left: 0, right: 0 });
   useEffect(() => {
-    mapPaddingRef.current = isMap2
-      // Map 2: below its measured category rail, above its measured dock.
-      ? { top: navHeight + categoryRailHeight + 18, bottom: dockPadding + 16, left: 0, right: 0 }
-      : { top: navHeight + 12, bottom: navPillBottom + NAV_PILL_H + 12, left: 0, right: 0 };
-  }, [isMap2, navHeight, navPillBottom, categoryRailHeight, dockPadding]);
+    mapPaddingRef.current = {
+      top: navHeight + 12,
+      bottom: navPillBottom + NAV_PILL_H + 12,
+      left: 0,
+      right: 0,
+    };
+  }, [navHeight, navPillBottom]);
   const [currentZoom, setCurrentZoom] = useState(MAPCN_ZOOM);
 
   const showLabels = currentZoom >= 14;
@@ -822,11 +809,10 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
 
   if (error) {
     return (
-      <main className={`h-screen w-full flex items-center justify-center bg-background ${isMap2 ? 'map2-error-state' : ''}`}>
-        <div className={`p-8 max-w-md text-center ${isMap2 ? 'map2-error-card' : 'retro-surface'}`}>
-          <h3 className="text-lg font-semibold mb-2 text-red-400">{isMap2 ? 'Could not load the map' : 'Error Loading Venues'}</h3>
+      <main className="h-screen w-full flex items-center justify-center bg-background">
+        <div className="retro-surface p-8 max-w-md text-center">
+          <h3 className="text-lg font-semibold mb-2 text-red-400">Error Loading Venues</h3>
           <p className="text-muted-foreground">{error}</p>
-          {isMap2 && <button type="button" onClick={() => window.location.reload()}>Try again</button>}
         </div>
       </main>
     );
@@ -846,13 +832,13 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
           display: none !important;
         }
       `}</style>
-      <div className={`wmv-phone-frame ${isMap2 ? 'wmv-map2' : ''}`} style={{
+      <div className="wmv-phone-frame" style={{
         maxWidth: FRAME_MAX_WIDTH,
         margin: '0 auto',
         height: '100dvh',
         overflow: 'hidden',
         transform: 'translateZ(0)',
-        background: isMap2 ? '#27282b' : '#0a0a14',
+        background: '#0a0a14',
         opacity: isReady ? 1 : 0,
         transition: isReady ? 'opacity 0.3s ease' : 'none',
       }}>
@@ -860,8 +846,6 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
         <h1 className="sr-only">{getCityConfig(city).displayName} Event Discovery - Map</h1>
 
         <TopNav
-          refined={isMap2}
-          cityLabel={getCityConfig(city).displayName}
           embedded={false}
           hideProfile={true}
           onSearchClick={() => setIsFilterSheetOpen(true)}
@@ -877,12 +861,10 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
         />
 
         <div
-          ref={categoryRailRef}
-          className={`fixed left-0 right-0 z-30 px-2 ${isMap2 ? 'map2-category-rail' : ''}`}
+          className="fixed left-0 right-0 z-30 px-2"
           style={{ top: navHeight + 6 }}
         >
           <CategoryPills
-            refined={isMap2}
             filters={filters}
             onFiltersChange={handleFiltersChange}
             venues={countVenues}
@@ -989,9 +971,9 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
             className="absolute z-20 flex items-center justify-center"
             style={{
               right: 12,
-              bottom: isMap2 ? dockPadding + 18 : locateBottom,
-              width: isMap2 ? 44 : 40,
-              height: isMap2 ? 44 : 40,
+              bottom: locateBottom,
+              width: 40,
+              height: 40,
               borderRadius: '50%',
               background: liveLocation.enabled ? '#4285f4' : 'rgba(20,20,31,0.9)',
               border: `1px solid ${liveLocation.enabled ? '#4285f4' : 'rgba(255,255,255,0.14)'}`,
@@ -1014,7 +996,7 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
             <div
               className="absolute z-30"
               style={{
-                left: '50%', transform: 'translateX(-50%)', bottom: isMap2 ? dockPadding + 76 : toastBottom,
+                left: '50%', transform: 'translateX(-50%)', bottom: toastBottom,
                 padding: '10px 18px', borderRadius: 999, maxWidth: '85%',
                 background: 'rgba(20,20,31,0.95)', border: '1px solid rgba(255,255,255,0.14)',
                 color: '#f5f2ed', fontSize: 12, fontWeight: 600, textAlign: 'center',
@@ -1026,23 +1008,18 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
           )}
         </div>
 
-        {/* /map: bottomOffset is measured from the card panel, which already
-            pays the safe-area inset in its own padding — hence
-            safeAreaAware={false}, otherwise notched iPhones would add the
-            inset a second time. Map 2 docks the pill itself (offset 8). */}
+        {/* bottomOffset is measured from the card panel, which already pays
+            the safe-area inset in its own padding — hence safeAreaAware={false},
+            otherwise notched iPhones would add the inset a second time. */}
         <NavPill
           city={city}
           active="map"
-          bottomOffset={isMap2 ? 8 : navPillBottom}
-          safeAreaAware={isMap2}
+          bottomOffset={navPillBottom}
+          safeAreaAware={false}
           hidden={isFilterSheetOpen}
-          refined={isMap2}
         />
 
         <MobileEventList
-          refined={isMap2}
-          selectedPrimaryCategories={isMap2 ? filters.eventCategories?.selectedPrimaries : undefined}
-          onDockPaddingChange={isMap2 ? setDockPadding : undefined}
           cards={cards}
           allCards={allCards}
           getCategoryColor={getCategoryColorForStackedCards}
@@ -1059,10 +1036,7 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
           onPanelHeightChange={handlePanelHeight}
         />
 
-        {isMap2 && !isLoading && cards.length === 0 && <div className="map2-empty-state" role="status"><strong>No plans in this view</strong><span>Try another date, area, or category.</span><button type="button" onClick={() => setIsFilterSheetOpen(true)}>Adjust filters</button></div>}
-
         <FilterBottomSheet
-          refined={isMap2}
           isOpen={isFilterSheetOpen}
           onClose={() => setIsFilterSheetOpen(false)}
           filters={filters}

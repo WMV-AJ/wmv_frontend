@@ -10,7 +10,6 @@ import { trackEvent } from '@/lib/analytics/track';
 import { isAllCitySentinel } from '@/lib/city-helpers';
 
 interface FilterBottomSheetProps {
-  refined?: boolean;
   isOpen: boolean;
   onClose: () => void;
   filters: HierarchicalFilterState;
@@ -37,7 +36,6 @@ interface FilterSectionConfig {
 }
 
 const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
-  refined = false,
   isOpen,
   onClose,
   filters,
@@ -64,10 +62,6 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
 
   // Ref for search input auto-focus
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const closeRef = useRef(onClose);
-  useEffect(() => { closeRef.current = onClose; }, [onClose]);
 
   // Update temp filters when props change (on initial open)
   useEffect(() => {
@@ -85,41 +79,13 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
 
   // Auto-focus search input when sheet opens
   useEffect(() => {
-    if (isOpen && !refined && searchInputRef.current) {
+    if (isOpen && searchInputRef.current) {
       // Delay focus slightly to ensure sheet animation completes
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 300);
     }
-  }, [isOpen, refined]);
-
-  useEffect(() => {
-    if (!isOpen || !refined) return;
-    const sheet = sheetRef.current;
-    const main = sheet?.closest('main');
-    if (!sheet || !main) return;
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const siblings = Array.from(main.children).filter((child) => child !== sheet && !child.hasAttribute('data-map2-filter-backdrop')) as HTMLElement[];
-    const previous = siblings.map((child) => ({ child, inert: child.inert, aria: child.getAttribute('aria-hidden') }));
-    previous.forEach(({ child }) => { child.inert = true; child.setAttribute('aria-hidden', 'true'); });
-    const focusTimer = window.setTimeout(() => headingRef.current?.focus(), 80);
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); closeRef.current(); return; }
-      if (event.key !== 'Tab') return;
-      const items = Array.from(sheet.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),[tabindex="0"]')).filter((item) => item.offsetParent !== null);
-      if (!items.length) return;
-      const first = items[0], last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      clearTimeout(focusTimer);
-      document.removeEventListener('keydown', onKey);
-      previous.forEach(({ child, inert, aria }) => { child.inert = inert; if (aria === null) child.removeAttribute('aria-hidden'); else child.setAttribute('aria-hidden', aria); });
-      previousFocus?.focus();
-    };
-  }, [isOpen, refined]);
+  }, [isOpen]);
 
   /**
    * The box at the top of the sheet narrows the lists below it.
@@ -336,31 +302,26 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
         <>
           {/* Backdrop */}
           <motion.div
-            data-map2-filter-backdrop={refined ? '' : undefined}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-30 ${refined ? 'map2-filter-backdrop' : ''}`}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30"
             onClick={onClose}
           />
 
           {/* Bottom Sheet */}
           <motion.div
-            ref={sheetRef}
-            role={refined ? 'dialog' : undefined}
-            aria-modal={refined ? true : undefined}
-            aria-label={refined ? 'Filter events and venues' : undefined}
             initial={{ y: '100%', opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
-            transition={refined ? { duration: 0.25, ease: 'easeOut' } : {
+            transition={{
               type: 'spring',
               damping: 25,
               stiffness: 300,
               duration: 0.3
             }}
-            className={`fixed left-0 right-0 z-40 ${refined ? 'map2-filter-sheet' : ''}`}
+            className="fixed left-0 right-0 z-40"
             style={{ top: '180px', bottom: 0 }}
           >
             <div className="filter-bottom-sheet rounded-t-3xl shadow-2xl relative h-full flex flex-col">
@@ -373,7 +334,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 ref={headingRef} tabIndex={refined ? -1 : undefined} className="font-sans text-lg font-semibold text-white">
+                    <h2 className="font-sans text-lg font-semibold text-white">
                       Filter by
                     </h2>
                   </div>
@@ -517,7 +478,6 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               {/* Action Bar — flex child so it never overlaps scroll content */}
               <div className="flex-shrink-0">
                 <FilterActionBar
-                  refined={refined}
                   onCancel={handleCancel}
                   onApply={handleApply}
                   hasUnsavedChanges={hasUnsavedChanges}

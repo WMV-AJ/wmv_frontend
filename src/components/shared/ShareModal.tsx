@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react';
 import { X, Copy, Link2, Check } from 'lucide-react';
 
 interface ShareModalProps {
-  refined?: boolean;
   isOpen: boolean;
   onClose: () => void;
   shareUrl: string;
@@ -14,7 +13,6 @@ interface ShareModalProps {
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
-  refined = false,
   isOpen,
   onClose,
   shareUrl,
@@ -24,34 +22,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
   const [copiedField, setCopiedField] = useState<'text' | 'link' | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const modalRef = React.useRef<HTMLDivElement>(null);
-  const closeRef = React.useRef(onClose);
-  React.useEffect(() => { closeRef.current = onClose; }, [onClose]);
-  React.useEffect(() => {
-    if (!refined || !isOpen || !modalRef.current) return;
-    const modal = modalRef.current;
-    const main = modal.closest('main');
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const siblings = main ? Array.from(main.children).filter((child) => child !== modal) as HTMLElement[] : [];
-    const previous = siblings.map((child) => ({ child, inert: child.inert, aria: child.getAttribute('aria-hidden') }));
-    previous.forEach(({ child }) => { child.inert = true; child.setAttribute('aria-hidden', 'true'); });
-    modal.querySelector<HTMLElement>('[data-map2-share-close]')?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeRef.current(); return; }
-      if (event.key !== 'Tab') return;
-      const items = Array.from(modal.querySelectorAll<HTMLElement>('button:not([disabled]),a[href]'));
-      if (!items.length) return;
-      const first = items[0], last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      previous.forEach(({ child, inert, aria }) => { child.inert = inert; if (aria === null) child.removeAttribute('aria-hidden'); else child.setAttribute('aria-hidden', aria); });
-      previousFocus?.focus();
-    };
-  }, [refined, isOpen]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -111,11 +81,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   return (
     <>
       <div
-        ref={modalRef}
-        role={refined ? 'dialog' : undefined}
-        aria-modal={refined ? true : undefined}
-        aria-label={refined ? 'Share event' : undefined}
-        className={`fixed inset-0 z-[10100] flex items-end justify-center ${refined ? 'map2-share-modal' : ''}`}
+        className="fixed inset-0 z-[10100] flex items-end justify-center"
         onClick={onClose}
       >
         <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
@@ -128,8 +94,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[17px] font-bold text-gray-900">Share event</h3>
             <button
-              data-map2-share-close={refined ? '' : undefined}
-              aria-label="Close share options"
               onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center"
               style={{ background: '#f3f4f6' }}

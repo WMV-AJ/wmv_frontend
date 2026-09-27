@@ -2,7 +2,7 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, ChevronDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { Venue } from '@/types';
 import { parseDateFromFormat } from '@/lib/filters/date-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
@@ -88,8 +88,6 @@ interface DateSelectorProps {
 }
 
 interface TopNavProps {
-  refined?: boolean;
-  cityLabel?: string;
   navButtons?: React.ReactNode;
   onSearchClick?: () => void;
   showDatePicker?: boolean;
@@ -108,8 +106,6 @@ interface TopNavProps {
 }
 
 const TopNav: React.FC<TopNavProps> = ({
-  refined = false,
-  cityLabel,
   navButtons,
   onSearchClick,
   showDatePicker,
@@ -140,14 +136,10 @@ const TopNav: React.FC<TopNavProps> = ({
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState('');
-  const [datePageStart, setDatePageStart] = useState(0);
-  const [datePageSize, setDatePageSize] = useState(3);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const rangeTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDateScrollRef = useRef<HTMLDivElement>(null);
   const todayPillRef = useRef<HTMLButtonElement>(null);
   const mobileNavRef = useRef<HTMLDivElement>(null);
-
 
   // Measure mobile nav height and notify parent
   useEffect(() => {
@@ -168,7 +160,6 @@ const TopNav: React.FC<TopNavProps> = ({
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (rangeTriggerRef.current?.contains(e.target as Node)) return;
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
       }
@@ -177,18 +168,6 @@ const TopNav: React.FC<TopNavProps> = ({
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isDropdownOpen]);
-
-  useEffect(() => {
-    if (!isDropdownOpen) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsDropdownOpen(false);
-        rangeTriggerRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
   }, [isDropdownOpen]);
 
   // Filter options now come from shared VenueDataContext — no fetch needed here
@@ -225,24 +204,6 @@ const TopNav: React.FC<TopNavProps> = ({
     }));
   }, [filterOptions, hasDatePicker, todayKey]);
 
-  useEffect(() => {
-    if (!refined || !mobileDateScrollRef.current) return;
-    const el = mobileDateScrollRef.current;
-    const update = () => setDatePageSize(Math.min(4, Math.max(1, Math.floor((el.clientWidth + 2) / 46))));
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [refined, dateOptions.length]);
-
-  useEffect(() => {
-    if (!refined) return;
-    setDatePageStart((current) => {
-      const maxStart = Math.floor(Math.max(0, dateOptions.length - 1) / datePageSize) * datePageSize;
-      return Math.min(maxStart, Math.floor(current / datePageSize) * datePageSize);
-    });
-  }, [refined, dateOptions.length, datePageSize]);
-
   // Auto-scroll date pills on initial load (to today) and when dropdown preset changes
   const prevPresetRef = useRef<string>(selectedPreset);
   const hasInitialScrolled = useRef(false);
@@ -276,12 +237,7 @@ const TopNav: React.FC<TopNavProps> = ({
         }
       }
 
-      if (targetIndex >= 0) {
-        if (refined) {
-          setDatePageStart(Math.floor(targetIndex / datePageSize) * datePageSize);
-          return;
-        }
-        if (!pillButtons[targetIndex]) return;
+      if (targetIndex >= 0 && pillButtons[targetIndex]) {
         // Manual scroll for Safari compatibility (scrollIntoView options not fully supported)
         const pill = pillButtons[targetIndex] as HTMLElement;
         if (container) {
@@ -289,7 +245,7 @@ const TopNav: React.FC<TopNavProps> = ({
         }
       }
     });
-  }, [dateOptions, selectedPreset, todayKey, refined, datePageSize]);
+  }, [dateOptions, selectedPreset, todayKey]);
 
   // Set initial visible month only once when dates first load
   const monthInitialised = useRef(false);
@@ -331,11 +287,6 @@ const TopNav: React.FC<TopNavProps> = ({
     setIsDropdownOpen(false);
     const dates = getDateRangeKeys(preset, todayKey);
     datePickerProps.onDateChange(dates);
-    if (refined) {
-      const targetIndex = dateOptions.findIndex((option) => preset === 'today' || preset === 'all' ? option.isToday : dates.includes(option.dateKey));
-      if (targetIndex >= 0) setDatePageStart(Math.floor(targetIndex / datePageSize) * datePageSize);
-    }
-    if (refined) requestAnimationFrame(() => rangeTriggerRef.current?.focus());
   };
 
   const handleDateClick = (dateKey: string) => {
@@ -375,38 +326,6 @@ const TopNav: React.FC<TopNavProps> = ({
       return 'Selected';
     }
   }, [datePickerProps, todayKey]);
-
-  if (refined && !embedded) {
-    return (
-      <div ref={mobileNavRef} className="fixed z-50 map2-top-nav map2-nav-shell">
-        <div className="map2-nav-surface">
-          {showDatePicker && datePickerProps && <div className="map2-calendar-row">
-            <picture className="map2-row-logo"><source media="(prefers-reduced-motion: reduce)" srcSet="/home3/wmv-logo-still.png" /><img src="/wmv-logo.gif" alt="Where's My Vibe" width="28" height="28" /></picture>
-            <button type="button" ref={rangeTriggerRef} className="map2-range-trigger" aria-label={`Date range: ${PRESET_LABELS[selectedPreset]}`} aria-expanded={isDropdownOpen} onClick={() => setIsDropdownOpen(!isDropdownOpen)}><span>{PRESET_LABELS[selectedPreset]}</span><ChevronDown size={12} className={isDropdownOpen ? 'rotate-180' : ''}/></button>
-            <div ref={mobileDateScrollRef} className="map2-date-scroll" role="group" aria-label="Dates. Swipe or use left and right arrow keys to browse." tabIndex={0} onKeyDown={(e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); setDatePageStart((current) => Math.max(0, Math.min(Math.max(0, dateOptions.length - datePageSize), current + (e.key === 'ArrowRight' ? datePageSize : -datePageSize)))); } }} onTouchStart={(e) => { (e.currentTarget as HTMLElement).dataset.touchX = String(e.touches[0].clientX); }} onTouchEnd={(e) => { const start = Number((e.currentTarget as HTMLElement).dataset.touchX); const delta = e.changedTouches[0].clientX - start; if (Math.abs(delta) > 35) setDatePageStart((current) => Math.max(0, Math.min(Math.max(0, dateOptions.length - datePageSize), current + (delta < 0 ? datePageSize : -datePageSize)))); }}>
-              {dateOptions.slice(datePageStart, datePageStart + datePageSize).map((dateOption) => {
-                const isClicked = isDateSelected(dateOption.dateKey);
-                const isInRange = presetRangeDates.includes(dateOption.dateKey);
-                const isSelected = isClicked && (!isInRange || datePickerProps.selectedDates.length < presetRangeDates.length);
-                return <button key={dateOption.dateKey} type="button" ref={dateOption.isToday ? todayPillRef : undefined} data-month={dateOption.date.split(' ')[0].toUpperCase()} data-selected={isSelected} data-in-range={isInRange && !isSelected} data-today={dateOption.isToday} aria-pressed={isClicked} aria-label={`${dateOption.day}, ${dateOption.date}${dateOption.isToday ? ', Today' : ''}`} className="map2-date-tile" onClick={() => handleDateClick(dateOption.dateKey)}><span className="map2-date-weekday">{dateOption.isToday ? 'TODAY' : dateOption.day}</span><strong>{dateOption.date.split(' ')[1]}<small>{dateOption.date.split(' ')[0]}</small></strong></button>;
-              })}
-            </div>
-            <button type="button" className="map2-filter-trigger" onClick={onSearchClick} aria-label="Filters and search"><span>Filters</span></button>
-          </div>}
-          {isDropdownOpen && showDatePicker && datePickerProps && <div ref={dropdownRef} className="map2-range-menu" role="group" aria-label="Date range presets">
-            <span className="map2-range-caption">WMV · {cityLabel || 'YOUR CITY'} · SHOW PLANS</span>
-            <div className="map2-range-options">{(Object.keys(PRESET_LABELS) as DateRangePreset[]).map((preset) => <button type="button" key={preset} aria-pressed={selectedPreset===preset} onClick={() => handlePresetSelect(preset)}><span>{PRESET_LABELS[preset]}</span>{selectedPreset===preset && <Check size={16}/>}</button>)}</div>
-            <div className="map2-popup-date-paging">
-              <button type="button" className="map2-date-page" aria-label="Previous dates" disabled={datePageStart === 0} onClick={() => setDatePageStart(Math.max(0, datePageStart - datePageSize))}><ChevronLeft size={17}/></button>
-              <span aria-live="polite">{dateOptions[datePageStart]?.date} – {dateOptions[Math.min(dateOptions.length - 1, datePageStart + datePageSize - 1)]?.date}</span>
-              <button type="button" className="map2-date-page" aria-label="Next dates" disabled={datePageStart + datePageSize >= dateOptions.length} onClick={() => setDatePageStart(Math.min(Math.max(0,dateOptions.length - datePageSize), datePageStart + datePageSize))}><ChevronRight size={17}/></button>
-            </div>
-            <div className="map2-popup-date-options">{dateOptions.slice(datePageStart, datePageStart + datePageSize).map((dateOption) => <button type="button" key={dateOption.dateKey} aria-pressed={isDateSelected(dateOption.dateKey)} onClick={() => handleDateClick(dateOption.dateKey)}><span>{dateOption.isToday ? 'Today' : dateOption.day}</span><strong>{dateOption.date}</strong></button>)}</div>
-          </div>}
-        </div>
-      </div>
-    );
-  }
 
   // --- DESKTOP EMBEDDED LAYOUT ---
   if (embedded) {
@@ -561,7 +480,7 @@ const TopNav: React.FC<TopNavProps> = ({
 
   // --- MOBILE OVERLAY LAYOUT (original) ---
   return (
-    <div ref={mobileNavRef} className={`fixed top-1 left-1.5 right-1.5 z-50 ${refined ? 'map2-top-nav' : ''}`}>
+    <div ref={mobileNavRef} className="fixed top-1 left-1.5 right-1.5 z-50">
       <div
         className="px-3 py-1.5 rounded-2xl relative"
         style={darkMode ? {
@@ -587,12 +506,17 @@ const TopNav: React.FC<TopNavProps> = ({
                 GIF and circular crop as HomeMasthead; plain <img> so the
                 browser plays the GIF natively. Not a link - both screens
                 already have a HOME pill fixed at the bottom. */}
-            {refined ? <div className="map2-brand"><picture><source media="(prefers-reduced-motion: reduce)" srcSet="/home3/wmv-logo-still.png" /><img src="/wmv-logo.gif" alt="Where's My Vibe" width="32" height="32" /></picture><span><strong>WMV</strong><small>{cityLabel || 'YOUR CITY'}</small></span></div> : <img
+            <img
               src="/wmv-logo.gif"
               alt="Where's My Vibe"
               className="flex-shrink-0"
-              style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '50%' }}
-            />}
+              style={{
+                width: '28px',
+                height: '28px',
+                objectFit: 'cover',
+                borderRadius: '50%',
+              }}
+            />
 
             {/* Date pills with inline month separators */}
             {showDatePicker && datePickerProps && (
