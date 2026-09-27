@@ -594,8 +594,11 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
       hasSameDaySibling?: boolean;
     };
     const map = new Map<string, DateEntry[]>();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // The CITY's today (see useClientSideVenues): a viewer-local midnight
+    // dropped the city's current-day dates every evening for IST viewers,
+    // which emptied the carousel and the pill counts.
+    const cityToday = getCityDateString(city);
+    const todayKey = new Date(`${cityToday}T00:00:00Z`).toDateString();
 
     const parseStartHour = (timeStr: string): number => {
       const match = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)/i);
@@ -620,7 +623,7 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
       const eventTime = venue.event_time || '';
       try {
         const d = new Date(venue.event_date);
-        if (isNaN(d.getTime()) || d < today) return;
+        if (isNaN(d.getTime()) || d.toISOString().slice(0, 10) < cityToday) return;
         const dateKey = d.toDateString();
         if (!rawMap.has(venueKey)) rawMap.set(venueKey, []);
         const existing = rawMap.get(venueKey)!;
@@ -645,7 +648,7 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
           day: first.d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
           date: first.d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           dateKey,
-          isToday: first.d.toDateString() === today.toDateString(),
+          isToday: first.d.toDateString() === todayKey,
         });
       });
 
@@ -654,11 +657,11 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
     });
 
     return map;
-  }, [allVenues]);
+  }, [allVenues, city]);
 
   const cards = useMemo(() => {
     const rawCards = transformVenueDataToStackedCards(filteredVenues);
-    const todayTime = new Date().setHours(0, 0, 0, 0);
+    const todayTime = new Date(`${getCityDateString(city)}T00:00:00Z`).getTime();
     const dedupMap = new Map<string, (typeof rawCards)[0]>();
     rawCards.forEach((card) => {
       const key = `${card.venue.id}|${(card.event.event_name || '').toLowerCase().trim()}`;
@@ -692,7 +695,7 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
       return dLng * dLng + dLat * dLat;
     };
     return result.sort((a, b) => distSq(a) - distSq(b));
-  }, [filteredVenues, filters.activeDates, sortCenter]);
+  }, [filteredVenues, filters.activeDates, sortCenter, city]);
 
   const allCards = useMemo(() => {
     const rawCards = transformVenueDataToStackedCards(allVenues);
@@ -716,16 +719,15 @@ export default function CityMapPage({ variant = 'legacy' }: { variant?: 'legacy'
   // For pill counts: future events only (past excluded), no category filter applied.
   // This keeps pill counts accurate and stable regardless of which category is selected.
   const countVenues = useMemo(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    const cityToday = getCityDateString(city);
     return dateFilteredVenues.filter((v) => {
       if (!v.event_date) return true;
       try {
         const d = new Date(v.event_date);
-        return isNaN(d.getTime()) || d >= todayStart;
+        return isNaN(d.getTime()) || d.toISOString().slice(0, 10) >= cityToday;
       } catch { return true; }
     });
-  }, [dateFilteredVenues]);
+  }, [dateFilteredVenues, city]);
 
   const venues = useMemo(() => {
     const venueMap = new Map<number, (typeof filteredVenues)[0]>();
