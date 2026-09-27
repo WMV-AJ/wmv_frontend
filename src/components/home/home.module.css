@@ -8,7 +8,7 @@
 
 .vibeStage {
   position: relative;
-  height: 360px;
+  height: 290px;
   margin-top: 6px;
   touch-action: pan-y;
   cursor: grab;
@@ -25,9 +25,9 @@
 .fanCard {
   position: absolute;
   left: 50%;
-  top: 8%;
-  width: 175px;
-  height: 279px;
+  top: 7%;
+  width: 142px;
+  height: 227px;
   border-radius: 12px;
   overflow: hidden;
   background: #14141f;

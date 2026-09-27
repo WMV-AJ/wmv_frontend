@@ -64,7 +64,7 @@ export default function VibeFan({ city, cityName, items, loading, kicker, onExpl
 
   return (
     <section
-      className="px-[18px] pt-10"
+      className="px-[18px] pt-8"
       aria-labelledby="home-vibes-title"
       style={{ '--accent-soft': active.accent.soft } as React.CSSProperties}
     >
@@ -94,7 +94,7 @@ export default function VibeFan({ city, cityName, items, loading, kicker, onExpl
               className={styles.fanCard}
               onClick={() => { if (isFront) onExplore(v.id, 'fan_card'); else setSelected(index); }}
               style={{
-                transform: `translate3d(calc(-50% + ${delta * 78}px), ${depth * 14}px, 0) rotate(${delta * 7}deg) scale(${isFront ? 1.04 : Math.max(0.58, 0.8 - depth * 0.045)})`,
+                transform: `translate3d(calc(-50% + ${delta * 64}px), ${depth * 12}px, 0) rotate(${delta * 7}deg) scale(${isFront ? 1.04 : Math.max(0.58, 0.8 - depth * 0.045)})`,
                 zIndex: 10 - depth,
                 border: `3px solid ${v.accent.edge}`,
                 boxShadow: isFront
@@ -105,9 +105,9 @@ export default function VibeFan({ city, cityName, items, loading, kicker, onExpl
               }}
             >
               {v.media ? (
-                <EventMedia src={v.media.src} poster={v.media.poster} alt={v.label} sizes="175px" fill />
+                <EventMedia src={v.media.src} poster={v.media.poster} alt={v.label} sizes="142px" fill />
               ) : (
-                <Image src={v.fallbackImage} alt={v.label} fill sizes="175px" className="object-cover" />
+                <Image src={v.fallbackImage} alt={v.label} fill sizes="142px" className="object-cover" />
               )}
               <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.65))' }} />
               <span className={`${H4_LABEL} absolute left-2.5 bottom-2.5 text-pale`}>{v.label}</span>

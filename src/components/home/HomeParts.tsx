@@ -117,7 +117,7 @@ export function DealCard({ event: e, onOpen }: { event: any; onOpen: () => void 
       }}
     >
       <span className={`${H4_LABEL}`} style={{ color: accent.text }}>{dealLabel}{deal?.timing ? <span className="text-silver-dim"> · {deal.timing}</span> : null}</span>
-      <p className="text-[13px] leading-snug text-pale mt-1.5 line-clamp-3 break-words">{dealText}</p>
+      <p className="text-[13px] leading-snug text-pale mt-1.5 line-clamp-2 break-words">{dealText}</p>
       <div className="mt-auto pt-2.5" style={{ borderTop: `1px solid ${TILE_RULE}`, marginTop: 10 }}>
         {e.event_name && (
           <div className="font-inter font-semibold uppercase text-[12px] leading-tight tracking-[-0.01em] text-silver truncate">{e.event_name}</div>

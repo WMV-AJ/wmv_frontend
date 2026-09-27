@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
 import { useCitiesVersion } from '@/contexts/CitiesProvider';
 import { ALL_CITIES, getCityConfig, isValidCity, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ChevronDown } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import NavPill from '@/components/navigation/NavPill';
@@ -14,6 +14,7 @@ import { VIBES, matchesVibe } from '@/config/vibes';
 import { T } from '@/lib/theme/tokens';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
 import HomeHero from '@/components/home/HomeHero';
+import styles from '@/components/home/home.module.css';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
 import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
 import CityAtlas from '@/components/home/CityAtlas';
@@ -104,6 +105,10 @@ export default function CityHome() {
   useCitiesVersion(); // re-render once the runtime city list arrives
   // The page scrolls inside <main>; section observers use it as their root.
   const mainRef = useRef<HTMLElement | null>(null);
+  // Sections that open in place: all deals, all areas, which weekend day.
+  const [showAllDeals, setShowAllDeals] = useState(false);
+  const [showAllAreas, setShowAllAreas] = useState(false);
+  const [openWeekendDay, setOpenWeekendDay] = useState<string | null>(null);
 
   // Venue data comes from the shared VenueDataProvider (root layout) — this
   // page used to fire its own /api/venues fetch concurrently with the
@@ -221,7 +226,6 @@ export default function CityHome() {
   });
   const areas = Array.from(areaMap.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
     .map(([label, count]) => ({ label, count }));
 
   // Vibe fan: live count per vibe (same matchesVibe as /[city]/vibe/[id])
@@ -525,16 +529,29 @@ export default function CityHome() {
           )}
         </section>
 
-        {/* § Tonight's deals — hidden when empty */}
+        {/* § Tonight's deals — four offers, the rest open in place */}
         {!loading && dealsTonight.length > 0 && (
-          <section className="px-[18px] pt-7">
+          <section className="px-[18px] pt-8">
             <HomeSectionHeader label="Tonight's deals" count={`${dealsTonight.length} offers`} />
-            <HScrollRail>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {dealsTonight.map((e: any) => (
-                <DealCard key={e.event_id || e.venue_id} event={e} onOpen={() => openEvent(e, 'deals_rail')} />
-              ))}
-            </HScrollRail>
+            <RevealBlock root={mainRef}>
+              <div className={styles.revealRail}>
+                <HScrollRail>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {(showAllDeals ? dealsTonight : dealsTonight.slice(0, 4)).map((e: any) => (
+                    <DealCard key={e.event_id || e.venue_id} event={e} onOpen={() => openEvent(e, 'deals_rail')} />
+                  ))}
+                  {!showAllDeals && dealsTonight.length > 4 && (
+                    <button
+                      onClick={() => { setShowAllDeals(true); trackEvent('home_section_expand', { city, section: 'deals' }); }}
+                      className={`${BTN_SECONDARY} self-center flex-shrink-0`}
+                      style={BTN_SECONDARY_STYLE}
+                    >
+                      +{dealsTonight.length - 4} more
+                    </button>
+                  )}
+                </HScrollRail>
+              </div>
+            </RevealBlock>
           </section>
         )}
 
@@ -552,56 +569,76 @@ export default function CityHome() {
           }}
         />
 
-        {/* § Weekend — one row per day (Fri / Sat / Sun) */}
-        {(loading || weekendByDay.some(d => d.events.length > 0)) && (
-          <section className="px-[18px] pt-7">
-            <HomeSectionHeader label="Weekend vibes" />
-            {loading ? (
-              <div className="flex gap-3 overflow-x-hidden">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[180px]">
-                    <div style={{ ...skeletonStyle(180, undefined, { borderRadius: 12 }), aspectRatio: '3/4' }} />
-                    <div style={{ ...skeletonStyle(140, 10), marginTop: 8 }} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              weekendByDay.filter(d => d.events.length > 0).map(({ ds, label, events }) => (
-                <div key={ds} className="mb-5">
-                  <button
-                    onClick={() => {
-                      trackEvent('home_weekend_day_click', { city, date: ds });
-                      router.push(`/${city}/cards?date=${ds}`);
-                    }}
-                    className="w-full flex items-center justify-between pb-2.5"
-                  >
-                    <span className="font-inter font-[550] text-[16px] text-pale">{label}</span>
-                    <span className={`${H4_LABEL} inline-flex items-center gap-1 text-silver`}>
-                      {events.length} events
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </span>
-                  </button>
-                  <RevealBlock root={mainRef}>
-                    <TileRail items={toTileItems(events)} onOpen={(row) => openEvent(row, 'weekend_rail')} />
-                  </RevealBlock>
+        {/* § This weekend — ruled day rows, one day open at a time */}
+        {(loading || weekendByDay.some(d => d.events.length > 0)) && (() => {
+          const days = weekendByDay.filter(d => d.events.length > 0);
+          const openDs = openWeekendDay && days.some(d => d.ds === openWeekendDay) ? openWeekendDay : days[0]?.ds;
+          return (
+            <section className="px-[18px] pt-8">
+              <HomeSectionHeader label="This weekend" />
+              {loading ? (
+                <div style={skeletonStyle('100%', 176, { borderRadius: 16 })} />
+              ) : (
+                <div style={{ borderBottom: `1px solid ${TILE_RULE}` }}>
+                  {days.map(({ ds, label, events }) => {
+                    const open = ds === openDs;
+                    const accent = cityAccent.text;
+                    return (
+                      <div key={ds}>
+                        {/* The expanded card's ruled date item: selected = accent top rule. */}
+                        <div
+                          className="flex items-center justify-between gap-3 py-3"
+                          style={{ borderTop: `1px solid ${open ? accent : TILE_RULE}`, boxShadow: open ? `inset 0 1px 0 ${accent}` : undefined }}
+                        >
+                          <button
+                            type="button"
+                            aria-expanded={open}
+                            onClick={() => { setOpenWeekendDay(ds); trackEvent('home_section_expand', { city, section: 'weekend', date: ds }); }}
+                            className="flex-1 flex items-baseline gap-2.5 text-left min-w-0"
+                          >
+                            <span className={`${H4_LABEL}`} style={{ color: open ? accent : undefined }}>
+                              <span className={open ? '' : 'text-silver-dim'}>{label.split(' · ')[0].slice(0, 3)}</span>
+                            </span>
+                            <span className={`font-inter font-[550] text-[15px] ${open ? 'text-pale' : 'text-silver'}`}>{label.split(' · ')[1] ?? label}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              trackEvent('home_weekend_day_click', { city, date: ds });
+                              router.push(`/${city}/cards?date=${ds}`);
+                            }}
+                            className={`${H4_LABEL} inline-flex items-center gap-1 text-silver flex-shrink-0`}
+                          >
+                            {events.length} events
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {open && (
+                          <RevealBlock root={mainRef} className="pb-4">
+                            <TileRail items={toTileItems(events.slice(0, 6))} onOpen={(row) => openEvent(row, 'weekend_rail')} />
+                          </RevealBlock>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))
-            )}
-          </section>
-        )}
+              )}
+            </section>
+          );
+        })()}
 
-        {/* § Areas */}
-        <section className="px-[18px] pt-7">
-          <HomeSectionHeader label="Areas" />
+        {/* § Areas — four, the rest open in place */}
+        <section className="px-[18px] pt-8">
+          <HomeSectionHeader label="Areas" count={loading ? '—' : `${areas.length} areas`} />
           {loading
-            ? Array.from({ length: 5 }).map((_, i) => (
+            ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="grid items-center gap-3 py-3" style={{ gridTemplateColumns: '20px 1fr auto', borderBottom: `1px solid ${TILE_RULE}` }}>
                 <div style={skeletonStyle(18, 10)} />
                 <div style={skeletonStyle(140, 16)} />
                 <div style={skeletonStyle(60, 10)} />
               </div>
             ))
-            : areas.map((a, i) => (
+            : (showAllAreas ? areas : areas.slice(0, 4)).map((a, i) => (
               <NumberedRow key={a.label} index={i} label={a.label} meta={`${a.count} events`}
                 onClick={() => {
                   trackEvent('area_row_click', { area: a.label, city });
@@ -610,6 +647,15 @@ export default function CityHome() {
                   router.push(`/${city}/map?area=${encodeURIComponent(a.label)}`);
                 }} />
             ))}
+          {!loading && !showAllAreas && areas.length > 4 && (
+            <button
+              type="button"
+              onClick={() => { setShowAllAreas(true); trackEvent('home_section_expand', { city, section: 'areas' }); }}
+              className={`${H4_LABEL} inline-flex items-center gap-1.5 mt-3 text-silver`}
+            >
+              All {areas.length} areas <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          )}
         </section>
 
         {/* § How it works — Find / Sort / Go + live stats (from Home 4) */}
