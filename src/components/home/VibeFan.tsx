@@ -123,7 +123,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
       {/* Index — the list/map's own CategoryPills (same categories, labels,
           icons, counts and rows), fed the same day's rows; the selected
           category shows as the selected pill. */}
-      <div ref={chipRow} className="mb-2 -mr-[18px]" role="group" aria-label="Select a category">
+      <div ref={chipRow} className="mb-5 -mr-[18px]" role="group" aria-label="Select a category">
         <CategoryPills
           filters={{ ...PILL_FILTERS, eventCategories: { selectedPrimaries: [active.id], selectedSecondaries: {}, expandedPrimaries: [] } }}
           onFiltersChange={(f) => {
@@ -184,7 +184,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
 
       {/* Selected category — name, sub-categories, line; the square box is
           the action (count + View). */}
-      <div className="mt-3 flex items-stretch gap-4" data-fan-selected data-cat={active.id} data-count={active.count}>
+      <div className="mt-6 flex items-stretch gap-4" data-fan-selected data-cat={active.id} data-count={active.count}>
         <div className="flex-1 min-w-0 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}>
           <h3 className={`${HF.vibesName} italic capitalize`} style={{ color: active.accent.text }}>{active.label.toLowerCase()}</h3>
           {active.subcategories.length > 0 && (
