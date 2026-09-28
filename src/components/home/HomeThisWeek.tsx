@@ -59,7 +59,7 @@ export default function HomeThisWeek({ cityName, count, picks, loading, scrollRo
         <span>Live from the API</span>
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
       </div>
-      <h2 id="home-week-title" className={`${HF.week} text-pale mt-5`}>On this week in {cityName}</h2>
+      <h2 id="home-week-title" className={`${HF.week} text-pale mt-5`}>On this week in <em className="italic text-silver">{cityName}</em></h2>
 
       <div ref={ref} className="flex items-baseline gap-3 mt-4">
         <span className={`${HF.weekNum} text-pale tabular-nums`}>{loading ? '—' : shown}</span>

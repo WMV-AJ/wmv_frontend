@@ -694,7 +694,7 @@ export default function CityHome() {
               font={HF.live}
               label={<>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
-                Happening now
+                <span>Happening <em className="italic text-silver">now</em></span>
               </>}
               count={loading ? '—' : `${happeningNow.length} live`}
             />

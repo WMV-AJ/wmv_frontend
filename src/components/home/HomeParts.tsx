@@ -58,11 +58,19 @@ export function HomeSectionHeader({ label, count, onClick, id, font }: {
       style={{ borderBottom: `1px solid ${TILE_RULE}` }}
     >
       <h2 id={id} className={`flex items-center gap-2 text-pale ${font}`}>
-        {label}
+        {typeof label === 'string' ? <ItalicTail text={label} /> : label}
       </h2>
       {count != null && <span className={`${H4_LABEL} text-silver whitespace-nowrap pb-0.5`}>{count}</span>}
     </div>
   );
+}
+
+/** "Weekend vibes" → "Weekend *vibes*": upright words, italic last word
+ *  (the home's heading style — Instrument Serif, home-fonts.ts). */
+export function ItalicTail({ text }: { text: string }) {
+  const i = text.trimEnd().lastIndexOf(' ');
+  if (i < 0) return <em className="italic">{text}</em>;
+  return <>{text.slice(0, i + 1)}<em className="italic text-silver">{text.slice(i + 1)}</em></>;
 }
 
 // ── Horizontal rail ───────────────────────────────────────────────────

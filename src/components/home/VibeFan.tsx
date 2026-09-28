@@ -183,7 +183,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
       <div className="mt-8 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}
         data-fan-selected data-cat={active.id} data-count={active.count}>
         <div className="flex items-end justify-between gap-4">
-          <h3 className={HF.vibesName} style={{ color: active.accent.text }}>{active.label}</h3>
+          <h3 className={`${HF.vibesName} italic capitalize`} style={{ color: active.accent.text }}>{active.label.toLowerCase()}</h3>
           <div className="text-right flex-shrink-0">
             <div className={`${HF.vibesName} text-pale tabular-nums`}>{loading ? '—' : active.count}</div>
             <div className={`${H4_LABEL} text-silver-dim mt-1`}>today</div>

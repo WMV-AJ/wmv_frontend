@@ -30,7 +30,7 @@ export default function HomeMapOrList({ pinCategories, scrollRoot, onMap, onList
   return (
     <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-maplist-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
       <h2 id="home-maplist-title" className={`${HF.mapList} text-pale`}>
-        The night&rsquo;s already happening.<br /><span className="text-silver">How do you want to see it?</span>
+        The night&rsquo;s already happening.<br /><em className="italic text-silver">How do you want to see it?</em>
       </h2>
 
       <div ref={ref} className={`${styles.mapListCards} grid gap-3 mt-8`}>

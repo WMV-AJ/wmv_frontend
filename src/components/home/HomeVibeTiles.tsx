@@ -42,7 +42,7 @@ export default function HomeVibeTiles({ cityName, tiles, loading, scrollRoot, on
         <span>Pick your vibe</span>
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
       </div>
-      <h2 id="home-tiles-title" className={`${HF.tiles} text-pale mt-5`}>What {cityName} is into</h2>
+      <h2 id="home-tiles-title" className={`${HF.tiles} text-pale mt-5`}>What {cityName} is <em className="italic text-silver">into</em></h2>
       <p className="text-[15px] leading-relaxed text-silver mt-3">
         Ranked by what&rsquo;s actually on, from tonight through the coming weeks.
       </p>

@@ -42,7 +42,7 @@ export default function CityAtlas({ city, cities, accent, pinCategories, kicker,
     >
       <SectionKicker index={kicker.index} total={kicker.total} title="Your city" />
       <h2 id="home-city-title" className={`${HF.city} text-pale mt-4`}>
-        Your next<br />good night<br /><span className="text-silver italic">starts here.</span>
+        Your next good night<br /><em className="italic text-silver">starts here.</em>
       </h2>
       <p className="text-[13px] leading-relaxed text-silver mt-3">Pick your city. We&rsquo;ll show you what&rsquo;s on.</p>
 

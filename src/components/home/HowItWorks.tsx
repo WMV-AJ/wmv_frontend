@@ -46,7 +46,7 @@ export default function HowItWorks({ cityName, stats, loading, accent, kicker, s
     <section className="px-[18px] pt-12" aria-labelledby="home-how-title" style={cssVars}>
       <SectionKicker index={kicker.index} total={kicker.total} title="How it works" />
       <h2 id="home-how-title" className={`${HF.how} text-pale mt-4`}>
-        From their stories.<br /><span className="text-silver">To your plans.</span>
+        From their stories.<br /><em className="italic text-silver">To your plans.</em>
       </h2>
       <p className="text-[13px] leading-relaxed text-silver mt-3">
         Three moves between seeing what&rsquo;s out there in {cityName} and actually going.
@@ -107,7 +107,7 @@ function StepCopy({ step, title, accent, children }: { step: string; title: stri
   return (
     <div className={styles.howStepCopy}>
       <span className={H4_LABEL} style={{ color: accent.text }}>{step}</span>
-      <h3 className="font-tight font-semibold uppercase text-[28px] leading-[0.95] tracking-[-0.045em] text-pale mt-2">{title}</h3>
+      <h3 className={`${HF.step} italic text-pale mt-2`}>{title}</h3>
       <p className="text-[13px] leading-relaxed text-silver mt-2">{children}</p>
     </div>
   );
