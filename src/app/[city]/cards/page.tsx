@@ -29,7 +29,8 @@ function CardsInner() {
   const [filters, setFilters] = useState<HierarchicalFilterState>(() => {
     // Deep-link seeds (initializer-only — the URL seeds state, it is not
     // two-way-bound): ?cat=Club+Night (repeatable), ?area=Indiranagar,
-    // ?date=today|tomorrow|YYYY-MM-DD, ?vibe=brunch, ?q=search text.
+    // ?date=today|tomorrow|YYYY-MM-DD|all, ?vibe=brunch, ?q=search text.
+    // (date=all: no date filter — every upcoming event; the home's vibe tiles.)
     // Same contract as the map page (MapPageClient).
     const catParams = searchParams?.getAll('cat') ?? [];
     const vibeParam = searchParams?.get('vibe');
@@ -53,7 +54,9 @@ function CardsInner() {
       return d.toDateString();
     };
     let seededDates = [cityTodayEntry(0)];
-    if (dateParam === 'tomorrow') {
+    if (dateParam === 'all') {
+      seededDates = [];
+    } else if (dateParam === 'tomorrow') {
       seededDates = [cityTodayEntry(1)];
     } else if (dateParam && dateParam !== 'today') {
       const d = new Date(dateParam);

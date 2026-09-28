@@ -26,6 +26,8 @@ jobs:
         env:
           NEXT_PUBLIC_BACKEND_URL: https://wheresmyvibe.com
           NEXT_PUBLIC_APP_URL: https://wheresmyvibe.com
+          # Stale cities kept off the city home's pickers (src/config/home-cities.ts).
+          NEXT_PUBLIC_HOME_HIDDEN_CITIES: mumbai,delhi
           NODE_ENV: production
           # GlitchTip (Sentry-compatible) — public browser DSN, inlined at build.
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}

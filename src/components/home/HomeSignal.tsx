@@ -71,8 +71,9 @@ export default function HomeSignal({ liveCount, loading, dotCategories }: {
       </div>
 
       <p className="text-[15px] leading-relaxed text-silver mt-10">
-        Every day we read what venues post &mdash; stories, posts, ticketing pages and
-        their own sites &mdash; and turn it into one list of what&rsquo;s actually on.
+        We read every venue&rsquo;s stories so you don&rsquo;t have to &mdash; plus their posts,
+        ticket pages and sites &mdash; every day, and put what&rsquo;s on tonight and this
+        week in one place.
       </p>
 
       {/* Where it comes from — ruled cells, like the How it works stats */}

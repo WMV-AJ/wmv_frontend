@@ -52,3 +52,20 @@ export function getCategoryTagline(primary: string): string {
 export function getCategoryFallbackImage(primary: string): string {
   return FALLBACK_IMAGES[primary] ?? '/home3/friends-night.webp';
 }
+
+// The home's "Pick your vibe" tiles group a few primaries under one friendlier
+// label (content plan §4). Anything not listed is its own tile, named by
+// getShortDisplayName. Order doesn't matter — tiles rank by live count.
+export interface VibeTileGroup { id: string; label: string; categories: string[] }
+
+export const VIBE_TILE_GROUPS: VibeTileGroup[] = [
+  { id: 'food', label: 'Food & Deals', categories: ['Food & Dining'] },
+  { id: 'sports', label: 'Sports Screenings', categories: ['Sports Viewing'] },
+  { id: 'comedy', label: 'Comedy', categories: ['Comedy Night', 'Standup Comedy'] },
+  { id: 'popups', label: 'Pop-ups & Activities', categories: ['Pop Up', 'Activities'] },
+  { id: 'live', label: 'Live Music', categories: ['Live Performance'] },
+];
+
+export function getVibeTileGroup(primary: string): VibeTileGroup | undefined {
+  return VIBE_TILE_GROUPS.find((g) => g.categories.includes(primary));
+}

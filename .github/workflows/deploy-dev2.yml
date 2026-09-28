@@ -26,6 +26,8 @@ jobs:
         env:
           NEXT_PUBLIC_BACKEND_URL: http://91.99.102.124:2302
           NEXT_PUBLIC_APP_URL: http://91.99.102.124:2312
+          # Stale cities kept off the city home's pickers (src/config/home-cities.ts).
+          NEXT_PUBLIC_HOME_HIDDEN_CITIES: mumbai,delhi
           WMV_API_BASE: http://91.99.102.124:2302
           NODE_ENV: production
         run: |

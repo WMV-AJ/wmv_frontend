@@ -74,22 +74,22 @@ export default function HowItWorks({ cityName, stats, loading, accent, kicker, s
             <span className={`${H4_LABEL} text-silver`}>Stories</span>
             <span className={`${H4_LABEL} text-silver`}>Ticketing feeds</span>
           </div>
-          <StepCopy step="01 / Find" title="We find it." accent={accent}>
-            Public venue stories, posts, feeds and sites are scanned every day.
+          <StepCopy step="01 / Read" title="We read." accent={accent}>
+            Every venue&rsquo;s Instagram stories, posts and ticket pages, every day.
           </StepCopy>
         </div>
 
         <div className={`${styles.howStop} ${styles.howSort}`}>
           <div className={styles.prism} aria-hidden="true"><span /><span /><span /></div>
-          <StepCopy step="02 / Sort" title="We sort it." accent={accent}>
-            Events become clear choices by vibe, from brunch to live music.
+          <StepCopy step="02 / Sort" title="We sort." accent={accent}>
+            Each event gets a vibe: happy hour, club night, live music, comedy, food deals&hellip;
           </StepCopy>
         </div>
 
         <div className={`${styles.howStop} ${styles.howGo}`}>
           <div className={styles.howMarker} aria-hidden="true"><span /></div>
           <StepCopy step="03 / Go" title="You go." accent={accent}>
-            Open the map or list. Find tonight&rsquo;s plan and get out the door.
+            One map, one list, just what&rsquo;s on. Pick, tap, out the door.
           </StepCopy>
         </div>
       </div>

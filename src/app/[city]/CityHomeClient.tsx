@@ -17,7 +17,12 @@ import HomeHero from '@/components/home/HomeHero';
 import HomeSignal from '@/components/home/HomeSignal';
 import { HF } from '@/components/home/home-fonts';
 import { getShortDisplayName } from '@/lib/category-mappings';
-import { getCategoryTagline, getCategoryFallbackImage } from '@/config/category-copy';
+import { getCategoryTagline, getCategoryFallbackImage, getVibeTileGroup } from '@/config/category-copy';
+import { isHomeCityHidden } from '@/config/home-cities';
+import HomeProblem, { type ProblemStory } from '@/components/home/HomeProblem';
+import HomeThisWeek, { type WeekPick } from '@/components/home/HomeThisWeek';
+import HomeVibeTiles, { type VibeTile } from '@/components/home/HomeVibeTiles';
+import HomeMapOrList from '@/components/home/HomeMapOrList';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
 import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
 import CityAtlas from '@/components/home/CityAtlas';
@@ -91,6 +96,24 @@ function isLiveNow(
 
   const h = dubaiHour < startH ? dubaiHour + 24 : dubaiHour;
   return h >= startH && h < endH;
+}
+
+// A still photo for a row (never a video frame), or null.
+function isVideoUrl(url?: string, type?: string): boolean {
+  return type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url || '');
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function photoOf(r: any): string | null {
+  return (r.media_url_1 && !isVideoUrl(r.media_url_1, r.media_type_1)) ? r.media_url_1
+    : (r.media_url_2 && !isVideoUrl(r.media_url_2, r.media_type_2)) ? r.media_url_2 : null;
+}
+
+// Primary categories on a row, de-duplicated, in stored order.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function primariesOf(r: any): string[] {
+  return Array.from(new Set(
+    (Array.isArray(r.event_categories) ? r.event_categories : []).map((c: { primary?: string }) => c?.primary).filter(Boolean),
+  ));
 }
 
 // True once a today event's end time has passed on the city clock. Events
@@ -263,18 +286,11 @@ export default function CityHome() {
   // per event — so "See N" lands on N cards. Photos only (video frames would
   // trigger /api/video-thumb). No events today → the next day that has some.
   const fan = useMemo(() => {
-    const isVideo = (url?: string, type?: string) => type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url || '');
-    const photoOf = (r: any): string | null => // eslint-disable-line @typescript-eslint/no-explicit-any
-      (r.media_url_1 && !isVideo(r.media_url_1, r.media_type_1)) ? r.media_url_1
-        : (r.media_url_2 && !isVideo(r.media_url_2, r.media_type_2)) ? r.media_url_2 : null;
     const build = (ds: string, dateParam: string): VibeFanItem[] => {
       const byCat = new Map<string, { ids: Set<string>; firstRows: any[]; anyRows: any[] }>(); // eslint-disable-line @typescript-eslint/no-explicit-any
       venues.forEach((r) => {
         if (!r.event_date || utcDateKey(r.event_date) !== ds) return;
-        const prims: string[] = Array.from(new Set(
-          (Array.isArray(r.event_categories) ? r.event_categories : []).map((c: { primary?: string }) => c?.primary).filter(Boolean),
-        ));
-        prims.forEach((prim, i) => {
+        primariesOf(r).forEach((prim, i) => {
           const b = byCat.get(prim) ?? { ids: new Set<string>(), firstRows: [], anyRows: [] };
           b.ids.add(String(r.event_id ?? `${r.venue_id}-${r.event_time}`));
           (i === 0 ? b.firstRows : b.anyRows).push(r);
@@ -310,6 +326,97 @@ export default function CityHome() {
     const dayName = new Date(`${next}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' });
     return { title: next === tomorrow ? "Tomorrow's vibes" : `${dayName}'s vibes`, ds: next, items: build(next, next) };
   }, [venues, todayStr, city]);
+
+  // On this week: the next 7 city days (today + 6). One entry per event per
+  // day — the sum of the list's ?date= counts over those days. Picks: up to
+  // six, spread round-robin across the days, photos and ratings first.
+  const week = useMemo(() => {
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(`${todayStr}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + i);
+      return d.toISOString().slice(0, 10);
+    });
+    const inWeek = new Set(days);
+    const seen = new Set<string>();
+    const byDay = new Map<string, any[]>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    venues.forEach((v) => {
+      const ds = v.event_date ? utcDateKey(v.event_date) : null;
+      if (!ds || !inWeek.has(ds)) return;
+      const k = `${v.event_id ?? `${v.venue_id}-${v.event_time}`}|${ds}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      byDay.set(ds, [...(byDay.get(ds) ?? []), v]);
+    });
+    const ranked = days.map((ds) => (byDay.get(ds) ?? []).slice().sort((a, b) =>
+      (photoOf(b) ? 1 : 0) - (photoOf(a) ? 1 : 0) || (b.rating ?? 0) - (a.rating ?? 0)));
+    const picks: WeekPick[] = [];
+    for (let round = 0; picks.length < 6 && round < 6; round++) {
+      days.forEach((ds, i) => {
+        const e = ranked[i][round];
+        if (!e || picks.length >= 6) return;
+        const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow'
+          : new Date(`${ds}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+        picks.push({ ds, dayLabel: label, event: e });
+      });
+    }
+    picks.sort((a, b) => a.ds.localeCompare(b.ds));
+    return { count: seen.size, picks };
+  }, [venues, todayStr]);
+
+  // Pick your vibe: every upcoming event (today on), grouped into tiles by
+  // category (getVibeTileGroup), counted the list's way — any category, one
+  // per event. Six at most, 10+ events each.
+  const vibeTiles = useMemo<VibeTile[]>(() => {
+    type Acc = { label: string; cats: Set<string>; ids: Set<string>; firstRows: any[]; anyRows: any[] }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const groups = new Map<string, Acc>();
+    venues.forEach((r) => {
+      const seenGroups = new Set<string>();
+      primariesOf(r).forEach((prim, i) => {
+        const g = getVibeTileGroup(prim);
+        const id = g?.id ?? prim;
+        const acc = groups.get(id) ?? { label: g?.label ?? getShortDisplayName(prim), cats: new Set<string>(), ids: new Set<string>(), firstRows: [], anyRows: [] };
+        (g?.categories ?? [prim]).forEach((c) => acc.cats.add(c));
+        acc.ids.add(String(r.event_id ?? `${r.venue_id}-${r.event_date}-${r.event_time}`));
+        if (!seenGroups.has(id)) (i === 0 ? acc.firstRows : acc.anyRows).push(r);
+        seenGroups.add(id);
+        groups.set(id, acc);
+      });
+    });
+    return Array.from(groups.entries())
+      .filter(([, a]) => a.ids.size >= 10)
+      .sort((a, b) => b[1].ids.size - a[1].ids.size)
+      .slice(0, 6)
+      .map(([id, a]) => {
+        const cats = Array.from(a.cats);
+        const photoRow = [...a.firstRows, ...a.anyRows].find((r) => photoOf(r));
+        return {
+          id,
+          label: a.label,
+          count: a.ids.size,
+          tagline: getCategoryTagline(cats[0]),
+          photo: photoRow ? photoOf(photoRow) : null,
+          fallbackImage: getCategoryFallbackImage(cats[0]),
+          accent: getCardAccent(cats[0]),
+          href: `/${city}/cards?date=all&${cats.map((c) => `cat=${encodeURIComponent(c)}`).join('&')}`,
+        };
+      });
+  }, [venues, city]);
+
+  // The story in "the plan was in a story": a real event on today, with a photo.
+  const problemStory = useMemo<ProblemStory | null>(() => {
+    const r = todayVenues.find((v) => photoOf(v) && v.event_name) ?? venues.find((v) => photoOf(v) && v.event_name);
+    if (!r) return null;
+    const cat = primaryCategory(r);
+    return {
+      photo: photoOf(r),
+      fallbackImage: getCategoryFallbackImage(cat),
+      venueName: r.name || r.venue || '',
+      eventName: r.event_name,
+      accent: getCardAccent(cat),
+    };
+    // todayVenues is re-derived each render from venues + todayStr
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venues, todayStr]);
 
   // Events on the city's today, one per event (hero count).
   const todayEventCount = useMemo(
@@ -359,7 +466,10 @@ export default function CityHome() {
 
   // Every live city. ALL_CITIES grows at runtime once /api/cities loads;
   // useCitiesVersion() re-renders the page when it does.
-  const cityOptions: Array<[string, string]> = ALL_CITIES.map((slug) => [slug, getCityConfig(slug).displayName]);
+  // Stale cities (NEXT_PUBLIC_HOME_HIDDEN_CITIES) stay out of the home's pickers.
+  const cityOptions: Array<[string, string]> = ALL_CITIES
+    .filter((slug) => !isHomeCityHidden(slug, city))
+    .map((slug) => [slug, getCityConfig(slug).displayName]);
   const switchCity = (slug: string) => {
     if (slug === city || !isValidCity(slug)) return;
     trackEvent('home_city_switch', { from: city, to: slug });
@@ -433,10 +543,11 @@ export default function CityHome() {
           cityName={cityName}
           dateLabel={dateLabel}
           todayCount={todayEventCount}
+          venueCount={howStats.venues}
           liveCount={happeningNow.length}
           loading={loading}
           onMap={() => goMap('hero_cta')}
-          onList={() => goList('hero_cta', '?date=today')}
+          onList={() => goList('hero_cta')}
           onWhatsApp={() => trackEvent('whatsapp_bot_click', { city, source: 'hero_cta' })}
         />
 
@@ -647,6 +758,32 @@ export default function CityHome() {
           onChangeCity={switchCity}
           onMap={() => goMap('city_atlas_map')}
           onList={() => goList('city_atlas_list')}
+        />
+
+        {/* § From the content plan: problem → relief, this week, pick your
+            vibe, map or list (marketing/strategy/HOMEPAGE_CONTENT_PLAN.md) */}
+        <HomeProblem story={problemStory} scrollRoot={mainRef} />
+        <HomeThisWeek
+          cityName={cityName}
+          count={week.count}
+          picks={week.picks}
+          loading={loading}
+          scrollRoot={mainRef}
+          onOpen={(e) => openEvent(e, 'this_week_rail')}
+          onMap={() => goMap('this_week_map')}
+        />
+        <HomeVibeTiles
+          cityName={cityName}
+          tiles={vibeTiles}
+          loading={loading}
+          scrollRoot={mainRef}
+          onPick={(t) => trackEvent('home_category_click', { city, category: t.id, count: t.count, source: 'vibe_tile' })}
+        />
+        <HomeMapOrList
+          pinCategories={fan.items.map((i) => i.id)}
+          scrollRoot={mainRef}
+          onMap={() => goMap('map_or_list')}
+          onList={() => goList('map_or_list')}
         />
 
         <HomeFooter

@@ -1,8 +1,9 @@
 'use client';
 
-// Headline block for the city home: the city's live date, "Tonight in
-// {City}", today's counts, and the three ways in — the map, today's list,
-// and the WhatsApp bot. (The radar and the source chips now live in the
+// Headline block for the city home (copy: marketing/strategy/
+// HOMEPAGE_CONTENT_PLAN.md §1): "{City}'s Instagram stories, finally on a
+// map.", what WMV does in one line, today's counts, and the ways in — the
+// map, the list, and the WhatsApp bot. (The radar and the source chips now live in the
 // "idea" section, HomeSignal.)
 
 import { List, Map as MapIcon, MessageCircle } from 'lucide-react';
@@ -16,8 +17,10 @@ import { BTN_PRIMARY, BTN_SECONDARY, BTN_SECONDARY_STYLE } from './HomeParts';
 // the build environment (GitHub Actions), not just on the server.
 const WHATSAPP_BOT_URL = (process.env.NEXT_PUBLIC_WHATSAPP_BOT_URL ?? '').trim();
 
-export default function HomeHero({ cityName, dateLabel, todayCount, liveCount, loading, onMap, onList, onWhatsApp }: {
+export default function HomeHero({ cityName, dateLabel, todayCount, liveCount, venueCount, loading, onMap, onList, onWhatsApp }: {
   cityName: string;
+  /** Venues in the city's upcoming data — shown rounded down ("110+"). */
+  venueCount: number;
   /** e.g. "Saturday 26 Sept" — in the city's calendar. */
   dateLabel: string;
   todayCount: number;
@@ -31,16 +34,20 @@ export default function HomeHero({ cityName, dateLabel, todayCount, liveCount, l
     <section className="relative px-[18px] pt-5" aria-labelledby="home-hero-title">
       <div className={`${H4_LABEL} inline-flex items-center gap-1.5`} style={{ color: T.live }}>
         <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
-        Live · {dateLabel}
+        {cityName} · Updated daily
+        <span className="text-silver-dim">· {dateLabel}</span>
       </div>
 
       <h1 id="home-hero-title" className={`${HF.hero} text-pale mt-3.5`}>
-        Tonight in<br />
-        <span style={{ color: T.accent }}>{cityName}</span>
+        <span style={{ color: T.accent }}>{cityName}&rsquo;s</span> Instagram stories, finally on a map.
       </h1>
 
-      <p className="font-tight font-semibold uppercase text-[18px] leading-tight tracking-[-0.03em] text-silver mt-3">
-        Less scroll. More tonight.
+      <p className="text-[15px] leading-relaxed text-silver mt-4">
+        Venues post their nights to Instagram and it gets buried. We read what
+        {loading || venueCount < 10
+          ? ' every venue '
+          : <> <span className="text-pale tabular-nums">{Math.floor(venueCount / 10) * 10}+</span> venues </>}
+        post every day and put it all on one map, sorted by vibe. <span className="text-pale">Free. No app.</span>
       </p>
 
       <p className={`${H4_LABEL} text-silver-dim mt-3`}>
@@ -52,11 +59,11 @@ export default function HomeHero({ cityName, dateLabel, todayCount, liveCount, l
       <div className="grid grid-cols-2 gap-2 mt-5">
         <button type="button" onClick={onMap} className={`${BTN_PRIMARY} px-3`} data-cta="map">
           <MapIcon className="w-4 h-4" />
-          Explore on map
+          See tonight&rsquo;s map
         </button>
         <button type="button" onClick={onList} className={`${BTN_SECONDARY} px-3`} style={BTN_SECONDARY_STYLE} data-cta="list">
           <List className="w-4 h-4" />
-          Today&rsquo;s list
+          Browse the list
         </button>
         {WHATSAPP_BOT_URL && (
           <a

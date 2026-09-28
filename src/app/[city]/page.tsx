@@ -12,8 +12,8 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { city } = await params;
   const name = await getCityDisplayName(city);
-  const title = `Tonight in ${name} — live events, brunches & nightlife | Where's My Vibe`;
-  const description = `What's actually happening in ${name} tonight: clubs, brunches, rooftops, ladies nights and live music — pulled live from Instagram stories and venue data.`;
+  const title = `Where's My Vibe — What's on tonight in ${name}`;
+  const description = `Every ${name} venue's Instagram stories and events, read daily and put on one map. Happy hours, club nights, live music, comedy and food deals. Free, no app.`;
 
   return {
     title,
