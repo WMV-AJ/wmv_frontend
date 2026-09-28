@@ -52,13 +52,13 @@ export function HomeSectionHeader({ label, count, onClick, id }: {
   return (
     <div
       onClick={onClick}
-      className={`flex items-baseline gap-2 -mx-[18px] px-[18px] pb-2.5 mb-3 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`flex items-end justify-between gap-3 -mx-[18px] px-[18px] pb-3 mb-3.5 ${onClick ? 'cursor-pointer' : ''}`}
       style={{ borderBottom: `1px solid ${TILE_RULE}` }}
     >
-      <h2 id={id} className="flex items-center gap-1.5 text-[11px] uppercase font-extrabold tracking-[0.18em] text-pale">
+      <h2 id={id} className="flex items-center gap-2 font-tight font-semibold uppercase text-[26px] leading-[0.95] tracking-[-0.04em] text-pale">
         {label}
       </h2>
-      {count != null && <span className={`${H4_LABEL} text-silver-dim whitespace-nowrap`}>{count}</span>}
+      {count != null && <span className={`${H4_LABEL} text-silver whitespace-nowrap pb-0.5`}>{count}</span>}
     </div>
   );
 }
@@ -101,7 +101,7 @@ export function HScrollRail({ children }: { children: React.ReactNode }) {
           <button
             aria-label="Scroll right"
             onClick={() => ref.current?.scrollBy({ left: (ref.current?.clientWidth ?? 200) * 0.8, behavior: 'smooth' })}
-            className="absolute top-1/2 right-1 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center"
+            className="absolute top-1/2 right-1 -translate-y-1/2 w-9 h-9 flex items-center justify-center"
             style={{ background: HP.scrim, border: '1px solid rgba(255,255,255,0.28)' }}
           >
             <ChevronRight className="w-4 h-4 text-white" />
@@ -133,7 +133,7 @@ export function LikeButton({ liked, onToggle, className = '' }: { liked: boolean
       onClick={(ev) => { ev.stopPropagation(); onToggle(); }}
       aria-label={liked ? 'Unlike' : 'Like'}
       aria-pressed={liked}
-      className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`w-9 h-9 flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ background: HP.scrim, border: '1px solid rgba(255,255,255,0.28)' }}
     >
       <Heart className="w-4 h-4" style={{ color: liked ? T.pink : '#fff', fill: liked ? T.pink : 'transparent' }} />
@@ -181,7 +181,7 @@ export function EventTile({ event: e, width, sizes, live, liked, onLike, onOpen 
           />
         )}
         {live && (
-          <span className={`absolute top-2 left-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-full ${H4_CHIP}`}
+          <span className={`absolute top-2 left-2 inline-flex items-center gap-1.5 px-2 py-1 ${H4_CHIP}`}
             style={{ background: T.live, color: '#fff' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-white" style={{ animation: 'wmv-pulse 1.5s infinite' }} />
             Live
@@ -339,10 +339,10 @@ export function NumberedRow({ index, label, meta, onClick }: {
 
 // ── Buttons (map/list idiom) ──────────────────────────────────────────
 export const BTN_PRIMARY =
-  'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-white text-[#0b0b0b] text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95';
+  'inline-flex items-center justify-center gap-2 h-12 px-5 bg-white text-[#0b0b0b] text-[11px] font-[750] uppercase tracking-[0.13em] whitespace-nowrap transition-transform active:scale-[0.98]';
 export const BTN_SECONDARY =
-  'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full text-pale text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95';
+  'inline-flex items-center justify-center gap-2 h-12 px-5 text-pale text-[11px] font-[750] uppercase tracking-[0.13em] whitespace-nowrap transition-transform active:scale-[0.98]';
 export const BTN_SECONDARY_STYLE: React.CSSProperties = {
-  background: 'rgba(90,90,90,0.75)',
-  border: '1px solid rgba(255,255,255,0.12)',
+  background: 'transparent',
+  border: '1px solid rgba(226,227,225,0.42)',
 };

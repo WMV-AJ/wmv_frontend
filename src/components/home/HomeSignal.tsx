@@ -68,7 +68,7 @@ export default function HomeSignal({ liveCount, loading, dotCategories }: {
 
       <div className="flex flex-wrap gap-1.5 mt-4">
         {SOURCES.map(([label, color]) => (
-          <span key={label} className={`${H4_LABEL} inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-silver`}
+          <span key={label} className={`${H4_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-silver`}
             style={{ border: `1px solid ${color}66`, background: `${color}12`, fontSize: 9 }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
             {label}
