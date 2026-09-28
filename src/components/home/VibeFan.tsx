@@ -5,10 +5,10 @@
 // today event in that category (falling back to a local photo); the count
 // is computed the way the list filters (any category match, one per event),
 // so "See N" lands on N cards. Tapping goes to today's list for that
-// category. Below the fan: the selected category (name, count, line, one
-// action), then a chip index.
+// category. Below the fan: a 3-row chip index, then the selected category (name,
+// count, line, one action).
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
@@ -51,6 +51,15 @@ export default function VibeFan({ title, items, loading, onExplore }: {
 }) {
   const [selected, setSelected] = useState(0);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const chipRow = useRef<HTMLDivElement>(null);
+  // Dragging the fan changes the selection — keep its chip in view. Scrolls
+  // the row only (never the page).
+  useEffect(() => {
+    const row = chipRow.current;
+    const chip = row?.querySelector<HTMLElement>(`[data-fan-index="${selected}"]`);
+    if (!row || !chip) return;
+    row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+  }, [selected]);
   const n = items.length;
   const active = items[selected] ?? items[0];
   if (loading && !active) {
@@ -70,6 +79,13 @@ export default function VibeFan({ title, items, loading, onExplore }: {
   if (!active) return null;
 
   const step = (d: number) => setSelected((s) => (s + d + n) % n);
+
+  // Up to 3 rows, filled evenly (8 chips → 3 / 3 / 2), in count order.
+  const rowCount = Math.min(3, n);
+  const perRow = Math.ceil(n / rowCount);
+  const chipRows = Array.from({ length: rowCount }, (_, r) =>
+    Array.from({ length: Math.max(0, Math.min(perRow, n - r * perRow)) }, (_, i) => r * perRow + i),
+  ).filter((row) => row.length > 0);
 
   const onPointerDown = (e: React.PointerEvent) => { dragStart.current = { x: e.clientX, y: e.clientY }; };
   const onPointerUp = (e: React.PointerEvent) => {
@@ -130,13 +146,40 @@ export default function VibeFan({ title, items, loading, onExplore }: {
           );
         })}
       </div>
-      <div className={`${H4_LABEL} flex justify-between text-silver-dim`}>
-        <span className="tabular-nums">Selected / {String(selected + 1).padStart(2, '0')}—{String(n).padStart(2, '0')}</span>
-        <span>Drag to explore ↔</span>
+
+      {/* Index — chips dealt evenly across up to 3 rows that scroll sideways
+          together, like the map's category pills; tap to select */}
+      <div ref={chipRow} className="relative overflow-x-auto mt-2 pb-1 -mx-[18px] px-[18px]" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Select a category">
+        <div className="flex flex-col gap-2 w-max">
+          {chipRows.map((row, r) => (
+            <div key={r} className="flex gap-2">
+              {row.map((index) => {
+                const v = items[index];
+                const isActive = index === selected;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setSelected(index)}
+                    data-fan-chip data-fan-index={index} data-cat={v.id} data-count={v.count}
+                    className={`${H4_CHIP} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0 transition-colors duration-200 active:scale-95`}
+                    style={isActive
+                      ? { background: v.accent.edge, color: '#0b0b0b', border: `1px solid ${v.accent.edge}` }
+                      : { background: v.accent.soft, color: v.accent.text, border: `1px solid ${v.accent.border}` }}
+                  >
+                    {v.label}
+                    <span className="tabular-nums opacity-80">{loading ? '—' : v.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Selected category — name + count, its line, then one clear action */}
-      <div className="mt-9 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}
+      <div className="mt-8 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}
         data-fan-selected data-cat={active.id} data-count={active.count}>
         <div className="flex items-end justify-between gap-4">
           <h3 className={HF.vibesName} style={{ color: active.accent.text }}>{active.label}</h3>
@@ -156,29 +199,6 @@ export default function VibeFan({ title, items, loading, onExplore }: {
         See {active.count} {active.label} {active.count === 1 ? 'event' : 'events'}
         <ArrowUpRight className="w-4 h-4" />
       </Link>
-
-      {/* Index — one row of chips; tap to select */}
-      <div className="flex gap-2 overflow-x-auto mt-7 pb-1 -mx-[18px] px-[18px]" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Select a category">
-        {items.map((v, index) => {
-          const isActive = index === selected;
-          return (
-            <button
-              key={v.id}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => setSelected(index)}
-              data-fan-chip data-cat={v.id} data-count={v.count}
-              className={`${H4_CHIP} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0 transition-colors duration-200 active:scale-95`}
-              style={isActive
-                ? { background: v.accent.edge, color: '#0b0b0b', border: `1px solid ${v.accent.edge}` }
-                : { background: v.accent.soft, color: v.accent.text, border: `1px solid ${v.accent.border}` }}
-            >
-              {v.label}
-              <span className="tabular-nums opacity-80">{loading ? '—' : v.count}</span>
-            </button>
-          );
-        })}
-      </div>
     </section>
   );
 }
