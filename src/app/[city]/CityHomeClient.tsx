@@ -581,19 +581,30 @@ export default function CityHome() {
           }}
         />
 
-        {/* § The idea + radar */}
+        {/* § The idea — WMV at the centre of its sources */}
         <HomeSignal
           liveCount={happeningNow.length}
           loading={loading}
-          dotCategories={fan.items.map((i) => i.id)}
           countryCode={getCityConfig(city).region}
+          scrollRoot={mainRef}
+        />
+
+        {/* § Pick your vibe — tiles ranked by upcoming count */}
+        <HomeVibeTiles
+          cityName={cityName}
+          tiles={vibeTiles}
+          loading={loading}
+          scrollRoot={mainRef}
+          onPick={(t) => trackEvent('home_category_click', { city, category: t.id, count: t.count, source: 'vibe_tile' })}
         />
 
         {/* § Today in <city> — all of today, not just the evening */}
         <section className="px-[18px] pt-16">
           <HomeSectionHeader
             font={HF.today}
+            kicker={`Today · ${dateLabel}`}
             label={`Today in ${cityName}`}
+            sub="Everything on today, what’s still to come first."
             count={loading ? '—' : `${todayEvents.length} events`}
           />
           {loading ? (
@@ -652,8 +663,8 @@ export default function CityHome() {
 
         {/* § Weekend — one row per day (Fri / Sat / Sun) */}
         {(loading || weekendByDay.some(d => d.events.length > 0)) && (
-          <section className="px-[18px] pt-7">
-            <HomeSectionHeader font={HF.weekend} label="Weekend vibes" />
+          <section className="px-[18px] pt-16">
+            <HomeSectionHeader font={HF.weekend} kicker="This weekend" label="Weekend vibes" sub="Friday to Sunday, day by day. Tap a day for the full list." />
             {loading ? (
               <div className="flex gap-3 overflow-x-hidden">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -698,13 +709,15 @@ export default function CityHome() {
 
         {/* § Happening now — live right now, hidden when empty */}
         {(loading || happeningNow.length > 0) && (
-          <section className="px-[18px] pt-7">
+          <section className="px-[18px] pt-16">
             <HomeSectionHeader
               font={HF.live}
-              label={<>
+              kicker={<>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
-                <span>Happening <em className="italic text-silver">now</em></span>
+                Live right now
               </>}
+              label="Happening now"
+              sub="On at this very moment. Go now, not later."
               count={loading ? '—' : `${happeningNow.length} live`}
             />
             <HScrollRail>
@@ -722,8 +735,8 @@ export default function CityHome() {
 
         {/* § Today's deals — hidden when empty */}
         {!loading && dealsToday.length > 0 && (
-          <section className="px-[18px] pt-7">
-            <HomeSectionHeader font={HF.deals} label="Today's deals" count={`${dealsToday.length} offers`} />
+          <section className="px-[18px] pt-16">
+            <HomeSectionHeader font={HF.deals} kicker="Offers today" label="Today's deals" sub="Happy hours, set menus and ladies’ nights with a deal attached." count={`${dealsToday.length} offers`} />
             <HScrollRail>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {dealsToday.map((e: any) => (
@@ -734,8 +747,8 @@ export default function CityHome() {
         )}
 
         {/* § Areas */}
-        <section className="px-[18px] pt-7">
-          <HomeSectionHeader font={HF.areas} label="Areas" />
+        <section className="px-[18px] pt-16">
+          <HomeSectionHeader font={HF.areas} kicker="Where it’s happening" label="Busiest areas" sub="Neighbourhoods ranked by what’s coming up. Tap one to see it on the map." />
           {loading
             ? Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="grid items-center gap-3 py-3" style={{ gridTemplateColumns: '20px 1fr auto', borderBottom: `1px solid ${TILE_RULE}` }}>
@@ -778,8 +791,8 @@ export default function CityHome() {
           onList={() => goList('city_atlas_list')}
         />
 
-        {/* § From the content plan: problem → relief, this week, pick your
-            vibe, map or list (marketing/strategy/HOMEPAGE_CONTENT_PLAN.md) */}
+        {/* § From the content plan: problem → relief, this week, map or list
+            (marketing/strategy/HOMEPAGE_CONTENT_PLAN.md) */}
         <HomeProblem story={problemStory} scrollRoot={mainRef} />
         <HomeThisWeek
           cityName={cityName}
@@ -789,13 +802,6 @@ export default function CityHome() {
           scrollRoot={mainRef}
           onOpen={(e) => openEvent(e, 'this_week_rail')}
           onMap={() => goMap('this_week_map')}
-        />
-        <HomeVibeTiles
-          cityName={cityName}
-          tiles={vibeTiles}
-          loading={loading}
-          scrollRoot={mainRef}
-          onPick={(t) => trackEvent('home_category_click', { city, category: t.id, count: t.count, source: 'vibe_tile' })}
         />
         <HomeMapOrList
           pinCategories={fan.items.map((i) => i.id)}

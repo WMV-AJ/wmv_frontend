@@ -40,27 +40,37 @@ export function placeLine(e: any, hasOwnTitle: boolean): string {
 }
 
 // ── Section header ────────────────────────────────────────────────────
-// The expanded card's section heading (11px / extrabold / .18em caps) over a
-// full-bleed hairline; the count rides beside it in H4_LABEL.
-export function HomeSectionHeader({ label, count, onClick, id, font }: {
+// The home's one header pattern (every section): a spaced-caps kicker over a
+// hairline (count on the right), the heading in Instrument Serif with an
+// italic tail, then a sub-line in the body face.
+export function SectionKickerRule({ children, count }: { children: React.ReactNode; count?: React.ReactNode }) {
+  return (
+    <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap">{children}</span>
+      <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
+      {count != null && <span className="text-silver whitespace-nowrap tabular-nums">{count}</span>}
+    </div>
+  );
+}
+
+export function HomeSectionHeader({ kicker, label, sub, count, id, font }: {
+  kicker: React.ReactNode;
   label: React.ReactNode;
-  /** This section's display face + size (home-fonts.ts HF.*). */
+  /** One line in the body face under the heading. */
+  sub?: React.ReactNode;
+  /** This section's heading size (home-fonts.ts HF.*). */
   font: string;
   /** Optional id for the <h2>, so a section can aria-labelledby it. */
   id?: string;
   count?: React.ReactNode;
-  onClick?: () => void;
 }) {
   return (
-    <div
-      onClick={onClick}
-      className={`flex items-end justify-between gap-3 -mx-[18px] px-[18px] pb-3 mb-3.5 ${onClick ? 'cursor-pointer' : ''}`}
-      style={{ borderBottom: `1px solid ${TILE_RULE}` }}
-    >
-      <h2 id={id} className={`flex items-center gap-2 text-pale ${font}`}>
+    <div className="mb-5">
+      <SectionKickerRule count={count}>{kicker}</SectionKickerRule>
+      <h2 id={id} className={`flex items-center gap-2 text-pale mt-4 ${font}`}>
         {typeof label === 'string' ? <ItalicTail text={label} /> : label}
       </h2>
-      {count != null && <span className={`${H4_LABEL} text-silver whitespace-nowrap pb-0.5`}>{count}</span>}
+      {sub && <p className="text-[15px] leading-relaxed text-silver mt-3">{sub}</p>}
     </div>
   );
 }

@@ -87,7 +87,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
     // Hold the stage's height while today's data loads, so nothing jumps.
     return (
       <section className="px-[18px] pt-6" aria-busy="true">
-        <HomeSectionHeader font={HF.vibes} label={title} count="—" />
+        <HomeSectionHeader font={HF.vibes} kicker="Pick a category" label={title} count="—" />
         <div className={styles.vibeStage} aria-hidden="true">
           {[-1, 1, 0].map((d) => (
             <div key={d} className={styles.fanCard}
@@ -118,7 +118,9 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
       aria-labelledby="home-vibes-title"
       style={{ '--accent-soft': active.accent.soft } as React.CSSProperties}
     >
-      <HomeSectionHeader font={HF.vibes} id="home-vibes-title" label={title} count={loading ? '—' : `${n} ${n === 1 ? 'category' : 'categories'}`} />
+      <HomeSectionHeader font={HF.vibes} id="home-vibes-title" kicker="Pick a category" label={title}
+        sub="Swipe the cards or tap a pill — every one is on today."
+        count={loading ? '—' : `${n} ${n === 1 ? 'category' : 'categories'}`} />
 
       {/* Index — the list/map's own CategoryPills (same categories, labels,
           icons, counts and rows), fed the same day's rows; the selected

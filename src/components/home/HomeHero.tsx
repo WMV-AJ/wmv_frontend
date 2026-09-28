@@ -3,7 +3,7 @@
 // Headline block for the city home (copy: marketing/strategy/
 // HOMEPAGE_CONTENT_PLAN.md §1): "{City}'s Instagram stories, finally on a
 // map.", what WMV does in one line, today's counts, and the ways in — the
-// map, the list, and the WhatsApp bot. (The radar and the source chips now live in the
+// map, the list, and the WhatsApp bot. (Where the listings come from lives in the
 // "idea" section, HomeSignal.)
 
 import { List, Map as MapIcon, MessageCircle } from 'lucide-react';

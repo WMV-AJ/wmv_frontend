@@ -5,9 +5,10 @@
 // pulsing pins, the list with rows that stack in.
 
 import { ArrowUpRight } from 'lucide-react';
-import { H4_LABEL, TILE_RULE, getCardAccent } from '@/components/shared/card-style';
+import { H4_LABEL, getCardAccent } from '@/components/shared/card-style';
 import { HF } from './home-fonts';
 import { useRevealOnce } from './useRevealOnce';
+import { SectionKickerRule } from './HomeParts';
 import styles from './home.module.css';
 
 const PINS = [
@@ -28,10 +29,12 @@ export default function HomeMapOrList({ pinCategories, scrollRoot, onMap, onList
   const colours = pinCategories.length ? pinCategories.map((c) => getCardAccent(c).text) : ['#f4c430'];
 
   return (
-    <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-maplist-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
-      <h2 id="home-maplist-title" className={`${HF.mapList} text-pale`}>
+    <section className="px-[18px] pt-16" aria-labelledby="home-maplist-title">
+      <SectionKickerRule>Map or list</SectionKickerRule>
+      <h2 id="home-maplist-title" className={`${HF.mapList} text-pale mt-4`}>
         The night&rsquo;s already happening.<br /><em className="italic text-silver">How do you want to see it?</em>
       </h2>
+      <p className="text-[15px] leading-relaxed text-silver mt-3">Same events, two ways in. Pick the one that suits tonight.</p>
 
       <div ref={ref} className={`${styles.mapListCards} grid gap-3 mt-8`}>
         <button type="button" onClick={onMap} data-cta="maplist-map"

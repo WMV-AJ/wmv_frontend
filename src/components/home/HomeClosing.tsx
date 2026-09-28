@@ -10,7 +10,7 @@ import { ArrowUp, ArrowUpRight, Plus } from 'lucide-react';
 import { FAQ_ITEMS } from '@/content/faq';
 import { VIBES_DATA } from '@/config/vibes-data';
 import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
-import { BTN_PRIMARY } from './HomeParts';
+import { BTN_PRIMARY, SectionKickerRule } from './HomeParts';
 import styles from './home.module.css';
 
 import { HF } from './home-fonts';
@@ -19,11 +19,12 @@ import { HF } from './home-fonts';
 export function HomeFaq({ accent, onExpand }: { accent: CardAccent; onExpand: (question: string) => void }) {
   const items = FAQ_ITEMS.slice(0, 4);
   return (
-    <section className="px-[18px] pt-14" aria-labelledby="home-faq-title">
-      <span className={H4_LABEL} style={{ color: accent.text }}>A few good questions / 01—{String(items.length).padStart(2, '0')}</span>
+    <section className="px-[18px] pt-16" aria-labelledby="home-faq-title">
+      <SectionKickerRule count={`01—${String(items.length).padStart(2, '0')}`}>A few good questions</SectionKickerRule>
       <h2 id="home-faq-title" className={`${HF.faq} text-pale mt-4`}>
         Good to<br /><em className="italic text-silver">know</em><span style={{ color: accent.text }}>.</span>
       </h2>
+      <p className="text-[15px] leading-relaxed text-silver mt-3">Quick answers before you head out.</p>
       <div className="mt-6" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
         {items.map((item, i) => (
           <details
@@ -64,11 +65,11 @@ export function VenueCta({ accent, onClick }: { accent: CardAccent; onClick: () 
           <Image src="/home3/live-performance.webp" alt="" fill sizes="230px" className="object-cover" />
         </div>
       </div>
-      <span className={`${H4_LABEL} block mt-6`} style={{ color: accent.text }}>To the places that make the night</span>
+      <div className="mt-6"><SectionKickerRule>For venues</SectionKickerRule></div>
       <h2 id="home-venue-title" className={`${HF.venue} text-pale mt-4`}>
         Make your venue<br /><em className="italic text-silver">someone&rsquo;s next plan.</em>
       </h2>
-      <p className="text-[13px] leading-relaxed text-silver mt-3">
+      <p className="text-[15px] leading-relaxed text-silver mt-3">
         Your stories are probably already on our radar. Make sure your next night gets seen.
       </p>
       <Link href="/list-your-venue" onClick={onClick} className={`${BTN_PRIMARY} mt-5`}>

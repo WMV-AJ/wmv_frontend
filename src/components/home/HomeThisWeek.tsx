@@ -53,7 +53,7 @@ export default function HomeThisWeek({ cityName, count, picks, loading, scrollRo
   if (!loading && picks.length === 0) return null;
 
   return (
-    <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-week-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+    <section className="px-[18px] pt-16" aria-labelledby="home-week-title">
       <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#ef4444', animation: 'wmv-pulse 1.5s infinite' }} />
         <span>Live from the API</span>

@@ -55,7 +55,7 @@ export default function HomeProblem({ story, scrollRoot }: {
   const event = story?.eventName || 'Tonight’s lineup';
 
   return (
-    <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-problem-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+    <section className="px-[18px] pt-16" aria-labelledby="home-problem-title">
       <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
         <span>Why this exists</span>
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />

@@ -37,7 +37,7 @@ export default function HomeVibeTiles({ cityName, tiles, loading, scrollRoot, on
   if (!loading && tiles.length === 0) return null;
 
   return (
-    <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-tiles-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+    <section className="px-[18px] pt-16" aria-labelledby="home-tiles-title">
       <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
         <span>Pick your vibe</span>
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />

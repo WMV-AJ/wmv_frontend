@@ -314,21 +314,6 @@
   -webkit-text-stroke: 1px var(--accent-border);
 }
 
-/* ── The idea + radar (HomeSignal) ─────────────────────────────────── */
-
-.radar {
-  position: relative;
-  width: 220px;
-  height: 220px;
-  flex-shrink: 0;
-}
-
-@keyframes homeSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes homePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-.radarSweep { animation: homeSpin 4s linear infinite; }
-.radarDot { animation: homePulse 2s infinite; }
-
 /* ── Problem → relief: a story that expires, then the pin that stays ── */
 
 .storyStage {
@@ -511,76 +496,6 @@
 
 [data-in='1'] .mlRow { opacity: 1; transform: none; }
 
-/* ── Source layers (HomeSignal): WMV above its sources ───────────── */
-
-.layers {
-  margin-top: 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.layer {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: var(--home-surface, #161616);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), 0 6px 0 -1px rgba(255, 255, 255, 0.04);
-  opacity: 0;
-  transform: perspective(700px) rotateX(24deg) translateY(28px);
-  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
-  transition-delay: calc(var(--d, 0) * 220ms);
-}
-
-[data-in='1'] .layer { opacity: 1; transform: perspective(700px) rotateX(0deg) translateY(0); }
-
-.layerTop {
-  flex-wrap: nowrap;
-  background: linear-gradient(135deg, #202020, #161616);
-  border-color: rgba(244, 196, 48, 0.55);
-  box-shadow: 0 0 28px rgba(244, 196, 48, 0.16), 0 14px 30px rgba(0, 0, 0, 0.5);
-}
-
-.layerNext {
-  background: rgba(22, 22, 22, 0.6);
-  border-style: dashed;
-}
-
-.flow {
-  display: flex;
-  justify-content: space-around;
-  height: 34px;
-  padding: 0 16%;
-}
-
-.flowLine {
-  position: relative;
-  width: 1px;
-  background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.08));
-}
-
-.flowDot {
-  position: absolute;
-  left: -2px;
-  bottom: 0;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #f4c430;
-  box-shadow: 0 0 8px #f4c430;
-  animation: flowUp 1.6s linear infinite;
-}
-
-@keyframes flowUp {
-  0% { transform: translateY(0); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(-34px); opacity: 0; }
-}
-
 /* ── Source visual A: orbit ─────────────────────────────────────── */
 
 .orbit {
@@ -604,15 +519,34 @@
 .orbitRingOuter {
   width: 300px;
   height: 300px;
-  border: 1px dashed rgba(244, 196, 48, 0.28);
+  border: 1px dashed rgba(244, 196, 48, 0.3);
 }
 
 .orbitRingInner {
   width: 176px;
   height: 176px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: radial-gradient(circle, rgba(244, 196, 48, 0.08), transparent 70%);
+  background: radial-gradient(circle, rgba(244, 196, 48, 0.1), transparent 70%);
+  overflow: hidden;
 }
+
+/* A soft scan sweeping the inner ring. */
+.orbitScan {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 78%, rgba(244, 196, 48, 0.14) 94%, rgba(244, 196, 48, 0.3) 100%);
+  animation: orbitCW 5s linear infinite;
+}
+
+/* Rings grow in when the orbit scrolls into view. */
+.orbit > * {
+  transition: opacity 0.7s ease, scale 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.orbit > :not(.orbitCore) { opacity: 0; scale: 0.7; }
+.orbit[data-in='1'] > * { opacity: 1; scale: 1; }
+.orbit[data-in='1'] > :nth-child(1) { transition-delay: 0.25s; }
+.orbit[data-in='1'] > :nth-child(3) { transition-delay: 0.35s; }
 
 .orbitSpin {
   position: absolute;
@@ -659,9 +593,9 @@
 
 .orbitNext {
   padding: 4px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  opacity: 0.75;
-  filter: saturate(0.7);
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  opacity: 0.85;
+  filter: saturate(0.85);
 }
 
 .orbitBeam {
@@ -670,7 +604,20 @@
   top: 50%;
   height: 1px;
   transform-origin: 0 50%;
-  background: linear-gradient(90deg, rgba(244, 196, 48, 0.55), rgba(255, 255, 255, 0.08));
+  background: linear-gradient(90deg, rgba(244, 196, 48, 0.6), rgba(255, 255, 255, 0.1));
+}
+
+.orbitBeamFaint {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03));
+}
+
+.orbitBeamFaint span {
+  width: 4px;
+  height: 4px;
+  top: -1.5px;
+  background: #f5f5f5;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  animation-duration: 2.6s;
 }
 
 .orbitBeam span {
@@ -704,6 +651,13 @@
   background: #0b0b0b;
   border: 2px solid rgba(244, 196, 48, 0.8);
   box-shadow: 0 0 40px rgba(244, 196, 48, 0.35);
+  animation: coreTake 1.8s ease-in-out infinite;
+}
+
+/* The core glows as the data arrives. */
+@keyframes coreTake {
+  0%, 100% { box-shadow: 0 0 30px rgba(244, 196, 48, 0.3); }
+  50% { box-shadow: 0 0 56px rgba(244, 196, 48, 0.55); }
 }
 
 .orbitPulse {
@@ -719,95 +673,16 @@
   to { transform: scale(1.9); opacity: 0; }
 }
 
-/* ── Source visual B: sphere ────────────────────────────────────── */
-
-.sphere {
-  position: relative;
-  width: 340px;
-  max-width: 100%;
-  aspect-ratio: 1;
-  margin: 0 auto;
-  background: radial-gradient(circle at 50% 50%, rgba(244, 196, 48, 0.12), transparent 55%);
-}
-
-.sphereLines {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.09);
-  stroke-width: 1;
-}
-
-.sphereLines circle { stroke: rgba(255, 255, 255, 0.16); }
-
-.sphereNode {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  will-change: transform, opacity;
-}
-
-.sphereLive,
-.sphereNext {
-  display: flex;
-  background: #161616;
-  border-radius: 12px;
-}
-
-.sphereLive {
-  padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 16px rgba(244, 196, 48, 0.3);
-}
-
-.sphereNext {
-  padding: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.sphereLabel {
-  font-size: 9px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #f5f5f5;
-  text-shadow: 0 1px 4px #000;
-  opacity: var(--label, 1);
-  transition: opacity 0.3s ease;
-}
-
-.sphereCore {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  z-index: 15;
-  display: flex;
-  padding: 6px;
-  border-radius: 50%;
-  background: #0b0b0b;
-  border: 2px solid rgba(244, 196, 48, 0.85);
-  box-shadow: 0 0 44px rgba(244, 196, 48, 0.4), 0 0 0 10px rgba(11, 11, 11, 0.6);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .radarSweep,
-  .radarDot,
   .storySeg span,
   .mlPin,
-  .flowDot,
   .orbitSpin,
   .orbitUpright,
   .orbitUprightSlow,
   .orbitBeam span,
-  .orbitPulse {
+  .orbitPulse,
+  .orbitScan,
+  .orbitCore {
     animation: none !important;
   }
   .vibeTile,
@@ -819,9 +694,8 @@
     transition: none !important;
   }
   .vibeTile,
-  .mlRow,
-  .layer { opacity: 1; transform: none; }
-  .layer { transition: none !important; }
+  .mlRow { opacity: 1; transform: none; }
+  .orbit > * { opacity: 1 !important; scale: 1 !important; transition: none !important; }
   .vibeStage,
   .fanCard,
   .pathActive,
