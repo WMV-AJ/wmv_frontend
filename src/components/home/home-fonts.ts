@@ -13,7 +13,7 @@ const H = `${serif.className} font-normal`;
 export const HF = {
   hero: `${H} text-[46px] leading-[0.98] tracking-[-0.015em]`,
   vibes: `${H} text-[40px] leading-[1] tracking-[-0.01em]`,
-  vibesName: `${H} text-[50px] leading-[0.9] tracking-[-0.01em]`,
+  vibesName: `${H} text-[42px] leading-[0.9] tracking-[-0.01em]`,
   idea: `${H} text-[42px] leading-[0.98] tracking-[-0.01em]`,
   today: `${H} text-[40px] leading-[1] tracking-[-0.01em]`,
   weekend: `${H} text-[40px] leading-[1] tracking-[-0.01em]`,

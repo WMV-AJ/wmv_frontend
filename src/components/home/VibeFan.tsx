@@ -16,7 +16,7 @@ import EventMedia from '@/components/shared/EventMedia';
 import CategoryPills from '@/components/filters/CategoryPills';
 import type { HierarchicalFilterState, Venue } from '@/types';
 import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
-import { HomeSectionHeader, BTN_PRIMARY } from './HomeParts';
+import { HomeSectionHeader } from './HomeParts';
 import { HF } from './home-fonts';
 import styles from './home.module.css';
 
@@ -120,6 +120,26 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
     >
       <HomeSectionHeader font={HF.vibes} id="home-vibes-title" label={title} count={loading ? '—' : `${n} ${n === 1 ? 'category' : 'categories'}`} />
 
+      {/* Index — the list/map's own CategoryPills (same categories, labels,
+          icons, counts and rows), fed the same day's rows; the selected
+          category shows as the selected pill. */}
+      <div ref={chipRow} className="mb-2 -mr-[18px]" role="group" aria-label="Select a category">
+        <CategoryPills
+          filters={{ ...PILL_FILTERS, eventCategories: { selectedPrimaries: [active.id], selectedSecondaries: {}, expandedPrimaries: [] } }}
+          onFiltersChange={(f) => {
+            const picked = f.eventCategories?.selectedPrimaries.find((c) => c !== active.id);
+            const index = picked ? items.findIndex((v) => v.id === picked) : -1;
+            if (index >= 0) setSelected(index);
+          }}
+          venues={rows}
+          inlineMode
+          variant="outlined"
+          wrapPills
+          darkMode
+        />
+      </div>
+
+
       {/* Fan — drag sideways to change the vibe; tap the front card to go. */}
       <div
         className={styles.vibeStage}
@@ -151,9 +171,9 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
               }}
             >
               {v.media ? (
-                <EventMedia src={v.media.src} poster={v.media.poster} alt={v.label} sizes="175px" fill />
+                <EventMedia src={v.media.src} poster={v.media.poster} alt={v.label} sizes="160px" fill />
               ) : (
-                <Image src={v.fallbackImage} alt={v.label} fill sizes="175px" className="object-cover" />
+                <Image src={v.fallbackImage} alt={v.label} fill sizes="160px" className="object-cover" />
               )}
               <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.65))' }} />
               <span className={`${H4_LABEL} absolute left-2.5 bottom-2.5 text-pale`}>{v.label}</span>
@@ -162,51 +182,35 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
         })}
       </div>
 
-      {/* Index — the list/map's own CategoryPills (same categories, labels,
-          icons, counts and rows), fed the same day's rows; the selected
-          category shows as the selected pill. */}
-      <div ref={chipRow} className="mt-2 -mr-[18px]" role="group" aria-label="Select a category">
-        <CategoryPills
-          filters={{ ...PILL_FILTERS, eventCategories: { selectedPrimaries: [active.id], selectedSecondaries: {}, expandedPrimaries: [] } }}
-          onFiltersChange={(f) => {
-            const picked = f.eventCategories?.selectedPrimaries.find((c) => c !== active.id);
-            const index = picked ? items.findIndex((v) => v.id === picked) : -1;
-            if (index >= 0) setSelected(index);
-          }}
-          venues={rows}
-          inlineMode
-          variant="outlined"
-          wrapPills
-          darkMode
-        />
-      </div>
-
-      {/* Selected category — name + count, its line, then one clear action */}
-      <div className="mt-8 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}
-        data-fan-selected data-cat={active.id} data-count={active.count}>
-        <div className="flex items-end justify-between gap-4">
+      {/* Selected category — name, sub-categories, line; the square box is
+          the action (count + View). */}
+      <div className="mt-3 flex items-stretch gap-4" data-fan-selected data-cat={active.id} data-count={active.count}>
+        <div className="flex-1 min-w-0 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}>
           <h3 className={`${HF.vibesName} italic capitalize`} style={{ color: active.accent.text }}>{active.label.toLowerCase()}</h3>
-          <div className="text-right flex-shrink-0">
-            <div className={`${HF.vibesName} text-pale tabular-nums`}>{loading ? '—' : active.count}</div>
-            <div className={`${H4_LABEL} text-silver-dim mt-1`}>today</div>
-          </div>
+          {active.subcategories.length > 0 && (
+            <div className={`${H4_LABEL} text-silver mt-2 leading-relaxed line-clamp-2`} data-fan-subs>
+              {active.subcategories.slice(0, 3).join(' · ')}
+            </div>
+          )}
+          <p className="text-[14px] leading-snug text-silver mt-2 line-clamp-2">{active.description}</p>
         </div>
-        {active.subcategories.length > 0 && (
-          <div className={`${H4_LABEL} text-silver mt-3 leading-relaxed`} data-fan-subs>
-            {active.subcategories.join(' · ')}
+        <Link
+          href={active.href}
+          onClick={() => onExplore(active, 'fan_link')}
+          aria-label={`View ${active.count} ${active.label} events`}
+          className="flex-shrink-0 w-[108px] self-start aspect-square flex flex-col justify-between p-3 bg-white text-[#0b0b0b] transition-transform active:scale-[0.97]"
+          data-fan-view
+        >
+          <div className="flex items-start justify-between">
+            <span className={`${HF.vibesName} tabular-nums leading-none`}>{loading ? '—' : active.count}</span>
+            <ArrowUpRight className="w-5 h-5 mt-1" />
           </div>
-        )}
-        <p className="text-[15px] leading-relaxed text-silver mt-3">{active.description}</p>
+          <div>
+            <div className={`${H4_LABEL} text-[#0b0b0b]/60`}>{active.count === 1 ? 'event' : 'events'} today</div>
+            <div className="text-[12px] font-[750] uppercase tracking-[0.13em] mt-1">View</div>
+          </div>
+        </Link>
       </div>
-      <Link
-        href={active.href}
-        onClick={() => onExplore(active, 'fan_link')}
-        aria-label={`See ${active.count} ${active.label} events`}
-        className={`${BTN_PRIMARY} w-full justify-between mt-6`}
-      >
-        See {active.count} {active.label} {active.count === 1 ? 'event' : 'events'}
-        <ArrowUpRight className="w-4 h-4" />
-      </Link>
     </section>
   );
 }
