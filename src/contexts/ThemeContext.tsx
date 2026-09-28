@@ -1,51 +1,54 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// Site-wide light / dark theme. Light is the default; the visitor's choice
+// is kept in localStorage (wmv_theme) and applied as `.dark` on <html>.
+// THEME_BOOT_SCRIPT runs in <head> before first paint so there's no flash;
+// the provider only reads that state back and handles the toggle.
+// (Key is new on purpose: the old `theme` key was written as "dark" for
+// every past map/list visitor and would override the light default.)
+
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+
+export type ThemeName = 'light' | 'dark';
+
+const STORAGE_KEY = 'wmv_theme';
+
+export const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}');var d=t==='dark';var r=document.documentElement;r.classList.toggle('dark',d);r.dataset.theme=d?'dark':'light';}catch(e){}})();`;
 
 interface ThemeContextType {
+  theme: ThemeName;
   isDarkMode: boolean;
+  setTheme: (t: ThemeName) => void;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
+function applyTheme(t: ThemeName) {
+  const r = document.documentElement;
+  r.classList.toggle('dark', t === 'dark');
+  r.dataset.theme = t;
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // Server + first client render assume light; the effect below syncs to
+  // what the boot script already applied to <html>.
+  const [theme, setThemeState] = useState<ThemeName>('light');
 
-  // Load theme preference from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      setIsDarkMode(false);
-    }
+    if (document.documentElement.classList.contains('dark')) setThemeState('dark');
   }, []);
 
-  // Apply theme to document and save to localStorage
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
+  const setTheme = useCallback((t: ThemeName) => {
+    setThemeState(t);
+    applyTheme(t);
+    try { localStorage.setItem(STORAGE_KEY, t); } catch { /* private mode */ }
+  }, []);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const contextValue: ThemeContextType = {
-    isDarkMode,
-    toggleTheme
-  };
+  const toggleTheme = useCallback(() => setTheme(theme === 'dark' ? 'light' : 'dark'), [theme, setTheme]);
 
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <ThemeContext.Provider value={{ theme, isDarkMode: theme === 'dark', setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -53,8 +56,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
   return context;
 }

@@ -60,7 +60,7 @@ export default function HomeThisWeek({ cityName, count, picks, loading, scrollRo
             <button
               type="button"
               onClick={onMap}
-              className="flex-shrink-0 flex flex-col justify-between p-4 text-left bg-white text-[#0b0b0b]"
+              className="flex-shrink-0 flex flex-col justify-between p-4 text-left wmv-invert"
               style={{ width: 172, marginTop: 26, aspectRatio: '3/4' }}
             >
               <MapIcon className="w-6 h-6" />

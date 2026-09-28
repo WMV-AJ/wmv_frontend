@@ -53,7 +53,7 @@ export default function HomeVibeTiles({ cityName, tiles, loading, scrollRoot, on
             key={t.id}
             href={t.href}
             onClick={() => onPick(t)}
-            className={styles.vibeTile}
+            className={`${styles.vibeTile} theme-dark`}
             style={{ '--i': i, borderTop: `3px solid ${t.accent.edge}` } as React.CSSProperties}
             data-vibe-tile data-count={t.count}
           >
@@ -74,7 +74,7 @@ export default function HomeVibeTiles({ cityName, tiles, loading, scrollRoot, on
           </Link>
         ))}
         {loading && Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="aspect-[4/5]" style={{ background: 'linear-gradient(90deg, #1a1a1a 25%, #262626 50%, #1a1a1a 75%)', backgroundSize: '200% 100%', animation: 'wmv-shimmer 1.4s infinite' }} />
+          <div key={i} className="aspect-[4/5]" style={{ background: 'linear-gradient(90deg, var(--wmv-skeleton) 25%, var(--wmv-skeleton-hi) 50%, var(--wmv-skeleton) 75%)', backgroundSize: '200% 100%', animation: 'wmv-shimmer 1.4s infinite' }} />
         ))}
       </div>
     </section>

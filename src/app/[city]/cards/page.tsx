@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useRef, useLayoutEffect, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
 import TopNav from '@/components/navigation/TopNav';
@@ -190,7 +189,7 @@ function CardsInner() {
   }
 
   return (
-    <ThemeProvider>
+    <>
       <style>{`#cards-scroll-container::-webkit-scrollbar { display: none; }`}</style>
       <div className="wmv-phone-frame" style={{
         maxWidth: FRAME_MAX_WIDTH,
@@ -266,7 +265,7 @@ function CardsInner() {
         <NavPill city={city} active="cards" hidden={isFilterSheetOpen} />
       </main>
       </div>
-    </ThemeProvider>
+    </>
   );
 }
 

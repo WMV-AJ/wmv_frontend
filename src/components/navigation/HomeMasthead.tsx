@@ -9,14 +9,15 @@ import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import AuthCornerWidget from '@/components/auth/AuthCornerWidget';
+import ThemeToggle from './ThemeToggle';
 import { bodyFont, displayFont } from '@/lib/theme/tokens';
 
-// Violet by default; the city home overrides via --home-* (home-palette.ts).
+// Site theme tokens (globals.css — light by default, .dark for dark).
 const T = {
-  surface: 'var(--home-surface, #14141f)',
-  ink: 'var(--home-ink, #f5f2ed)',
-  inkMuted: 'var(--home-ink-muted, #a8a2b8)',
-  line: 'var(--home-line, #2a2638)',
+  surface: 'var(--wmv-surface)',
+  ink: 'var(--wmv-ink)',
+  inkMuted: 'var(--wmv-ink-muted)',
+  line: 'var(--wmv-line)',
 };
 
 
@@ -81,6 +82,7 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
             }}
           />
         </form>
+        <ThemeToggle />
         {/* Auth state: real avatar when signed in, sign-in icon otherwise. */}
         <AuthCornerWidget />
       </div>

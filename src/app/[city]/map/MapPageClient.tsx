@@ -17,7 +17,6 @@ import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
 import MobileEventList from '@/components/mobile/MobileEventList';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import {
@@ -819,7 +818,7 @@ export default function CityMapPage() {
   }
 
   return (
-    <ThemeProvider>
+    <>
       <style>{`
         .maplibregl-popup-content:has(.wmv-dark-popup) {
           background: transparent !important;
@@ -1045,6 +1044,6 @@ export default function CityMapPage() {
         />
       </main>
       </div>
-    </ThemeProvider>
+    </>
   );
 }

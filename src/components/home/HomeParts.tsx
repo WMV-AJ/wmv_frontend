@@ -195,7 +195,7 @@ export function EventTile({ event: e, width, sizes, live, liked, onLike, onOpen 
     >
       <div
         className="relative aspect-[3/4] overflow-hidden rounded-xl"
-        style={{ background: homeTileBg(accent), border: '1px solid rgba(255,255,255,0.10)' }}
+        style={{ background: homeTileBg(accent), border: '1px solid var(--wmv-line)' }}
       >
         {e.media_url_1 && (
           <EventMedia
@@ -259,7 +259,7 @@ export function EventRow({ event: e, index, liked, onLike, onOpen }: {
     >
       <span className={`${H4_LABEL} text-silver-dim tabular-nums`}>{String(index + 1).padStart(2, '0')}</span>
       <div className="relative w-[72px] h-[72px] overflow-hidden rounded-lg"
-        style={{ background: homeTileBg(accent), border: '1px solid rgba(255,255,255,0.10)' }}>
+        style={{ background: homeTileBg(accent), border: '1px solid var(--wmv-line)' }}>
         {e.media_url_1 && (
           <EventMedia
             src={e.media_url_1}
@@ -316,9 +316,9 @@ export function DealCard({ event: e, onOpen }: { event: any; onOpen: () => void 
         flex: '0 0 220px', width: 220, minWidth: 220, maxWidth: 220,
         background: homeTileBg(accent),
         borderTop: `3px solid ${accent.edge}`,
-        borderRight: '1px solid rgba(255,255,255,0.07)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        borderLeft: '1px solid rgba(255,255,255,0.07)',
+        borderRight: '1px solid var(--wmv-line)',
+        borderBottom: '1px solid var(--wmv-line)',
+        borderLeft: '1px solid var(--wmv-line)',
         boxShadow: `0 2px 20px rgba(0,0,0,0.5), 0 0 16px ${accent.glow}`,
         cursor: e.event_id ? 'pointer' : 'default',
       }}
@@ -367,10 +367,10 @@ export function NumberedRow({ index, label, meta, onClick }: {
 
 // ── Buttons (map/list idiom) ──────────────────────────────────────────
 export const BTN_PRIMARY =
-  'inline-flex items-center justify-center gap-2 h-12 px-5 bg-white text-[#0b0b0b] text-[11px] font-[750] uppercase tracking-[0.13em] whitespace-nowrap transition-transform active:scale-[0.98]';
+  'inline-flex items-center justify-center gap-2 h-12 px-5 wmv-invert text-[11px] font-[750] uppercase tracking-[0.13em] whitespace-nowrap transition-transform active:scale-[0.98]';
 export const BTN_SECONDARY =
   'inline-flex items-center justify-center gap-2 h-12 px-5 text-pale text-[11px] font-[750] uppercase tracking-[0.13em] whitespace-nowrap transition-transform active:scale-[0.98]';
 export const BTN_SECONDARY_STYLE: React.CSSProperties = {
   background: 'transparent',
-  border: '1px solid rgba(226,227,225,0.42)',
+  border: '1px solid var(--wmv-line-strong)',
 };

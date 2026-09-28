@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Roboto, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider, THEME_BOOT_SCRIPT } from "@/contexts/ThemeContext";
 import { VenueDataProvider } from "@/contexts/VenueDataContext";
 import { CitiesProvider } from "@/contexts/CitiesProvider";
 import AnalyticsProvider from "@/lib/analytics/AnalyticsProvider";
@@ -44,6 +45,10 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0b" },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -107,8 +112,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    // No theme class in the markup: THEME_BOOT_SCRIPT adds `.dark` before
+    // first paint when the visitor chose dark (light is the default).
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         {/* Event/venue media (Instagram scrapes) and map tiles come from these
             hosts on every content page — warming the connections saves a
             DNS+TLS round-trip on the first image/tile fetch (mobile: 100-300ms). */}
@@ -143,6 +151,7 @@ export default function RootLayout({
             </Script>
           </>
         )}
+        <ThemeProvider>
         <AuthProvider>
           <Suspense fallback={null}>
             <AnalyticsProvider>
@@ -155,6 +164,7 @@ export default function RootLayout({
           </Suspense>
           <CookieConsentBanner />
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
 import CategoryPills from '@/components/filters/CategoryPills';
+import { useTheme } from '@/contexts/ThemeContext';
 import type { HierarchicalFilterState, Venue } from '@/types';
 import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
 import { HomeSectionHeader } from './HomeParts';
@@ -69,6 +70,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
   onExplore: (item: VibeFanItem, source: 'fan_card' | 'fan_link') => void;
 }) {
   const [selected, setSelected] = useState(0);
+  const { isDarkMode } = useTheme();
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const chipRow = useRef<HTMLDivElement>(null);
   // Dragging the fan changes the selection — keep its chip in view. Scrolls
@@ -91,7 +93,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
         <div className={styles.vibeStage} aria-hidden="true">
           {[-1, 1, 0].map((d) => (
             <div key={d} className={styles.fanCard}
-              style={{ transform: `translate3d(calc(-50% + ${d * 78}px), ${Math.abs(d) * 14}px, 0) rotate(${d * 7}deg) scale(${d ? 0.76 : 1.04})`, zIndex: 10 - Math.abs(d), background: 'linear-gradient(90deg, #1a1a1a 25%, #262626 50%, #1a1a1a 75%)', backgroundSize: '200% 100%', animation: 'wmv-shimmer 1.4s infinite' }} />
+              style={{ transform: `translate3d(calc(-50% + ${d * 78}px), ${Math.abs(d) * 14}px, 0) rotate(${d * 7}deg) scale(${d ? 0.76 : 1.04})`, zIndex: 10 - Math.abs(d), background: 'linear-gradient(90deg, var(--wmv-skeleton) 25%, var(--wmv-skeleton-hi) 50%, var(--wmv-skeleton) 75%)', backgroundSize: '200% 100%', animation: 'wmv-shimmer 1.4s infinite' }} />
           ))}
         </div>
       </section>
@@ -136,7 +138,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
           inlineMode
           variant="outlined"
           wrapPills
-          darkMode
+          darkMode={isDarkMode}
         />
       </div>
 
@@ -158,7 +160,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
           return (
             <div
               key={v.id}
-              className={styles.fanCard}
+              className={`${styles.fanCard} theme-dark`}
               onClick={() => { if (isFront) onExplore(v, 'fan_card'); else setSelected(index); }}
               style={{
                 transform: `translate3d(calc(-50% + ${delta * 78}px), ${depth * 14}px, 0) rotate(${delta * 7}deg) scale(${isFront ? 1.04 : Math.max(0.58, 0.8 - depth * 0.045)})`,
@@ -199,7 +201,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
           href={active.href}
           onClick={() => onExplore(active, 'fan_link')}
           aria-label={`View ${active.count} ${active.label} events`}
-          className="flex-shrink-0 w-[108px] self-start aspect-square flex flex-col justify-between p-3 bg-white text-[#0b0b0b] transition-transform active:scale-[0.97]"
+          className="flex-shrink-0 w-[108px] self-start aspect-square flex flex-col justify-between p-3 wmv-invert transition-transform active:scale-[0.97]"
           data-fan-view
         >
           <div className="flex items-start justify-between">
@@ -207,7 +209,7 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
             <ArrowUpRight className="w-5 h-5 mt-1" />
           </div>
           <div>
-            <div className={`${H4_LABEL} text-[#0b0b0b]/60`}>{active.count === 1 ? 'event' : 'events'} today</div>
+            <div className={`${H4_LABEL} wmv-invert-muted`}>{active.count === 1 ? 'event' : 'events'} today</div>
             <div className="text-[12px] font-[750] uppercase tracking-[0.13em] mt-1">View</div>
           </div>
         </Link>

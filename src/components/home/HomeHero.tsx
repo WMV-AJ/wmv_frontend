@@ -39,7 +39,7 @@ export default function HomeHero({ cityName, dateLabel, todayCount, liveCount, v
       </div>
 
       <h1 id="home-hero-title" className={`${HF.hero} text-pale mt-3.5`}>
-        <span style={{ color: T.accent }}>{cityName}&rsquo;s</span> Instagram stories,<br /><em className="italic text-silver">finally on a map.</em>
+        <span style={{ color: T.accentInk }}>{cityName}&rsquo;s</span> Instagram stories,<br /><em className="italic text-silver">finally on a map.</em>
       </h1>
 
       <p className="text-[15px] leading-relaxed text-silver mt-4">

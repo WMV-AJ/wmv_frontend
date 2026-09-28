@@ -628,14 +628,14 @@ export default function CityHome() {
                         trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'today_see_all' });
                         router.push(`/${city}/cards?date=today`);
                       }}
-                      className="flex-shrink-0 flex flex-col justify-between p-4 text-left bg-white text-[#0b0b0b]"
+                      className="flex-shrink-0 flex flex-col justify-between p-4 text-left wmv-invert"
                       style={{ width: '48%', aspectRatio: '3/4' }}
                       data-cta="today-see-all"
                     >
                       <ArrowUpRight className="w-6 h-6" />
                       <span>
                         <span className={`${HF.weekTile} block`}>See all {todayEvents.length}</span>
-                        <span className={`${H4_LABEL} text-[#0b0b0b]/60 block mt-2`}>on the list</span>
+                        <span className={`${H4_LABEL} wmv-invert-muted block mt-2`}>on the list</span>
                       </span>
                     </button>
                   )}

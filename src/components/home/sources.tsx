@@ -51,7 +51,7 @@ export function Logo({ src, name, size }: { src: string | null; name: string; si
   if (!src) {
     const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
     return (
-      <span className="flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-[#0b0b0b] bg-[#f5f5f5]"
+      <span className="flex items-center justify-center flex-shrink-0 text-[9px] font-bold wmv-invert"
         style={{ width: size, height: size, borderRadius: size * 0.22 }}>{initials}</span>
     );
   }

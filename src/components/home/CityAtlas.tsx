@@ -53,7 +53,7 @@ export default function CityAtlas({ city, cities, accent, pinCategories, kicker,
           value={city}
           onChange={(e) => onChangeCity(e.target.value)}
           className="appearance-none w-full h-12 rounded-none pl-3.5 pr-10 font-inter font-[550] text-[14px] text-pale cursor-pointer"
-          style={{ background: 'var(--home-surface, rgba(20,20,31,0.92))', border: `1px solid ${TILE_RULE}` }}
+          style={{ background: 'var(--wmv-surface)', border: `1px solid ${TILE_RULE}` }}
         >
           {cities.map(([slug, name]) => <option key={slug} value={slug}>{name}</option>)}
         </select>

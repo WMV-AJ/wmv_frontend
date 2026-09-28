@@ -38,9 +38,9 @@ export default function HomeMapOrList({ pinCategories, scrollRoot, onMap, onList
 
       <div ref={ref} className={`${styles.mapListCards} grid gap-3 mt-8`}>
         <button type="button" onClick={onMap} data-cta="maplist-map"
-          className="relative flex items-stretch text-left bg-white text-[#0b0b0b] min-h-[132px] overflow-hidden">
+          className="relative flex items-stretch text-left wmv-invert min-h-[132px] overflow-hidden">
           <div className="flex-1 p-4 flex flex-col justify-between">
-            <span className={`${H4_LABEL} text-[#0b0b0b]/60`}>Map</span>
+            <span className={`${H4_LABEL} wmv-invert-muted`}>Map</span>
             <span className="text-[19px] font-semibold leading-tight">See what&rsquo;s near you right now</span>
             <ArrowUpRight className="w-5 h-5" />
           </div>
@@ -54,7 +54,7 @@ export default function HomeMapOrList({ pinCategories, scrollRoot, onMap, onList
 
         <button type="button" onClick={onList} data-cta="maplist-list"
           className="relative flex items-stretch text-left text-pale min-h-[132px] overflow-hidden"
-          style={{ border: '1px solid rgba(226,227,225,0.42)' }}>
+          style={{ border: '1px solid var(--wmv-line-strong)' }}>
           <div className="flex-1 p-4 flex flex-col justify-between">
             <span className={`${H4_LABEL} text-silver`}>List</span>
             <span className="text-[19px] font-semibold leading-tight">Scroll every event by date and vibe</span>

@@ -61,13 +61,13 @@ export default function HomeProblem({ story, scrollRoot }: {
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
       </div>
       <h2 id="home-problem-title" className={`${HF.problem} text-pale mt-5`}>
-        The plan was in a story.<br /><em className="italic" style={{ color: T.accent }}>It expired at midnight.</em>
+        The plan was in a story.<br /><em className="italic" style={{ color: T.accentInk }}>It expired at midnight.</em>
       </h2>
       <p className="text-[15px] leading-relaxed text-silver mt-4">
         Venues post tonight&rsquo;s lineup to Instagram stories. 24 hours later it&rsquo;s gone, and you never saw it.
       </p>
 
-      <div ref={ref} className={styles.storyStage} data-phase={phase} aria-hidden="true">
+      <div ref={ref} className={`${styles.storyStage} theme-dark`} data-phase={phase} aria-hidden="true">
         {/* The story */}
         <div className={styles.storyCard}>
           {story?.photo
@@ -108,7 +108,7 @@ export default function HomeProblem({ story, scrollRoot }: {
 
       <p className="text-[15px] leading-relaxed text-silver">
         We read every venue&rsquo;s stories so you don&rsquo;t have to.{' '}
-        <span className="text-pale font-semibold">They sell tickets. <span style={{ color: T.accent }}>We find vibes.</span></span>
+        <span className="text-pale font-semibold">They sell tickets. <span style={{ color: T.accentInk }}>We find vibes.</span></span>
       </p>
     </section>
   );

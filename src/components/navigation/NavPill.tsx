@@ -62,19 +62,16 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         // Near-opaque surfaceAlt + real border: the old surface-on-bg fill
         // was ~4 RGB points from the page background (black-on-black), and
         // the backdrop blur cost a recomposite per frame over the moving map.
-        // --home-pill: grey on the city home (home-palette.ts), violet elsewhere.
-        background: 'var(--home-pill, rgba(28,28,42,0.97))',
+        // Themed chrome: near-black on dark, near-white on light.
+        background: 'var(--wmv-chrome)',
         // No rim: the basemap is grey now, so the dark pill separates from it
         // on its own and a border only added noise.
         border: 'none',
         // White drop shadow, not black. A black shadow under a near-black pill
         // sitting on a grey basemap did nothing visible; a white halo separates
         // it from the map instead. The inset top highlight is unchanged.
-        boxShadow: [
-          '0 0 18px 4px rgba(255,255,255,0.06)',
-          '0 0 6px 1px rgba(255,255,255,0.10)',
-          'inset 0 1px 0 rgba(255,255,255,0.06)',
-        ].join(', '),
+        // (Light theme: a soft dark shadow + hairline instead.)
+        boxShadow: 'var(--wmv-pill-shadow)',
       }}
     >
       {SEGMENTS.map(({ view, label, Icon, path }) => {
@@ -100,8 +97,8 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
               // White, not the brand gold. Gold competed with the map's
               // category colours; white reads as neutral chrome and lets the
               // pins own the only saturated colour on the screen.
-              background: isActive ? '#FFFFFF' : T.overlay,
-              color: isActive ? T.inkInverse : T.inkMuted,
+              background: isActive ? 'var(--wmv-btn)' : T.overlay,
+              color: isActive ? 'var(--wmv-btn-ink)' : T.inkMuted,
               border: 'none',
               cursor: isActive ? 'default' : 'pointer',
               fontFamily: bodyFont,

@@ -28,9 +28,16 @@
      overrides all 32 of its uses, so magenta is the real text accent.
      No --color-black / --color-slate — both collide with Tailwind builtins. */
   --color-graphite: #27282B;
-  --color-pale: #E2E3E1;
-  --color-silver: #BFC1C3;
-  --color-silver-dim: #A3A5A6;
+  --color-pale: var(--pale);
+  --color-silver: var(--silver);
+  --color-silver-dim: var(--silver-dim);
+  --color-paper: var(--wmv-bg);
+  --color-surface: var(--wmv-surface);
+  --color-raised: var(--wmv-raised);
+  --color-ink: var(--wmv-ink);
+  --color-ink-muted: var(--wmv-ink-muted);
+  --color-line: var(--wmv-line);
+  --color-accent-ink: var(--wmv-accent-ink);
   --color-magenta: #F080C0;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -61,43 +68,99 @@
    Geist / Space Grotesk / Fraunces / Playfair / Inter / Space Mono
    variables are gone — every call site now names one of the two above. */
 
-/* Dark Purple Theme */
-:root {
+/* ── Themes ─────────────────────────────────────────────────────────────
+   Light (warm paper) is the default; `.dark` on <html> switches the whole
+   site (set before paint by the script in layout.tsx, toggled by
+   ThemeContext). `.theme-dark` / `.theme-light` re-scope a subtree — e.g.
+   text sitting on a photo keeps the dark set in either theme.
+   --wmv-* are the semantic tokens (T in lib/theme/tokens.ts points at
+   them); --pale / --silver / --silver-dim drive text-pale etc. */
+
+:root,
+.theme-light {
   --radius: 0.5rem;
 
-  /* Dark Purple Palette */
-  --background: #0a0a1a;        /* Deep dark navy */
-  --foreground: #e8ecf2;        /* Light gray text */
-  --card: #111127;              /* Dark card surface */
-  --card-foreground: #e8ecf2;   /* Light text on card */
-  --popover: #1a1a3e;           /* Popover background */
-  --popover-foreground: #e2e8f0; /* Light text */
-  --primary: #ca8a04;           /* Violet accent */
-  --primary-foreground: #ffffff; /* White on violet */
-  --secondary: #1e1b4b;         /* Dark indigo surface */
-  --secondary-foreground: #e2e8f0; /* Light text */
-  --muted: #1a1a3e;             /* Muted dark purple */
-  --muted-foreground: #8b95a7;  /* Gray muted text */
-  --accent: #2e1065;            /* Deep purple accent */
-  --accent-foreground: #e2e8f0; /* Light text */
-  --destructive: #ef4444;       /* Red */
-  --destructive-foreground: #ffffff; /* White text */
-  --border: rgba(255, 255, 255, 0.06); /* Neutral border */
-  --input: #1e1b4b;             /* Dark indigo input */
-  --ring: #ca8a04;              /* Purple focus ring */
+  --wmv-bg: #f6f4ef;            /* warm paper */
+  --wmv-surface: #ffffff;       /* cards */
+  --wmv-raised: #efece5;        /* inputs, chips, rails */
+  --wmv-ink: #161513;           /* primary text */
+  --wmv-ink-muted: #5c5851;
+  --wmv-ink-faint: #8a857c;
+  --wmv-ink-inverse: #f6f4ef;   /* text on an ink fill */
+  --wmv-line: rgba(22, 21, 19, 0.12);
+  --wmv-line-strong: rgba(22, 21, 19, 0.32);
+  --wmv-overlay: rgba(22, 21, 19, 0.04);
+  --wmv-chrome: rgba(255, 255, 255, 0.94);    /* floating nav / sheets */
+  --wmv-btn: #161513;                          /* primary button fill */
+  --wmv-btn-ink: #f6f4ef;
+  --wmv-accent-ink: #8f6400;                   /* gold, as TEXT */
+  --wmv-accent-darken: 38%;                    /* category hues as text */
+  --wmv-skeleton: #ebe7df;
+  --wmv-skeleton-hi: #f7f5f0;
+  --wmv-shadow: rgba(40, 32, 20, 0.12);
+  --wmv-pill-shadow: 0 6px 20px rgba(40, 32, 20, 0.14), 0 0 0 1px rgba(22, 21, 19, 0.08);
 
-  /* Venue Pin Colors - Purple Spectrum */
-  --venue-nightclub: #f4c430;  /* Light purple - Premium venues */
-  --venue-restaurant: #34d399; /* Emerald - Dining */
-  --venue-bar: #f97316;        /* Orange - Bars/Lounges */
-  --venue-beach: #22d3ee;      /* Cyan - Beach clubs */
-  --venue-rooftop: #f472b6;    /* Pink - Rooftop venues */
-  --venue-hotel: #a3a3a3;      /* Gray - Hotel venues */
-  --venue-default: #ca8a04;    /* Purple - Default */
+  --pale: #1c1b19;
+  --silver: #4f4c46;
+  --silver-dim: #77736b;
+
+  --background: #f6f4ef;
+  --foreground: #161513;
+  --card: #ffffff;
+  --card-foreground: #161513;
+  --popover: #ffffff;
+  --popover-foreground: #161513;
+  --primary: #a16207;
+  --primary-foreground: #ffffff;
+  --secondary: #efece5;
+  --secondary-foreground: #161513;
+  --muted: #efece5;
+  --muted-foreground: #5c5851;
+  --accent: #efece5;
+  --accent-foreground: #161513;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: rgba(22, 21, 19, 0.1);
+  --input: #efece5;
+  --ring: #a16207;
+
+  --venue-nightclub: #f4c430;
+  --venue-restaurant: #34d399;
+  --venue-bar: #f97316;
+  --venue-beach: #22d3ee;
+  --venue-rooftop: #f472b6;
+  --venue-hotel: #a3a3a3;
+  --venue-default: #ca8a04;
+
+  color-scheme: light;
 }
 
-/* Dark mode uses the same palette */
-.dark {
+.dark,
+.theme-dark {
+  --wmv-bg: #0b0b0b;
+  --wmv-surface: #161616;
+  --wmv-raised: #202020;
+  --wmv-ink: #f5f5f5;
+  --wmv-ink-muted: #b3b3b3;
+  --wmv-ink-faint: #7a7a7a;
+  --wmv-ink-inverse: #0b0b0b;
+  --wmv-line: rgba(226, 227, 225, 0.14);
+  --wmv-line-strong: rgba(226, 227, 225, 0.42);
+  --wmv-overlay: rgba(255, 255, 255, 0.04);
+  --wmv-chrome: rgba(32, 32, 32, 0.97);
+  --wmv-btn: #ffffff;
+  --wmv-btn-ink: #0b0b0b;
+  --wmv-accent-ink: #f4c430;
+  --wmv-accent-darken: 0%;
+  --wmv-skeleton: #1a1a1a;
+  --wmv-skeleton-hi: #262626;
+  --wmv-shadow: rgba(0, 0, 0, 0.5);
+  --wmv-pill-shadow: 0 0 18px 4px rgba(255,255,255,0.06), 0 0 6px 1px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.06);
+
+  --pale: #e2e3e1;
+  --silver: #bfc1c3;
+  --silver-dim: #a3a5a6;
+
   --background: #0a0a1a;
   --foreground: #e8ecf2;
   --card: #111127;
@@ -117,7 +180,14 @@
   --border: rgba(255, 255, 255, 0.06);
   --input: #1e1b4b;
   --ring: #ca8a04;
+
+  color-scheme: dark;
 }
+
+/* Ink-on-paper fill that inverts with the theme: white chip on dark,
+   near-black chip on light. For primary buttons and "View" tiles. */
+.wmv-invert { background: var(--wmv-btn); color: var(--wmv-btn-ink); }
+.wmv-invert-muted { color: color-mix(in srgb, var(--wmv-btn-ink) 60%, transparent); }
 
 @layer base {
   * {

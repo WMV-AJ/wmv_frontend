@@ -10,7 +10,6 @@
 // Pages provide their own header row (use <ListPageHeader>) + the cards.
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import StackedEventCards, { type EventCardData } from '@/components/events/StackedEventCards';
 import { getCategoryColorForStackedCards } from '@/lib/stacked-card-adapter';
@@ -162,7 +161,7 @@ export default function StackedCardsListPage({
   );
 
   return (
-    <ThemeProvider>
+    <>
       <style>{`#cards-scroll-container::-webkit-scrollbar { display: none; }`}</style>
       <main
         style={{
@@ -210,6 +209,6 @@ export default function StackedCardsListPage({
           </div>
         </div>
       </main>
-    </ThemeProvider>
+    </>
   );
 }

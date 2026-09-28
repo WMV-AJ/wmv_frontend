@@ -1,24 +1,23 @@
-// Neutral greys for the city home — black, dark grey and white behind the
-// category accents (which stay as they are). Home only: the shared violet
-// `T` in lib/theme/tokens.ts still drives the list, vibe, area and map
-// pages. Set as CSS vars on the home <main> (homePaletteVars) so shared
-// chrome (HomeMasthead, NavPill) can opt in via var(--home-*, <violet>)
-// without changing anywhere else.
+// City-home palette — now just names for the site theme tokens (globals.css:
+// light by default, .dark for dark), so the home follows the theme toggle.
+// --home-* stay defined on the home <main> because home.module.css and a
+// few shared components read them.
 
 import type { CardAccent } from '@/components/shared/card-style';
 
 export const HP = {
-  bg: '#0b0b0b',
-  surface: '#161616',
-  raised: '#202020',
-  line: 'rgba(255,255,255,0.12)',
-  ink: '#f5f5f5',
-  inkMuted: '#b3b3b3',
-  inkFaint: '#7a7a7a',
+  bg: 'var(--wmv-bg)',
+  surface: 'var(--wmv-surface)',
+  raised: 'var(--wmv-raised)',
+  line: 'var(--wmv-line)',
+  ink: 'var(--wmv-ink)',
+  inkMuted: 'var(--wmv-ink-muted)',
+  inkFaint: 'var(--wmv-ink-faint)',
+  /** Buttons that sit ON photos (heart, rail arrow) — dark in both themes. */
   scrim: 'rgba(11,11,11,0.72)',
-  pill: 'rgba(32,32,32,0.97)',
-  skeleton: '#1a1a1a',
-  skeletonHi: '#262626',
+  pill: 'var(--wmv-chrome)',
+  skeleton: 'var(--wmv-skeleton)',
+  skeletonHi: 'var(--wmv-skeleton-hi)',
 } as const;
 
 export const homePaletteVars = {
@@ -31,9 +30,7 @@ export const homePaletteVars = {
   '--home-pill': HP.pill,
 } as React.CSSProperties;
 
-/** The card's flat tile fill: the same 6% category wash as accent.tileBg,
- *  but over neutral grey instead of navy. */
+/** The card's flat tile fill: a 6% category wash over the theme surface. */
 export function homeTileBg(accent: CardAccent): string {
-  const mix = (c: number) => Math.round(c * 0.06 + 20 * 0.94);
-  return `rgb(${mix(accent.rgb[0])}, ${mix(accent.rgb[1])}, ${mix(accent.rgb[2])})`;
+  return `color-mix(in srgb, rgb(${accent.rgb.join(',')}) 6%, var(--wmv-surface))`;
 }

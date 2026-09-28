@@ -13,7 +13,7 @@ export const H4_LABEL = 'text-[10px] uppercase font-[650] tracking-[0.16em]'; //
 export const H4_CHIP  = 'text-[10px] font-bold uppercase tracking-wide'; // start-of-day chip type, deliberately NOT the Home 4 label idiom
 
 // Hairline used between the event and venue blocks and around ruled cells.
-export const TILE_RULE = 'rgba(226,227,225,0.14)';
+export const TILE_RULE = 'var(--wmv-line)'; // themed hairline
 
 // Offer type → label for the expanded card's Offers cell.
 export const DEAL_LABELS: Record<string, string> = {
@@ -56,22 +56,23 @@ export interface CardAccent {
   edge: string;
   /** Outer glow on the card. */
   glow: string;
-  /** Flat dark card fill, pre-tinted with the category. */
+  /** Flat card fill (theme surface), pre-tinted with the category. */
   tileBg: string;
 }
 
 function buildAccent(rgb: [number, number, number], hex: string): CardAccent {
   const rgba = (a: number) => `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
-  // Same 6% wash over the tile backdrop as mixCategoryTint.
-  const mix = (c: number, base: number) => Math.round(c * 0.06 + base * 0.94);
   return {
     rgb,
-    text: hex,
+    // Category hue as text: as-is on dark; darkened on light
+    // (--wmv-accent-darken) so yellows and cyans stay readable on paper.
+    text: `color-mix(in srgb, ${hex}, #000 var(--wmv-accent-darken, 0%))`,
     soft: rgba(0.16),
     border: rgba(0.55),
     edge: rgba(0.95),
     glow: rgba(0.30),
-    tileBg: `rgb(${mix(rgb[0], 12)}, ${mix(rgb[1], 12)}, ${mix(rgb[2], 28)})`,
+    // 6% category wash over the theme surface.
+    tileBg: `color-mix(in srgb, ${rgba(1)} 6%, var(--wmv-surface))`,
   };
 }
 

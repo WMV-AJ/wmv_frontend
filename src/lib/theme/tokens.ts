@@ -1,25 +1,32 @@
 // ── SHARED THEME TOKENS ──────────────────────────────────────────────
-// The dark violet palette used across the city home, listing pages, and
-// marketing surfaces. Previously each page redeclared its own `T` object
+// The site palette (light by default, dark via .dark) for the city home,
+// listing pages and marketing surfaces. Previously each page redeclared its own `T` object
 // ([city]/page.tsx, StackedCardsListPage.tsx, HomeMasthead.tsx) — this is
 // the canonical copy. New pages import from here; existing pages migrate
 // incrementally (do NOT bulk-rewrite the 869-line home page just for this).
 
 export const T = {
-  bg: '#0a0a14',
-  surface: '#14141f',
-  surfaceAlt: '#1c1c2a',
-  overlay: 'rgba(255,255,255,0.04)',
+  // Themed (globals.css :root = light, .dark = dark). These are CSS var()
+  // strings, so they work in inline styles but NOT in string math — don't
+  // append hex alpha to them.
+  bg: 'var(--wmv-bg)',
+  surface: 'var(--wmv-surface)',
+  surfaceAlt: 'var(--wmv-raised)',
+  overlay: 'var(--wmv-overlay)',
 
-  ink: '#f5f2ed',
-  inkMuted: '#a8a2b8',
-  inkFaint: '#5f5a70',
-  inkInverse: '#0a0a14',
+  ink: 'var(--wmv-ink)',
+  inkMuted: 'var(--wmv-ink-muted)',
+  inkFaint: 'var(--wmv-ink-faint)',
+  inkInverse: 'var(--wmv-ink-inverse)',
 
-  line: '#2a2638',
-  lineFaint: 'rgba(255,255,255,0.08)',
-  crosshair: 'rgba(255,255,255,0.06)',
+  line: 'var(--wmv-line-strong)',
+  lineFaint: 'var(--wmv-line)',
+  crosshair: 'var(--wmv-line)',
 
+  /** Gold for TEXT — darker in light mode so it stays readable. */
+  accentInk: 'var(--wmv-accent-ink)',
+
+  // Fixed brand colours (same in both themes; safe for `${T.accent}66`).
   accent: '#f4c430',
   accentSoft: 'rgba(244, 196, 48,0.18)',
   live: '#ef4444',
