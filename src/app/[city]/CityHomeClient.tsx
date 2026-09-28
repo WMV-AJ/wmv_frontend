@@ -309,11 +309,9 @@ export default function CityHome() {
         .map((prim) => [prim, byCat.get(prim)!] as const)
         .sort((a, b) => b[1].rowCount - a[1].rowCount)
         .map(([prim, b]) => {
-          // Up to 6 distinct photos (first-category rows first) for the card
-          // to cycle through, and the day's top sub-categories for this one.
-          const photos = Array.from(new Set(
-            [...b.firstRows, ...b.anyRows].map((r) => photoOf(r)).filter((u): u is string => !!u),
-          )).slice(0, 6);
+          // One photo per card (first-category rows first), and the day's top
+          // sub-categories for this one.
+          const photo = [...b.firstRows, ...b.anyRows].map((r) => photoOf(r)).find(Boolean) ?? null;
           const subs = new Map<string, number>();
           [...b.firstRows, ...b.anyRows].forEach((r) => {
             (Array.isArray(r.event_categories) ? r.event_categories : []).forEach((c: { primary?: string; secondary?: string }) => {
@@ -326,8 +324,7 @@ export default function CityHome() {
             description: getCategoryTagline(prim),
             count: b.ids.size,
             accent: getCardAccent(prim),
-            media: photos[0] ? { src: photos[0] } : null,
-            photos,
+            media: photo ? { src: photo } : null,
             subcategories: Array.from(subs.entries()).sort((x, y) => y[1] - x[1]).slice(0, 4).map(([s]) => s),
             fallbackImage: getCategoryFallbackImage(prim),
             href: `/${city}/cards?date=${dateParam}&cat=${encodeURIComponent(prim)}`,
