@@ -11,6 +11,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import NavPill from '@/components/navigation/NavPill';
 import { T } from '@/lib/theme/tokens';
+import { HP, homePaletteVars } from '@/components/home/home-palette';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
 import HomeHero from '@/components/home/HomeHero';
 import HomeSignal from '@/components/home/HomeSignal';
@@ -379,7 +380,7 @@ export default function CityHome() {
   const skeletonStyle = (w: string | number, h: string | number | undefined, extra?: React.CSSProperties): React.CSSProperties => ({
     width: w,
     height: h,
-    background: 'linear-gradient(90deg, #1c1c2a 25%, #2a2638 50%, #1c1c2a 75%)',
+    background: `linear-gradient(90deg, ${HP.skeleton} 25%, ${HP.skeletonHi} 50%, ${HP.skeleton} 75%)`,
     backgroundSize: '200% 100%',
     animation: 'wmv-shimmer 1.4s infinite',
     borderRadius: 2,
@@ -412,8 +413,9 @@ export default function CityHome() {
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        background: T.bg,
-        color: T.ink,
+        background: HP.bg,
+        color: HP.ink,
+        ...homePaletteVars,
       }}
     >
       <style>{`

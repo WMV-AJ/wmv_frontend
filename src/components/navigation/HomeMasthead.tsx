@@ -11,11 +11,12 @@ import { trackEvent } from '@/lib/analytics/track';
 import AuthCornerWidget from '@/components/auth/AuthCornerWidget';
 import { bodyFont, displayFont } from '@/lib/theme/tokens';
 
+// Violet by default; the city home overrides via --home-* (home-palette.ts).
 const T = {
-  surface: '#14141f',
-  ink: '#f5f2ed',
-  inkMuted: '#a8a2b8',
-  line: '#2a2638',
+  surface: 'var(--home-surface, #14141f)',
+  ink: 'var(--home-ink, #f5f2ed)',
+  inkMuted: 'var(--home-ink-muted, #a8a2b8)',
+  line: 'var(--home-line, #2a2638)',
 };
 
 

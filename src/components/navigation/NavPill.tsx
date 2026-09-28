@@ -62,7 +62,8 @@ export default function NavPill({ city, active, bottomOffset = 16, hidden = fals
         // Near-opaque surfaceAlt + real border: the old surface-on-bg fill
         // was ~4 RGB points from the page background (black-on-black), and
         // the backdrop blur cost a recomposite per frame over the moving map.
-        background: 'rgba(28,28,42,0.97)',
+        // --home-pill: grey on the city home (home-palette.ts), violet elsewhere.
+        background: 'var(--home-pill, rgba(28,28,42,0.97))',
         // No rim: the basemap is grey now, so the dark pill separates from it
         // on its own and a border only added noise.
         border: 'none',

@@ -9,6 +9,7 @@ import { Building2, ChevronRight, Clock, Heart, Star } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
 import { getShortDisplayName } from '@/lib/category-mappings';
 import { T } from '@/lib/theme/tokens';
+import { HP, homeTileBg } from './home-palette';
 import { shortenLocation } from '@/lib/format-location';
 import {
   H4_LABEL,
@@ -95,13 +96,13 @@ export function HScrollRail({ children }: { children: React.ReactNode }) {
           <div
             aria-hidden
             className="absolute top-0 bottom-1 right-0 w-11 pointer-events-none"
-            style={{ background: `linear-gradient(to left, ${T.bg}, transparent)` }}
+            style={{ background: `linear-gradient(to left, ${HP.bg}, transparent)` }}
           />
           <button
             aria-label="Scroll right"
             onClick={() => ref.current?.scrollBy({ left: (ref.current?.clientWidth ?? 200) * 0.8, behavior: 'smooth' })}
             className="absolute top-1/2 right-1 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(10,10,20,0.72)', border: '1px solid rgba(255,255,255,0.28)' }}
+            style={{ background: HP.scrim, border: '1px solid rgba(255,255,255,0.28)' }}
           >
             <ChevronRight className="w-4 h-4 text-white" />
           </button>
@@ -133,7 +134,7 @@ export function LikeButton({ liked, onToggle, className = '' }: { liked: boolean
       aria-label={liked ? 'Unlike' : 'Like'}
       aria-pressed={liked}
       className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
-      style={{ background: 'rgba(10,10,20,0.72)', border: '1px solid rgba(255,255,255,0.28)' }}
+      style={{ background: HP.scrim, border: '1px solid rgba(255,255,255,0.28)' }}
     >
       <Heart className="w-4 h-4" style={{ color: liked ? T.pink : '#fff', fill: liked ? T.pink : 'transparent' }} />
     </button>
@@ -166,7 +167,7 @@ export function EventTile({ event: e, width, sizes, live, liked, onLike, onOpen 
     >
       <div
         className="relative aspect-[3/4] overflow-hidden rounded-xl"
-        style={{ background: accent.tileBg, border: '1px solid rgba(255,255,255,0.10)' }}
+        style={{ background: homeTileBg(accent), border: '1px solid rgba(255,255,255,0.10)' }}
       >
         {e.media_url_1 && (
           <EventMedia
@@ -230,7 +231,7 @@ export function EventRow({ event: e, index, liked, onLike, onOpen }: {
     >
       <span className={`${H4_LABEL} text-silver-dim tabular-nums`}>{String(index + 1).padStart(2, '0')}</span>
       <div className="relative w-[72px] h-[72px] overflow-hidden rounded-lg"
-        style={{ background: accent.tileBg, border: '1px solid rgba(255,255,255,0.10)' }}>
+        style={{ background: homeTileBg(accent), border: '1px solid rgba(255,255,255,0.10)' }}>
         {e.media_url_1 && (
           <EventMedia
             src={e.media_url_1}
@@ -285,7 +286,7 @@ export function DealCard({ event: e, onOpen }: { event: any; onOpen: () => void 
       className="snap-start flex flex-col rounded-2xl overflow-hidden px-3 pt-3 pb-3.5 box-border"
       style={{
         flex: '0 0 220px', width: 220, minWidth: 220, maxWidth: 220,
-        background: accent.tileBg,
+        background: homeTileBg(accent),
         borderTop: `3px solid ${accent.edge}`,
         borderRight: '1px solid rgba(255,255,255,0.07)',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -338,7 +339,7 @@ export function NumberedRow({ index, label, meta, onClick }: {
 
 // ── Buttons (map/list idiom) ──────────────────────────────────────────
 export const BTN_PRIMARY =
-  'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-white text-[#0a0a14] text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95';
+  'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-white text-[#0b0b0b] text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95';
 export const BTN_SECONDARY =
   'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full text-pale text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95';
 export const BTN_SECONDARY_STYLE: React.CSSProperties = {
