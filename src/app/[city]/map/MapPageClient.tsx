@@ -25,6 +25,7 @@ import {
 } from '@/lib/stacked-card-adapter';
 import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/marker-colors';
 import { applyBasemapSimplification } from '@/lib/map/simplify-basemap';
+import { useTheme } from '@/contexts/ThemeContext';
 import { getDisplayName } from '@/lib/category-mappings';
 import { getVibeDataById } from '@/config/vibes-data';
 import { type Venue, type HierarchicalFilterState } from '@/types';
@@ -193,14 +194,15 @@ function DisableTouchRotation() {
 // idempotent, so the repeated styledata firings are harmless.
 function SimplifyBasemap() {
   const { map, isLoaded } = useMap();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (!map || !isLoaded) return;
-    applyBasemapSimplification(map);
-    const reapply = () => applyBasemapSimplification(map);
+    applyBasemapSimplification(map, isDarkMode);
+    const reapply = () => applyBasemapSimplification(map, isDarkMode);
     map.on('styledata', reapply);
     return () => { map.off('styledata', reapply); };
-  }, [map, isLoaded]);
+  }, [map, isLoaded, isDarkMode]);
 
   return null;
 }
@@ -511,6 +513,7 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
 
 export default function CityMapPage() {
   const params = useParams();
+  const { isDarkMode } = useTheme();
   const city = (params?.city as string) || 'dubai';
 
   const searchParams = useSearchParams();
@@ -837,7 +840,7 @@ export default function CityMapPage() {
         height: '100dvh',
         overflow: 'hidden',
         transform: 'translateZ(0)',
-        background: '#0a0a14',
+        background: 'var(--wmv-bg)',
         opacity: isReady ? 1 : 0,
         transition: isReady ? 'opacity 0.3s ease' : 'none',
       }}>
@@ -856,7 +859,7 @@ export default function CityMapPage() {
           }}
           onPresetRangeDatesChange={handlePresetRangeDatesChange}
           onHeightChange={setNavHeight}
-          darkMode={true}
+          darkMode={isDarkMode}
         />
 
         <div
@@ -870,7 +873,7 @@ export default function CityMapPage() {
             inlineMode={true}
             variant="outlined"
             wrapPills={true}
-            darkMode={true}
+            darkMode={isDarkMode}
           />
         </div>
 
@@ -891,7 +894,7 @@ export default function CityMapPage() {
             // zoom props still start each city in the right place.
             minZoom={3}
             maxZoom={MAPCN_MAX_ZOOM}
-            theme="dark"
+            theme={isDarkMode ? 'dark' : 'light'}
             className="w-full h-full"
             dragRotate={false}
             pitchWithRotate={false}
@@ -974,15 +977,15 @@ export default function CityMapPage() {
               width: 40,
               height: 40,
               borderRadius: '50%',
-              background: liveLocation.enabled ? '#4285f4' : 'rgba(20,20,31,0.9)',
-              border: `1px solid ${liveLocation.enabled ? '#4285f4' : 'rgba(255,255,255,0.14)'}`,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
+              background: liveLocation.enabled ? '#4285f4' : 'var(--wmv-chrome)',
+              border: `1px solid ${liveLocation.enabled ? '#4285f4' : 'var(--wmv-line)'}`,
+              boxShadow: '0 4px 16px var(--wmv-shadow)',
               cursor: 'pointer',
               transition: 'background 0.2s ease',
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke={liveLocation.enabled ? '#fff' : '#f5f2ed'} strokeWidth="2"
+              style={{ stroke: liveLocation.enabled ? '#fff' : 'var(--wmv-ink)' }} strokeWidth="2"
               strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
@@ -997,9 +1000,9 @@ export default function CityMapPage() {
               style={{
                 left: '50%', transform: 'translateX(-50%)', bottom: toastBottom,
                 padding: '10px 18px', borderRadius: 999, maxWidth: '85%',
-                background: 'rgba(20,20,31,0.95)', border: '1px solid rgba(255,255,255,0.14)',
-                color: '#f5f2ed', fontSize: 12, fontWeight: 600, textAlign: 'center',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                background: 'var(--wmv-chrome)', border: '1px solid var(--wmv-line)',
+                color: 'var(--wmv-ink)', fontSize: 12, fontWeight: 600, textAlign: 'center',
+                boxShadow: '0 8px 24px var(--wmv-shadow)',
               }}
             >
               {liveLocation.notice}
@@ -1031,7 +1034,7 @@ export default function CityMapPage() {
           onActiveOfferChange={setHighlightedOffer}
           presetRangeDates={presetRangeDates}
           navHeight={navHeight}
-          darkMode={true}
+          darkMode={isDarkMode}
           onPanelHeightChange={handlePanelHeight}
         />
 

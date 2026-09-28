@@ -22,10 +22,12 @@ const HIDE_ALWAYS = new Set([
 // names at all. Show them from zoom 10 and brighten them so they read on
 // the dark basemap. NOTE: place_hamlet carries class=neighbourhood, so it
 // must never go into HIDE_ALWAYS.
-const AREA_LABELS: Record<string, { minzoom: number; maxzoom: number; color: string }> = {
-  place_suburbs: { minzoom: 10, maxzoom: 16, color: 'rgba(196,192,206,1)' },
-  place_hamlet: { minzoom: 10, maxzoom: 16, color: 'rgba(196,192,206,1)' },
+const AREA_LABELS: Record<string, { minzoom: number; maxzoom: number }> = {
+  place_suburbs: { minzoom: 10, maxzoom: 16 },
+  place_hamlet: { minzoom: 10, maxzoom: 16 },
 };
+// Area-label colour per basemap: light on dark-matter, dark on positron.
+const AREA_LABEL_COLOR = { dark: 'rgba(196,192,206,1)', light: 'rgba(92,88,81,1)' };
 
 // Residential/service roads: from zoom 14 (Carto default is ~13).
 const MINOR_ROAD_RE = /^(road|tunnel|bridge)_(service|minor)_/;
@@ -38,16 +40,19 @@ const SEC_ROAD_RE = /^(road|tunnel|bridge)_sec_/;
 // dominate.
 const MAJOR_FILL_RE = /^(road|tunnel|bridge)_(pri|trunk|mot)_fill/;
 
-export function applyBasemapSimplification(map: MapLibreMap): void {
-  // Cheap idempotency check — a style reset clears this, which is exactly
-  // when re-application is needed.
-  try {
-    if (map.getLayer('poi_park') && map.getLayoutProperty('poi_park', 'visibility') === 'none') {
-      return;
-    }
-  } catch {
-    /* fall through and apply */
-  }
+// Which style each map was last simplified for. The old check ("is
+// poi_park hidden?") only works on dark-matter — positron has no poi_park,
+// so every paint change fired styledata → re-apply → styledata… forever.
+const simplifiedFor = new WeakMap<MapLibreMap, string>();
+
+export function applyBasemapSimplification(map: MapLibreMap, dark = true): void {
+  // Idempotent per (map, style, theme): a style swap changes the key, which
+  // is exactly when re-application is needed; our own setPaintProperty
+  // calls re-fire styledata but hit this early return.
+  const style = map.getStyle();
+  const key = `${style?.name ?? ''}|${style?.layers?.length ?? 0}|${dark ? 'd' : 'l'}`;
+  if (simplifiedFor.get(map) === key) return;
+  simplifiedFor.set(map, key);
 
   const layers = map.getStyle()?.layers ?? [];
   for (const layer of layers) {
@@ -58,7 +63,7 @@ export function applyBasemapSimplification(map: MapLibreMap): void {
       } else if (id in AREA_LABELS) {
         const cfg = AREA_LABELS[id];
         map.setLayerZoomRange(id, cfg.minzoom, cfg.maxzoom);
-        map.setPaintProperty(id, 'text-color', cfg.color);
+        map.setPaintProperty(id, 'text-color', dark ? AREA_LABEL_COLOR.dark : AREA_LABEL_COLOR.light);
       } else if (PATH_RE.test(id)) {
         map.setLayerZoomRange(id, 15, 24);
       } else if (MINOR_ROAD_RE.test(id)) {

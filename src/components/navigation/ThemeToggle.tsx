@@ -13,7 +13,9 @@ import { trackEvent } from '@/lib/analytics/track';
 const noopSubscribe = () => () => {};
 const useMounted = () => useSyncExternalStore(noopSubscribe, () => true, () => false);
 
-export default function ThemeToggle({ size = 28 }: { size?: number }) {
+/** `compact`: one round button (moon on light, sun on dark) for crowded bars
+ *  like the map/list TopNav; default: the two-segment switch. */
+export default function ThemeToggle({ size = 28, compact = false }: { size?: number; compact?: boolean }) {
   const { theme: current, setTheme } = useTheme();
   const theme = useMounted() ? current : 'light';
   const seg = size - 6;
@@ -22,6 +24,21 @@ export default function ThemeToggle({ size = 28 }: { size?: number }) {
     setTheme(t);
     trackEvent('theme_change', { theme: t });
   };
+  if (compact) {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    const Icon = theme === 'dark' ? Sun : Moon;
+    return (
+      <button
+        type="button"
+        onClick={() => pick(next)}
+        aria-label={`Switch to ${next} theme`}
+        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 active:scale-90"
+        style={{ background: 'color-mix(in srgb, var(--wmv-ink) 9%, transparent)', color: 'var(--wmv-ink-muted)' }}
+      >
+        <Icon className="w-4 h-4" />
+      </button>
+    );
+  }
   return (
     <div
       role="radiogroup"

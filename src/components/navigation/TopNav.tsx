@@ -9,6 +9,7 @@ import { useVenueData } from '@/contexts/VenueDataContext';
 import { getCityDateString } from '@/lib/city-date';
 import SignInButton from '@/components/auth/SignInButton';
 import UserMenu from '@/components/auth/UserMenu';
+import ThemeToggle from './ThemeToggle';
 
 // ===========================================
 // DATE RANGE PRESET LOGIC
@@ -333,9 +334,9 @@ const TopNav: React.FC<TopNavProps> = ({
       <div
         className="border-b"
         style={{
-          background: 'rgba(10, 10, 26, 0.97)',
-          borderColor: 'rgba(255, 255, 255, 0.06)',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.04) inset',
+          background: 'var(--wmv-chrome)',
+          borderColor: 'var(--wmv-line)',
+          boxShadow: '0 4px 24px var(--wmv-shadow)',
         }}
       >
         {/* === ROW 1: Logo + Date Pills + Search + Hamburger === */}
@@ -369,9 +370,9 @@ const TopNav: React.FC<TopNavProps> = ({
                   <div
                     className="absolute top-full left-0 mt-2 rounded-xl overflow-hidden z-[60]"
                     style={{
-                      background: 'rgba(20, 20, 40, 0.97)',
+                      background: 'var(--wmv-chrome)',
                       border: '1px solid rgba(202, 138, 4, 0.3)',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+                      boxShadow: '0 8px 24px var(--wmv-shadow)',
                       minWidth: '140px',
                     }}
                   >
@@ -381,7 +382,7 @@ const TopNav: React.FC<TopNavProps> = ({
                         onClick={() => handlePresetSelect(preset)}
                         className="w-full text-left px-4 py-2.5 text-xs font-medium transition-colors duration-150"
                         style={{
-                          color: selectedPreset === preset ? '#f8dc85' : 'rgba(255,255,255,0.5)',
+                          color: selectedPreset === preset ? 'var(--wmv-accent-ink)' : 'var(--wmv-ink-muted)',
                           background: selectedPreset === preset ? 'rgba(202, 138, 4, 0.2)' : 'transparent',
                         }}
                         onMouseEnter={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'rgba(202, 138, 4, 0.1)'; }}
@@ -452,11 +453,11 @@ const TopNav: React.FC<TopNavProps> = ({
               <input
                 type="text"
                 placeholder="Search for your Vibe?"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder:text-gray-500 cursor-pointer focus:outline-none transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-ink placeholder:text-gray-500 cursor-pointer focus:outline-none transition-all duration-200"
                 style={{
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.2)',
+                  background: 'var(--wmv-overlay)',
+                  border: '1px solid var(--wmv-line)',
+                  boxShadow: 'inset 0 1px 3px var(--wmv-shadow)',
                 }}
                 readOnly
                 onClick={onSearchClick}
@@ -470,7 +471,7 @@ const TopNav: React.FC<TopNavProps> = ({
 
         {/* === ROW 2: Category Pills === */}
         {showCategoryPills && categoryPillsContent && (
-          <div className="px-5 py-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+          <div className="px-5 py-2 border-t" style={{ borderColor: 'var(--wmv-line)' }}>
             {categoryPillsContent}
           </div>
         )}
@@ -613,9 +614,9 @@ const TopNav: React.FC<TopNavProps> = ({
                   <div
                     className="absolute top-full right-0 mt-2 rounded-xl overflow-hidden z-[60]"
                     style={{
-                      background: 'rgba(30, 30, 30, 0.97)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                      background: 'var(--wmv-chrome)',
+                      border: '1px solid var(--wmv-line)',
+                      boxShadow: '0 8px 24px var(--wmv-shadow)',
                       minWidth: '140px',
                     }}
                   >
@@ -625,10 +626,10 @@ const TopNav: React.FC<TopNavProps> = ({
                         onClick={() => handlePresetSelect(preset)}
                         className="w-full text-left px-4 py-2.5 text-xs font-medium transition-colors duration-150"
                         style={{
-                          color: selectedPreset === preset ? '#fff' : 'rgba(255,255,255,0.6)',
-                          background: selectedPreset === preset ? 'rgba(255,255,255,0.1)' : 'transparent',
+                          color: selectedPreset === preset ? 'var(--wmv-ink)' : 'var(--wmv-ink-muted)',
+                          background: selectedPreset === preset ? 'color-mix(in srgb, var(--wmv-ink) 10%, transparent)' : 'transparent',
                         }}
-                        onMouseEnter={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                        onMouseEnter={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'color-mix(in srgb, var(--wmv-ink) 6%, transparent)'; }}
                         onMouseLeave={(e) => { if (selectedPreset !== preset) e.currentTarget.style.background = 'transparent'; }}
                       >
                         {PRESET_LABELS[preset]}
@@ -638,6 +639,8 @@ const TopNav: React.FC<TopNavProps> = ({
                 )}
               </div>
             )}
+
+            <ThemeToggle compact />
 
             {/* Search icon */}
             <button
