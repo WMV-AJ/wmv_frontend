@@ -681,7 +681,7 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               {venue.venue_instagram && (
                 <button
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
-                  style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
+                  style={{ background: 'var(--wmv-action-bg)', boxShadow: '0 2px 8px var(--wmv-shadow)' }}
                   onClick={handleInstagramClick}
                 >
                   <Instagram className="w-[18px] h-[18px]" style={{ color: '#E1306C' }} />
@@ -690,18 +690,18 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               {venue.venue_phone && (
                 <button
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
-                  style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
+                  style={{ background: 'var(--wmv-action-bg)', boxShadow: '0 2px 8px var(--wmv-shadow)' }}
                   onClick={handleCallClick}
                 >
-                  <Phone className="w-[18px] h-[18px]" style={{ color: '#4ADE80' }} />
+                  <Phone className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-green)' }} />
                 </button>
               )}
               <button
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
-                style={{ background: 'rgba(90, 90, 90, 0.75)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)' }}
+                style={{ background: 'var(--wmv-action-bg)', boxShadow: '0 2px 8px var(--wmv-shadow)' }}
                 onClick={handleShareClick}
               >
-                <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />
+                <Share2 className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-ink)' }} />
               </button>
             </div>
 
@@ -711,9 +711,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                 <button
                   className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
                   style={{
-                    background: 'rgba(90, 90, 90, 0.75)',
+                    background: 'var(--wmv-action-bg)',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
-                    color: '#ffffff',
+                    color: 'var(--wmv-ink)',
                   }}
                   onClick={handleBookClick}
                 >
@@ -724,13 +724,13 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               <button
                 className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
                 style={{
-                  background: 'rgba(90, 90, 90, 0.75)',
+                  background: 'var(--wmv-action-bg)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
-                  color: '#ffffff',
+                  color: 'var(--wmv-ink)',
                 }}
                 onClick={handleDirectionsClick}
               >
-                <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
+                <Navigation className="w-4 h-4" style={{ color: 'var(--wmv-green)' }} />
                 <span>Directions</span>
               </button>
             </div>

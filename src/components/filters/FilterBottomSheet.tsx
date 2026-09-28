@@ -327,36 +327,36 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
             <div className="filter-bottom-sheet rounded-t-3xl shadow-2xl relative h-full flex flex-col">
               {/* Handle Bar */}
               <div className="flex justify-center pt-3 pb-2">
-                <div className="w-12 h-1 bg-white/30 rounded-full" />
+                <div className="w-12 h-1 bg-ink/30 rounded-full" />
               </div>
 
               {/* Header */}
               <div className="px-4 py-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-sans text-lg font-semibold text-white">
+                    <h2 className="font-sans text-lg font-semibold text-ink">
                       Filter by
                     </h2>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={handleClearAll}
-                      className="font-sans text-sm text-white/60 hover:text-white/80 px-2 py-1 rounded-md hover:bg-white/10"
+                      className="font-sans text-sm text-ink/60 hover:text-ink/80 px-2 py-1 rounded-md hover:bg-ink/10"
                     >
                       Clear All
                     </button>
                     <button
                       onClick={onClose}
-                      className="p-1 rounded-full bg-white/10 hover:bg-white/20"
+                      className="p-1 rounded-full bg-ink/10 hover:bg-ink/20"
                     >
-                      <X className="w-4 h-4 text-white/80" />
+                      <X className="w-4 h-4 text-ink/80" />
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Search Input Section */}
-              <div className="px-4 py-3 border-b border-white/10">
+              <div className="px-4 py-3 border-b border-ink/10">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
@@ -365,12 +365,12 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                     value={tempFilters.searchQuery || ''}
                     onChange={(e) => setTempFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
                     placeholder="Search venues, events, vibes..."
-                    className="w-full pl-10 pr-10 py-2.5 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
+                    className="w-full pl-10 pr-10 py-2.5 bg-ink/10 backdrop-blur-sm rounded-xl border border-ink/20 text-ink placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-ink/30"
                   />
                   {tempFilters.searchQuery && (
                     <button
                       onClick={() => setTempFilters(prev => ({ ...prev, searchQuery: '' }))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-ink"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -390,12 +390,12 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         className={`flex items-center border rounded-full px-2 py-0.5 ${filter.color}`}
                       >
-                        <span className="font-sans text-sm text-white/90 mr-1">
+                        <span className="font-sans text-sm text-ink/90 mr-1">
                           {filter.label}
                         </span>
                         <button
                           onClick={filter.onRemove}
-                          className="text-white/60 hover:text-white/90"
+                          className="text-ink/60 hover:text-ink/90"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -420,7 +420,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                 <div
                   role="tablist"
                   aria-label="Filter by"
-                  className="flex-shrink-0 flex gap-5 px-4 border-b border-white/10 overflow-x-auto scrollbar-hide"
+                  className="flex-shrink-0 flex gap-5 px-4 border-b border-ink/10 overflow-x-auto scrollbar-hide"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {filterSections.map((section) => {
@@ -434,15 +434,15 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                         onClick={() => handleSectionToggle(section.id)}
                         className={`relative flex-shrink-0 flex items-center gap-1.5 whitespace-nowrap pb-2.5 pt-0.5 text-[13px] tracking-wide transition-colors ${
                           isActive
-                            ? 'text-white font-semibold'
-                            : 'text-white/45 font-medium hover:text-white/75'
+                            ? 'text-ink font-semibold'
+                            : 'text-ink/45 font-medium hover:text-ink/75'
                         }`}
                       >
                         {section.title}
                         {count > 0 && (
                           <span
                             className={`min-w-[17px] rounded-full px-1 text-[11px] font-semibold leading-[17px] text-center ${
-                              isActive ? 'bg-white text-black' : 'bg-white/15 text-white/70'
+                              isActive ? 'bg-ink text-paper' : 'bg-ink/15 text-ink/70'
                             }`}
                           >
                             {count}
@@ -451,7 +451,7 @@ const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
                         {/* Sits ON the rule, so the active tab joins the panel
                             below it rather than floating above it. */}
                         {isActive && (
-                          <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-white" />
+                          <span className="absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-ink" />
                         )}
                       </button>
                     );

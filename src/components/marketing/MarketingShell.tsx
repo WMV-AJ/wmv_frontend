@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { T, displayFont, bodyFont, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 import { VIBES_DATA } from '@/config/vibes-data';
 import { ALL_CITIES, getCityConfig } from '@/config/cities.config';
+import ThemeToggle from '@/components/navigation/ThemeToggle';
 
 export default function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
@@ -44,7 +45,8 @@ export default function MarketingShell({ children }: { children: React.ReactNode
           flexDirection: 'column',
         }}
       >
-        {/* Masthead (server-rendered; no auth widget on marketing pages) */}
+        {/* Masthead (server-rendered; no auth widget on marketing pages — the
+            theme toggle is the one client island) */}
         <header
           style={{
             padding: '14px 18px 12px',
@@ -77,6 +79,9 @@ export default function MarketingShell({ children }: { children: React.ReactNode
               Where&rsquo;s My Vibe
             </span>
           </Link>
+          <div style={{ marginLeft: 'auto' }}>
+            <ThemeToggle />
+          </div>
         </header>
 
         <main style={{ flex: 1 }}>{children}</main>

@@ -95,11 +95,11 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       {!hideHeader && (
       <div className="flex items-center justify-between mb-1.5 min-h-[28px]">
         <div className="flex items-center space-x-1.5">
-          <h3 className="font-sans text-sm font-semibold text-white">
+          <h3 className="font-sans text-sm font-semibold text-ink">
             {section.title}
           </h3>
           {selectedCount > 0 && (
-            <span className="px-1.5 py-0.5 text-sm font-medium bg-white/20 text-white/90 rounded-full">
+            <span className="px-1.5 py-0.5 text-sm font-medium bg-ink/20 text-ink/90 rounded-full">
               {selectedCount}
             </span>
           )}
@@ -108,13 +108,13 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         {section.isCollapsible && (
           <button
             onClick={onToggle}
-            className="flex items-center justify-center p-0.5 rounded-md hover:bg-white/10"
+            className="flex items-center justify-center p-0.5 rounded-md hover:bg-ink/10"
             aria-label={section.isExpanded ? 'Collapse section' : 'Expand section'}
           >
             {section.isExpanded ? (
-              <ChevronUp className="w-3.5 h-3.5 text-white/80" />
+              <ChevronUp className="w-3.5 h-3.5 text-ink/80" />
             ) : (
-              <ChevronDown className="w-3.5 h-3.5 text-white/80" />
+              <ChevronDown className="w-3.5 h-3.5 text-ink/80" />
             )}
           </button>
         )}
@@ -159,7 +159,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
             {/* Show helpful text for empty selections */}
             {section.options.length === 0 && (
               <div className="text-center py-4">
-                <p className="font-sans text-sm text-white/60">
+                <p className="font-sans text-sm text-ink/60">
                   No {section.title.toLowerCase()} available
                 </p>
               </div>

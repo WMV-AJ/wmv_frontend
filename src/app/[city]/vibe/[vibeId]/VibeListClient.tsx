@@ -63,7 +63,7 @@ export default function VibeListingPage() {
       onViewMap={vibe ? () => { trackEvent('nav_view_change', { from: 'vibe_list', to: 'map', source: 'list_header', vibe: vibe.id }); router.push(`/${city}/map?vibe=${vibe.id}`); } : undefined}
       onBack={() => router.push(`/${city}`)}
       icon={Icon ? <Icon style={{ width: 12, height: 12, color: '#0a0a14' }} /> : null}
-      iconBg={vibe ? vibe.color : '#2a2638'}
+      iconBg={vibe ? vibe.color : 'var(--wmv-raised)'}
       title={vibe ? vibe.label : 'Vibe not found'}
       subtitle={
         !vibe ? '' : isLoading ? 'Loading…'
@@ -74,10 +74,10 @@ export default function VibeListingPage() {
 
   const emptyState = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: displayFont, fontSize: 18, color: '#f5f2ed' }}>
+      <div style={{ fontFamily: displayFont, fontSize: 18, color: 'var(--wmv-ink)' }}>
         {vibe ? `No ${vibe.label.toLowerCase()} events right now` : 'That vibe doesn’t exist'}
       </div>
-      <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
+      <div style={{ fontFamily: bodyFont, fontSize: 11, color: 'var(--wmv-ink-muted)', marginTop: 8, lineHeight: 1.5 }}>
         {vibe ? 'Check back soon — the city updates daily.' : 'Pick a vibe from the home page.'}
       </div>
     </div>

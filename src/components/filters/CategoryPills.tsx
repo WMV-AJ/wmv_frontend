@@ -206,7 +206,8 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
         className={`flex items-center gap-[3px] px-2 py-[3px] rounded-full text-[11px] font-semibold uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-md' : 'hover:shadow-sm'
         }`}
         style={isOutlined ? {
-          color: isSelected ? '#ffffff' : hexColor,
+          // Unselected: category hue as text, darkened on light so pale hues read.
+          color: isSelected ? '#ffffff' : `color-mix(in srgb, ${hexColor}, #000 var(--wmv-accent-darken, 0%))`,
           background: isSelected ? hexColor : darkMode ? 'rgba(8,8,18,0.92)' : 'rgba(255,255,255,0.9)',
           border: `1.5px solid ${hexColor}`,
         } : {
@@ -294,7 +295,8 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({
                     className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap flex-shrink-0 transition-all duration-200 ${ isSelected ? 'shadow-lg scale-105' : ''
                     }`}
                     style={isOutlined ? {
-                      color: isSelected ? '#ffffff' : hexColor,
+                      // Unselected: category hue as text, darkened on light so pale hues read.
+          color: isSelected ? '#ffffff' : `color-mix(in srgb, ${hexColor}, #000 var(--wmv-accent-darken, 0%))`,
                       background: isSelected ? hexColor : darkMode ? 'rgba(8,8,18,0.92)' : 'rgba(255,255,255,0.9)',
                       border: `1.5px solid ${hexColor}`,
                     } : {

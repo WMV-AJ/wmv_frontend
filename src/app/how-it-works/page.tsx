@@ -34,7 +34,7 @@ export default async function HowItWorksPage() {
         <div style={{ position: 'relative' }}>
           <h1 style={{ fontFamily: displayFont, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px' }}>
             We watch the stories<br />
-            <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>so you don&rsquo;t have to.</span>
+            <span style={{ color: T.accentInk, textShadow: `0 0 34px ${T.accent}40` }}>so you don&rsquo;t have to.</span>
           </h1>
           <p style={{ color: T.inkMuted, fontSize: 14, lineHeight: 1.6, margin: '0 0 30px', maxWidth: 340 }}>
             Everything happening tonight is already public — scattered across a few

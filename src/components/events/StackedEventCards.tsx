@@ -322,10 +322,10 @@ const EventCard: React.FC<EventCardProps> = ({
         // a category stripe.
         background: accent.tileBg,
         borderTop: `3px solid ${accent.edge}`,
-        borderRight: '1px solid rgba(255, 255, 255, 0.07)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
-        borderLeft: '1px solid rgba(255, 255, 255, 0.07)',
-        boxShadow: `0 2px 20px rgba(0, 0, 0, 0.5), 0 0 16px ${accent.glow}`,
+        borderRight: '1px solid var(--wmv-line)',
+        borderBottom: '1px solid var(--wmv-line)',
+        borderLeft: '1px solid var(--wmv-line)',
+        boxShadow: `0 2px 20px var(--wmv-shadow), 0 0 16px ${accent.glow}`,
         zIndex: isExpanded ? 9999 : index + 1,
         '--content-height': `${contentHeight}px`,
       } as React.CSSProperties}
@@ -399,7 +399,7 @@ const EventCard: React.FC<EventCardProps> = ({
         >
           <div
             className="relative w-full rounded-xl overflow-hidden"
-            style={{ aspectRatio: '9 / 16', border: '1px solid rgba(255,255,255,0.10)' }}
+            style={{ aspectRatio: '9 / 16', border: '1px solid var(--wmv-line)' }}
           >
             <EventMedia
               src={mediaUrl}
@@ -510,14 +510,14 @@ const EventCard: React.FC<EventCardProps> = ({
             onClick={handleCallClick}
             aria-label="Call"
           >
-            <Phone className="w-[18px] h-[18px]" style={{ color: '#4ADE80' }} />
+            <Phone className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-green)' }} />
           </button>
           <button
             className="stacked-card-action-btn"
             onClick={handleShareClick}
             aria-label="Share"
           >
-            <Share2 className="w-[18px] h-[18px]" style={{ color: '#ffffff' }} />
+            <Share2 className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-ink)' }} />
           </button>
         </div>
         {event.swipe_link_url && (
@@ -533,7 +533,7 @@ const EventCard: React.FC<EventCardProps> = ({
           className="stacked-card-directions-btn"
           onClick={handleDirectionsClick}
         >
-          <Navigation className="w-4 h-4" style={{ color: '#4ADE80' }} />
+          <Navigation className="w-4 h-4" style={{ color: 'var(--wmv-green)' }} />
           <span>Directions</span>
         </button>
       </div>

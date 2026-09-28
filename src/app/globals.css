@@ -94,10 +94,12 @@
   --wmv-btn: #161513;                          /* primary button fill */
   --wmv-btn-ink: #f6f4ef;
   --wmv-accent-ink: #8f6400;                   /* gold, as TEXT */
-  --wmv-accent-darken: 38%;                    /* category hues as text */
+  --wmv-accent-darken: 50%;                    /* category hues as text */
   --wmv-skeleton: #ebe7df;
   --wmv-skeleton-hi: #f7f5f0;
   --wmv-shadow: rgba(40, 32, 20, 0.12);
+  --wmv-action-bg: rgba(22, 21, 19, 0.08);   /* round action buttons */
+  --wmv-green: #15803d;
   --wmv-pill-shadow: 0 6px 20px rgba(40, 32, 20, 0.14), 0 0 0 1px rgba(22, 21, 19, 0.08);
 
   --pale: #1c1b19;
@@ -155,6 +157,8 @@
   --wmv-skeleton: #1a1a1a;
   --wmv-skeleton-hi: #262626;
   --wmv-shadow: rgba(0, 0, 0, 0.5);
+  --wmv-action-bg: rgba(90, 90, 90, 0.75);
+  --wmv-green: #4ade80;
   --wmv-pill-shadow: 0 0 18px 4px rgba(255,255,255,0.06), 0 0 6px 1px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.06);
 
   --pale: #e2e3e1;

@@ -15,12 +15,14 @@ import {
   transformVenueDataToStackedCards
 } from '@/lib/stacked-card-adapter';
 import { getCityConfig } from '@/config/cities.config';
+import { useTheme } from '@/contexts/ThemeContext';
 import { getCityDateString } from '@/lib/city-date';
 import { getVibeDataById } from '@/config/vibes-data';
 import { FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 
 function CardsInner() {
   const params = useParams();
+  const { isDarkMode } = useTheme();
   const city = (params?.city as string) || 'dubai';
   const cityConfig = getCityConfig(city);
   const searchParams = useSearchParams();
@@ -179,7 +181,7 @@ function CardsInner() {
 
   if (isLoading) {
     return (
-      <main className="h-screen w-full flex items-center justify-center" style={{ background: '#0a0a1a' }}>
+      <main className="h-screen w-full flex items-center justify-center" style={{ background: 'var(--wmv-bg)' }}>
         <div className="p-8 max-w-md text-center">
           <h3 className="text-lg font-semibold mb-2 text-white">Loading Venues...</h3>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mt-4"></div>
@@ -197,9 +199,9 @@ function CardsInner() {
         height: '100dvh',
         overflow: 'hidden',
         transform: 'translateZ(0)',
-        background: '#0a0a1a',
+        background: 'var(--wmv-bg)',
       }}>
-      <main className="h-full w-full" style={{ background: '#0a0a1a' }}>
+      <main className="h-full w-full" style={{ background: 'var(--wmv-bg)' }}>
         <TopNav
           embedded={false}
           hideProfile={true}
@@ -211,7 +213,7 @@ function CardsInner() {
             onDateChange: handleDateChange,
           }}
           onHeightChange={setNavHeight}
-          darkMode={true}
+          darkMode={isDarkMode}
         />
 
         <div
@@ -226,7 +228,7 @@ function CardsInner() {
             inlineMode={true}
             variant="outlined"
             wrapPills={true}
-            darkMode={true}
+            darkMode={isDarkMode}
           />
         </div>
 
@@ -235,7 +237,7 @@ function CardsInner() {
           ref={cardsScrollRef}
           className="fixed left-2 right-2 bottom-0 z-10 overflow-y-auto rounded-2xl"
           style={{
-            background: '#0a0a1a',
+            background: 'var(--wmv-bg)',
             top: `${navHeight + 6 + pillsHeight + 6}px`,
             // Held back until the pills have been measured: before that the
             // list started ~10px too high and slid under the pills, which

@@ -19,9 +19,9 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f1e6]">
+    <div className="min-h-screen flex items-center justify-center bg-paper">
       <div className="text-center space-y-4 p-8">
-        <h2 className="text-2xl font-bold text-gray-900">Something went wrong!</h2>
+        <h2 className="text-2xl font-bold text-ink">Something went wrong!</h2>
         <button
           onClick={reset}
           className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"

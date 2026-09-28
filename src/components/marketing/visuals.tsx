@@ -149,7 +149,7 @@ export function StoryCollage() {
       }} />
       <div style={{
         position: 'absolute', top: -18, right: -6, fontFamily: bodyFont, fontSize: 8,
-        letterSpacing: '0.14em', textTransform: 'uppercase', color: T.accent,
+        letterSpacing: '0.14em', textTransform: 'uppercase', color: T.accentInk,
       }}>● scanning</div>
     </div>
   );

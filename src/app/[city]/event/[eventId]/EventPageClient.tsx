@@ -323,13 +323,13 @@ export default function EventDetailPage() {
   if (isLoading || !event) {
     if (error) {
       return (
-        <main className="min-h-screen w-full" style={{ backgroundColor: '#0a0a14' }}>
+        <main className="min-h-screen w-full" style={{ backgroundColor: 'var(--wmv-bg)' }}>
           <div className="flex flex-col items-center justify-center h-screen gap-4 px-6">
-            <p className="text-[#f5f2ed] text-lg">{error}</p>
+            <p className="text-ink text-lg">{error}</p>
             <button
               onClick={() => router.back()}
               className="px-6 py-2 rounded-full text-sm font-medium"
-              style={{ background: 'rgba(255,255,255,0.08)', color: '#f5f2ed' }}
+              style={{ background: 'var(--wmv-skeleton)', color: 'var(--wmv-ink)' }}
             >
               Go Back
             </button>
@@ -339,7 +339,7 @@ export default function EventDetailPage() {
     }
     // Skeleton loading state
     return (
-      <main ref={mainRef} className="fixed inset-0 overflow-y-auto" style={{ backgroundColor: '#0a0a14' }}>
+      <main ref={mainRef} className="fixed inset-0 overflow-y-auto" style={{ backgroundColor: 'var(--wmv-bg)' }}>
         <div style={{ maxWidth: 430, margin: '0 auto', minHeight: '100%', paddingBottom: 40 }}>
           {/* Hero skeleton */}
           <div className="relative w-full" style={{ height: '280px' }}>
@@ -353,7 +353,7 @@ export default function EventDetailPage() {
               >
                 <ArrowLeft className="w-5 h-5 text-white" />
               </button>
-              <div className="w-10 h-10 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="w-10 h-10 rounded-full" style={{ background: 'var(--wmv-skeleton)' }} />
             </div>
           </div>
 
@@ -366,8 +366,8 @@ export default function EventDetailPage() {
             <div className="mt-5 space-y-3.5">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-[18px] h-[18px] rounded skeleton-pulse" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                  <div className="h-4 rounded-lg skeleton-pulse" style={{ background: 'rgba(255,255,255,0.08)', width: `${55 + i * 10}%` }} />
+                  <div className="w-[18px] h-[18px] rounded skeleton-pulse" style={{ background: 'var(--wmv-skeleton)' }} />
+                  <div className="h-4 rounded-lg skeleton-pulse" style={{ background: 'var(--wmv-skeleton)', width: `${55 + i * 10}%` }} />
                 </div>
               ))}
             </div>
@@ -385,8 +385,8 @@ export default function EventDetailPage() {
             </div>
 
             <div className="mt-8">
-              <div className="h-px w-full mb-5" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              <div className="h-3 rounded skeleton-pulse mb-4" style={{ background: 'rgba(255,255,255,0.08)', width: '100px' }} />
+              <div className="h-px w-full mb-5" style={{ background: 'var(--wmv-skeleton)' }} />
+              <div className="h-3 rounded skeleton-pulse mb-4" style={{ background: 'var(--wmv-skeleton)', width: '100px' }} />
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function EventDetailPage() {
             </div>
 
             <div className="mt-8">
-              <div className="h-px w-full mb-5" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="h-px w-full mb-5" style={{ background: 'var(--wmv-skeleton)' }} />
               <div className="flex items-center gap-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="w-11 h-11 rounded-full skeleton-pulse" style={{ background: 'rgba(0,0,0,0.06)' }} />
@@ -408,12 +408,12 @@ export default function EventDetailPage() {
             </div>
 
             <div className="mt-8">
-              <div className="h-px w-full mb-5" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              <div className="h-4 rounded skeleton-pulse mb-4" style={{ background: 'rgba(255,255,255,0.08)', width: '140px' }} />
+              <div className="h-px w-full mb-5" style={{ background: 'var(--wmv-skeleton)' }} />
+              <div className="h-4 rounded skeleton-pulse mb-4" style={{ background: 'var(--wmv-skeleton)', width: '140px' }} />
               <div className="space-y-2">
                 {[1, 2].map((i) => (
                   <div key={i} className="flex items-center gap-3 py-3 px-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                    <div className="w-[55px] h-[55px] rounded-xl skeleton-pulse" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                    <div className="w-[55px] h-[55px] rounded-xl skeleton-pulse" style={{ background: 'var(--wmv-skeleton)' }} />
                     <div className="flex-1 space-y-1.5">
                       <div className="h-3 rounded skeleton-pulse" style={{ background: 'rgba(0,0,0,0.06)', width: '45%' }} />
                       <div className="h-3.5 rounded skeleton-pulse" style={{ background: 'rgba(0,0,0,0.1)', width: '70%' }} />

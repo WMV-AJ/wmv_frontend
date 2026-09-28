@@ -79,10 +79,10 @@ export default function AreaListingPage() {
 
   const emptyState = (
     <div style={{ padding: '64px 24px', textAlign: 'center' }}>
-      <div style={{ fontFamily: displayFont, fontSize: 18, color: '#f5f2ed' }}>
+      <div style={{ fontFamily: displayFont, fontSize: 18, color: 'var(--wmv-ink)' }}>
         No events in {title} right now
       </div>
-      <div style={{ fontFamily: bodyFont, fontSize: 11, color: '#a8a2b8', marginTop: 8, lineHeight: 1.5 }}>
+      <div style={{ fontFamily: bodyFont, fontSize: 11, color: 'var(--wmv-ink-muted)', marginTop: 8, lineHeight: 1.5 }}>
         Check back soon — the city updates daily.
       </div>
     </div>

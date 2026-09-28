@@ -19,8 +19,8 @@ const FilterActionBar: React.FC<FilterActionBarProps> = ({
     <div
       className="px-5 py-4"
       style={{
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(8,8,20,0.95)',
+        borderTop: '1px solid var(--wmv-line)',
+        background: 'var(--wmv-chrome)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
       }}
@@ -32,9 +32,9 @@ const FilterActionBar: React.FC<FilterActionBarProps> = ({
             flex: 1,
             padding: '12px 0',
             borderRadius: 14,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.7)',
+            background: 'var(--wmv-overlay)',
+            border: '1px solid var(--wmv-line)',
+            color: 'var(--wmv-ink-muted)',
             fontSize: 14,
             fontWeight: 500,
           }}
@@ -53,7 +53,7 @@ const FilterActionBar: React.FC<FilterActionBarProps> = ({
               ? 'linear-gradient(135deg, #d4af37 0%, #b8952e 100%)'
               : 'rgba(212,175,55,0.25)',
             border: '1px solid rgba(212,175,55,0.3)',
-            color: hasUnsavedChanges || selectedCount > 0 ? '#0a0a14' : 'rgba(212,175,55,0.5)',
+            color: hasUnsavedChanges || selectedCount > 0 ? '#0a0a14' : 'var(--wmv-accent-ink)',
             fontSize: 14,
             fontWeight: 600,
             display: 'flex',

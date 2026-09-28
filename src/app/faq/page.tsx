@@ -30,7 +30,7 @@ export default function FaqPage() {
       <div style={{ padding: '32px 18px 8px', position: 'relative', overflow: 'hidden' }}>
         <RadarRings size={220} right={-70} top={-50} />
         <h1 style={{ fontFamily: displayFont, fontSize: 30, color: T.ink, margin: '0 0 6px', position: 'relative' }}>
-          Questions, <span style={{ color: T.accent }}>answered.</span>
+          Questions, <span style={{ color: T.accentInk }}>answered.</span>
         </h1>
         <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, margin: '0 0 26px' }}>
           The short version: it&rsquo;s free, the data comes from the venues&rsquo; own

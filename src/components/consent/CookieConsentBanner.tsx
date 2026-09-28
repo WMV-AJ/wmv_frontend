@@ -48,12 +48,12 @@ export default function CookieConsentBanner() {
       aria-label="Cookie consent"
       className="fixed bottom-3 left-3 right-3 md:left-auto md:right-6 md:bottom-6 md:max-w-md z-[70] rounded-2xl px-4 py-3 md:px-5 md:py-4"
       style={{
-        background: 'rgba(15, 15, 30, 0.96)',
+        background: 'var(--wmv-chrome)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.55)',
-        color: '#fff',
+        border: '1px solid var(--wmv-line)',
+        boxShadow: '0 12px 32px var(--wmv-shadow)',
+        color: 'var(--wmv-ink)',
       }}
     >
       <div className="flex items-start gap-3">
@@ -62,7 +62,7 @@ export default function CookieConsentBanner() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold mb-1">We use cookies for analytics</p>
-          <p className="text-xs text-gray-300 leading-relaxed">
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--wmv-ink-muted)' }}>
             We collect anonymous usage data to improve the experience. No third-party advertising.
             You can change this any time.
           </p>
@@ -70,7 +70,7 @@ export default function CookieConsentBanner() {
             <button
               onClick={handleReject}
               className="text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.85)' }}
+              style={{ background: 'var(--wmv-overlay)', color: 'var(--wmv-ink)', border: '1px solid var(--wmv-line)' }}
             >
               Reject
             </button>

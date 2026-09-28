@@ -29,28 +29,28 @@ const PillButton: React.FC<PillButtonProps> = ({
 
   const variantStyles = {
     area: {
-      unselected: 'bg-white/10 border-white/20 text-white/80 hover:border-[#B9D3C2]/50 hover:bg-[#B9D3C2]/20',
+      unselected: 'bg-ink/10 border-ink/20 text-ink/80 hover:border-[#B9D3C2]/50 hover:bg-[#B9D3C2]/20',
       selected: 'bg-[#B9D3C2]/80 border-2 border-[#B9D3C2] text-white'
     },
     vibe: {
-      unselected: 'bg-white/10 border-white/20 text-white/80 hover:border-lime-400/50 hover:bg-lime-500/20',
+      unselected: 'bg-ink/10 border-ink/20 text-ink/80 hover:border-lime-400/50 hover:bg-lime-500/20',
       selected: 'bg-lime-500/80 border-2 border-lime-400 text-white'
     },
     genre: {
-      unselected: 'bg-white/10 border-white/20 text-white/80 hover:border-amber-400/50 hover:bg-amber-500/20',
+      unselected: 'bg-ink/10 border-ink/20 text-ink/80 hover:border-amber-400/50 hover:bg-amber-500/20',
       selected: 'bg-amber-500/80 border-2 border-amber-400 text-white'
     },
     date: {
-      unselected: 'bg-white/10 border-white/20 text-white/80 hover:border-cyan-400/50 hover:bg-cyan-500/20',
+      unselected: 'bg-ink/10 border-ink/20 text-ink/80 hover:border-cyan-400/50 hover:bg-cyan-500/20',
       selected: 'bg-cyan-500/80 border-2 border-cyan-400 text-white'
     },
     default: {
-      unselected: 'bg-white/10 border-white/20 text-white/80 hover:border-white/30 hover:bg-white/15',
-      selected: 'bg-white/20 border-2 border-white/40 text-white'
+      unselected: 'bg-ink/10 border-ink/20 text-ink/80 hover:border-ink/30 hover:bg-ink/15',
+      selected: 'bg-ink/20 border-2 border-ink/40 text-ink'
     }
   };
 
-  const disabledStyles = 'opacity-50 cursor-not-allowed hover:border-white/20 hover:bg-white/10';
+  const disabledStyles = 'opacity-50 cursor-not-allowed hover:border-ink/20 hover:bg-ink/10';
 
   const currentStyles = disabled
     ? disabledStyles

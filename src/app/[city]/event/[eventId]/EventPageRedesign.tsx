@@ -116,10 +116,10 @@ function CategoryPillTag({ primary }: { primary: string }) {
 //   bg #0a0a14 · surface #14141f · ink #f5f2ed · inkMuted #a8a2b8
 //   inkFaint #5f5a70 · line #2a2638 · accent #f4c430 · live #ef4444
 
-const MONEY = '#6ee7b7';       // entry price
-const OK = '#4ade80';          // confidence bar, directions icon
+const MONEY = 'color-mix(in srgb, #6ee7b7, #000 var(--wmv-accent-darken, 0%))';       // entry price
+const OK = 'color-mix(in srgb, #4ade80, #000 var(--wmv-accent-darken, 0%))';          // confidence bar, directions icon
 const IG = '#E1306C';          // Instagram brand
-const CALL = '#87ceeb';        // call icon (matches globals.css .date-icon sky)
+const CALL = 'color-mix(in srgb, #87ceeb, #000 var(--wmv-accent-darken, 0%))';        // call icon (matches globals.css .date-icon sky)
 const R_CARD = 14;             // inner card radius
 const HERO_H = 360;
 const BAR_H = 46;              // action-bar control height (>= 44px touch min)
@@ -386,7 +386,8 @@ export default function EventPageRedesign({
               <div
                 style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0, height: 230, pointerEvents: 'none',
-                  background: `linear-gradient(180deg, transparent 0%, rgba(10,10,20,0.72) 38%, rgba(10,10,20,0.95) 72%, ${T.bg} 100%)`,
+                  // Fades into the page colour (paper on light, near-black on dark).
+                  background: 'linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--wmv-bg) 72%, transparent) 38%, color-mix(in srgb, var(--wmv-bg) 95%, transparent) 72%, var(--wmv-bg) 100%)',
                 }}
               />
 
@@ -444,7 +445,7 @@ export default function EventPageRedesign({
                       <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '1.1px', color: '#fff' }}>ON NOW</span>
                     </span>
                   )}
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.4px', textTransform: 'uppercase', color: T.accent, whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.4px', textTransform: 'uppercase', color: T.accentInk, whiteSpace: 'nowrap' }}>
                     {event.event_categories?.[0]?.primary || event.venue_category}
                   </span>
                   <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.inkFaint }} />
@@ -463,7 +464,7 @@ export default function EventPageRedesign({
                     at <span style={{ color: T.ink, fontWeight: 600 }}>{venueName}</span>
                   </span>
                   {event.venue_rating > 0 && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 999, background: 'rgba(10,10,20,0.5)', border: '1px solid rgba(255,255,255,0.16)', whiteSpace: 'nowrap' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 999, background: 'var(--wmv-raised)', border: '1px solid var(--wmv-line)', whiteSpace: 'nowrap' }}>
                       <Star className="w-[11px] h-[11px]" style={{ color: T.accent }} fill={T.accent} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: T.ink }}>{event.venue_rating.toFixed(1)}</span>
                       {event.venue_rating_count > 0 && (
@@ -687,7 +688,7 @@ export default function EventPageRedesign({
                   rel="noopener noreferrer"
                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: R_CARD, background: T.surface, border: `1px solid ${T.line}`, textDecoration: 'none', marginTop: 8 }}
                 >
-                  <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: '#60a5fa' }} />
+                  <Globe className="w-[18px] h-[18px] flex-shrink-0" style={{ color: 'color-mix(in srgb, #60a5fa, #000 var(--wmv-accent-darken, 0%))' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, color: T.ink, fontWeight: 600 }}>Event site</div>
                     <div style={{ fontSize: 10, color: T.inkFaint, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -736,7 +737,7 @@ export default function EventPageRedesign({
                     href={event.venue_website.startsWith('http') ? event.venue_website : `https://${event.venue_website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontSize: 13, color: '#60a5fa', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    style={{ fontSize: 13, color: 'color-mix(in srgb, #60a5fa, #000 var(--wmv-accent-darken, 0%))', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     onClick={e => e.stopPropagation()}
                   >
                     {event.venue_website.replace(/^https?:\/\/(www\.)?/, '')}
@@ -808,15 +809,15 @@ export default function EventPageRedesign({
           style={{
             position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
             padding: '12px 14px max(16px, env(safe-area-inset-bottom))',
-            background: 'linear-gradient(180deg, rgba(10,10,20,0) 0%, rgba(10,10,20,0.94) 34%)',
+            background: 'linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--wmv-bg) 94%, transparent) 34%)',
           }}
         >
           <div
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: 6, borderRadius: 999,
-              background: 'rgba(28,28,42,0.97)', border: `1px solid ${T.line}`,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+              background: 'var(--wmv-chrome)', border: `1px solid ${T.line}`,
+              boxShadow: '0 8px 32px var(--wmv-shadow)',
             }}
           >
           {event.venue_final_instagram && (

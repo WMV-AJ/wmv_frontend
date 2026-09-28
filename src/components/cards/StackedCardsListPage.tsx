@@ -13,15 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import StackedEventCards, { type EventCardData } from '@/components/events/StackedEventCards';
 import { getCategoryColorForStackedCards } from '@/lib/stacked-card-adapter';
-import { displayFont, bodyFont } from '@/lib/theme/tokens';
-
-const T = {
-  bg: '#0a0a14',
-  surface: '#14141f',
-  ink: '#f5f2ed',
-  inkMuted: '#a8a2b8',
-  line: '#2a2638',
-};
+import { displayFont, bodyFont, T } from '@/lib/theme/tokens';
 
 // Standard header row used inside the sticky bar: back + icon circle + title + count.
 export function ListPageHeader({

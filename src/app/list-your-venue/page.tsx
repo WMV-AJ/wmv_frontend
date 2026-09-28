@@ -33,7 +33,7 @@ export default async function ListYourVenuePage() {
         <RadarRings size={260} right={-80} top={-40} />
         <h1 style={{ fontFamily: displayFont, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
           Your venue is already<br />
-          <span style={{ color: T.accent, textShadow: `0 0 34px ${T.accent}40` }}>on the radar. Own it.</span>
+          <span style={{ color: T.accentInk, textShadow: `0 0 34px ${T.accent}40` }}>on the radar. Own it.</span>
         </h1>
         <p style={{ color: T.inkMuted, fontSize: 14, lineHeight: 1.6, margin: '0 0 34px' }}>
           If you post your events publicly, chances are we&rsquo;re already scanning
