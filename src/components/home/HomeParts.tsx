@@ -9,6 +9,7 @@ import { Building2, ChevronRight, Clock, Heart, Star } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
 import { getShortDisplayName } from '@/lib/category-mappings';
 import { T } from '@/lib/theme/tokens';
+import { shortenLocation } from '@/lib/format-location';
 import {
   H4_LABEL,
   H4_CHIP,
@@ -24,6 +25,17 @@ export function primaryCategory(e: any): string {
   const cats = (Array.isArray(e?.event_categories) ? e.event_categories : []) as Array<{ primary?: string; confidence?: number }>;
   const best = cats.filter((c) => c?.primary).sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0];
   return best?.primary || '';
+}
+
+/** "Venue · Area" on one line — the shortest where-is-it for a card. The
+ *  venue is omitted when the card's title already IS the venue name. */
+export function placeLine(e: any, hasOwnTitle: boolean): string {
+  const venue = hasOwnTitle ? (e.name || e.venue || '') : '';
+  // Shortest readable area: the neighbourhood (last comma part), e.g.
+  // "Dena Bank Colony, Ganganagar" → "Ganganagar".
+  const raw = String(e.area || e.address || '');
+  const where = shortenLocation(raw.includes(',') ? raw.split(',').map((x: string) => x.trim()).filter(Boolean).pop() || raw : raw, 24);
+  return [venue, where].filter(Boolean).join(' · ');
 }
 
 // ── Section header ────────────────────────────────────────────────────
@@ -143,6 +155,7 @@ export function EventTile({ event: e, width, sizes, live, liked, onLike, onOpen 
   const accent = getCardAccent(cat);
   const w = typeof width === 'number' ? `${width}px` : width;
   const small = typeof width === 'number' && width < 150;
+  const place = placeLine(e, !!(e.event_name && e.name));
   return (
     <div
       onClick={onOpen}
@@ -173,21 +186,22 @@ export function EventTile({ event: e, width, sizes, live, liked, onLike, onOpen 
         )}
         {onLike && <LikeButton liked={!!liked} onToggle={onLike} className="absolute top-2 right-2" />}
       </div>
-      <div className="pt-2">
-        {cat && <CategoryChip category={cat} />}
-        <h3 className={`font-inter font-semibold uppercase leading-tight tracking-[-0.01em] line-clamp-2 text-pale ${cat ? 'mt-1.5' : ''} ${small ? 'text-[13px]' : 'text-[15px]'}`}>
+      {/* Always: category pill → event name → time → venue · area. */}
+      <div className="pt-2" data-card="tile">
+        {cat && <span data-field="pill"><CategoryChip category={cat} /></span>}
+        <h3 data-field="name" className={`font-inter font-semibold uppercase leading-tight tracking-[-0.01em] line-clamp-2 text-pale ${cat ? 'mt-1.5' : ''} ${small ? 'text-[13px]' : 'text-[15px]'}`}>
           {e.event_name || e.name || ''}
         </h3>
-        {e.event_name && e.name && (
-          <div className="flex items-center gap-1.5 mt-1 min-w-0">
-            <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent.text }} />
-            <span className={`font-inter font-[550] text-pale truncate ${small ? 'text-[12px]' : 'text-[13px]'}`}>{e.name}</span>
-          </div>
-        )}
         {e.event_time && (
-          <div className={`${H4_LABEL} flex items-center gap-1.5 mt-1 text-silver min-w-0`}>
+          <div data-field="time" className={`${H4_LABEL} flex items-center gap-1.5 mt-1 text-silver min-w-0`}>
             <Clock aria-hidden className="w-3 h-3 flex-shrink-0" style={{ color: accent.text }} />
             <span className="truncate">{e.event_time}</span>
+          </div>
+        )}
+        {place && (
+          <div data-field="place" className="flex items-center gap-1.5 mt-1 min-w-0">
+            <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent.text }} />
+            <span className={`font-inter font-[550] text-pale truncate ${small ? 'text-[12px]' : 'text-[13px]'}`}>{place}</span>
           </div>
         )}
       </div>
@@ -205,10 +219,11 @@ export function EventRow({ event: e, index, liked, onLike, onOpen }: {
 }) {
   const cat = primaryCategory(e);
   const accent = getCardAccent(cat);
+  const place = placeLine(e, !!(e.event_name && e.name));
   return (
     <div
       onClick={onOpen}
-      className="grid items-center gap-3 py-3"
+      className="grid items-start gap-3 py-3"
       style={{ gridTemplateColumns: '20px 72px 1fr auto', borderTop: `1px solid ${TILE_RULE}`, cursor: e.event_id ? 'pointer' : 'default' }}
     >
       <span className={`${H4_LABEL} text-silver-dim tabular-nums`}>{String(index + 1).padStart(2, '0')}</span>
@@ -226,30 +241,29 @@ export function EventRow({ event: e, index, liked, onLike, onOpen }: {
           />
         )}
       </div>
-      <div className="min-w-0">
-        {e.area && <div className={`${H4_LABEL} text-silver-dim truncate`}>{e.area}</div>}
-        <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-          <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent.text }} />
-          <span className="font-inter font-[550] text-[15px] leading-snug text-pale truncate">{e.name || e.venue}</span>
+      {/* Same order as the tiles: pill → name → time (+ rating) → venue · area. */}
+      <div className="min-w-0" data-card="row">
+        {cat && <span data-field="pill"><CategoryChip category={cat} /></span>}
+        <div data-field="name" className="font-inter font-semibold uppercase text-[14px] leading-tight tracking-[-0.01em] text-pale line-clamp-2 mt-1.5">
+          {e.event_name || e.name || e.venue}
         </div>
-        {e.event_name && (
-          <div className="font-inter font-semibold uppercase text-[12px] leading-tight tracking-[-0.01em] text-silver truncate mt-0.5">{e.event_name}</div>
+        {(e.event_time || e.rating) && (
+          <div data-field="time" className={`${H4_LABEL} flex items-center gap-1.5 mt-1 text-silver flex-wrap`}>
+            {e.event_time && <><Clock aria-hidden className="w-3 h-3" style={{ color: accent.text }} />{e.event_time}</>}
+            {e.rating && (
+              <span className="inline-flex items-center gap-1 normal-case tracking-normal text-[11px] font-bold tabular-nums text-silver-dim">
+                <Star className="w-3 h-3 text-silver-dim fill-silver-dim" />
+                {e.rating}
+              </span>
+            )}
+          </div>
         )}
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-          {cat && <CategoryChip category={cat} />}
-          {e.event_time && (
-            <span className={`${H4_LABEL} inline-flex items-center gap-1 text-silver`}>
-              <Clock aria-hidden className="w-3 h-3" style={{ color: accent.text }} />
-              {e.event_time}
-            </span>
-          )}
-          {e.rating && (
-            <span className="inline-flex items-center gap-1 text-[12px] font-bold tabular-nums text-silver">
-              <Star className="w-3 h-3 text-silver fill-silver" />
-              {e.rating}
-            </span>
-          )}
-        </div>
+        {place && (
+          <div data-field="place" className="flex items-center gap-1.5 mt-1 min-w-0">
+            <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent.text }} />
+            <span className="font-inter font-[550] text-[13px] text-pale truncate">{place}</span>
+          </div>
+        )}
       </div>
       <LikeButton liked={liked} onToggle={onLike} />
     </div>
