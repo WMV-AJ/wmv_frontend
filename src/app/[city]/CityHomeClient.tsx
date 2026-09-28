@@ -286,20 +286,28 @@ export default function CityHome() {
   // per event — so "See N" lands on N cards. Photos only (video frames would
   // trigger /api/video-thumb). No events today → the next day that has some.
   const fan = useMemo(() => {
+    // Same category set + order as the list/map's CategoryPills for that day:
+    // the city's taxonomy (or, if empty, what the rows carry), rows with any
+    // matching primary counted, zero-count dropped, sorted by that count.
+    const cityCats = getCityConfig(city).eventCategories ?? [];
+    const rowsOn = (ds: string) => venues.filter((r) => r.event_date && utcDateKey(r.event_date) === ds);
     const build = (ds: string, dateParam: string): VibeFanItem[] => {
-      const byCat = new Map<string, { ids: Set<string>; firstRows: any[]; anyRows: any[] }>(); // eslint-disable-line @typescript-eslint/no-explicit-any
-      venues.forEach((r) => {
-        if (!r.event_date || utcDateKey(r.event_date) !== ds) return;
+      const rows = rowsOn(ds);
+      const byCat = new Map<string, { ids: Set<string>; rowCount: number; firstRows: any[]; anyRows: any[] }>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+      rows.forEach((r) => {
         primariesOf(r).forEach((prim, i) => {
-          const b = byCat.get(prim) ?? { ids: new Set<string>(), firstRows: [], anyRows: [] };
+          const b = byCat.get(prim) ?? { ids: new Set<string>(), rowCount: 0, firstRows: [], anyRows: [] };
           b.ids.add(String(r.event_id ?? `${r.venue_id}-${r.event_time}`));
+          b.rowCount += 1;
           (i === 0 ? b.firstRows : b.anyRows).push(r);
           byCat.set(prim, b);
         });
       });
-      return Array.from(byCat.entries())
-        .sort((a, b) => b[1].ids.size - a[1].ids.size)
-        .slice(0, 8)
+      const taxonomy = cityCats.length ? cityCats : Array.from(byCat.keys());
+      return taxonomy
+        .filter((prim) => (byCat.get(prim)?.rowCount ?? 0) > 0)
+        .map((prim) => [prim, byCat.get(prim)!] as const)
+        .sort((a, b) => b[1].rowCount - a[1].rowCount)
         .map(([prim, b]) => {
           const photoRow = [...b.firstRows, ...b.anyRows].find((r) => photoOf(r));
           const src = photoRow ? photoOf(photoRow) : null;
@@ -316,15 +324,15 @@ export default function CityHome() {
         });
     };
     const today = build(todayStr, 'today');
-    if (today.length) return { title: "Today's vibes", ds: todayStr, items: today };
+    if (today.length) return { title: "Today's vibes", ds: todayStr, items: today, rows: rowsOn(todayStr) };
     const next = venues
       .map((r) => (r.event_date ? utcDateKey(r.event_date) : null))
       .filter((d): d is string => !!d && d > todayStr)
       .sort()[0];
-    if (!next) return { title: "Today's vibes", ds: todayStr, items: [] as VibeFanItem[] };
+    if (!next) return { title: "Today's vibes", ds: todayStr, items: [] as VibeFanItem[], rows: [] as any[] }; // eslint-disable-line @typescript-eslint/no-explicit-any
     const tomorrow = (() => { const d = new Date(`${todayStr}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
     const dayName = new Date(`${next}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' });
-    return { title: next === tomorrow ? "Tomorrow's vibes" : `${dayName}'s vibes`, ds: next, items: build(next, next) };
+    return { title: next === tomorrow ? "Tomorrow's vibes" : `${dayName}'s vibes`, ds: next, items: build(next, next), rows: rowsOn(next) };
   }, [venues, todayStr, city]);
 
   // On this week: the next 7 city days (today + 6). One entry per event per
@@ -556,6 +564,7 @@ export default function CityHome() {
           key={fan.ds}
           title={fan.title}
           items={fan.items}
+          rows={fan.rows}
           loading={loading}
           onExplore={(item, source) => {
             trackEvent('home_category_click', { city, category: item.id, count: item.count, source });

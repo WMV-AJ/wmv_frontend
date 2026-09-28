@@ -5,7 +5,7 @@
 // today event in that category (falling back to a local photo); the count
 // is computed the way the list filters (any category match, one per event),
 // so "See N" lands on N cards. Tapping goes to today's list for that
-// category. Below the fan: a 3-row chip index, then the selected category (name,
+// category. Below the fan: the list/map's CategoryPills, then the selected category (name,
 // count, line, one action).
 
 import { useEffect, useRef, useState } from 'react';
@@ -13,7 +13,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
-import { H4_LABEL, H4_CHIP, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
+import CategoryPills from '@/components/filters/CategoryPills';
+import type { HierarchicalFilterState, Venue } from '@/types';
+import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
 import { HomeSectionHeader, BTN_PRIMARY } from './HomeParts';
 import { HF } from './home-fonts';
 import styles from './home.module.css';
@@ -41,10 +43,25 @@ export function SectionKicker({ index, total, title }: { index: number; total: n
   );
 }
 
-export default function VibeFan({ title, items, loading, onExplore }: {
+// Everything CategoryPills reads besides eventCategories — unused here.
+const PILL_FILTERS: HierarchicalFilterState = {
+  selectedPrimaries: { genres: [], vibes: [] },
+  selectedSecondaries: { genres: {}, vibes: {} },
+  expandedPrimaries: { genres: [], vibes: [] },
+  eventCategories: { selectedPrimaries: [], selectedSecondaries: {}, expandedPrimaries: [] },
+  attributes: { venue: [], energy: [], timing: [], status: [] },
+  selectedAreas: [],
+  activeDates: [],
+  activeOffers: [],
+  searchQuery: '',
+};
+
+export default function VibeFan({ title, items, rows, loading, onExplore }: {
   /** Section heading, e.g. "Today's vibes" or "Tomorrow's vibes". */
   title: string;
   items: VibeFanItem[];
+  /** The fan day's rows — what the pills count, exactly as the list does. */
+  rows: Venue[];
   loading: boolean;
   /** Called on every navigation (the caller routes to item.href). */
   onExplore: (item: VibeFanItem, source: 'fan_card' | 'fan_link') => void;
@@ -56,9 +73,11 @@ export default function VibeFan({ title, items, loading, onExplore }: {
   // the row only (never the page).
   useEffect(() => {
     const row = chipRow.current;
-    const chip = row?.querySelector<HTMLElement>(`[data-fan-index="${selected}"]`);
-    if (!row || !chip) return;
-    row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+    const chip = row?.querySelector<HTMLElement>('button.shadow-md'); // CategoryPills' selected pill
+    const scroller = chip?.closest<HTMLElement>('.overflow-x-auto');
+    if (!chip || !scroller) return;
+    const left = chip.getBoundingClientRect().left - scroller.getBoundingClientRect().left + scroller.scrollLeft;
+    scroller.scrollTo({ left: left - (scroller.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
   }, [selected]);
   const n = items.length;
   const active = items[selected] ?? items[0];
@@ -80,12 +99,6 @@ export default function VibeFan({ title, items, loading, onExplore }: {
 
   const step = (d: number) => setSelected((s) => (s + d + n) % n);
 
-  // Up to 3 rows, filled evenly (8 chips → 3 / 3 / 2), in count order.
-  const rowCount = Math.min(3, n);
-  const perRow = Math.ceil(n / rowCount);
-  const chipRows = Array.from({ length: rowCount }, (_, r) =>
-    Array.from({ length: Math.max(0, Math.min(perRow, n - r * perRow)) }, (_, i) => r * perRow + i),
-  ).filter((row) => row.length > 0);
 
   const onPointerDown = (e: React.PointerEvent) => { dragStart.current = { x: e.clientX, y: e.clientY }; };
   const onPointerUp = (e: React.PointerEvent) => {
@@ -147,35 +160,23 @@ export default function VibeFan({ title, items, loading, onExplore }: {
         })}
       </div>
 
-      {/* Index — chips dealt evenly across up to 3 rows that scroll sideways
-          together, like the map's category pills; tap to select */}
-      <div ref={chipRow} className="relative overflow-x-auto mt-2 pb-1 -mx-[18px] px-[18px]" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Select a category">
-        <div className="flex flex-col gap-2 w-max">
-          {chipRows.map((row, r) => (
-            <div key={r} className="flex gap-2">
-              {row.map((index) => {
-                const v = items[index];
-                const isActive = index === selected;
-                return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => setSelected(index)}
-                    data-fan-chip data-fan-index={index} data-cat={v.id} data-count={v.count}
-                    className={`${H4_CHIP} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0 transition-colors duration-200 active:scale-95`}
-                    style={isActive
-                      ? { background: v.accent.edge, color: '#0b0b0b', border: `1px solid ${v.accent.edge}` }
-                      : { background: v.accent.soft, color: v.accent.text, border: `1px solid ${v.accent.border}` }}
-                  >
-                    {v.label}
-                    <span className="tabular-nums opacity-80">{loading ? '—' : v.count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+      {/* Index — the list/map's own CategoryPills (same categories, labels,
+          icons, counts and rows), fed the same day's rows; the selected
+          category shows as the selected pill. */}
+      <div ref={chipRow} className="mt-2 -mr-[18px]" role="group" aria-label="Select a category">
+        <CategoryPills
+          filters={{ ...PILL_FILTERS, eventCategories: { selectedPrimaries: [active.id], selectedSecondaries: {}, expandedPrimaries: [] } }}
+          onFiltersChange={(f) => {
+            const picked = f.eventCategories?.selectedPrimaries.find((c) => c !== active.id);
+            const index = picked ? items.findIndex((v) => v.id === picked) : -1;
+            if (index >= 0) setSelected(index);
+          }}
+          venues={rows}
+          inlineMode
+          variant="outlined"
+          wrapPills
+          darkMode
+        />
       </div>
 
       {/* Selected category — name + count, its line, then one clear action */}
