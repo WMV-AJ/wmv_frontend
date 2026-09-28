@@ -5,6 +5,7 @@
 // Data comes in through props — nothing here fetches.
 
 import { useEffect, useRef, useState } from 'react';
+import { useInViewOnce, useCountUp } from './useRevealOnce';
 import { Building2, ChevronRight, Clock, Heart, Star } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
 import { getShortDisplayName } from '@/lib/category-mappings';
@@ -73,6 +74,13 @@ export function HomeSectionHeader({ kicker, label, sub, count, id, font }: {
       {sub && <p className="text-[15px] leading-relaxed text-silver mt-3">{sub}</p>}
     </div>
   );
+}
+
+/** A number that counts up the first time it scrolls into view. */
+export function CountUp({ value, scrollRoot }: { value: number; scrollRoot: React.RefObject<HTMLElement | null> }) {
+  const [ref, inView] = useInViewOnce<HTMLSpanElement>(scrollRoot, 0.6);
+  const shown = useCountUp(value, inView);
+  return <span ref={ref} className="tabular-nums">{shown}</span>;
 }
 
 /** "Weekend vibes" → "Weekend *vibes*": upright words, italic last word

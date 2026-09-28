@@ -49,3 +49,23 @@ export function useInViewOnce<T extends HTMLElement>(root: React.RefObject<HTMLE
 export function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
+
+/** Counts 0 → target (ease-out, 1.2s) once `run` turns true; jumps straight
+ *  to the target under reduced motion. */
+export function useCountUp(target: number, run: boolean): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!run) return;
+    if (prefersReducedMotion()) { setValue(target); return; }
+    let raf = 0;
+    const start = performance.now();
+    const step = (now: number) => {
+      const p = Math.min(1, (now - start) / 1200);
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, run]);
+  return value;
+}

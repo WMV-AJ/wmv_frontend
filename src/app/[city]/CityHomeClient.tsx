@@ -29,14 +29,12 @@ import CityAtlas from '@/components/home/CityAtlas';
 import { HomeFaq, VenueCta, HomeFooter } from '@/components/home/HomeClosing';
 import {
   HomeSectionHeader,
+  CountUp,
   HScrollRail,
   EventTile,
-  EventRow,
   DealCard,
   NumberedRow,
   primaryCategory,
-  BTN_SECONDARY,
-  BTN_SECONDARY_STYLE,
 } from '@/components/home/HomeParts';
 
 // Type, colour and components follow the map tile / list page system
@@ -583,8 +581,6 @@ export default function CityHome() {
 
         {/* § The idea — WMV at the centre of its sources */}
         <HomeSignal
-          liveCount={happeningNow.length}
-          loading={loading}
           countryCode={getCityConfig(city).region}
           scrollRoot={mainRef}
         />
@@ -603,9 +599,10 @@ export default function CityHome() {
           <HomeSectionHeader
             font={HF.today}
             kicker={`Today · ${dateLabel}`}
-            label={`Today in ${cityName}`}
+            label={<span>Today in <em className="italic text-silver">{cityName}</em>{!loading && todayEvents.length > 0 && (
+              <> <span className="text-silver-dim">&mdash;</span> <CountUp value={todayEvents.length} scrollRoot={mainRef} /></>
+            )}</span>}
             sub="Everything on today, what’s still to come first."
-            count={loading ? '—' : `${todayEvents.length} events`}
           />
           {loading ? (
             <>
@@ -614,17 +611,6 @@ export default function CityHome() {
                   <div key={i} style={{ flex: '0 0 48%', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
                 ))}
               </div>
-              {[0, 1, 2].map(i => (
-                <div key={i} className="grid gap-3 py-3 items-start" style={{ gridTemplateColumns: '20px 72px 1fr', borderTop: `1px solid ${TILE_RULE}` }}>
-                  <div style={skeletonStyle(18, 12)} />
-                  <div style={skeletonStyle(72, 72, { borderRadius: 8 })} />
-                  <div>
-                    <div style={skeletonStyle(80, 10)} />
-                    <div style={{ ...skeletonStyle(140, 16), marginTop: 6 }} />
-                    <div style={{ ...skeletonStyle(100, 10), marginTop: 6 }} />
-                  </div>
-                </div>
-              ))}
             </>
           ) : todayEvents.length > 0 ? (
             <>
@@ -635,26 +621,26 @@ export default function CityHome() {
                       liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
                       onOpen={() => openEvent(e, 'today_scroller')} />
                   ))}
+                  {(
+                    <button
+                      type="button"
+                      onClick={() => {
+                        trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'today_see_all' });
+                        router.push(`/${city}/cards?date=today`);
+                      }}
+                      className="flex-shrink-0 flex flex-col justify-between p-4 text-left bg-white text-[#0b0b0b]"
+                      style={{ width: '48%', aspectRatio: '3/4' }}
+                      data-cta="today-see-all"
+                    >
+                      <ArrowUpRight className="w-6 h-6" />
+                      <span>
+                        <span className={`${HF.weekTile} block`}>See all {todayEvents.length}</span>
+                        <span className={`${H4_LABEL} text-[#0b0b0b]/60 block mt-2`}>on the list</span>
+                      </span>
+                    </button>
+                  )}
                 </HScrollRail>
               </div>
-              {todayEvents.slice(0, 4).map((e, i) => (
-                <EventRow key={e.event_id || e.venue_id || i} event={e} index={i}
-                  liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
-                  onOpen={() => openEvent(e, 'today_list')} />
-              ))}
-              {todayEvents.length > 4 && (
-                <button
-                  onClick={() => {
-                    trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'today_see_all' });
-                    router.push(`/${city}/cards?date=today`);
-                  }}
-                  className={`${BTN_SECONDARY} w-full mt-3`}
-                  style={BTN_SECONDARY_STYLE}
-                >
-                  See all {todayEvents.length} events today
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-              )}
             </>
           ) : (
             <p className={`${H4_LABEL} text-silver-dim text-center py-5`}>No events found for today</p>

@@ -11,7 +11,7 @@ const H = `${serif.className} font-normal`;
 
 /** Full heading classes (face + size) per section. */
 export const HF = {
-  hero: `${H} text-[46px] leading-[0.98] tracking-[-0.015em]`,
+  hero: `${H} text-[36px] leading-[1.02] tracking-[-0.015em]`,
   vibes: `${H} text-[40px] leading-[1] tracking-[-0.01em]`,
   vibesName: `${H} text-[42px] leading-[0.9] tracking-[-0.01em]`,
   idea: `${H} text-[42px] leading-[0.98] tracking-[-0.01em]`,

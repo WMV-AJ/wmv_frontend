@@ -8,16 +8,14 @@ import { HF } from './home-fonts';
 import { SectionKickerRule } from './HomeParts';
 import SourceOrbit from './SourceOrbit';
 
-export default function HomeSignal({ liveCount, loading, countryCode, scrollRoot }: {
-  liveCount: number;
-  loading: boolean;
+export default function HomeSignal({ countryCode, scrollRoot }: {
   /** City's ISO country (city config region) — picks the ticketing sites shown. */
   countryCode?: string;
   scrollRoot: React.RefObject<HTMLElement | null>;
 }) {
   return (
     <section className="px-[18px] pt-16" aria-labelledby="home-signal-title">
-      <SectionKickerRule count={loading ? undefined : `${liveCount} live now`}>The idea</SectionKickerRule>
+      <SectionKickerRule>The idea</SectionKickerRule>
       <h2 id="home-signal-title" className={`${HF.idea} text-pale mt-4`}>
         We watch every venue&rsquo;s stories.<br /><em className="italic text-silver">You pick the vibe.</em>
       </h2>

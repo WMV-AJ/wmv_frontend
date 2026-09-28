@@ -4,12 +4,11 @@
 // the next 7 city days — counting up when it scrolls in — and a rail of six
 // picks spread across the days, ending on a "See the whole map" tile.
 
-import { useEffect, useState } from 'react';
 import { ArrowUpRight, Map as MapIcon } from 'lucide-react';
 import { H4_LABEL, TILE_RULE } from '@/components/shared/card-style';
 import { EventTile, HScrollRail } from './HomeParts';
 import { HF } from './home-fonts';
-import { useInViewOnce, prefersReducedMotion } from './useRevealOnce';
+import { useInViewOnce, useCountUp } from './useRevealOnce';
 
 export interface WeekPick {
   /** City date, YYYY-MM-DD. */
@@ -20,23 +19,6 @@ export interface WeekPick {
   event: any;
 }
 
-function useCountUp(target: number, run: boolean): number {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!run) return;
-    if (prefersReducedMotion()) { setValue(target); return; }
-    let raf = 0;
-    const start = performance.now();
-    const step = (now: number) => {
-      const p = Math.min(1, (now - start) / 1200);
-      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [target, run]);
-  return value;
-}
 
 export default function HomeThisWeek({ cityName, count, picks, loading, scrollRoot, onOpen, onMap }: {
   cityName: string;
