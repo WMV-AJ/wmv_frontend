@@ -1,13 +1,14 @@
 'use client';
 
 // The idea, stacked: heading, a centred live radar + count, one line of
-// copy and where the listings come from: we watch every venue's
+// copy, and WMV drawn as the layer above where the listings come from: we watch every venue's
 // stories, you pick the vibe. The radar's dots are today's categories, and
 // the source chips say where the listings come from.
 
 import { H4_LABEL, TILE_RULE, getCardAccent } from '@/components/shared/card-style';
 import { T } from '@/lib/theme/tokens';
 import { HF } from './home-fonts';
+import HomeSourceLayers from './HomeSourceLayers';
 import styles from './home.module.css';
 
 const RADAR_DOTS = [
@@ -20,14 +21,11 @@ const RADAR_DOTS = [
   { t: '70%', l: '80%' },
 ];
 
-export const SOURCES: Array<[string, string]> = [
-  ['IG stories', '#ec4899'],
-  ['IG posts', '#eab308'],
-  ['Ticketing', '#10b981'],
-  ['Venue sites', '#f97316'],
-];
 
-export default function HomeSignal({ liveCount, loading, dotCategories }: {
+export default function HomeSignal({ liveCount, loading, dotCategories, countryCode, scrollRoot }: {
+  /** City's ISO country (city config region) — picks the ticketing sites shown. */
+  countryCode?: string;
+  scrollRoot: React.RefObject<HTMLElement | null>;
   liveCount: number;
   loading: boolean;
   /** Today's categories — each dot takes one's colour. */
@@ -76,16 +74,8 @@ export default function HomeSignal({ liveCount, loading, dotCategories }: {
         week in one place.
       </p>
 
-      {/* Where it comes from — ruled cells, like the How it works stats */}
-      <div className="grid grid-cols-2 mt-7" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
-        {SOURCES.map(([label, color], i) => (
-          <div key={label} className={`${H4_LABEL} flex items-center gap-2.5 py-4 text-pale`}
-            style={{ borderBottom: `1px solid ${TILE_RULE}`, paddingLeft: i % 2 ? 14 : 0, borderLeft: i % 2 ? `1px solid ${TILE_RULE}` : undefined }}>
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
-            {label}
-          </div>
-        ))}
-      </div>
+      {/* Where it comes from — WMV as the layer above its sources */}
+      <HomeSourceLayers countryCode={countryCode} scrollRoot={scrollRoot} />
     </section>
   );
 }

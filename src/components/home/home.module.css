@@ -511,11 +511,82 @@
 
 [data-in='1'] .mlRow { opacity: 1; transform: none; }
 
+/* ── Source layers (HomeSignal): WMV above its sources ───────────── */
+
+.layers {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.layer {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--home-surface, #161616);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), 0 6px 0 -1px rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  transform: perspective(700px) rotateX(24deg) translateY(28px);
+  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(var(--d, 0) * 220ms);
+}
+
+[data-in='1'] .layer { opacity: 1; transform: perspective(700px) rotateX(0deg) translateY(0); }
+
+.layerTop {
+  flex-wrap: nowrap;
+  background: linear-gradient(135deg, #202020, #161616);
+  border-color: rgba(244, 196, 48, 0.55);
+  box-shadow: 0 0 28px rgba(244, 196, 48, 0.16), 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+.layerNext {
+  background: rgba(22, 22, 22, 0.6);
+  border-style: dashed;
+}
+
+.flow {
+  display: flex;
+  justify-content: space-around;
+  height: 34px;
+  padding: 0 16%;
+}
+
+.flowLine {
+  position: relative;
+  width: 1px;
+  background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.08));
+}
+
+.flowDot {
+  position: absolute;
+  left: -2px;
+  bottom: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f4c430;
+  box-shadow: 0 0 8px #f4c430;
+  animation: flowUp 1.6s linear infinite;
+}
+
+@keyframes flowUp {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-34px); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .radarSweep,
   .radarDot,
   .storySeg span,
-  .mlPin {
+  .mlPin,
+  .flowDot {
     animation: none !important;
   }
   .vibeTile,
@@ -527,7 +598,9 @@
     transition: none !important;
   }
   .vibeTile,
-  .mlRow { opacity: 1; transform: none; }
+  .mlRow,
+  .layer { opacity: 1; transform: none; }
+  .layer { transition: none !important; }
   .vibeStage,
   .fanCard,
   .pathActive,

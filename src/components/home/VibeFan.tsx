@@ -28,6 +28,10 @@ export interface VibeFanItem {
   accent: CardAccent;
   /** A live event image for this vibe, if any. */
   media: { src: string; poster?: string | null } | null;
+  /** Event photos for this vibe, cycled on the card (media = photos[0]). */
+  photos: string[];
+  /** The day's top sub-categories, e.g. DJ Set · Theme Party. */
+  subcategories: string[];
   fallbackImage: string;
   /** Where the category goes, e.g. /dubai/cards?date=today&cat=Club%20Night */
   href: string;
@@ -69,6 +73,14 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
   const [selected, setSelected] = useState(0);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const chipRow = useRef<HTMLDivElement>(null);
+  // Photo cycle: every card steps to its next event photo each 0.5s (still
+  // under reduced motion, paused while the tab is hidden).
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const id = window.setInterval(() => { if (!document.hidden) setFrame((f) => f + 1); }, 500);
+    return () => window.clearInterval(id);
+  }, []);
   // Dragging the fan changes the selection — keep its chip in view. Scrolls
   // the row only (never the page).
   useEffect(() => {
@@ -148,7 +160,16 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
                 cursor: 'pointer',
               }}
             >
-              {v.media ? (
+              {v.photos.length > 1 && depth <= 3 ? (
+                // Every photo stacked, one shown at a time — each is loaded
+                // once, so the 0.5s swap never flashes an empty card.
+                v.photos.map((src, k) => (
+                  <div key={src} className="absolute inset-0 transition-opacity duration-200"
+                    style={{ opacity: k === (frame + index) % v.photos.length ? 1 : 0 }}>
+                    <EventMedia src={src} alt={k ? '' : v.label} sizes="175px" fill />
+                  </div>
+                ))
+              ) : v.media ? (
                 <EventMedia src={v.media.src} poster={v.media.poster} alt={v.label} sizes="175px" fill />
               ) : (
                 <Image src={v.fallbackImage} alt={v.label} fill sizes="175px" className="object-cover" />
@@ -189,6 +210,11 @@ export default function VibeFan({ title, items, rows, loading, onExplore }: {
             <div className={`${H4_LABEL} text-silver-dim mt-1`}>today</div>
           </div>
         </div>
+        {active.subcategories.length > 0 && (
+          <div className={`${H4_LABEL} text-silver mt-3 leading-relaxed`} data-fan-subs>
+            {active.subcategories.join(' · ')}
+          </div>
+        )}
         <p className="text-[15px] leading-relaxed text-silver mt-3">{active.description}</p>
       </div>
       <Link
