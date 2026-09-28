@@ -41,8 +41,10 @@ export function placeLine(e: any, hasOwnTitle: boolean): string {
 // ── Section header ────────────────────────────────────────────────────
 // The expanded card's section heading (11px / extrabold / .18em caps) over a
 // full-bleed hairline; the count rides beside it in H4_LABEL.
-export function HomeSectionHeader({ label, count, onClick }: {
+export function HomeSectionHeader({ label, count, onClick, id }: {
   label: React.ReactNode;
+  /** Optional id for the <h2>, so a section can aria-labelledby it. */
+  id?: string;
   count?: React.ReactNode;
   onClick?: () => void;
 }) {
@@ -52,7 +54,7 @@ export function HomeSectionHeader({ label, count, onClick }: {
       className={`flex items-baseline gap-2 -mx-[18px] px-[18px] pb-2.5 mb-3 ${onClick ? 'cursor-pointer' : ''}`}
       style={{ borderBottom: `1px solid ${TILE_RULE}` }}
     >
-      <h2 className="flex items-center gap-1.5 text-[11px] uppercase font-extrabold tracking-[0.18em] text-pale">
+      <h2 id={id} className="flex items-center gap-1.5 text-[11px] uppercase font-extrabold tracking-[0.18em] text-pale">
         {label}
       </h2>
       {count != null && <span className={`${H4_LABEL} text-silver-dim whitespace-nowrap`}>{count}</span>}

@@ -314,7 +314,26 @@
   -webkit-text-stroke: 1px var(--accent-border);
 }
 
+/* ── The idea + radar (HomeSignal) ─────────────────────────────────── */
+
+.radar {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+
+@keyframes homeSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes homePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.radarSweep { animation: homeSpin 4s linear infinite; }
+.radarDot { animation: homePulse 2s infinite; }
+
 @media (prefers-reduced-motion: reduce) {
+  .radarSweep,
+  .radarDot {
+    animation: none !important;
+  }
   .vibeStage,
   .fanCard,
   .pathActive,

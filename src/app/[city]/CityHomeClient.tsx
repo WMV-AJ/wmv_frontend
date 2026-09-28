@@ -10,10 +10,12 @@ import { ArrowUpRight } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import NavPill from '@/components/navigation/NavPill';
-import { VIBES, matchesVibe } from '@/config/vibes';
 import { T } from '@/lib/theme/tokens';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
 import HomeHero from '@/components/home/HomeHero';
+import HomeSignal from '@/components/home/HomeSignal';
+import { getShortDisplayName } from '@/lib/category-mappings';
+import { getCategoryTagline, getCategoryFallbackImage } from '@/config/category-copy';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
 import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
 import CityAtlas from '@/components/home/CityAtlas';
@@ -233,30 +235,67 @@ export default function CityHome() {
     .slice(0, 6)
     .map(([label, count]) => ({ label, count }));
 
-  // Vibe fan: live count per vibe (same matchesVibe as /[city]/vibe/[id])
-  // and a real upcoming event photo for each card. Photos are preferred over
-  // video frames so the fan doesn't trigger 8 /api/video-thumb extractions.
-  const vibeFan = useMemo<VibeFanItem[]>(() => {
+  // ── Today's vibes (fan) ─────────────────────────────────────────────
+  // Built from the categories actually on today (city date). Counted the way
+  // the list filters — an event counts for every category it carries, once
+  // per event — so "See N" lands on N cards. Photos only (video frames would
+  // trigger /api/video-thumb). No events today → the next day that has some.
+  const fan = useMemo(() => {
     const isVideo = (url?: string, type?: string) => type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url || '');
-    return VIBES.map((v) => {
-      const matches = venues.filter((venue) => matchesVibe(venue, v));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const withPhoto = matches.find((m: any) =>
-        (m.media_url_1 && !isVideo(m.media_url_1, m.media_type_1)) || (m.media_url_2 && !isVideo(m.media_url_2, m.media_type_2)));
-      const src = withPhoto
-        ? (withPhoto.media_url_1 && !isVideo(withPhoto.media_url_1, withPhoto.media_type_1) ? withPhoto.media_url_1 : withPhoto.media_url_2)
-        : null;
-      return {
-        id: v.id,
-        label: v.label,
-        description: v.description,
-        count: matches.length,
-        accent: v.categories[0] ? getCardAccent(v.categories[0]) : accentFromHex(v.color),
-        media: src ? { src } : null,
-        fallbackImage: v.fallbackImage,
-      };
-    });
-  }, [venues]);
+    const photoOf = (r: any): string | null => // eslint-disable-line @typescript-eslint/no-explicit-any
+      (r.media_url_1 && !isVideo(r.media_url_1, r.media_type_1)) ? r.media_url_1
+        : (r.media_url_2 && !isVideo(r.media_url_2, r.media_type_2)) ? r.media_url_2 : null;
+    const build = (ds: string, dateParam: string): VibeFanItem[] => {
+      const byCat = new Map<string, { ids: Set<string>; firstRows: any[]; anyRows: any[] }>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+      venues.forEach((r) => {
+        if (!r.event_date || utcDateKey(r.event_date) !== ds) return;
+        const prims: string[] = Array.from(new Set(
+          (Array.isArray(r.event_categories) ? r.event_categories : []).map((c: { primary?: string }) => c?.primary).filter(Boolean),
+        ));
+        prims.forEach((prim, i) => {
+          const b = byCat.get(prim) ?? { ids: new Set<string>(), firstRows: [], anyRows: [] };
+          b.ids.add(String(r.event_id ?? `${r.venue_id}-${r.event_time}`));
+          (i === 0 ? b.firstRows : b.anyRows).push(r);
+          byCat.set(prim, b);
+        });
+      });
+      return Array.from(byCat.entries())
+        .sort((a, b) => b[1].ids.size - a[1].ids.size)
+        .slice(0, 8)
+        .map(([prim, b]) => {
+          const photoRow = [...b.firstRows, ...b.anyRows].find((r) => photoOf(r));
+          const src = photoRow ? photoOf(photoRow) : null;
+          return {
+            id: prim,
+            label: getShortDisplayName(prim),
+            description: getCategoryTagline(prim),
+            count: b.ids.size,
+            accent: getCardAccent(prim),
+            media: src ? { src } : null,
+            fallbackImage: getCategoryFallbackImage(prim),
+            href: `/${city}/cards?date=${dateParam}&cat=${encodeURIComponent(prim)}`,
+          };
+        });
+    };
+    const today = build(todayStr, 'today');
+    if (today.length) return { title: "Today's vibes", ds: todayStr, items: today };
+    const next = venues
+      .map((r) => (r.event_date ? utcDateKey(r.event_date) : null))
+      .filter((d): d is string => !!d && d > todayStr)
+      .sort()[0];
+    if (!next) return { title: "Today's vibes", ds: todayStr, items: [] as VibeFanItem[] };
+    const tomorrow = (() => { const d = new Date(`${todayStr}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
+    const dayName = new Date(`${next}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' });
+    return { title: next === tomorrow ? "Tomorrow's vibes" : `${dayName}'s vibes`, ds: next, items: build(next, next) };
+  }, [venues, todayStr, city]);
+
+  // Events on the city's today, one per event (hero count).
+  const todayEventCount = useMemo(
+    () => new Set(todayVenues.map((r) => String(r.event_id ?? `${r.venue_id}-${r.event_time}`))).size,
+    // todayVenues is re-derived each render from venues + todayStr
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [venues, todayStr],
+  );
 
   // The city's top event categories by count — colours the hero radar (and,
   // later on the page, the atlas pins).
@@ -338,9 +377,9 @@ export default function CityHome() {
     trackEvent('nav_view_change', { from: 'home', to: 'map', source });
     router.push(`/${city}/map`);
   };
-  const goList = (source: string) => {
+  const goList = (source: string, query = '') => {
     trackEvent('nav_view_change', { from: 'home', to: 'cards', source });
-    router.push(`/${city}/cards`);
+    router.push(`/${city}/cards${query}`);
   };
 
   return (
@@ -370,12 +409,32 @@ export default function CityHome() {
         <HomeHero
           cityName={cityName}
           dateLabel={dateLabel}
-          tonightCount={tonightEvents.length}
+          todayCount={todayEventCount}
           liveCount={happeningNow.length}
           loading={loading}
-          topCategories={topCategories}
           onMap={() => goMap('hero_cta')}
-          onList={() => goList('hero_cta')}
+          onList={() => goList('hero_cta', '?date=today')}
+          onWhatsApp={() => trackEvent('whatsapp_bot_click', { city, source: 'hero_cta' })}
+        />
+
+        {/* § Today's vibes — the fan, built from today's real categories */}
+        <VibeFan
+          key={fan.ds}
+          title={fan.title}
+          items={fan.items}
+          loading={loading}
+          onExplore={(item, source) => {
+            trackEvent('home_category_click', { city, category: item.id, count: item.count, source });
+            // The "See N" link navigates itself; the front fan card doesn't.
+            if (source === 'fan_card') router.push(item.href);
+          }}
+        />
+
+        {/* § The idea + radar */}
+        <HomeSignal
+          liveCount={happeningNow.length}
+          loading={loading}
+          dotCategories={fan.items.map((i) => i.id)}
         />
 
         {/* § Happening now — live right now, hidden when empty */}
@@ -473,20 +532,6 @@ export default function CityHome() {
             </HScrollRail>
           </section>
         )}
-
-        {/* § What kind of night is it? — vibe fan + index (from Home 4) */}
-        <VibeFan
-          city={city}
-          cityName={cityName}
-          items={vibeFan}
-          loading={loading}
-          kicker={{ index: 1, total: 3 }}
-          onExplore={(vibeId, source) => {
-            trackEvent('vibe_pill_click', { vibe: vibeId, city, source });
-            // The index link navigates itself; the front fan card doesn't.
-            if (source === 'fan_card') router.push(`/${city}/vibe/${vibeId}`);
-          }}
-        />
 
         {/* § Weekend — one row per day (Fri / Sat / Sun) */}
         {(loading || weekendByDay.some(d => d.events.length > 0)) && (

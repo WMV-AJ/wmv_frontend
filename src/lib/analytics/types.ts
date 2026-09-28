@@ -25,6 +25,7 @@ export type AnalyticsEventName =
   | 'home_category_click'
   | 'home_weekend_day_click'
   | 'home_city_switch'
+  | 'whatsapp_bot_click'
   // Landing intro + marketing funnels
   //   Visitor funnel: page_view(/) → intro_completed|intro_skipped →
   //     landing_cta_click → page_view(/{city}) → nav_view_change → view_event
