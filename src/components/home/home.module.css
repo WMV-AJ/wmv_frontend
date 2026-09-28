@@ -581,12 +581,233 @@
   100% { transform: translateY(-34px); opacity: 0; }
 }
 
+/* ── Source visual A: orbit ─────────────────────────────────────── */
+
+.orbit {
+  position: relative;
+  width: 340px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.orbitRingOuter,
+.orbitRingInner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.orbitRingOuter {
+  width: 300px;
+  height: 300px;
+  border: 1px dashed rgba(244, 196, 48, 0.28);
+}
+
+.orbitRingInner {
+  width: 176px;
+  height: 176px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle, rgba(244, 196, 48, 0.08), transparent 70%);
+}
+
+.orbitSpin {
+  position: absolute;
+  inset: 0;
+  animation: orbitCW 36s linear infinite;
+}
+
+.orbitSpinSlow { animation: orbitCCW 80s linear infinite; }
+.orbitUpright { animation: orbitCCW 36s linear infinite; }
+.orbitUprightSlow { animation: orbitCW 80s linear infinite; }
+
+@keyframes orbitCW { to { transform: rotate(360deg); } }
+@keyframes orbitCCW { to { transform: rotate(-360deg); } }
+
+.orbitSlot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+
+.orbitSlot > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+}
+
+.orbitLive,
+.orbitNext {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #161616;
+  border-radius: 12px;
+}
+
+.orbitLive {
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 18px rgba(244, 196, 48, 0.25), 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+.orbitNext {
+  padding: 4px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  opacity: 0.75;
+  filter: saturate(0.7);
+}
+
+.orbitBeam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 1px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgba(244, 196, 48, 0.55), rgba(255, 255, 255, 0.08));
+}
+
+.orbitBeam span {
+  position: absolute;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f4c430;
+  box-shadow: 0 0 8px #f4c430;
+  animation: beamIn 1.8s linear infinite;
+}
+
+@keyframes beamIn {
+  0% { left: 100%; opacity: 0; }
+  15% { opacity: 1; }
+  100% { left: 0; opacity: 0.2; }
+}
+
+.orbitCore {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #0b0b0b;
+  border: 2px solid rgba(244, 196, 48, 0.8);
+  box-shadow: 0 0 40px rgba(244, 196, 48, 0.35);
+}
+
+.orbitPulse {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 196, 48, 0.6);
+  animation: corePulse 2.4s ease-out infinite;
+}
+
+@keyframes corePulse {
+  from { transform: scale(1); opacity: 0.8; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+
+/* ── Source visual B: sphere ────────────────────────────────────── */
+
+.sphere {
+  position: relative;
+  width: 340px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  background: radial-gradient(circle at 50% 50%, rgba(244, 196, 48, 0.12), transparent 55%);
+}
+
+.sphereLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 1;
+}
+
+.sphereLines circle { stroke: rgba(255, 255, 255, 0.16); }
+
+.sphereNode {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  will-change: transform, opacity;
+}
+
+.sphereLive,
+.sphereNext {
+  display: flex;
+  background: #161616;
+  border-radius: 12px;
+}
+
+.sphereLive {
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 16px rgba(244, 196, 48, 0.3);
+}
+
+.sphereNext {
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sphereLabel {
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #f5f5f5;
+  text-shadow: 0 1px 4px #000;
+  opacity: var(--label, 1);
+  transition: opacity 0.3s ease;
+}
+
+.sphereCore {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  z-index: 15;
+  display: flex;
+  padding: 6px;
+  border-radius: 50%;
+  background: #0b0b0b;
+  border: 2px solid rgba(244, 196, 48, 0.85);
+  box-shadow: 0 0 44px rgba(244, 196, 48, 0.4), 0 0 0 10px rgba(11, 11, 11, 0.6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .radarSweep,
   .radarDot,
   .storySeg span,
   .mlPin,
-  .flowDot {
+  .flowDot,
+  .orbitSpin,
+  .orbitUpright,
+  .orbitUprightSlow,
+  .orbitBeam span,
+  .orbitPulse {
     animation: none !important;
   }
   .vibeTile,

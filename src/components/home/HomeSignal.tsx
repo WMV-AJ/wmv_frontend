@@ -8,7 +8,9 @@
 import { H4_LABEL, TILE_RULE, getCardAccent } from '@/components/shared/card-style';
 import { T } from '@/lib/theme/tokens';
 import { HF } from './home-fonts';
-import HomeSourceLayers from './HomeSourceLayers';
+import { useEffect, useState } from 'react';
+import SourceOrbit from './SourceOrbit';
+import SourceSphere from './SourceSphere';
 import styles from './home.module.css';
 
 const RADAR_DOTS = [
@@ -22,15 +24,18 @@ const RADAR_DOTS = [
 ];
 
 
-export default function HomeSignal({ liveCount, loading, dotCategories, countryCode, scrollRoot }: {
+export default function HomeSignal({ liveCount, loading, dotCategories, countryCode }: {
   /** City's ISO country (city config region) — picks the ticketing sites shown. */
   countryCode?: string;
-  scrollRoot: React.RefObject<HTMLElement | null>;
   liveCount: number;
   loading: boolean;
   /** Today's categories — each dot takes one's colour. */
   dotCategories: string[];
 }) {
+  const [variant, setVariant] = useState<'a' | 'b'>('a');
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('sources') === 'b') setVariant('b');
+  }, []);
   const colours = dotCategories.length ? dotCategories.map((c) => getCardAccent(c).text) : ['#f5f5f5'];
   return (
     <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-signal-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
@@ -74,8 +79,9 @@ export default function HomeSignal({ liveCount, loading, dotCategories, countryC
         week in one place.
       </p>
 
-      {/* Where it comes from — WMV as the layer above its sources */}
-      <HomeSourceLayers countryCode={countryCode} scrollRoot={scrollRoot} />
+      {/* Where it comes from — WMV at the centre of its sources.
+          PREVIEW: ?sources=b shows option B (sphere); default A (orbit). */}
+      {variant === 'b' ? <SourceSphere countryCode={countryCode} /> : <SourceOrbit countryCode={countryCode} />}
     </section>
   );
 }

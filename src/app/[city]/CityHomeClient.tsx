@@ -587,7 +587,6 @@ export default function CityHome() {
           loading={loading}
           dotCategories={fan.items.map((i) => i.id)}
           countryCode={getCityConfig(city).region}
-          scrollRoot={mainRef}
         />
 
         {/* § Today in <city> — all of today, not just the evening */}
