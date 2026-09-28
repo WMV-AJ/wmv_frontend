@@ -91,6 +91,18 @@ function isLiveNow(
   return h >= startH && h < endH;
 }
 
+// True once a today event's end time has passed on the city clock. Events
+// without a parsable end ("late", "sunrise", no end) or that run past
+// midnight are never "over" today.
+function hasEnded(eventTime: string | null | undefined, cityHour: number): boolean {
+  if (!eventTime) return false;
+  const parts = eventTime.split('-').map(p => p.trim());
+  const startH = parseTimeHours(parts[0] || '');
+  const endH = parseTimeHours(parts[1] || '');
+  if (startH === null || endH === null || endH < startH) return false;
+  return cityHour >= endH;
+}
+
 function utcDateKey(eventDate: string): string | null {
   const d = new Date(eventDate);
   if (isNaN(d.getTime())) return null;
@@ -150,24 +162,32 @@ export default function CityHome() {
     return utcDateKey(v.event_date) === todayStr;
   });
 
-  const tonightEvents = todayVenues
-    .filter(v => {
-      if (!v.event_time) return false;
-      const t = v.event_time.trim().toLowerCase();
-      if (t === 'all day') return true;
-      const parts = v.event_time.split('-').map((p: string) => p.trim());
-      const startH = parseTimeHours(parts[0] || '');
-      return startH !== null && startH >= 18;
-    })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .sort((a: any, b: any) => {
-      const sa = parseTimeHours((a.event_time || '').split('-')[0]?.trim() || '') ?? 99;
-      const sb = parseTimeHours((b.event_time || '').split('-')[0]?.trim() || '') ?? 99;
-      if (sa !== sb) return sa - sb;
-      const ra = a.rating ?? 0, rb = b.rating ?? 0;
-      if (ra !== rb) return rb - ra;
-      return (a.venue_id ?? 0) - (b.venue_id ?? 0);
-    });
+  // All of today (city date), one row per event — the same set the list's
+  // ?date=today shows, so "See all N" lands on N cards. Still-on / upcoming
+  // first, then by start time; finished ones sink to the end.
+  const todayEvents = (() => {
+    const seen = new Set<string>();
+    const startOf = (e: { event_time?: string }) =>
+      parseTimeHours((e.event_time || '').split('-')[0]?.trim() || '') ?? 99;
+    return todayVenues
+      .filter(v => {
+        const k = String(v.event_id ?? `${v.venue_id}-${v.event_time}`);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .sort((a: any, b: any) => {
+        const ea = hasEnded(a.event_time, dubaiHour) ? 1 : 0;
+        const eb = hasEnded(b.event_time, dubaiHour) ? 1 : 0;
+        if (ea !== eb) return ea - eb;
+        const sa = startOf(a), sb = startOf(b);
+        if (sa !== sb) return sa - sb;
+        const ra = a.rating ?? 0, rb = b.rating ?? 0;
+        if (ra !== rb) return rb - ra;
+        return (a.venue_id ?? 0) - (b.venue_id ?? 0);
+      });
+  })();
 
   // Events running RIGHT NOW (city clock), deduped by event.
   const happeningNow = (() => {
@@ -185,10 +205,10 @@ export default function CityHome() {
         (parseTimeHours((b.event_time || '').split('-')[0]?.trim() || '') ?? 99));
   })();
 
-  // Tonight's events that carry a deal. NOTE: home rows have `special_offers`
+  // Today's events that carry a deal. NOTE: home rows have `special_offers`
   // (the `event_offers` rename happens later in the stacked-card adapter).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dealsTonight = tonightEvents.filter((e: any) => {
+  const dealsToday = todayEvents.filter((e: any) => {
     if (Array.isArray(e.deals) && e.deals.length > 0) return true;
     const so = e.special_offers ? String(e.special_offers) : '';
     return !!so && !so.toLowerCase().includes('no special');
@@ -437,34 +457,11 @@ export default function CityHome() {
           dotCategories={fan.items.map((i) => i.id)}
         />
 
-        {/* § Happening now — live right now, hidden when empty */}
-        {(loading || happeningNow.length > 0) && (
-          <section className="px-[18px] pt-7">
-            <HomeSectionHeader
-              label={<>
-                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
-                Happening now
-              </>}
-              count={loading ? '—' : `${happeningNow.length} live`}
-            />
-            <HScrollRail>
-              {loading
-                ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
-                ))
-                : happeningNow.map((e) => (
-                  <EventTile key={e.event_id || e.venue_id} event={e} width={130} sizes="140px" live
-                    onOpen={() => openEvent(e, 'happening_now')} />
-                ))}
-            </HScrollRail>
-          </section>
-        )}
-
-        {/* § Tonight in <city> */}
+        {/* § Today in <city> — all of today, not just the evening */}
         <section className="px-[18px] pt-7">
           <HomeSectionHeader
-            label={`Tonight in ${cityName}`}
-            count={loading ? '—' : `${tonightEvents.length} events`}
+            label={`Today in ${cityName}`}
+            count={loading ? '—' : `${todayEvents.length} events`}
           />
           {loading ? (
             <>
@@ -485,53 +482,40 @@ export default function CityHome() {
                 </div>
               ))}
             </>
-          ) : tonightEvents.length > 0 ? (
+          ) : todayEvents.length > 0 ? (
             <>
               <div className="mb-3.5">
                 <HScrollRail>
-                  {tonightEvents.map((e) => (
+                  {todayEvents.slice(0, 12).map((e) => (
                     <EventTile key={e.event_id || e.venue_id} event={e} width="48%" sizes="(max-width: 430px) 48vw, 206px"
                       liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
-                      onOpen={() => openEvent(e, 'tonight_scroller')} />
+                      onOpen={() => openEvent(e, 'today_scroller')} />
                   ))}
                 </HScrollRail>
               </div>
-              {tonightEvents.slice(0, 4).map((e, i) => (
+              {todayEvents.slice(0, 4).map((e, i) => (
                 <EventRow key={e.event_id || e.venue_id || i} event={e} index={i}
                   liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
-                  onOpen={() => openEvent(e, 'tonight_list')} />
+                  onOpen={() => openEvent(e, 'today_list')} />
               ))}
-              {tonightEvents.length > 4 && (
+              {todayEvents.length > 4 && (
                 <button
                   onClick={() => {
-                    trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'tonight_see_all' });
+                    trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'today_see_all' });
                     router.push(`/${city}/cards?date=today`);
                   }}
                   className={`${BTN_SECONDARY} w-full mt-3`}
                   style={BTN_SECONDARY_STYLE}
                 >
-                  See all {tonightEvents.length} events tonight
+                  See all {todayEvents.length} events today
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
               )}
             </>
           ) : (
-            <p className={`${H4_LABEL} text-silver-dim text-center py-5`}>No events found for tonight</p>
+            <p className={`${H4_LABEL} text-silver-dim text-center py-5`}>No events found for today</p>
           )}
         </section>
-
-        {/* § Tonight's deals — hidden when empty */}
-        {!loading && dealsTonight.length > 0 && (
-          <section className="px-[18px] pt-7">
-            <HomeSectionHeader label="Tonight's deals" count={`${dealsTonight.length} offers`} />
-            <HScrollRail>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {dealsTonight.map((e: any) => (
-                <DealCard key={e.event_id || e.venue_id} event={e} onOpen={() => openEvent(e, 'deals_rail')} />
-              ))}
-            </HScrollRail>
-          </section>
-        )}
 
         {/* § Weekend — one row per day (Fri / Sat / Sun) */}
         {(loading || weekendByDay.some(d => d.events.length > 0)) && (
@@ -575,6 +559,46 @@ export default function CityHome() {
           </section>
         )}
 
+        {/* § Good to know + venue call to action (from Home 4) */}
+        <HomeFaq accent={brandAccent} onExpand={(q) => trackEvent('faq_expand', { q, source: 'home' })} />
+        <VenueCta accent={brandAccent} onClick={() => trackEvent('venue_lead_click', { source: 'home_cta' })} />
+
+        {/* § Happening now — live right now, hidden when empty */}
+        {(loading || happeningNow.length > 0) && (
+          <section className="px-[18px] pt-7">
+            <HomeSectionHeader
+              label={<>
+                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
+                Happening now
+              </>}
+              count={loading ? '—' : `${happeningNow.length} live`}
+            />
+            <HScrollRail>
+              {loading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
+                ))
+                : happeningNow.map((e) => (
+                  <EventTile key={e.event_id || e.venue_id} event={e} width={130} sizes="140px" live
+                    onOpen={() => openEvent(e, 'happening_now')} />
+                ))}
+            </HScrollRail>
+          </section>
+        )}
+
+        {/* § Today's deals — hidden when empty */}
+        {!loading && dealsToday.length > 0 && (
+          <section className="px-[18px] pt-7">
+            <HomeSectionHeader label="Today's deals" count={`${dealsToday.length} offers`} />
+            <HScrollRail>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {dealsToday.map((e: any) => (
+                <DealCard key={e.event_id || e.venue_id} event={e} onOpen={() => openEvent(e, 'deals_rail')} />
+              ))}
+            </HScrollRail>
+          </section>
+        )}
+
         {/* § Areas */}
         <section className="px-[18px] pt-7">
           <HomeSectionHeader label="Areas" />
@@ -603,7 +627,7 @@ export default function CityHome() {
           stats={howStats}
           loading={loading}
           accent={cityAccent}
-          kicker={{ index: 2, total: 3 }}
+          kicker={{ index: 1, total: 2 }}
           scrollRoot={mainRef}
         />
 
@@ -613,16 +637,13 @@ export default function CityHome() {
           cities={cityOptions}
           accent={cityAccent}
           pinCategories={topCategories}
-          kicker={{ index: 3, total: 3 }}
+          kicker={{ index: 2, total: 2 }}
           scrollRoot={mainRef}
           onChangeCity={switchCity}
           onMap={() => goMap('city_atlas_map')}
           onList={() => goList('city_atlas_list')}
         />
 
-        {/* § Good to know, venue call to action, footer (from Home 4) */}
-        <HomeFaq accent={brandAccent} onExpand={(q) => trackEvent('faq_expand', { q, source: 'home' })} />
-        <VenueCta accent={brandAccent} onClick={() => trackEvent('venue_lead_click', { source: 'home_cta' })} />
         <HomeFooter
           city={city}
           cities={cityOptions}
