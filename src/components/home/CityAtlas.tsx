@@ -9,6 +9,7 @@ import { ArrowUpRight, ChevronDown, List, Map as MapIcon } from 'lucide-react';
 import { H4_LABEL, TILE_RULE, getCardAccent, type CardAccent } from '@/components/shared/card-style';
 import { SectionKicker } from './VibeFan';
 import { BTN_PRIMARY, BTN_SECONDARY, BTN_SECONDARY_STYLE } from './HomeParts';
+import { HF } from './home-fonts';
 import { useRevealOnce } from './useRevealOnce';
 import styles from './home.module.css';
 
@@ -40,8 +41,8 @@ export default function CityAtlas({ city, cities, accent, pinCategories, kicker,
       style={{ '--accent-text': accent.text } as React.CSSProperties}
     >
       <SectionKicker index={kicker.index} total={kicker.total} title="Your city" />
-      <h2 id="home-city-title" className="font-tight font-semibold uppercase text-[34px] leading-[0.92] tracking-[-0.045em] text-pale mt-4">
-        Your next<br />good night<br /><span className="text-silver">starts here.</span>
+      <h2 id="home-city-title" className={`${HF.city} text-pale mt-4`}>
+        Your next<br />good night<br /><span className="text-silver italic">starts here.</span>
       </h2>
       <p className="text-[13px] leading-relaxed text-silver mt-3">Pick your city. We&rsquo;ll show you what&rsquo;s on.</p>
 

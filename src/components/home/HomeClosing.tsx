@@ -13,7 +13,7 @@ import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-s
 import { BTN_PRIMARY } from './HomeParts';
 import styles from './home.module.css';
 
-const TITLE = 'font-tight font-semibold uppercase text-[34px] leading-[0.92] tracking-[-0.045em] text-pale';
+import { HF } from './home-fonts';
 
 // ── Good to know ──────────────────────────────────────────────────────
 export function HomeFaq({ accent, onExpand }: { accent: CardAccent; onExpand: (question: string) => void }) {
@@ -21,7 +21,7 @@ export function HomeFaq({ accent, onExpand }: { accent: CardAccent; onExpand: (q
   return (
     <section className="px-[18px] pt-14" aria-labelledby="home-faq-title">
       <span className={H4_LABEL} style={{ color: accent.text }}>A few good questions / 01—{String(items.length).padStart(2, '0')}</span>
-      <h2 id="home-faq-title" className={`${TITLE} mt-4`}>
+      <h2 id="home-faq-title" className={`${HF.faq} text-pale mt-4`}>
         Good to<br />know<span style={{ color: accent.text }}>.</span>
       </h2>
       <div className="mt-6" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
@@ -65,7 +65,7 @@ export function VenueCta({ accent, onClick }: { accent: CardAccent; onClick: () 
         </div>
       </div>
       <span className={`${H4_LABEL} block mt-6`} style={{ color: accent.text }}>To the places that make the night</span>
-      <h2 id="home-venue-title" className={`${TITLE} mt-4`}>
+      <h2 id="home-venue-title" className={`${HF.venue} text-pale mt-4`}>
         Make your venue<br /><span className="text-silver">someone&rsquo;s next plan.</span>
       </h2>
       <p className="text-[13px] leading-relaxed text-silver mt-3">

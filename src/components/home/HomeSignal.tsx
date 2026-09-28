@@ -1,11 +1,13 @@
 'use client';
 
-// The idea, in two lines, beside a live radar: we watch every venue's
+// The idea, stacked: heading, a centred live radar + count, one line of
+// copy and where the listings come from: we watch every venue's
 // stories, you pick the vibe. The radar's dots are today's categories, and
 // the source chips say where the listings come from.
 
-import { H4_LABEL, getCardAccent } from '@/components/shared/card-style';
+import { H4_LABEL, TILE_RULE, getCardAccent } from '@/components/shared/card-style';
 import { T } from '@/lib/theme/tokens';
+import { HF } from './home-fonts';
 import styles from './home.module.css';
 
 const RADAR_DOTS = [
@@ -33,22 +35,20 @@ export default function HomeSignal({ liveCount, loading, dotCategories }: {
 }) {
   const colours = dotCategories.length ? dotCategories.map((c) => getCardAccent(c).text) : ['#f5f5f5'];
   return (
-    <section className="px-[18px] pt-8" aria-labelledby="home-signal-title">
-      <div className="flex items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <span className={`${H4_LABEL} text-silver-dim`}>The idea</span>
-          <h2 id="home-signal-title" className="font-tight font-semibold uppercase text-[22px] leading-[0.95] tracking-[-0.035em] text-pale mt-2">
-            We watch every venue&rsquo;s stories.<br /><span className="text-silver">You pick the vibe.</span>
-          </h2>
-          <p className="text-[13px] leading-relaxed text-silver mt-2">
-            Posts, stories, ticketing and venue sites, scanned every day
-            {loading ? '.' : <> — <span className="text-pale tabular-nums">{liveCount}</span> live right now.</>}
-          </p>
-        </div>
+    <section className="px-[18px] pt-16 mt-14" aria-labelledby="home-signal-title" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+      <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
+        <span>The idea</span>
+        <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
+      </div>
+      <h2 id="home-signal-title" className={`${HF.idea} text-pale mt-5`}>
+        We watch every venue&rsquo;s stories.<br /><span className="italic text-silver">You pick the vibe.</span>
+      </h2>
 
+      {/* Radar, centred, with the live count underneath */}
+      <div className="flex flex-col items-center mt-10">
         <div aria-hidden className={styles.radar}>
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="absolute rounded-full" style={{ inset: `${i * 14}px`, border: `1px solid rgba(255,255,255,${0.16 - i * 0.03})` }} />
+            <div key={i} className="absolute rounded-full" style={{ inset: `${i * 12.5}%`, border: `1px solid rgba(255,255,255,${0.18 - i * 0.03})` }} />
           ))}
           <div className="absolute top-1/2 inset-x-0 h-px" style={{ background: T.crosshair }} />
           <div className="absolute left-1/2 inset-y-0 w-px" style={{ background: T.crosshair }} />
@@ -57,22 +57,32 @@ export default function HomeSignal({ liveCount, loading, dotCategories }: {
           {RADAR_DOTS.map((d, i) => {
             const c = colours[i % colours.length];
             return (
-              <span key={i} className={`absolute w-1.5 h-1.5 rounded-full ${styles.radarDot}`}
-                style={{ top: d.t, left: d.l, background: c, boxShadow: `0 0 8px ${c}`, animationDelay: `${i * 0.25}s` }} />
+              <span key={i} className={`absolute w-2 h-2 rounded-full ${styles.radarDot}`}
+                style={{ top: d.t, left: d.l, background: c, boxShadow: `0 0 10px ${c}`, animationDelay: `${i * 0.25}s` }} />
             );
           })}
-          <span className={`absolute top-1/2 left-1/2 w-2.5 h-2.5 -mt-[5px] -ml-[5px] rounded-full ${styles.radarDot}`}
-            style={{ background: '#f5f5f5', boxShadow: '0 0 12px rgba(255,255,255,0.6)' }} />
+          <span className={`absolute top-1/2 left-1/2 w-3 h-3 -mt-1.5 -ml-1.5 rounded-full ${styles.radarDot}`}
+            style={{ background: '#f5f5f5', boxShadow: '0 0 14px rgba(255,255,255,0.6)' }} />
+        </div>
+        <div className="mt-6 text-center">
+          <div className={`${HF.idea} text-pale tabular-nums`}>{loading ? '—' : liveCount}</div>
+          <div className={`${H4_LABEL} text-silver-dim mt-1`}>live right now</div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 mt-4">
-        {SOURCES.map(([label, color]) => (
-          <span key={label} className={`${H4_LABEL} inline-flex items-center gap-1.5 px-2 py-1 text-silver`}
-            style={{ border: `1px solid ${color}66`, background: `${color}12`, fontSize: 9 }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
+      <p className="text-[15px] leading-relaxed text-silver mt-10">
+        Every day we read what venues post &mdash; stories, posts, ticketing pages and
+        their own sites &mdash; and turn it into one list of what&rsquo;s actually on.
+      </p>
+
+      {/* Where it comes from — ruled cells, like the How it works stats */}
+      <div className="grid grid-cols-2 mt-7" style={{ borderTop: `1px solid ${TILE_RULE}` }}>
+        {SOURCES.map(([label, color], i) => (
+          <div key={label} className={`${H4_LABEL} flex items-center gap-2.5 py-4 text-pale`}
+            style={{ borderBottom: `1px solid ${TILE_RULE}`, paddingLeft: i % 2 ? 14 : 0, borderLeft: i % 2 ? `1px solid ${TILE_RULE}` : undefined }}>
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
             {label}
-          </span>
+          </div>
         ))}
       </div>
     </section>

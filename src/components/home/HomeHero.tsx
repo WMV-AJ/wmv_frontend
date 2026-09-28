@@ -8,6 +8,7 @@
 import { List, Map as MapIcon, MessageCircle } from 'lucide-react';
 import { T } from '@/lib/theme/tokens';
 import { H4_LABEL } from '@/components/shared/card-style';
+import { HF } from './home-fonts';
 import { BTN_PRIMARY, BTN_SECONDARY, BTN_SECONDARY_STYLE } from './HomeParts';
 
 // Placeholder until the bot is live: the button renders only when this is
@@ -33,7 +34,7 @@ export default function HomeHero({ cityName, dateLabel, todayCount, liveCount, l
         Live · {dateLabel}
       </div>
 
-      <h1 id="home-hero-title" className="font-tight font-semibold uppercase text-[46px] leading-[0.92] tracking-[-0.045em] text-pale mt-3.5">
+      <h1 id="home-hero-title" className={`${HF.hero} text-pale mt-3.5`}>
         Tonight in<br />
         <span style={{ color: T.accent }}>{cityName}</span>
       </h1>

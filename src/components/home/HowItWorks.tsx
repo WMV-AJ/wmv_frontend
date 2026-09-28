@@ -6,6 +6,7 @@
 
 import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
 import { SectionKicker } from './VibeFan';
+import { HF } from './home-fonts';
 import { useRevealOnce } from './useRevealOnce';
 import styles from './home.module.css';
 
@@ -44,7 +45,7 @@ export default function HowItWorks({ cityName, stats, loading, accent, kicker, s
   return (
     <section className="px-[18px] pt-12" aria-labelledby="home-how-title" style={cssVars}>
       <SectionKicker index={kicker.index} total={kicker.total} title="How it works" />
-      <h2 id="home-how-title" className="font-tight font-semibold uppercase text-[34px] leading-[0.92] tracking-[-0.045em] text-pale mt-4">
+      <h2 id="home-how-title" className={`${HF.how} text-pale mt-4`}>
         From their stories.<br /><span className="text-silver">To your plans.</span>
       </h2>
       <p className="text-[13px] leading-relaxed text-silver mt-3">

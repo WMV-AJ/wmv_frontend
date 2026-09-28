@@ -15,6 +15,7 @@ import { HP, homePaletteVars } from '@/components/home/home-palette';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
 import HomeHero from '@/components/home/HomeHero';
 import HomeSignal from '@/components/home/HomeSignal';
+import { HF } from '@/components/home/home-fonts';
 import { getShortDisplayName } from '@/lib/category-mappings';
 import { getCategoryTagline, getCategoryFallbackImage } from '@/config/category-copy';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
@@ -460,8 +461,9 @@ export default function CityHome() {
         />
 
         {/* § Today in <city> — all of today, not just the evening */}
-        <section className="px-[18px] pt-7">
+        <section className="px-[18px] pt-16">
           <HomeSectionHeader
+            font={HF.today}
             label={`Today in ${cityName}`}
             count={loading ? '—' : `${todayEvents.length} events`}
           />
@@ -522,7 +524,7 @@ export default function CityHome() {
         {/* § Weekend — one row per day (Fri / Sat / Sun) */}
         {(loading || weekendByDay.some(d => d.events.length > 0)) && (
           <section className="px-[18px] pt-7">
-            <HomeSectionHeader label="Weekend vibes" />
+            <HomeSectionHeader font={HF.weekend} label="Weekend vibes" />
             {loading ? (
               <div className="flex gap-3 overflow-x-hidden">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -569,6 +571,7 @@ export default function CityHome() {
         {(loading || happeningNow.length > 0) && (
           <section className="px-[18px] pt-7">
             <HomeSectionHeader
+              font={HF.live}
               label={<>
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
                 Happening now
@@ -591,7 +594,7 @@ export default function CityHome() {
         {/* § Today's deals — hidden when empty */}
         {!loading && dealsToday.length > 0 && (
           <section className="px-[18px] pt-7">
-            <HomeSectionHeader label="Today's deals" count={`${dealsToday.length} offers`} />
+            <HomeSectionHeader font={HF.deals} label="Today's deals" count={`${dealsToday.length} offers`} />
             <HScrollRail>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {dealsToday.map((e: any) => (
@@ -603,7 +606,7 @@ export default function CityHome() {
 
         {/* § Areas */}
         <section className="px-[18px] pt-7">
-          <HomeSectionHeader label="Areas" />
+          <HomeSectionHeader font={HF.areas} label="Areas" />
           {loading
             ? Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="grid items-center gap-3 py-3" style={{ gridTemplateColumns: '20px 1fr auto', borderBottom: `1px solid ${TILE_RULE}` }}>

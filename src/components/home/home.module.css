@@ -318,8 +318,8 @@
 
 .radar {
   position: relative;
-  width: 132px;
-  height: 132px;
+  width: 220px;
+  height: 220px;
   flex-shrink: 0;
 }
 

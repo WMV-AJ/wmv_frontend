@@ -5,7 +5,8 @@
 // today event in that category (falling back to a local photo); the count
 // is computed the way the list filters (any category match, one per event),
 // so "See N" lands on N cards. Tapping goes to today's list for that
-// category. Below the fan: one compact selected line + a chip index.
+// category. Below the fan: the selected category (name, count, line, one
+// action), then a chip index.
 
 import { useRef, useState } from 'react';
 import Image from 'next/image';
@@ -14,6 +15,7 @@ import { ArrowUpRight } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
 import { H4_LABEL, H4_CHIP, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
 import { HomeSectionHeader, BTN_PRIMARY } from './HomeParts';
+import { HF } from './home-fonts';
 import styles from './home.module.css';
 
 export interface VibeFanItem {
@@ -55,7 +57,7 @@ export default function VibeFan({ title, items, loading, onExplore }: {
     // Hold the stage's height while today's data loads, so nothing jumps.
     return (
       <section className="px-[18px] pt-6" aria-busy="true">
-        <HomeSectionHeader label={title} count="—" />
+        <HomeSectionHeader font={HF.vibes} label={title} count="—" />
         <div className={styles.vibeStage} aria-hidden="true">
           {[-1, 1, 0].map((d) => (
             <div key={d} className={styles.fanCard}
@@ -85,7 +87,7 @@ export default function VibeFan({ title, items, loading, onExplore }: {
       aria-labelledby="home-vibes-title"
       style={{ '--accent-soft': active.accent.soft } as React.CSSProperties}
     >
-      <HomeSectionHeader id="home-vibes-title" label={title} count={loading ? '—' : `${n} ${n === 1 ? 'category' : 'categories'}`} />
+      <HomeSectionHeader font={HF.vibes} id="home-vibes-title" label={title} count={loading ? '—' : `${n} ${n === 1 ? 'category' : 'categories'}`} />
 
       {/* Fan — drag sideways to change the vibe; tap the front card to go. */}
       <div
@@ -133,28 +135,30 @@ export default function VibeFan({ title, items, loading, onExplore }: {
         <span>Drag to explore ↔</span>
       </div>
 
-      {/* Selected category — one compact line */}
-      <div className="mt-3 flex items-center justify-between gap-3 min-h-[56px] py-2"
-        style={{ borderTop: `1px solid ${TILE_RULE}`, borderBottom: `1px solid ${TILE_RULE}` }}>
-        <div className="min-w-0">
-          <div className={H4_LABEL} style={{ color: active.accent.text }} data-fan-selected data-cat={active.id} data-count={active.count}>
-            {active.label} · {loading ? '—' : `${active.count} today`}
+      {/* Selected category — name + count, its line, then one clear action */}
+      <div className="mt-9 pl-4" style={{ borderLeft: `2px solid ${active.accent.edge}` }}
+        data-fan-selected data-cat={active.id} data-count={active.count}>
+        <div className="flex items-end justify-between gap-4">
+          <h3 className={HF.vibesName} style={{ color: active.accent.text }}>{active.label}</h3>
+          <div className="text-right flex-shrink-0">
+            <div className={`${HF.vibesName} text-pale tabular-nums`}>{loading ? '—' : active.count}</div>
+            <div className={`${H4_LABEL} text-silver-dim mt-1`}>today</div>
           </div>
-          <p className="text-[12px] leading-snug text-silver truncate mt-0.5">{active.description}</p>
         </div>
-        <Link
-          href={active.href}
-          onClick={() => onExplore(active, 'fan_link')}
-          aria-label={`See ${active.count} ${active.label} events`}
-          className={`${BTN_PRIMARY} h-9 px-4 flex-shrink-0`}
-        >
-          See {active.count}
-          <ArrowUpRight className="w-4 h-4" />
-        </Link>
+        <p className="text-[15px] leading-relaxed text-silver mt-3">{active.description}</p>
       </div>
+      <Link
+        href={active.href}
+        onClick={() => onExplore(active, 'fan_link')}
+        aria-label={`See ${active.count} ${active.label} events`}
+        className={`${BTN_PRIMARY} w-full justify-between mt-6`}
+      >
+        See {active.count} {active.label} {active.count === 1 ? 'event' : 'events'}
+        <ArrowUpRight className="w-4 h-4" />
+      </Link>
 
       {/* Index — one row of chips; tap to select */}
-      <div className="flex gap-1.5 overflow-x-auto mt-3 pb-1 -mx-[18px] px-[18px]" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Select a category">
+      <div className="flex gap-2 overflow-x-auto mt-7 pb-1 -mx-[18px] px-[18px]" style={{ scrollbarWidth: 'none' }} role="group" aria-label="Select a category">
         {items.map((v, index) => {
           const isActive = index === selected;
           return (
@@ -164,7 +168,7 @@ export default function VibeFan({ title, items, loading, onExplore }: {
               aria-pressed={isActive}
               onClick={() => setSelected(index)}
               data-fan-chip data-cat={v.id} data-count={v.count}
-              className={`${H4_CHIP} inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 transition-colors duration-200 active:scale-95`}
+              className={`${H4_CHIP} inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0 transition-colors duration-200 active:scale-95`}
               style={isActive
                 ? { background: v.accent.edge, color: '#0b0b0b', border: `1px solid ${v.accent.edge}` }
                 : { background: v.accent.soft, color: v.accent.text, border: `1px solid ${v.accent.border}` }}
