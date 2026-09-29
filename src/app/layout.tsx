@@ -45,10 +45,9 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0b0b" },
-  ],
+  // Dark only for now (THEME_SWITCHING_ENABLED is off). With light back on:
+  // [{ media: "(prefers-color-scheme: light)", color: "#f6f4ef" }, { media: "(prefers-color-scheme: dark)", color: "#0b0b0b" }]
+  themeColor: "#0b0b0b",
 };
 
 export const metadata: Metadata = {

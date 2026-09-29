@@ -5,7 +5,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, THEME_SWITCHING_ENABLED, DEFAULT_THEME } from '@/contexts/ThemeContext';
 import { trackEvent } from '@/lib/analytics/track';
 
 // False on the server and during hydration, true after — so the first client
@@ -17,8 +17,10 @@ const useMounted = () => useSyncExternalStore(noopSubscribe, () => true, () => f
  *  like the map/list TopNav; default: the two-segment switch. */
 export default function ThemeToggle({ size = 28, compact = false }: { size?: number; compact?: boolean }) {
   const { theme: current, setTheme } = useTheme();
-  const theme = useMounted() ? current : 'light';
+  const mounted = useMounted();
+  const theme = mounted ? current : DEFAULT_THEME;
   const seg = size - 6;
+  if (!THEME_SWITCHING_ENABLED) return null;
   const pick = (t: 'light' | 'dark') => {
     if (t === theme) return;
     setTheme(t);
