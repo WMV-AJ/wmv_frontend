@@ -491,22 +491,23 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
           isActive={isActive}
           dimmed={dimmed}
         />
+        {/* Must sit inside MarkerContent: only its portal reaches the
+            marker element, so a label outside it never renders. */}
+        {showLabel && (
+          <MarkerLabel position="bottom" className="mt-0.5">
+            <span
+              className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
+              style={{
+                color: '#1a1a1a',
+                backgroundColor: 'rgba(255,255,255,0.85)',
+                textShadow: '0 0 3px rgba(255,255,255,0.8)',
+              }}
+            >
+              {venue.name}
+            </span>
+          </MarkerLabel>
+        )}
       </MarkerContent>
-
-      {showLabel && (
-        <MarkerLabel position="bottom" className="mt-0.5">
-          <span
-            className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
-            style={{
-              color: '#1a1a1a',
-              backgroundColor: 'rgba(255,255,255,0.85)',
-              textShadow: '0 0 3px rgba(255,255,255,0.8)',
-            }}
-          >
-            {venue.name}
-          </span>
-        </MarkerLabel>
-      )}
     </MapMarker>
   );
 });
