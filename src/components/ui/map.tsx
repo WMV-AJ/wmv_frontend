@@ -25,54 +25,42 @@ const defaultStyles = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
 
-// Carto's dark-matter paints its land #0e0e0e — effectively black, so the map
-// read as one flat dark page under the app chrome (#0b0b0b). Repaint it as a
-// "dusk slate" (cf. Google Maps night mode, Mapbox Standard's dusk preset):
-// clearly lighter and bluer than the UI, roads a step lighter again, water a
-// step darker, text halos on the casing tone so labels stay crisp.
-const SLATE = {
-  land: "#343a48",
-  green: "#323d3f",
-  water: "#232a37",
-  building: "#3c4250",
-  roadMajor: "#4a5163",
-  roadMinor: "#414858",
-  casing: "#2b303c",
-};
+// Carto's dark-matter paints its land #0e0e0e — effectively black, which made
+// the whole screen read as one flat dark mass against the app chrome (#0a0a14).
+// Lift the land to a slate grey. Roads sit at rgba(65,71,88) so they still read
+// clearly above this, and the few near-black service/ramp fills are lifted too
+// so they don't invert and become darker than the ground they sit on.
+const DARK_LAND = "#262932";
+const DARK_LAND_MINOR = "#31343e";
+const NEAR_BLACK_ROAD_FILLS = [
+  "road_service_fill", "road_pri_fill_ramp", "road_trunk_fill_ramp",
+  "bridge_service_fill", "bridge_minor_fill", "bridge_sec_fill", "bridge_pri_fill",
+  "tunnel_service_fill", "tunnel_sec_fill", "tunnel_trunk_fill",
+];
+// Parks, reserves and landuse are painted #0e0e0e too, via zoom stops rather
+// than a flat colour. Left alone they punch black holes in the grey ground, so
+// they get their own slightly darker tone to stay legible as green space.
 const LAND_FILL_LAYERS = ["landcover", "park_national_park", "park_nature_reserve", "landuse"];
-const ROAD_FILL_RE = /^(road|tunnel|bridge)_.*_fill/;
-const ROAD_MINOR_RE = /_(minor|service|path)_|_path$/;
-const ROAD_CASE_RE = /^(road|tunnel|bridge)_.*_case/;
+const DARK_LAND_FEATURE = "#20232b";
+// landuse_residential is a black alpha wash; at 0.4-0.5 over grey it reads as a
+// smear, so it is dropped to a whisper.
+const RESIDENTIAL_WASH = "rgba(0, 0, 0, 0.14)";
 
-/** Recolour dark-matter to the dusk-slate palette. No-op on other styles. */
+/** Recolour the basemap's ground. No-op unless the dark style is loaded. */
 function applyLandTint(map: MapLibreGL.Map, isDark: boolean) {
   if (!isDark) return;
   try {
     if (map.getLayer("background")) {
-      map.setPaintProperty("background", "background-color", SLATE.land);
+      map.setPaintProperty("background", "background-color", DARK_LAND);
+    }
+    for (const id of NEAR_BLACK_ROAD_FILLS) {
+      if (map.getLayer(id)) map.setPaintProperty(id, "line-color", DARK_LAND_MINOR);
     }
     for (const id of LAND_FILL_LAYERS) {
-      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", SLATE.green);
+      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", DARK_LAND_FEATURE);
     }
     if (map.getLayer("landuse_residential")) {
-      map.setPaintProperty("landuse_residential", "fill-color", "rgba(0, 0, 0, 0)");
-    }
-    for (const id of ["water", "water_shadow"]) {
-      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", SLATE.water);
-    }
-    for (const id of ["building", "building-top"]) {
-      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", SLATE.building);
-    }
-    for (const layer of map.getStyle()?.layers ?? []) {
-      if (layer.type === "symbol") {
-        map.setPaintProperty(layer.id, "text-halo-color", SLATE.casing);
-      } else if (layer.type === "line") {
-        if (ROAD_FILL_RE.test(layer.id)) {
-          map.setPaintProperty(layer.id, "line-color", ROAD_MINOR_RE.test(layer.id) ? SLATE.roadMinor : SLATE.roadMajor);
-        } else if (ROAD_CASE_RE.test(layer.id)) {
-          map.setPaintProperty(layer.id, "line-color", SLATE.casing);
-        }
-      }
+      map.setPaintProperty("landuse_residential", "fill-color", RESIDENTIAL_WASH);
     }
   } catch {
     // style swapped mid-call; the next styledata event re-applies it
