@@ -27,7 +27,6 @@ import { applyBasemapSimplification } from '@/lib/map/simplify-basemap';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDisplayName } from '@/lib/category-mappings';
 import { getCategoryIcon } from '@/lib/category-icons';
-import { getCardAccent } from '@/components/shared/card-style';
 import { getVibeDataById } from '@/config/vibes-data';
 import { type Venue, type HierarchicalFilterState } from '@/types';
 import {
@@ -180,8 +179,10 @@ function SimplifyBasemap() {
 const LABEL_BUDGET: Array<[minZoom: number, max: number]> = [
   [15, Infinity], [14, 60], [13, 30], [12, 14], [11, 8], [0, 5],
 ];
-const LABEL_H = 24;
+const LABEL_H = 17;
 const LABEL_PAD = 3;
+// Selected venue's text block wraps at this width (full name + full deal).
+const SELECTED_MAX_W = 220;
 
 // Map labels use the venue's short name: "Café De Paris - French Restaurant
 // | Cafe" → "Café De Paris", "Nikki Beach Dubai (Beach Club…)" → "Nikki
@@ -191,20 +192,31 @@ function shortVenueName(name: string): string {
   return base.length > 22 ? `${base.slice(0, 21).trimEnd()}…` : base;
 }
 
-// Deal text inside the selected pill: first clause, capped at 28 chars.
-function shortOffer(offer: string): string {
-  const base = (offer.split(/[.;\n]/)[0] || offer).trim();
-  return base.length > 28 ? `${base.slice(0, 27).trimEnd()}…` : base;
-}
+// Labels are bare text with a dark outline (Google-Maps-style, no box), so
+// they read on the slate map without a background. paint-order puts the
+// stroke behind the fill; unlike text-shadow it survives .wmv-map-moving.
+const LABEL_HALO: React.CSSProperties = {
+  WebkitTextStroke: '3px #20242e',
+  paintOrder: 'stroke fill',
+};
 
-// Name pills sit ABOVE the marker. `text` is everything shown in the pill;
-// `above` = distance from the marker centre to the pill's bottom edge.
-function labelBox(x: number, y: number, text: string, above: number): [number, number, number, number] {
-  const width = text.length * 7 + 24;
+// Box above the marker for a label of `width` × `height` px; `above` is the
+// distance from the marker centre to the label's bottom edge.
+function boxAbove(x: number, y: number, width: number, height: number, above: number): [number, number, number, number] {
   return [
-    x - width / 2 - LABEL_PAD, y - above - LABEL_H - LABEL_PAD,
+    x - width / 2 - LABEL_PAD, y - above - height - LABEL_PAD,
     x + width / 2 + LABEL_PAD, y - above + LABEL_PAD,
   ];
+}
+
+// Selected label = full name (13px bold) over the full deal (12px), wrapped
+// at SELECTED_MAX_W. Rough line count from character widths.
+function selectedLabelSize(name: string, offer: string | null): [number, number] {
+  const nameW = name.length * 7.6;
+  const offerW = offer ? offer.length * 6.6 + 18 : 0;
+  const width = Math.min(SELECTED_MAX_W, Math.max(nameW, offerW));
+  const lines = (w: number, lh: number) => (w ? Math.ceil(w / SELECTED_MAX_W) * lh : 0);
+  return [width, lines(nameW, 17) + lines(offerW, 16)];
 }
 
 function venueScore(venue: Venue): number {
@@ -252,10 +264,8 @@ function LabelPlacer({
         // The selected circle (56px with halo) and its name label.
         const p = map.project([selectedVenue.lng, selectedVenue.lat]);
         boxes.push([p.x - 30, p.y - 30, p.x + 30, p.y + 30]);
-        // "   " stands in for the divider + gift icon width.
-        const text = shortVenueName(selectedVenue.name ?? '') + (selectedOffer ? `   ${shortOffer(selectedOffer)}` : '');
-        // +8: the pill's tail.
-        boxes.push(labelBox(p.x, p.y, text, 38));
+        const [sw, sh] = selectedLabelSize(selectedVenue.name ?? '', selectedOffer);
+        boxes.push(boxAbove(p.x, p.y, sw, sh, 32));
       }
       for (const venue of ranked) {
         if (ids.size >= budget) break;
@@ -264,7 +274,7 @@ function LabelPlacer({
         if (p.y > h - pad.bottom) continue;
         // Label sits on top of the 24px idle marker box; it must fit fully
         // inside the visible map (not under the nav pills or off an edge).
-        const box = labelBox(p.x, p.y, shortVenueName(venue.name ?? ''), 14);
+        const box = boxAbove(p.x, p.y, shortVenueName(venue.name ?? '').length * 6.8 + 6, LABEL_H, 14);
         if (box[0] < 0 || box[2] > w || box[1] < topLimit) continue;
         const hit = boxes.some((o) => box[0] < o[2] && box[2] > o[0] && box[1] < o[3] && box[3] > o[1]);
         if (hit) continue;
@@ -572,46 +582,32 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
         />
         {/* Inside MarkerContent: only its portal reaches the marker element. */}
         {showLabel && (
-          <MarkerLabel position="top" className={selected ? 'mb-2' : 'mb-0.5'}>
-            {/* One pill system (Airbnb-style): dark pills for names; the
-                selected venue's pill inverts to white and carries its deal. */}
-            <span
-              className={`relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 leading-tight whitespace-nowrap ${selected ? 'text-[13px] font-bold' : 'text-[12px] font-semibold'}`}
-              style={selected ? {
-                color: '#161513',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 3px 10px rgba(0,0,0,0.35)',
-                maxWidth: 260,
-              } : {
-                color: '#f5f5f5',
-                backgroundColor: 'rgba(22,22,22,0.92)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-              }}
-            >
-              <span className="truncate">{shortVenueName(venue.name ?? '')}</span>
-              {selected && offer && (
-                <>
-                  <span aria-hidden className="self-stretch w-px" style={{ background: 'rgba(22,21,19,0.18)' }} />
-                  <Gift aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: getCardAccent(category).text }} />
-                  <span className="truncate text-[12px] font-semibold">{shortOffer(offer)}</span>
-                </>
-              )}
-              {selected && (
-                <span
-                  aria-hidden
-                  className="absolute left-1/2 -translate-x-1/2"
-                  style={{
-                    top: '100%',
-                    width: 0,
-                    height: 0,
-                    borderLeft: '6px solid transparent',
-                    borderRight: '6px solid transparent',
-                    borderTop: '6px solid #ffffff',
-                  }}
-                />
-              )}
-            </span>
+          <MarkerLabel position="top" className={selected ? 'mb-1' : 'mb-0'}>
+            {selected ? (
+              // Selected: full name, then the full deal in gold, wrapping —
+              // nothing truncated, no box.
+              <span
+                className="block w-max text-center whitespace-normal leading-tight"
+                style={{ maxWidth: SELECTED_MAX_W, ...LABEL_HALO }}
+              >
+                <span className="block text-[13px] font-bold" style={{ color: '#ffffff' }}>
+                  {venue.name}
+                </span>
+                {offer && (
+                  <span className="block mt-0.5 text-[12px] font-semibold" style={{ color: '#f4c430' }}>
+                    <Gift aria-hidden className="inline w-3.5 h-3.5 -mt-0.5 mr-1" style={{ color: '#f4c430' }} />
+                    {offer.trim()}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span
+                className="block whitespace-nowrap text-[12px] font-semibold leading-tight"
+                style={{ color: '#eef0f4', ...LABEL_HALO }}
+              >
+                {shortVenueName(venue.name ?? '')}
+              </span>
+            )}
           </MarkerLabel>
         )}
       </MarkerContent>
