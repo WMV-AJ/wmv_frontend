@@ -3,12 +3,8 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Utensils, Laugh, Moon, Music2, Trophy, Sun, Clock, Waves, Sparkles, Coffee,
-  // 046/047 city-specific category icons
-  Martini, Beer, Wrench, Users, PartyPopper, Mic, Wine, Zap, Briefcase, Film,
-  Tag, // generic fallback for unknown categories
-} from 'lucide-react';
+import { Tag } from 'lucide-react';
+import { CATEGORY_ICONS } from '@/lib/category-icons';
 import { HierarchicalFilterState, EventCategoryFilterState, Venue } from '@/types';
 import {
   getCategoryColor,
@@ -30,31 +26,6 @@ interface CategoryPillsProps {
 }
 
 
-// Icon mapping for primary categories — keys match DB event_categories[].primary exactly
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  'Food & Dining': Utensils,
-  'Sports Viewing': Trophy,
-  'Live Performance': Music2,
-  'Club Night': Moon,
-  'Day Party & Afterwork': Sun,
-  'Happy Hour': Clock,
-  'Pool Party': Waves,
-  'Ladies Night': Sparkles,
-  'Brunch': Coffee,
-  'Comedy Night': Laugh,
-  // 046/047 city-specific additions
-  'Cocktail Bar Night': Martini,
-  'Pub Night': Beer,
-  'Workshop': Wrench,
-  'Family & Kids': Users,
-  'Activities': PartyPopper,
-  'Karaoke': Mic,
-  'Tasting Event': Wine,
-  'Pop Up': Zap,
-  'Business Event': Briefcase,
-  'Bollywood Night': Film,
-  'Standup Comedy': Mic,
-};
 
 const CategoryPills: React.FC<CategoryPillsProps> = ({
   filters,

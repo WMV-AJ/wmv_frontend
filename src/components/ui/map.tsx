@@ -67,6 +67,42 @@ function applyLandTint(map: MapLibreGL.Map, isDark: boolean) {
   }
 }
 
+// Positron is near-white; the map page wants a soft Google-style grey under
+// a dark app. Ground goes light grey, roads stay white with a faint grey
+// casing so they still read, water is a muted blue-grey.
+const LIGHT_GROUND = "#e8e8e6";
+const LIGHT_GREEN = "#dce3d8";
+const LIGHT_WATER = "#c5d0da";
+const LIGHT_ROAD_CASE = "#d2d2cf";
+const LIGHT_ROAD_FILL_RE = /^(road|tunnel|bridge)_.*_fill/;
+const LIGHT_ROAD_CASE_RE = /^(road|tunnel|bridge)_.*_case/;
+
+/** Recolour Positron to light grey. No-op unless the light style is loaded. */
+function applyLightTint(map: MapLibreGL.Map, isLight: boolean) {
+  if (!isLight) return;
+  try {
+    if (map.getLayer("background")) {
+      map.setPaintProperty("background", "background-color", LIGHT_GROUND);
+    }
+    if (map.getLayer("landuse_residential")) {
+      map.setPaintProperty("landuse_residential", "fill-color", "rgba(0, 0, 0, 0.03)");
+    }
+    for (const id of LAND_FILL_LAYERS) {
+      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", LIGHT_GREEN);
+    }
+    for (const id of ["water", "water_shadow"]) {
+      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", LIGHT_WATER);
+    }
+    for (const layer of map.getStyle()?.layers ?? []) {
+      if (layer.type !== "line") continue;
+      if (LIGHT_ROAD_FILL_RE.test(layer.id)) map.setPaintProperty(layer.id, "line-color", "#ffffff");
+      else if (LIGHT_ROAD_CASE_RE.test(layer.id)) map.setPaintProperty(layer.id, "line-color", LIGHT_ROAD_CASE);
+    }
+  } catch {
+    // style swapped mid-call; the next styledata event re-applies it
+  }
+}
+
 type Theme = "light" | "dark";
 
 // Check document class for theme (works with next-themes, etc.)
@@ -292,6 +328,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         setIsStyleLoaded(true);
         // Re-applied on every styledata, so it survives a theme swap too.
         applyLandTint(map, currentStyleRef.current === mapStylesRef.current.dark);
+        applyLightTint(map, currentStyleRef.current === mapStylesRef.current.light);
         if (projection) {
           map.setProjection(projection);
         }

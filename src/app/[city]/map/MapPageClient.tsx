@@ -1,7 +1,7 @@
 'use client';
 
 import { Gift } from 'lucide-react';
-import { useState, useMemo, useCallback, useEffect, useRef, memo, type MutableRefObject } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, memo, type MutableRefObject, type RefObject } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
   Map as MapView,
@@ -27,6 +27,7 @@ import { getMarkerColorScheme, getVenuePrimaryEventCategory } from '@/lib/map/ma
 import { applyBasemapSimplification } from '@/lib/map/simplify-basemap';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDisplayName } from '@/lib/category-mappings';
+import { getCategoryIcon } from '@/lib/category-icons';
 import { getVibeDataById } from '@/config/vibes-data';
 import { type Venue, type HierarchicalFilterState } from '@/types';
 import {
@@ -44,92 +45,94 @@ function getVenueColor(venue: Venue): string {
   return getMarkerColorScheme(venue).svgColor;
 }
 
+// Category icon goes dark on the pale hues (Oat, Cream, Sage, Peach tints)
+// so it stays visible inside the filled circle.
+function isLightHex(hex: string): boolean {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
+  if (!m) return false;
+  const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b > 170;
+}
+
+const SELECTED_SIZE = 34;
+
 function GlowingMarker({
   color,
+  category,
   isHighlighted,
   isActive,
   dimmed,
 }: {
   color: string;
+  category: string;
   isHighlighted: boolean;
   isActive: boolean;
   dimmed: boolean;
 }) {
-  const size = isHighlighted ? 22 : isActive ? 24 : 12;
-  const glowSize = isHighlighted ? 44 : isActive ? 48 : 24;
+  const selected = isHighlighted || isActive;
+  const box = selected ? SELECTED_SIZE + 22 : 24;
+  const Icon = getCategoryIcon(category);
 
   return (
     <div
       className="relative flex items-center justify-center"
       style={{
-        width: glowSize,
-        height: glowSize,
-        opacity: dimmed ? 0.35 : 1,
+        width: box,
+        height: box,
+        opacity: dimmed ? 0.55 : 1,
         zIndex: isHighlighted ? 999 : isActive ? 998 : 1,
         transition: 'opacity 0.3s ease',
       }}
     >
-      {(isHighlighted || isActive) && (
+      {selected && (
         <div
           className="absolute rounded-full"
-          style={{
-            width: glowSize,
-            height: glowSize,
-            backgroundColor: color,
-            opacity: isHighlighted ? 0.25 : 0.2,
-            transition: 'opacity 0.3s ease',
-          }}
+          style={{ width: box, height: box, backgroundColor: color, opacity: 0.22 }}
         />
       )}
       {isHighlighted && (
         <div
           className="absolute rounded-full animate-ping"
           style={{
-            width: glowSize + 8,
-            height: glowSize + 8,
+            width: SELECTED_SIZE + 10,
+            height: SELECTED_SIZE + 10,
             border: `2px solid ${color}`,
-            opacity: 0.4,
+            opacity: 0.45,
             animationDuration: '1.5s',
           }}
         />
       )}
-      {isActive && !isHighlighted && (
+      {selected ? (
+        // Selected: a filled category circle with its icon inside.
         <div
-          className="absolute rounded-full"
+          className="relative rounded-full flex items-center justify-center"
           style={{
-            width: size + 14,
-            height: size + 14,
-            border: `3px solid ${color}`,
-            opacity: 1,
-            transition: 'opacity 0.3s ease',
+            width: SELECTED_SIZE,
+            height: SELECTED_SIZE,
+            backgroundColor: color,
+            border: '2px solid #ffffff',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          <Icon
+            className="w-4 h-4"
+            strokeWidth={2.4}
+            style={{ color: isLightHex(color) ? '#161513' : '#ffffff' }}
+          />
+        </div>
+      ) : (
+        // Idle: a small dot; the white ring keeps it readable on the grey map.
+        <div
+          className="relative rounded-full"
+          style={{
+            width: 12,
+            height: 12,
+            backgroundColor: color,
+            border: '1.5px solid #ffffff',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }}
         />
       )}
-      {isActive && !isHighlighted && (
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: size + 6,
-            height: size + 6,
-            border: '2px solid white',
-            transition: 'opacity 0.3s ease',
-          }}
-        />
-      )}
-      {/* Fixed 12px dot scaled via transform: size changes stay on the
-          compositor instead of animating width/height (layout) per state
-          change while MapLibre is already retransforming the marker. */}
-      <div
-        className="relative rounded-full"
-        style={{
-          width: 12,
-          height: 12,
-          backgroundColor: color,
-          boxShadow: (isHighlighted || isActive) ? `0 0 ${isHighlighted ? 14 : 10}px ${color}80` : 'none',
-          transform: `scale(${size / 12})`,
-          transition: 'transform 0.3s ease',
-        }}
-      />
     </div>
   );
 }
@@ -145,8 +148,8 @@ function OfferBanner({
     <MapPopup
       longitude={venue.lng}
       latitude={venue.lat}
-      // Hangs below the dot. The offset clears the highlighted dot (22px) plus
-      // the venue's own name label, which also sits below it when zoomed in.
+      // Hangs just below the selected icon circle (56px incl. halo); the
+      // venue's name sits above the marker, so nothing else is in the way.
       anchor="top"
       offset={30}
       closeOnClick={false}
@@ -192,31 +195,128 @@ function DisableTouchRotation() {
 // Declutters the Carto basemap (minor roads, road labels, POIs) once loaded,
 // and re-applies after any style reload — applyBasemapSimplification is
 // idempotent, so the repeated styledata firings are harmless.
+// The basemap is always the light-grey Positron (see the <MapView theme>),
+// whatever the app theme, so simplification always runs in light mode.
 function SimplifyBasemap() {
   const { map, isLoaded } = useMap();
-  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (!map || !isLoaded) return;
-    applyBasemapSimplification(map, isDarkMode);
-    const reapply = () => applyBasemapSimplification(map, isDarkMode);
+    applyBasemapSimplification(map, false);
+    const reapply = () => applyBasemapSimplification(map, false);
     map.on('styledata', reapply);
     return () => { map.off('styledata', reapply); };
-  }, [map, isLoaded, isDarkMode]);
+  }, [map, isLoaded]);
 
   return null;
 }
 
-function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+// Google-Maps-style name labels: a few of the best-rated venues are named
+// when zoomed out, more appear as you zoom in. On every settled move, venues
+// in view are ranked by rating × log(review count) and placed greedily,
+// skipping any label that would overlap one already placed, up to a
+// per-zoom budget. Re-placed while zooming/panning (throttled) so names
+// appear and drop out as the zoom changes, like Google Maps.
+const LABEL_BUDGET: Array<[minZoom: number, max: number]> = [
+  [15, Infinity], [14, 30], [13, 16], [12, 8], [0, 4],
+];
+const LABEL_H = 18;
+const LABEL_PAD = 6;
+
+// Map labels use the venue's short name: "Café De Paris - French Restaurant
+// | Cafe" → "Café De Paris", "Nikki Beach Dubai (Beach Club…)" → "Nikki
+// Beach Dubai", capped at 22 chars.
+function shortVenueName(name: string): string {
+  const base = (name.split(/\s+[-|–—]\s+|\s*\(/)[0] || name).trim();
+  return base.length > 22 ? `${base.slice(0, 21).trimEnd()}…` : base;
+}
+
+// Name labels sit ABOVE the marker (the deal hangs below the selected one).
+// `above` = distance from the marker centre to the label's bottom edge.
+function labelBox(x: number, y: number, name: string, above: number): [number, number, number, number] {
+  const width = shortVenueName(name).length * 6 + 14;
+  return [
+    x - width / 2 - LABEL_PAD, y - above - LABEL_H - LABEL_PAD,
+    x + width / 2 + LABEL_PAD, y - above + LABEL_PAD,
+  ];
+}
+
+function venueScore(venue: Venue): number {
+  const rating = venue.rating ?? 0;
+  return rating * Math.log10((venue.rating_count ?? 0) + 1);
+}
+
+function LabelPlacer({
+  venues,
+  selectedVenue,
+  mapPaddingRef,
+  pillsRef,
+  onChange,
+}: {
+  venues: Venue[];
+  /** Highlighted/active venue: its marker + label are reserved first. */
+  selectedVenue: Venue | null;
+  /** Areas covered by the top nav and bottom cards — no labels there. */
+  mapPaddingRef: MutableRefObject<MapPadding>;
+  /** Category pill rows overlaying the top of the map. */
+  pillsRef: RefObject<HTMLDivElement | null>;
+  onChange: (ids: Set<string>) => void;
+}) {
   const { map, isLoaded } = useMap();
 
   useEffect(() => {
     if (!map || !isLoaded) return;
-    const handler = () => onZoomChange(map.getZoom());
-    handler();
-    map.on('zoomend', handler);
-    return () => { map.off('zoomend', handler); };
-  }, [map, isLoaded, onZoomChange]);
+    const ranked = [...venues].sort((a, b) => venueScore(b) - venueScore(a));
+    const place = () => {
+      const zoom = map.getZoom();
+      const budget = LABEL_BUDGET.find(([z]) => zoom >= z)?.[1] ?? 4;
+      const { clientWidth: w, clientHeight: h } = map.getContainer();
+      const pad = mapPaddingRef.current;
+      const mapTop = map.getContainer().getBoundingClientRect().top;
+      const pillsBottom = pillsRef.current
+        ? pillsRef.current.getBoundingClientRect().bottom - mapTop + 4
+        : 0;
+      const topLimit = Math.max(pad.top, pillsBottom);
+      const boxes: Array<[number, number, number, number]> = [];
+      const ids = new Set<string>();
+      if (selectedVenue) {
+        // The selected circle (56px with halo) and its name label.
+        const p = map.project([selectedVenue.lng, selectedVenue.lat]);
+        boxes.push([p.x - 30, p.y - 30, p.x + 30, p.y + 30]);
+        boxes.push(labelBox(p.x, p.y, selectedVenue.name ?? '', 30));
+      }
+      for (const venue of ranked) {
+        if (ids.size >= budget) break;
+        if (selectedVenue && venue.venue_id === selectedVenue.venue_id) continue;
+        const p = map.project([venue.lng, venue.lat]);
+        if (p.y > h - pad.bottom) continue;
+        // Label sits on top of the 24px idle marker box; it must fit fully
+        // inside the visible map (not under the nav pills or off an edge).
+        const box = labelBox(p.x, p.y, venue.name ?? '', 14);
+        if (box[0] < 0 || box[2] > w || box[1] < topLimit) continue;
+        const hit = boxes.some((o) => box[0] < o[2] && box[2] > o[0] && box[1] < o[3] && box[3] > o[1]);
+        if (hit) continue;
+        boxes.push(box);
+        ids.add(String(venue.venue_id));
+      }
+      onChange(ids);
+    };
+    let last = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const throttled = () => {
+      const wait = 150 - (Date.now() - last);
+      if (wait <= 0) { last = Date.now(); place(); return; }
+      if (!timer) timer = setTimeout(() => { timer = null; last = Date.now(); place(); }, wait);
+    };
+    place();
+    map.on('move', throttled);
+    map.on('moveend', place);
+    return () => {
+      map.off('move', throttled);
+      map.off('moveend', place);
+      if (timer) clearTimeout(timer);
+    };
+  }, [map, isLoaded, venues, selectedVenue, mapPaddingRef, pillsRef, onChange]);
 
   return null;
 }
@@ -464,6 +564,7 @@ function MapMoveClassToggler() {
 const VenueMarkerItem = memo(function VenueMarkerItem({
   venue,
   color,
+  category,
   isHighlighted,
   isActive,
   dimmed,
@@ -472,6 +573,7 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
 }: {
   venue: Venue;
   color: string;
+  category: string;
   isHighlighted: boolean;
   isActive: boolean;
   dimmed: boolean;
@@ -487,26 +589,28 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
       <MarkerContent className="flex flex-col items-center">
         <GlowingMarker
           color={color}
+          category={category}
           isHighlighted={isHighlighted}
           isActive={isActive}
           dimmed={dimmed}
         />
+        {/* Inside MarkerContent: only its portal reaches the marker element. */}
+        {showLabel && (
+          <MarkerLabel position="top" className="mb-0.5">
+            <span
+              className={`${isHighlighted || isActive ? 'text-[11px] font-bold' : 'text-[10px] font-semibold'} leading-tight px-1.5 py-0.5 rounded whitespace-nowrap`}
+              style={{
+                color: '#161513',
+                backgroundColor: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(0,0,0,0.08)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+              }}
+            >
+              {shortVenueName(venue.name ?? '')}
+            </span>
+          </MarkerLabel>
+        )}
       </MarkerContent>
-
-      {showLabel && (
-        <MarkerLabel position="bottom" className="mt-0.5">
-          <span
-            className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
-            style={{
-              color: '#1a1a1a',
-              backgroundColor: 'rgba(255,255,255,0.85)',
-              textShadow: '0 0 3px rgba(255,255,255,0.8)',
-            }}
-          >
-            {venue.name}
-          </span>
-        </MarkerLabel>
-      )}
     </MapMarker>
   );
 });
@@ -745,6 +849,8 @@ export default function CityMapPage() {
   const [highlightedOffer, setHighlightedOffer] = useState<string | null>(null);
   const [presetRangeDates, setPresetRangeDates] = useState<string[]>([]);
   const [navHeight, setNavHeight] = useState(140);
+  // Category pill rows under the nav — map name labels stay below them.
+  const pillsRef = useRef<HTMLDivElement>(null);
 
   // ── Bottom chrome geometry ──────────────────────────────────────────
   // The card panel is `absolute bottom-0` with a content-driven height, so
@@ -774,9 +880,8 @@ export default function CityMapPage() {
       right: 0,
     };
   }, [navHeight, navPillBottom]);
-  const [currentZoom, setCurrentZoom] = useState(MAPCN_ZOOM);
 
-  const showLabels = currentZoom >= 14;
+  const [labelledVenueIds, setLabelledVenueIds] = useState<Set<string>>(() => new Set());
 
   const highlightedVenue = useMemo(() => {
     if (!highlightedVenueId) return null;
@@ -803,10 +908,6 @@ export default function CityMapPage() {
 
   const handleUserCenterChange = useCallback((center: [number, number]) => {
     setSortCenter(center);
-  }, []);
-
-  const handleZoomChange = useCallback((zoom: number) => {
-    setCurrentZoom(zoom);
   }, []);
 
   if (error) {
@@ -863,6 +964,7 @@ export default function CityMapPage() {
         />
 
         <div
+          ref={pillsRef}
           className="fixed left-0 right-0 z-30 px-2"
           style={{ top: navHeight + 6 }}
         >
@@ -894,7 +996,8 @@ export default function CityMapPage() {
             // zoom props still start each city in the right place.
             minZoom={3}
             maxZoom={MAPCN_MAX_ZOOM}
-            theme={isDarkMode ? 'dark' : 'light'}
+            // Always the light-grey basemap, even in the dark app.
+            theme="light"
             className="w-full h-full"
             dragRotate={false}
             pitchWithRotate={false}
@@ -903,7 +1006,13 @@ export default function CityMapPage() {
             <DisableTouchRotation />
             <MapMoveClassToggler />
             <SimplifyBasemap />
-            <ZoomTracker onZoomChange={handleZoomChange} />
+            <LabelPlacer
+              venues={venues}
+              selectedVenue={highlightedVenue ?? selectedVenue}
+              mapPaddingRef={mapPaddingRef}
+              pillsRef={pillsRef}
+              onChange={setLabelledVenueIds}
+            />
             <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} mapPaddingRef={mapPaddingRef} />
             <MapCenterTracker
               programmaticPanRef={programmaticPanRef}
@@ -919,10 +1028,11 @@ export default function CityMapPage() {
                   key={venue.venue_id}
                   venue={venue}
                   color={getVenueColor(venue)}
+                  category={getVenuePrimaryEventCategory(venue)}
                   isHighlighted={isHighlighted}
                   isActive={isActive}
                   dimmed={!!highlightedVenueId && !isHighlighted && !isActive}
-                  showLabel={showLabels}
+                  showLabel={isHighlighted || isActive || labelledVenueIds.has(venueIdStr)}
                   onSelect={handleVenueSelect}
                 />
               );
