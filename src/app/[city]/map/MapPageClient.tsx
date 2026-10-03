@@ -218,10 +218,10 @@ function SimplifyBasemap() {
 // per-zoom budget. Re-placed while zooming/panning (throttled) so names
 // appear and drop out as the zoom changes, like Google Maps.
 const LABEL_BUDGET: Array<[minZoom: number, max: number]> = [
-  [15, Infinity], [14, 30], [13, 16], [12, 8], [0, 4],
+  [15, Infinity], [14, 60], [13, 30], [12, 14], [11, 8], [0, 5],
 ];
-const LABEL_H = 18;
-const LABEL_PAD = 6;
+const LABEL_H = 21;
+const LABEL_PAD = 3;
 
 // Map labels use the venue's short name: "Café De Paris - French Restaurant
 // | Cafe" → "Café De Paris", "Nikki Beach Dubai (Beach Club…)" → "Nikki
@@ -234,7 +234,7 @@ function shortVenueName(name: string): string {
 // Name labels sit ABOVE the marker (the deal hangs below the selected one).
 // `above` = distance from the marker centre to the label's bottom edge.
 function labelBox(x: number, y: number, name: string, above: number): [number, number, number, number] {
-  const width = shortVenueName(name).length * 6 + 14;
+  const width = shortVenueName(name).length * 7 + 16;
   return [
     x - width / 2 - LABEL_PAD, y - above - LABEL_H - LABEL_PAD,
     x + width / 2 + LABEL_PAD, y - above + LABEL_PAD,
@@ -598,7 +598,7 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
         {showLabel && (
           <MarkerLabel position="top" className="mb-0.5">
             <span
-              className={`${isHighlighted || isActive ? 'text-[11px] font-bold' : 'text-[10px] font-semibold'} leading-tight px-1.5 py-0.5 rounded whitespace-nowrap`}
+              className={`${isHighlighted || isActive ? 'text-[13px] font-bold' : 'text-[12px] font-semibold'} leading-tight px-1.5 py-0.5 rounded whitespace-nowrap`}
               style={{
                 color: '#161513',
                 backgroundColor: 'rgba(255,255,255,0.92)',

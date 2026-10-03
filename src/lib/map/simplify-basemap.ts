@@ -27,7 +27,7 @@ const AREA_LABELS: Record<string, { minzoom: number; maxzoom: number }> = {
   place_hamlet: { minzoom: 10, maxzoom: 16 },
 };
 // Area-label colour per basemap: light on dark-matter, dark on positron.
-const AREA_LABEL_COLOR = { dark: 'rgba(196,192,206,1)', light: 'rgba(92,88,81,1)' };
+const AREA_LABEL_COLOR = { dark: 'rgba(196,192,206,1)', light: 'rgba(38,40,44,1)' };
 
 // Residential/service roads: from zoom 14 (Carto default is ~13).
 const MINOR_ROAD_RE = /^(road|tunnel|bridge)_(service|minor)_/;

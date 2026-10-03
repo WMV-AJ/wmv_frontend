@@ -67,13 +67,16 @@ function applyLandTint(map: MapLibreGL.Map, isDark: boolean) {
   }
 }
 
-// Positron is near-white; the map page wants a soft Google-style grey under
-// a dark app. Ground goes light grey, roads stay white with a faint grey
-// casing so they still read, water is a muted blue-grey.
-const LIGHT_GROUND = "#e8e8e6";
-const LIGHT_GREEN = "#dce3d8";
-const LIGHT_WATER = "#c5d0da";
-const LIGHT_ROAD_CASE = "#d2d2cf";
+// Positron is near-white, which glares next to the dark app chrome. The map
+// page wants a mid "silver" grey: ground and buildings grey, roads a lighter
+// grey with a darker casing, water a muted slate. Text halos follow the
+// ground so labels don't sit in white boxes.
+const LIGHT_GROUND = "#a6a9ad";
+const LIGHT_GREEN = "#9ba59b";
+const LIGHT_WATER = "#7f909e";
+const LIGHT_BUILDING = "#999ca1";
+const LIGHT_ROAD_FILL = "#c9cbce";
+const LIGHT_ROAD_CASE = "#8d9095";
 const LIGHT_ROAD_FILL_RE = /^(road|tunnel|bridge)_.*_fill/;
 const LIGHT_ROAD_CASE_RE = /^(road|tunnel|bridge)_.*_case/;
 
@@ -85,7 +88,7 @@ function applyLightTint(map: MapLibreGL.Map, isLight: boolean) {
       map.setPaintProperty("background", "background-color", LIGHT_GROUND);
     }
     if (map.getLayer("landuse_residential")) {
-      map.setPaintProperty("landuse_residential", "fill-color", "rgba(0, 0, 0, 0.03)");
+      map.setPaintProperty("landuse_residential", "fill-color", "rgba(0, 0, 0, 0.04)");
     }
     for (const id of LAND_FILL_LAYERS) {
       if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", LIGHT_GREEN);
@@ -93,9 +96,16 @@ function applyLightTint(map: MapLibreGL.Map, isLight: boolean) {
     for (const id of ["water", "water_shadow"]) {
       if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", LIGHT_WATER);
     }
+    for (const id of ["building", "building-top"]) {
+      if (map.getLayer(id)) map.setPaintProperty(id, "fill-color", LIGHT_BUILDING);
+    }
     for (const layer of map.getStyle()?.layers ?? []) {
+      if (layer.type === "symbol") {
+        map.setPaintProperty(layer.id, "text-halo-color", LIGHT_GROUND);
+        continue;
+      }
       if (layer.type !== "line") continue;
-      if (LIGHT_ROAD_FILL_RE.test(layer.id)) map.setPaintProperty(layer.id, "line-color", "#ffffff");
+      if (LIGHT_ROAD_FILL_RE.test(layer.id)) map.setPaintProperty(layer.id, "line-color", LIGHT_ROAD_FILL);
       else if (LIGHT_ROAD_CASE_RE.test(layer.id)) map.setPaintProperty(layer.id, "line-color", LIGHT_ROAD_CASE);
     }
   } catch {
