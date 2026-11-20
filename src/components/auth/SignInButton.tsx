@@ -15,7 +15,7 @@ export default function SignInButton({ variant = 'desktop', className = '' }: Si
   if (variant === 'compact') {
     return (
       <button
-        onClick={() => router.push('/login')}
+        onClick={() => router.push('/')}
         className={`w-8 h-8 md:w-6 md:h-6 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0 ${className}`}
         style={{ background: 'rgba(202, 138, 4, 0.85)' }}
         aria-label="Sign in"
@@ -27,7 +27,7 @@ export default function SignInButton({ variant = 'desktop', className = '' }: Si
 
   return (
     <button
-      onClick={() => router.push('/login')}
+      onClick={() => router.push('/')}
       className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${className}`}
       style={{
         background: 'rgba(202, 138, 4, 0.85)',

@@ -35,6 +35,8 @@ const PASSTHROUGH = new Set([
   'list-your-venue',
   'sitemap.xml',
   'robots.txt',
+  // Sentry's tunnel route (next.config.ts tunnelRoute)
+  'monitoring',
 ]);
 
 // Dynamic cities cache, refreshed against the backend's /api/cities.

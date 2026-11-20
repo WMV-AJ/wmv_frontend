@@ -10,7 +10,7 @@
 // localStorage-in-initial-render hydration mismatch.
 import { useLayoutEffect, useState } from 'react';
 
-const SEEN_KEY = 'wmv_intro_v2';
+const SEEN_KEY = 'wmv_intro_v3';
 
 export type IntroState = 'pending' | 'playing' | 'done';
 
