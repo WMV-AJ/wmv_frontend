@@ -358,21 +358,27 @@
     to { transform: rotate(360deg); }
   }
 
-  /* Section-label dot on the city home: steps through the category colours
-     (COLOR_HEX_MAP in src/lib/category-mappings.ts) and breathes. */
+  /* Section-label dot on the city home: snaps through every category colour
+     (all 17 in COLOR_HEX_MAP, src/lib/category-mappings.ts), one every 0.3 s,
+     and beats. */
   @keyframes wmv-kicker-hue {
     0.0% { background-color: #F8991D; }
-    8.33% { background-color: #FC4024; }
-    16.67% { background-color: #8552A0; }
-    25.0% { background-color: #1FA86E; }
-    33.33% { background-color: #EF4782; }
-    41.67% { background-color: #9F8D32; }
-    50.0% { background-color: #00859C; }
-    58.33% { background-color: #EBDCC7; }
-    66.67% { background-color: #EBDEA6; }
-    75.0% { background-color: #BBC5AB; }
-    83.33% { background-color: #F09E7D; }
-    91.67% { background-color: #3BB3C9; }
+    5.88% { background-color: #EF4782; }
+    11.76% { background-color: #1FA86E; }
+    17.65% { background-color: #8552A0; }
+    23.53% { background-color: #FC4024; }
+    29.41% { background-color: #3BB3C9; }
+    35.29% { background-color: #EBDEA6; }
+    41.18% { background-color: #B07CC6; }
+    47.06% { background-color: #9F8D32; }
+    52.94% { background-color: #F57BA6; }
+    58.82% { background-color: #00859C; }
+    64.71% { background-color: #FBB450; }
+    70.59% { background-color: #BBC5AB; }
+    76.47% { background-color: #2FA372; }
+    82.35% { background-color: #F09E7D; }
+    88.24% { background-color: #EBDCC7; }
+    94.12% { background-color: #F7BFA6; }
     100% { background-color: #F8991D; }
   }
   @keyframes wmv-kicker-beat {
@@ -385,7 +391,7 @@
     border-radius: 50%;
     flex-shrink: 0;
     background-color: #F8991D;
-    animation: wmv-kicker-hue 14s linear infinite, wmv-kicker-beat 1.6s ease-in-out infinite;
+    animation: wmv-kicker-hue 5.1s step-end infinite, wmv-kicker-beat 0.6s ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce) {
     .wmv-kicker-dot { animation: none; }
