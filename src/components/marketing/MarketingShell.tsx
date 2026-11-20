@@ -139,6 +139,12 @@ function MarketingFooter() {
         <Link href="/list-your-venue" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
           List your venue
         </Link>
+        <Link href="/privacy" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
+          Privacy
+        </Link>
+        <Link href="/data-deletion" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
+          Data deletion
+        </Link>
       </div>
     </footer>
   );

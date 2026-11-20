@@ -136,6 +136,8 @@ const FOOTER_LINKS: Array<[string, string]> = [
   ['How it works', '/how-it-works'],
   ['FAQ', '/faq'],
   ['List your venue', '/list-your-venue'],
+  ['Privacy', '/privacy'],
+  ['Data deletion', '/data-deletion'],
 ];
 
 export function LandingOverlay({ hideUserMenu = false }: LandingOverlayProps = {}) {

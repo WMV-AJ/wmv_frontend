@@ -33,6 +33,8 @@ const PASSTHROUGH = new Set([
   'home4',
   'faq',
   'list-your-venue',
+  'privacy',
+  'data-deletion',
   'sitemap.xml',
   'robots.txt',
   // Sentry's tunnel route (next.config.ts tunnelRoute)
