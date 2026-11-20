@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import type { Venue, FilterOptions } from '@/types';
-import { DEFAULT_CITY, isValidCity, type CitySlug } from '@/config/cities.config';
+import { DEFAULT_CITY, type CitySlug } from '@/config/cities.config';
 
 interface VenueDataContextType {
   city: CitySlug;
@@ -13,6 +13,8 @@ interface VenueDataContextType {
   isLoadingFilters: boolean;
   venueError: string | null;
   filterError: string | null;
+  /** Load the city's events and filter options again (the Retry button). */
+  refetch: () => void;
 }
 
 const defaultFilterOptions: FilterOptions = {
@@ -39,17 +41,35 @@ const VenueDataContext = createContext<VenueDataContextType>({
   isLoadingFilters: true,
   venueError: null,
   filterError: null,
+  refetch: () => {},
 });
 
 export function useVenueData() {
   return useContext(VenueDataContext);
 }
 
-/** Pull the city slug out of the URL: `/dubai/...` → `dubai`. */
+/**
+ * Top-level paths that are not cities. Keep in step with PASSTHROUGH in
+ * src/middleware.ts.
+ */
+const NON_CITY_SEGMENTS = new Set([
+  'auth', 'api', '_next', 'how-it-works', 'home3', 'home4', 'faq', 'list-your-venue', 'privacy',
+  'data-deletion', 'terms', 'monitoring',
+]);
+
+/**
+ * Pull the city slug out of the URL: `/mumbai/...` → `mumbai`.
+ *
+ * The segment is trusted as it stands. The middleware has already redirected
+ * every path whose first segment is not a real city, and the list of cities
+ * known to the browser is incomplete until /api/cities answers. Checking
+ * against that list sent a direct visit to /mumbai off to load Dubai's events.
+ */
 function extractCityFromPath(pathname: string | null): CitySlug {
   if (!pathname) return DEFAULT_CITY;
   const firstSegment = pathname.split('/').filter(Boolean)[0]?.toLowerCase();
-  return isValidCity(firstSegment) ? firstSegment : DEFAULT_CITY;
+  if (!firstSegment || NON_CITY_SEGMENTS.has(firstSegment) || firstSegment.includes('.')) return DEFAULT_CITY;
+  return firstSegment;
 }
 
 /**
@@ -90,72 +110,70 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
   const [venueError, setVenueError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
 
-  // Re-fetch when the city slug in the URL changes.
-  useEffect(() => {
-    const fetchVenues = async () => {
-      try {
-        setIsLoadingVenues(true);
-        setVenueError(null);
+  // Bumped by refetch() to run both loads again.
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((n) => n + 1), []);
 
+  // Re-fetch when the city slug in the URL changes. A response is applied only
+  // if its request is still the current one, so a slow answer for the city just
+  // left can never overwrite the city now on screen.
+  useEffect(() => {
+    let cancelled = false;
+    setAllVenues([]);
+    setIsLoadingVenues(true);
+    setVenueError(null);
+
+    (async () => {
+      try {
         const response = await fetchWithRetry(`/api/venues?city=${encodeURIComponent(city)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
-
-        if (result.success && result.data) {
-          setAllVenues(result.data);
-        } else {
-          setVenueError(result.error || 'Invalid response format');
-        }
+        if (cancelled) return;
+        if (result.success && result.data) setAllVenues(result.data);
+        else setVenueError(result.error || 'Invalid response format');
       } catch (err) {
+        if (cancelled) return;
         setVenueError(err instanceof Error ? err.message : 'Network error occurred');
         console.error('Error fetching venues:', err);
       } finally {
-        setIsLoadingVenues(false);
+        if (!cancelled) setIsLoadingVenues(false);
       }
-    };
+    })();
 
-    fetchVenues();
-  }, [city]);
+    return () => { cancelled = true; };
+  }, [city, attempt]);
 
   useEffect(() => {
-    const fetchFilterOptions = async () => {
-      try {
-        setIsLoadingFilters(true);
-        setFilterError(null);
+    let cancelled = false;
+    setFilterOptions(defaultFilterOptions);
+    setIsLoadingFilters(true);
+    setFilterError(null);
 
+    (async () => {
+      try {
         const response = await fetchWithRetry(`/api/filter-options?city=${encodeURIComponent(city)}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
-
-        if (result.success && result.data) {
-          setFilterOptions(result.data);
-        } else {
-          setFilterError(result.error || 'Invalid response format');
-        }
+        if (cancelled) return;
+        if (result.success && result.data) setFilterOptions(result.data);
+        else setFilterError(result.error || 'Invalid response format');
       } catch (err) {
+        if (cancelled) return;
         setFilterError(err instanceof Error ? err.message : 'Network error occurred');
         console.error('Error fetching filter options:', err);
       } finally {
-        setIsLoadingFilters(false);
+        if (!cancelled) setIsLoadingFilters(false);
       }
-    };
+    })();
 
-    fetchFilterOptions();
-  }, [city]);
+    return () => { cancelled = true; };
+  }, [city, attempt]);
 
   return (
     <VenueDataContext.Provider
@@ -167,6 +185,7 @@ export function VenueDataProvider({ children }: { children: React.ReactNode }) {
         isLoadingFilters,
         venueError,
         filterError,
+        refetch,
       }}
     >
       {children}

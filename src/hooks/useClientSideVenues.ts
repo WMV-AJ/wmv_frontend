@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import type { Venue, HierarchicalFilterState, FilterState } from '@/types';
 import { getEventCategories } from '@/lib/category-utils';
 import { useVenueData } from '@/contexts/VenueDataContext';
-import { getCityDateString } from '@/lib/city-date';
+import { getCityDateString, getPastCutoff } from '@/lib/city-date';
 import { dealLabelsOf } from '@/lib/filter-taxonomy';
 
 interface UseClientSideVenuesResult {
@@ -75,7 +75,8 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
     // events whenever the viewer's midnight came first — e.g. an IST viewer
     // on Dubai between 18:30 and 20:00 UTC every day, which emptied the list
     // and map while the date filter was (correctly) on Dubai's today.
-    const cityToday = getCityDateString(city);
+    // Today, or yesterday when yesterday is the date picked in the strip.
+    const cityToday = getPastCutoff(city, flatFilters.activeDates);
 
     return allVenues.filter(venue => {
       // Always exclude past events

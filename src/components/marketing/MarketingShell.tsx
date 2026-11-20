@@ -145,6 +145,9 @@ function MarketingFooter() {
         <Link href="/data-deletion" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
           Data deletion
         </Link>
+        <Link href="/terms" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
+          Terms
+        </Link>
       </div>
     </footer>
   );

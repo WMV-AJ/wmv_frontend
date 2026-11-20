@@ -278,8 +278,9 @@ const EventCard: React.FC<EventCardProps> = ({
         </>
       ),
     },
-    { key: 'entry', icon: DollarSign, label: 'Entry', body: <p className={valueCls}>{event.event_entry_price || 'TBA'}</p> },
   ];
+  // No price from the source means no Entry cell, not a guess.
+  if (event.event_entry_price) shortCells.push({ key: 'entry', icon: DollarSign, label: 'Entry', body: <p className={valueCls}>{event.event_entry_price}</p> });
   if (event.event_categories && event.event_categories.length > 0) {
     shortCells.push({
       key: 'type', icon: Tag,

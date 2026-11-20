@@ -17,6 +17,22 @@ export function getCityDateString(city: CitySlug | string | undefined = 'dubai',
   return new Date(cityNowMs).toISOString().slice(0, 10);
 }
 
+/** The day before the city's current date, as YYYY-MM-DD. */
+export function getCityYesterdayString(city: CitySlug | string | undefined = 'dubai', now: Date = new Date()): string {
+  return getCityDateString(city, new Date(now.getTime() - 24 * 60 * 60 * 1000));
+}
+
+/**
+ * The oldest event date to keep. Past events are hidden, except that picking
+ * yesterday in the date strip brings yesterday's back, so a late night that
+ * ran past midnight can still be found.
+ */
+export function getPastCutoff(city: CitySlug | string | undefined, activeDates: readonly string[] | undefined): string {
+  const yesterday = getCityYesterdayString(city);
+  const yesterdayKey = new Date(`${yesterday}T00:00:00Z`).toDateString();
+  return activeDates?.includes(yesterdayKey) ? yesterday : getCityDateString(city);
+}
+
 /**
  * "Tonight" boundary — useful for "events happening tonight" filters.
  * Returns the city's current date if it's currently after sunset (≥18:00 local),

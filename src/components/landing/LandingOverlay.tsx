@@ -138,6 +138,7 @@ const FOOTER_LINKS: Array<[string, string]> = [
   ['List your venue', '/list-your-venue'],
   ['Privacy', '/privacy'],
   ['Data deletion', '/data-deletion'],
+  ['Terms', '/terms'],
 ];
 
 export function LandingOverlay({ hideUserMenu = false }: LandingOverlayProps = {}) {

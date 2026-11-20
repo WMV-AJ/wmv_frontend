@@ -13,6 +13,7 @@ import {
   useMap,
 } from '@/components/ui/map';
 import TopNav from '@/components/navigation/TopNav';
+import LoadError from '@/components/shared/LoadError';
 import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
@@ -35,7 +36,7 @@ import {
   getMapCenter,
 } from '@/lib/mapcn-config';
 import { getCityConfig } from '@/config/cities.config';
-import { getCityDateString } from '@/lib/city-date';
+import { getCityDateString, getPastCutoff } from '@/lib/city-date';
 import { FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 
 type MapPadding = { top: number; bottom: number; left: number; right: number };
@@ -605,8 +606,9 @@ export default function CityMapPage() {
     // The CITY's today (see useClientSideVenues): a viewer-local midnight
     // dropped the city's current-day dates every evening for IST viewers,
     // which emptied the carousel and the pill counts.
-    const cityToday = getCityDateString(city);
-    const todayKey = new Date(`${cityToday}T00:00:00Z`).toDateString();
+    const todayKey = new Date(`${getCityDateString(city)}T00:00:00Z`).toDateString();
+    // Oldest date kept: today, or yesterday when yesterday is picked in the strip.
+    const cityToday = getPastCutoff(city, filters.activeDates);
 
     const parseStartHour = (timeStr: string): number => {
       const match = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)/i);
@@ -665,10 +667,10 @@ export default function CityMapPage() {
     });
 
     return map;
-  }, [allVenues, city]);
+  }, [allVenues, city, filters.activeDates]);
 
   const cards = useMemo(() => {
-    const rawCards = transformVenueDataToStackedCards(filteredVenues);
+    const rawCards = transformVenueDataToStackedCards(filteredVenues, city);
     const todayTime = new Date(`${getCityDateString(city)}T00:00:00Z`).getTime();
     const dedupMap = new Map<string, (typeof rawCards)[0]>();
     rawCards.forEach((card) => {
@@ -706,7 +708,7 @@ export default function CityMapPage() {
   }, [filteredVenues, filters.activeDates, sortCenter, city]);
 
   const allCards = useMemo(() => {
-    const rawCards = transformVenueDataToStackedCards(allVenues);
+    const rawCards = transformVenueDataToStackedCards(allVenues, city);
     const eventMap = new Map<string, (typeof rawCards)[0]>();
     rawCards.forEach((card) => {
       if (card.event.id && !eventMap.has(card.event.id)) eventMap.set(card.event.id, card);
@@ -727,7 +729,7 @@ export default function CityMapPage() {
   // For pill counts: future events only (past excluded), no category filter applied.
   // This keeps pill counts accurate and stable regardless of which category is selected.
   const countVenues = useMemo(() => {
-    const cityToday = getCityDateString(city);
+    const cityToday = getPastCutoff(city, filters.activeDates);
     return dateFilteredVenues.filter((v) => {
       if (!v.event_date) return true;
       try {
@@ -735,7 +737,7 @@ export default function CityMapPage() {
         return isNaN(d.getTime()) || d.toISOString().slice(0, 10) >= cityToday;
       } catch { return true; }
     });
-  }, [dateFilteredVenues, city]);
+  }, [dateFilteredVenues, city, filters.activeDates]);
 
   const venues = useMemo(() => {
     const venueMap = new Map<number, (typeof filteredVenues)[0]>();
@@ -816,15 +818,8 @@ export default function CityMapPage() {
     setCurrentZoom(zoom);
   }, []);
 
-  if (error) {
-    return (
-      <main className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="retro-surface p-8 max-w-md text-center">
-          <h3 className="text-lg font-semibold mb-2 text-red-400">Error Loading Venues</h3>
-          <p className="text-muted-foreground">{error}</p>
-        </div>
-      </main>
-    );
+  if (error && allVenues.length === 0) {
+    return <LoadError full />;
   }
 
   return (

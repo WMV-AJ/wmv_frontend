@@ -6,6 +6,7 @@
 import { getCategoryColor, getHexColor } from '@/lib/category-mappings';
 import { hexToHSL } from '@/lib/card-color-utils';
 import { formatEventTimeLabel } from '@/lib/time-utils';
+import { formatPrice } from '@/config/cities.config';
 
 /**
  * Adapter function that converts your existing category color system
@@ -190,7 +191,9 @@ function calculateDataCompleteness(card: {
  * Transform venue/event data to StackedEventCards format
  */
 export function transformVenueDataToStackedCards(
-  venues: SupabaseVenueEvent[]
+  venues: SupabaseVenueEvent[],
+  /** The city the rows belong to, for the price's currency. */
+  city?: string,
 ) {
   // Step 1: Transform all records to card format
   const allCards = venues.map((venue, index) => {
@@ -233,7 +236,8 @@ export function transformVenueDataToStackedCards(
         // the dedup key below; this label must never reach that key.
         event_time_display: formatEventTimeLabel(venue.event_time),
         event_date: venue.event_date || new Date().toISOString().split('T')[0],
-        event_entry_price: venue.ticket_price ? `AED ${venue.ticket_price}` : 'Contact for pricing',
+        // Empty when the source gave no price: cards then show no price at all.
+        event_entry_price: formatPrice(venue.ticket_price, city) ?? '',
         event_offers: venue.special_offers || 'No special offers',
         category: venue.event_categories?.[0]?.primary || 'Music Events',
 

@@ -126,6 +126,7 @@ export function HomeFooter({ city, cities, accent, onBackToTop }: {
           <Link href="/list-your-venue" className={linkCls}>List your venue</Link>
           <Link href="/privacy" className={linkCls}>Privacy</Link>
           <Link href="/data-deletion" className={linkCls}>Data deletion</Link>
+          <Link href="/terms" className={linkCls}>Terms</Link>
         </nav>
       </div>
 

@@ -39,6 +39,7 @@ import { getEventCategories } from '@/lib/category-utils';
 import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
 import { T, displayFont } from '@/lib/theme/tokens';
 import { formatPrice } from '@/config/cities.config';
+import { goBack } from '@/lib/nav-back';
 import { formatDateLabel, formatTimeClean, isEventHappeningNow } from '@/lib/time-utils';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 
@@ -243,7 +244,6 @@ export default function EventPageRedesign({
   const city = (params?.city as string) || 'dubai';
 
   const [saved, setSaved] = useState(false);
-  const [going, setGoing] = useState(false);
   const [lightbox, setLightbox] = useState<{ url: string; isVideo: boolean } | null>(null);
 
   // Saves are device-local (localStorage) until accounts land.
@@ -283,7 +283,8 @@ export default function EventPageRedesign({
   const venueCategories = parseKeyedList(event.venue_category);
   const highlights = parseKeyedList(event.venue_highlights);
   const atmosphere = parseKeyedList(event.venue_atmosphere);
-  const priceText = event.ticket_price ? formatPrice(event.ticket_price as any, city) : 'Free entry';
+  // Null when the source gave no price; the Entry cell is then left out.
+  const priceText = event.ticket_price ? formatPrice(event.ticket_price as any, city) : null;
   const offerText = event.special_offers && !event.special_offers.toLowerCase().includes('no special')
     ? event.special_offers : '';
 
@@ -394,7 +395,7 @@ export default function EventPageRedesign({
               {/* back / save / share */}
               <div style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 3 }}>
                 <button
-                  onClick={() => router.back()}
+                  onClick={() => goBack(router, `/${city}`)}
                   aria-label="Back"
                   className="backdrop-blur-md active:scale-90 transition-transform"
                   style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(10,10,20,0.55)', border: '1px solid rgba(255,255,255,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
@@ -487,7 +488,7 @@ export default function EventPageRedesign({
                   const doorNote = attrs.find(a => a.type === 'timing')?.label || 'ID may be required';
                   // Longest note wins the flexible column (ties/short notes →
                   // ENTRY grows by default, it's the wordiest in practice).
-                  const lens = [whenNote.length, entryNote.length, doorNote.length];
+                  const lens = [whenNote.length, priceText ? entryNote.length : -1, doorNote.length];
                   const growIdx = lens.indexOf(Math.max(...lens));
                   return (
                     <>
@@ -498,7 +499,7 @@ export default function EventPageRedesign({
                         value={time.start ? formatTimeClean(time.start) : formatDateLabel(event.event_date)}
                         note={whenNote}
                       />
-                      <SpecCell grow={growIdx === 1} label="Entry" value={priceText || 'Free entry'} note={entryNote} valueColor={MONEY} />
+                      {priceText && <SpecCell grow={growIdx === 1} label="Entry" value={priceText} note={entryNote} valueColor={MONEY} />}
                       <SpecCell
                         grow={growIdx === 2}
                         label="Door"
@@ -508,35 +509,6 @@ export default function EventPageRedesign({
                     </>
                   );
                 })()}
-              </div>
-            </div>
-
-            {/* ── FRIENDS GOING (needs a social graph; drop if not shipping) ── */}
-            <div style={{ padding: '16px 20px 0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: R_CARD, background: T.surface, border: `1px solid ${T.line}` }}>
-                <div style={{ display: 'flex', flexShrink: 0 }}>
-                  {[T.accent, '#22d3ee', '#f472b6'].map((c, i) => (
-                    <span key={c} style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: `1.5px solid ${T.surface}`, marginLeft: i ? -8 : 0 }} />
-                  ))}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: T.ink, fontWeight: 600 }}>9 people you follow are going</div>
-                  <div style={{ fontSize: 10, color: T.inkFaint, marginTop: 2 }}>Sara, Omar and 7 others saved this</div>
-                </div>
-                <button
-                  onClick={() => setGoing(g => !g)}
-                  aria-pressed={going}
-                  style={{
-                    flexShrink: 0, height: 32, padding: '0 14px', borderRadius: 999,
-                    background: going ? T.accent : 'transparent',
-                    color: going ? T.inkInverse : T.accent,
-                    border: `1px solid ${going ? T.accent : 'rgba(244,196,48,0.5)'}`,
-                    fontSize: 9, fontWeight: 800, letterSpacing: '1.1px', textTransform: 'uppercase',
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}
-                >
-                  {going ? 'Going' : "I'm in"}
-                </button>
               </div>
             </div>
 

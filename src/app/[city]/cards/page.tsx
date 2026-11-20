@@ -6,6 +6,7 @@ import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { useScrollRestore } from '@/hooks/useScrollRestore';
 import { type HierarchicalFilterState } from '@/types';
 import TopNav from '@/components/navigation/TopNav';
+import LoadError from '@/components/shared/LoadError';
 import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import StackedEventCards from '@/components/events/StackedEventCards';
@@ -82,7 +83,7 @@ function CardsInner() {
     };
   });
 
-  const { allVenues, filteredVenues, isLoading } = useClientSideVenues(filters);
+  const { allVenues, filteredVenues, isLoading, error } = useClientSideVenues(filters);
 
   // ?search=1 (the home page's search icon) opens the same search and filter
   // sheet the search icon on this page and on the map opens.
@@ -132,7 +133,7 @@ function CardsInner() {
   }, [allVenues, filters.activeDates]);
 
   const cards = useMemo(() => {
-    const allCards = transformVenueDataToStackedCards(filteredVenues);
+    const allCards = transformVenueDataToStackedCards(filteredVenues, city);
     const eventMap = new Map<string, typeof allCards[0]>();
     allCards.forEach(card => {
       if (card.event.id && !eventMap.has(card.event.id)) {
@@ -194,6 +195,8 @@ function CardsInner() {
       </main>
     );
   }
+
+  if (error && allVenues.length === 0) return <LoadError full />;
 
   return (
     <>

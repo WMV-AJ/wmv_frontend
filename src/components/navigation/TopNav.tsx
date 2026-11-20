@@ -191,11 +191,17 @@ const TopNav: React.FC<TopNavProps> = ({
       } catch { /* skip */ }
     });
 
+    // Yesterday is always offered, so a night that ran past midnight can still be found.
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    if (!dateMap.has(yesterday.toDateString())) dateMap.set(yesterday.toDateString(), yesterday);
+
     const sortedDates = Array.from(dateMap.entries())
-      .filter(([, date]) => date >= today)
+      .filter(([, date]) => date >= yesterday)
       .sort(([, a], [, b]) => a.getTime() - b.getTime());
 
     return sortedDates.map(([dateKey, date]) => ({
+      isYesterday: date.toDateString() === yesterday.toDateString(),
       date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       day: date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
       dateKey,
@@ -427,6 +433,11 @@ const TopNav: React.FC<TopNavProps> = ({
                         TODAY
                       </span>
                     )}
+                    {dateOption.isYesterday && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[7px] font-bold px-1.5 py-0.5 rounded bg-gray-600 text-white tracking-wider">
+                        YDAY
+                      </span>
+                    )}
                     <span className={`text-[10px] font-semibold uppercase tracking-wider ${ isFullSelected ? 'text-amber-300'
                         : isWeekend ? 'text-red-400'
                         : 'text-gray-500'
@@ -576,6 +587,14 @@ const TopNav: React.FC<TopNavProps> = ({
                             }}
                           >
                             TODAY
+                          </span>
+                        )}
+                        {dateOption.isYesterday && (
+                          <span
+                            className="absolute -top-1.5 -right-1.5 text-[6px] font-bold px-1 py-px rounded z-10"
+                            style={{ background: darkMode ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.35)', color: '#fff' }}
+                          >
+                            YDAY
                           </span>
                         )}
                         <span className={`text-[10px] font-semibold uppercase tracking-wider leading-tight ${ isFullSelected ? 'text-white'

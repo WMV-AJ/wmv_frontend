@@ -10,6 +10,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import { useScrollRestore } from '@/hooks/useScrollRestore';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
+import LoadError from '@/components/shared/LoadError';
 import NavPill from '@/components/navigation/NavPill';
 import { T } from '@/lib/theme/tokens';
 import { HP, homePaletteVars } from '@/components/home/home-palette';
@@ -110,7 +111,7 @@ export default function CityHome() {
   // page used to fire its own /api/venues fetch concurrently with the
   // provider's, doubling upstream load on every home visit (the thundering
   // herd behind the intermittent 503s).
-  const { allVenues, isLoadingVenues } = useVenueData();
+  const { allVenues, isLoadingVenues, venueError } = useVenueData();
   const loading = isLoadingVenues;
   // Back from an event, the map or the list lands on the same spot.
   useScrollRestore(mainRef, !loading);
@@ -432,6 +433,9 @@ export default function CityHome() {
       <div style={{ maxWidth: 430, margin: '0 auto', paddingBottom: 96 }}>
 
         <HomeMasthead city={city} from="home" />
+
+        {/* The load failed: say so, instead of a page of zeros. */}
+        {venueError && !loading && allVenues.length === 0 && <LoadError />}
 
         {/* § Map or list — the two ways in, with live totals */}
         <HomeMapOrList

@@ -11,6 +11,7 @@
 // anyone out.
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { getAuthToken, useAuth } from '@/contexts/AuthContext';
+import { markEntry } from '@/lib/nav-back';
 
 /** Only same-site, root-relative paths may be used as a return target. */
 export function safeNextPath(raw: string | null): string | null {
@@ -31,7 +32,11 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
 
   // Before first paint: no token means no session, so cover the page and leave.
   useBrowserLayoutEffect(() => {
-    if (getAuthToken()) return;
+    if (getAuthToken()) {
+      // Signed in: this is where the visit starts, for the event page's back arrow.
+      markEntry();
+      return;
+    }
     setBlocked(true);
     goToSignIn();
   }, []);

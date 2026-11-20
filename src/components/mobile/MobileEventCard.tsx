@@ -546,8 +546,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
                   {timeLabel && <p className={longCls}>{timeLabel}</p>}
                 </React.Fragment>
               )],
-              ['entry', DollarSign, 'Entry', <p key="v" className={valueCls}>{event.event_entry_price || 'TBA'}</p>],
             ];
+            // No price from the source means no Entry cell, not a guess.
+            if (event.event_entry_price) shortCells.push(['entry', DollarSign, 'Entry', <p key="v" className={valueCls}>{event.event_entry_price}</p>]);
             if (event.event_categories && event.event_categories.length > 0) {
               shortCells.push(['type', Tag, event.event_categories.map((cat) => cat.primary).join(', '), (
                 <p key="v" className={valueCls}>{event.event_categories.map((cat) => cat.secondary).filter(Boolean).join(', ') || '—'}</p>

@@ -3,6 +3,7 @@
 // 1.1k-line clients, this wrapper canonicalizes to the /event/ variant so
 // the twins never compete in search.
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import LegacyEventClient from './LegacyEventClient';
 import { getCityDisplayName, getEventById } from '@/lib/server-data';
 
@@ -26,6 +27,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function LegacyEventPage() {
+export default async function LegacyEventPage({ params }: Props) {
+  // Event ids are numbers. Anything else here is a mistyped address
+  // (/dubai/serach), which used to render as "Event not found" with a 200.
+  const { eventId } = await params;
+  if (!/^\d+$/.test(eventId)) notFound();
   return <LegacyEventClient />;
 }

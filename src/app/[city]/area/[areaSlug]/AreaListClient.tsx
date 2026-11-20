@@ -51,7 +51,7 @@ export default function AreaListingPage() {
       return v.area === areaName;
     });
 
-    const allCards = transformVenueDataToStackedCards(matched as any);
+    const allCards = transformVenueDataToStackedCards(matched as any, city);
     const eventMap = new Map<string, typeof allCards[0]>();
     allCards.forEach(card => {
       if (card.event.id && !eventMap.has(card.event.id)) {
