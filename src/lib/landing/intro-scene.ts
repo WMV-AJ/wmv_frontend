@@ -314,7 +314,7 @@ export function buildScene(ctx: CanvasRenderingContext2D, layout: Layout, fonts:
     mapDots.push({ x, y, distance: Math.hypot(x - cx, y - cy), edge });
   }
   const markers: Marker[] = mapDots
-    .filter((dot, i) => hash(i) > 0.9 && dot.edge > 0.5)
+    .filter((dot, i) => hash(i) > 0.955 && dot.edge > 0.5)
     .map((dot, i) => ({
       ...dot,
       color: PALETTE[Math.floor(hash(i + 50) * PALETTE.length)],
@@ -521,8 +521,9 @@ function drawMap(ctx: CanvasRenderingContext2D, scene: Scene, t: number, ambient
     if (dot.distance > wave) continue;
     const front = wave < WAVE_RADIUS - 2 ? 1 - clamp((wave - dot.distance) / 46) : 0;
     ctx.fillStyle = front > 0 ? `rgba(255,255,255,${dot.edge * (0.5 + front * 0.5)})` : `rgba(205,210,220,${dot.edge * 0.5})`;
-    const size = 2.6 + front * 1.2;
-    ctx.fillRect(dot.x - size / 2, dot.y - size / 2, size, size);
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, 1.35 + front * 0.6, 0, Math.PI * 2);
+    ctx.fill();
   }
   // The dots fly back out of the sphere and land as markers.
   for (const marker of scene.markers) {
@@ -534,7 +535,7 @@ function drawMap(ctx: CanvasRenderingContext2D, scene: Scene, t: number, ambient
     const x = lerp(cx, marker.x, eased) + (bend * (marker.y - cy)) / reach;
     const y = lerp(cy, marker.y, eased) - (bend * (marker.x - cx)) / reach;
     const breathe = 0.5 + 0.5 * Math.sin(ambient * 1.6 + marker.phase * 6.283);
-    glowDot(ctx, x, y, 2.9 * (1 + breathe * 0.22 * k), marker.color, lerp(1, marker.edge * (0.72 + breathe * 0.25), k));
+    glowDot(ctx, x, y, 3.4 * (1 + breathe * 0.16 * k), marker.color, lerp(1, marker.edge * (0.8 + breathe * 0.2), k), 2.4);
   }
   const ringAlpha = 1 - prog(t, MAP_START, MAP_END - 0.2);
   if (ringAlpha > 0) {
