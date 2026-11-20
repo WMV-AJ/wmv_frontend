@@ -108,24 +108,24 @@ export function RailEndTile({ width, onMap, onList }: {
   onMap: () => void;
   onList: () => void;
 }) {
-  // Same pair as the top of the page: the map in white, the list in black.
   const half = 'flex-1 flex flex-col justify-between p-3.5 text-left transition-opacity active:opacity-70';
   const title = 'font-tight font-semibold text-[19px] leading-none';
   return (
-    <div className="flex-shrink-0 flex flex-col snap-start" style={{ width, aspectRatio: '3/4' }} data-cta="rail-end">
-      <button type="button" onClick={onMap} className={`${half} wmv-invert`} data-cta="rail-end-map">
-        <span className="flex items-center justify-between">
-          <MapIcon className="w-5 h-5" />
-          <span className="wmv-arrow-ring"><ArrowUpRight className="w-4 h-4 relative" /></span>
+    <div className="flex-shrink-0 flex flex-col wmv-invert snap-start" style={{ width, aspectRatio: '3/4' }} data-cta="rail-end">
+      <button type="button" onClick={onMap} className={half} data-cta="rail-end-map">
+        <MapIcon className="w-5 h-5" />
+        <span className="flex items-end justify-between gap-2">
+          <span className={title}>View on map</span>
+          <ArrowUpRight className="w-4 h-4 flex-shrink-0" />
         </span>
-        <span className={title}>View on map</span>
       </button>
-      <button type="button" onClick={onList} className={`${half} text-pale`} style={{ border: '1px solid var(--wmv-line-strong)', borderTop: 'none' }} data-cta="rail-end-list">
-        <span className="flex items-center justify-between">
-          <ListIcon className="w-5 h-5" />
-          <span className="wmv-arrow-ring"><ArrowUpRight className="w-4 h-4 relative" /></span>
+      <span aria-hidden className="h-px mx-3.5" style={{ background: 'color-mix(in srgb, var(--wmv-btn-ink) 22%, transparent)' }} />
+      <button type="button" onClick={onList} className={half} data-cta="rail-end-list">
+        <ListIcon className="w-5 h-5" />
+        <span className="flex items-end justify-between gap-2">
+          <span className={title}>View in list</span>
+          <ArrowUpRight className="w-4 h-4 flex-shrink-0" />
         </span>
-        <span className={title}>View in list</span>
       </button>
     </div>
   );
@@ -260,11 +260,12 @@ export function EventTile({ event: e, width, sizes, live, liked, onLike, onOpen 
         <h3 data-field="name" className={`font-inter font-semibold uppercase leading-tight tracking-[-0.01em] line-clamp-2 text-pale ${cat ? 'mt-1.5' : ''} ${small ? 'text-[13px]' : 'text-[15px]'}`}>
           {e.event_name || e.name || ''}
         </h3>
-        {/* Every tile carries a time line, so a rail reads evenly. */}
-        <div data-field="time" className={`${H4_LABEL} flex items-center gap-1.5 mt-1 min-w-0 ${e.event_time ? 'text-silver' : 'text-silver-dim'}`}>
-          <Clock aria-hidden className="w-3 h-3 flex-shrink-0" style={{ color: e.event_time ? accent.text : undefined }} />
-          <span className="truncate">{e.event_time || 'Time not listed'}</span>
-        </div>
+        {e.event_time && (
+          <div data-field="time" className={`${H4_LABEL} flex items-center gap-1.5 mt-1 text-silver min-w-0`}>
+            <Clock aria-hidden className="w-3 h-3 flex-shrink-0" style={{ color: accent.text }} />
+            <span className="truncate">{e.event_time}</span>
+          </div>
+        )}
         {place && (
           <div data-field="place" className="flex items-center gap-1.5 mt-1 min-w-0">
             <Building2 aria-hidden className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent.text }} />

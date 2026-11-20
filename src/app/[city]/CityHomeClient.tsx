@@ -204,31 +204,10 @@ export default function CityHome() {
           const key = `${v.venue_id}-${ds}`;
           if (!map.has(key)) map.set(key, v);
         });
-        // Timed events first, in start order; "All Day" style values next; no time last.
-        const rank = (e: { event_time?: string }): number => {
-          if (!e.event_time) return 200;
-          return parseTimeHours(e.event_time.split('-')[0]?.trim() || '') ?? 100;
-        };
-        const events = Array.from(map.values()).sort((a, b) => rank(a) - rank(b) || (a.venue_id ?? 0) - (b.venue_id ?? 0));
+        const events = Array.from(map.values()).sort((a, b) => (a.event_time || '').localeCompare(b.event_time || ''));
         return { ds, label, events };
       });
   })();
-
-  // The three numbers under the headline: today, tomorrow, this weekend.
-  const countOn = (dates: string[]): number => {
-    const ids = new Set<string>();
-    venues.forEach((v) => {
-      const ds = v.event_date ? utcDateKey(v.event_date) : null;
-      if (ds && dates.includes(ds)) ids.add(String(v.event_id ?? `${v.venue_id}-${ds}-${v.event_time}`));
-    });
-    return ids.size;
-  };
-  const tomorrowStr = (() => {
-    const d = new Date(`${todayStr}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() + 1);
-    return d.toISOString().slice(0, 10);
-  })();
-  const weekendDates = weekendByDay.map((d) => d.ds);
 
   const areaMap = new Map<string, number>();
   venues.forEach(v => {
@@ -442,16 +421,9 @@ export default function CityHome() {
           loading={loading}
           onMap={() => goMap('home_top')}
           onList={() => goList('home_top')}
-          dayCounts={[
-            { label: 'Today', count: todayEvents.length, onClick: () => goList('home_top_today', '?date=today') },
-            { label: 'Tomorrow', count: countOn([tomorrowStr]), onClick: () => goList('home_top_tomorrow', `?date=${tomorrowStr}`) },
-            { label: 'This weekend', count: countOn(weekendDates), onClick: () => goList('home_top_weekend', `?date=${weekendDates[0] ?? 'today'}`) },
-          ]}
-          onScrollCue={() => document.getElementById('home-categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
         />
 
         {/* § Today's vibes — the fan, built from today's real categories */}
-        <div id="home-categories">
         <VibeFan
           key={fan.ds}
           title={fan.title}
@@ -464,7 +436,6 @@ export default function CityHome() {
             if (source === 'fan_card') router.push(item.href);
           }}
         />
-        </div>
 
         {/* § Today in <city> — all of today, not just the evening */}
         <section className="px-[18px] pt-16">
@@ -525,7 +496,7 @@ export default function CityHome() {
                     }}
                     className="w-full flex items-center justify-between pb-2.5"
                   >
-                    <span className={`${HF.tileName} text-pale`}>{label}</span>
+                    <span className="font-inter font-[550] text-[16px] text-pale">{label}</span>
                     <span className={`${H4_LABEL} inline-flex items-center gap-1 text-silver`}>
                       {events.length} events
                       <ArrowUpRight className="w-3.5 h-3.5" />
