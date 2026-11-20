@@ -18,28 +18,95 @@ export interface CityRegistryEntry {
   displayName: string;
 }
 
+/** The parts of a city's config that server-rendered pages need. */
+export interface CityServerConfig {
+  slug: string;
+  displayName: string;
+  country: string;
+  currency: string;
+  utcOffsetHours: number;
+}
+
+interface RawRegistryCity {
+  slug: string;
+  displayName?: string;
+  status?: string;
+  country?: string;
+  currency?: string;
+  utcOffsetHours?: number | string;
+}
+
+/** Active cities straight from the backend registry. Throws when the backend is unreachable. */
+async function fetchRegistry(): Promise<RawRegistryCity[]> {
+  return getCached('seo:registry', 60_000, 60 * 60_000, async () => {
+    const r = await fetch(`${BACKEND}/api/cities`, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`cities upstream ${r.status}`);
+    const j = await r.json();
+    if (!j.success || !Array.isArray(j.cities)) throw new Error('bad cities payload');
+    const active = j.cities.filter((c: RawRegistryCity) => !c.status || c.status === 'active');
+    if (active.length === 0) throw new Error('empty cities payload');
+    return active as RawRegistryCity[];
+  });
+}
+
 /** Active cities from the backend registry; static config fallback. */
 export async function getActiveCities(): Promise<CityRegistryEntry[]> {
   try {
-    return await getCached('seo:cities', 60_000, 60 * 60_000, async () => {
-      const r = await fetch(`${BACKEND}/api/cities`, { cache: 'no-store' });
-      if (!r.ok) throw new Error(`cities upstream ${r.status}`);
-      const j = await r.json();
-      if (!j.success || !Array.isArray(j.cities)) throw new Error('bad cities payload');
-      const active = j.cities
-        .filter((c: { status?: string }) => !c.status || c.status === 'active')
-        .map((c: { slug: string; displayName?: string }) => ({
-          slug: c.slug,
-          displayName: c.displayName || getCityConfig(c.slug).displayName,
-        }));
-      if (active.length === 0) throw new Error('empty cities payload');
-      return active;
-    });
+    const registry = await fetchRegistry();
+    return registry.map((c) => ({
+      slug: c.slug,
+      displayName: c.displayName || getCityConfig(c.slug).displayName,
+    }));
   } catch {
     return (ALL_CITIES as readonly string[]).map((slug) => ({
       slug,
       displayName: getCityConfig(slug).displayName,
     }));
+  }
+}
+
+/**
+ * Whether a slug is a real city. Used to return a true 404 for made-up paths.
+ * Fails open: if the registry cannot be reached, an unknown slug is allowed
+ * through so a backend blip never turns a live city into a 404.
+ */
+export async function isKnownCity(slug: string): Promise<boolean> {
+  if ((ALL_CITIES as readonly string[]).includes(slug)) return true;
+  try {
+    const registry = await fetchRegistry();
+    return registry.some((c) => c.slug === slug);
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Display name, country, currency and UTC offset for a city, from the
+ * registry. The static config only knows Dubai and Bangalore, so a server
+ * render of Mumbai or Delhi would otherwise use Dubai's timezone and currency.
+ */
+export async function getCityServerConfig(slug: string): Promise<CityServerConfig> {
+  const fallback = getCityConfig(slug);
+  const fromStatic: CityServerConfig = {
+    slug,
+    displayName: fallback.displayName,
+    country: fallback.country,
+    currency: fallback.currency,
+    utcOffsetHours: fallback.utcOffsetHours,
+  };
+  try {
+    const entry = (await fetchRegistry()).find((c) => c.slug === slug);
+    if (!entry) return fromStatic;
+    const offset = Number(entry.utcOffsetHours);
+    return {
+      slug,
+      displayName: entry.displayName || fromStatic.displayName,
+      country: entry.country || fromStatic.country,
+      currency: entry.currency || fromStatic.currency,
+      utcOffsetHours: Number.isFinite(offset) ? offset : fromStatic.utcOffsetHours,
+    };
+  } catch {
+    return fromStatic;
   }
 }
 

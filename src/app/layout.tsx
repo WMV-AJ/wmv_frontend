@@ -170,15 +170,17 @@ export default function RootLayout({
         )}
         <ThemeProvider>
         <AuthProvider>
+          {/* AnalyticsProvider reads the query string. Kept in its own Suspense,
+              beside the page rather than around it, so prerendered pages
+              (/faq, /privacy, the 404) still ship their text in the HTML. */}
           <Suspense fallback={null}>
-            <AnalyticsProvider>
-              <CitiesProvider>
-                <VenueDataProvider>
-                  {children}
-                </VenueDataProvider>
-              </CitiesProvider>
-            </AnalyticsProvider>
+            <AnalyticsProvider />
           </Suspense>
+          <CitiesProvider>
+            <VenueDataProvider>
+              {children}
+            </VenueDataProvider>
+          </CitiesProvider>
           <CookieConsentBanner />
         </AuthProvider>
         </ThemeProvider>

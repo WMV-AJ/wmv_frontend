@@ -97,7 +97,12 @@ function utcDateKey(eventDate: string): string | null {
 /** Event rails show this many tiles, then the map / list tile. */
 const RAIL_LIMIT = 8;
 
-export default function CityHome() {
+interface CityHomeProps {
+  /** Server-rendered summary of today's events, placed above the footer. */
+  serverSummary?: React.ReactNode;
+}
+
+export default function CityHome({ serverSummary }: CityHomeProps) {
   const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
@@ -576,6 +581,8 @@ export default function CityHome() {
           scrollRoot={mainRef}
           onPick={(t) => trackEvent('home_category_click', { city, category: t.id, count: t.count, source: 'vibe_tile' })}
         />
+
+        {serverSummary}
 
         <HomeFooter
           city={city}

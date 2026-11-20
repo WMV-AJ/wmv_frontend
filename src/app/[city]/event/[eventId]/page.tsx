@@ -2,6 +2,7 @@
 // schema.org Event JSON-LD. The interactive page lives in
 // ./EventPageClient.tsx ('use client').
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import EventPageClient from './EventPageClient';
 import JsonLd from '@/components/seo/JsonLd';
 import { getCityDisplayName, getEventById } from '@/lib/server-data';
@@ -62,12 +63,13 @@ export default async function EventPage({ params }: Props) {
     getEventById(city, eventId),
     getCityDisplayName(city),
   ]);
-  const schema = event ? buildEventSchema(event, city, cityName) : null;
+  if (!event) notFound();
+  const schema = buildEventSchema(event, city, cityName);
 
   return (
     <>
       {schema && <JsonLd data={schema} />}
-      <EventPageClient />
+      <EventPageClient initialEvent={event} />
     </>
   );
 }

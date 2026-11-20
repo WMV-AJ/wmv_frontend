@@ -80,10 +80,14 @@ interface StackedCardsListPageProps {
   emptyState?: React.ReactNode;
   /** analytics source label for the masthead nav buttons */
   mastheadFrom?: string;
+  /** Server-rendered heading and one-line answer, shown above the cards at all times. */
+  intro?: React.ReactNode;
+  /** Server-rendered plain list, shown until the interactive cards have loaded. */
+  serverList?: React.ReactNode;
 }
 
 export default function StackedCardsListPage({
-  city, header, cards, isLoading, emptyState, mastheadFrom = 'list',
+  city, header, cards, isLoading, emptyState, mastheadFrom = 'list', intro, serverList,
 }: StackedCardsListPageProps) {
   // Size the shell to the *actual visible* viewport (not 100vh / inset:0) so on
   // mobile the bottom sits at the real visible bottom, not behind the toolbar.
@@ -190,10 +194,13 @@ export default function StackedCardsListPage({
               scrollbarWidth: 'none' as const,
             }}
           >
+            {intro}
             {isLoading ? (
-              <div style={{ padding: 48, textAlign: 'center' }}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto" />
-              </div>
+              serverList ?? (
+                <div style={{ padding: 48, textAlign: 'center' }}>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto" />
+                </div>
+              )
             ) : cards.length === 0 ? (
               emptyState ?? defaultEmpty
             ) : (

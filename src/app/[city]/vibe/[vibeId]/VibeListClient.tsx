@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
 import { type HierarchicalFilterState } from '@/types';
@@ -27,7 +27,14 @@ const EMPTY_FILTERS: HierarchicalFilterState = {
 };
 
 
-export default function VibeListingPage() {
+interface ServerContentProps {
+  /** Server-rendered heading and answer sentence. */
+  intro?: ReactNode;
+  /** Server-rendered plain list, shown until the cards load. */
+  serverList?: ReactNode;
+}
+
+export default function VibeListingPage({ intro, serverList }: ServerContentProps) {
   const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
@@ -91,6 +98,8 @@ export default function VibeListingPage() {
       isLoading={!!vibe && isLoading}
       emptyState={emptyState}
       mastheadFrom="vibe"
+      intro={intro}
+      serverList={serverList}
     />
   );
 }

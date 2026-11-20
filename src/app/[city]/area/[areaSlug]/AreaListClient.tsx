@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MapPin } from 'lucide-react';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
@@ -28,7 +28,14 @@ const EMPTY_FILTERS: HierarchicalFilterState = {
 };
 
 
-export default function AreaListingPage() {
+interface ServerContentProps {
+  /** Server-rendered heading and answer sentence. */
+  intro?: ReactNode;
+  /** Server-rendered plain list, shown until the cards load. */
+  serverList?: ReactNode;
+}
+
+export default function AreaListingPage({ intro, serverList }: ServerContentProps) {
   const router = useRouter();
   const params = useParams();
   const city = (params?.city as string) || 'dubai';
@@ -96,6 +103,8 @@ export default function AreaListingPage() {
       isLoading={isLoading}
       emptyState={emptyState}
       mastheadFrom="area"
+      intro={intro}
+      serverList={serverList}
     />
   );
 }

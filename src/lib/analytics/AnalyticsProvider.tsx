@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { initAnalytics, setUserId, trackEvent, trackPageView } from './track';
@@ -15,9 +15,11 @@ let _syncedUserId: string | null = null;
  *   - fires page_view on every pathname / search-param change
  *   - syncs user_id from AuthContext, fires login_completed / logout transitions
  *
- * Must live inside <AuthProvider> so useAuth() resolves.
+ * Must live inside <AuthProvider> so useAuth() resolves. Renders nothing:
+ * it sits beside the page tree in its own Suspense, because useSearchParams()
+ * would otherwise force every prerendered page to render in the browser only.
  */
-export default function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+export default function AnalyticsProvider(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
@@ -54,5 +56,5 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
     }
   }, [user, loading]);
 
-  return <>{children}</>;
+  return null;
 }

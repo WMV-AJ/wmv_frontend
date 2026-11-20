@@ -152,6 +152,28 @@ export function setUserId(userId: string | null): void {
   }
 }
 
+
+/** Assistants whose answers link out to the web, by the host a click arrives from. */
+const AI_REFERRER_HOSTS: Record<string, string> = {
+  'chatgpt.com': 'chatgpt',
+  'chat.openai.com': 'chatgpt',
+  'perplexity.ai': 'perplexity',
+  'claude.ai': 'claude',
+  'gemini.google.com': 'gemini',
+  'copilot.microsoft.com': 'copilot',
+};
+
+/** Which AI assistant sent this visit, or null for any other referrer. */
+export function aiSourceFromReferrer(referrer: string | null | undefined): string | null {
+  if (!referrer) return null;
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, '');
+    return AI_REFERRER_HOSTS[host] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function buildPayload(
   name: AnalyticsEventName,
   properties: AnalyticsProperties,
@@ -166,12 +188,15 @@ function buildPayload(
       ? `${window.screen.width}x${window.screen.height}`
       : undefined;
 
+  const aiSource = isBrowser() ? aiSourceFromReferrer(document.referrer) : null;
+
   return {
     event_name: name,
     user_id: cachedUserId,
     anonymous_id: getOrCreateAnonymousId(),
     session_id: getOrCreateSessionId(),
-    properties,
+    // ai_source rides in properties so the backend schema needs no change.
+    properties: aiSource ? { ...properties, ai_source: aiSource } : properties,
     page_path: pathOverride ?? (isBrowser() ? window.location.pathname : undefined),
     page_title: titleOverride ?? (isBrowser() ? document.title : undefined),
     referrer: isBrowser() ? document.referrer || undefined : undefined,

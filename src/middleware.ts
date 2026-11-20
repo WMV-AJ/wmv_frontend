@@ -38,9 +38,13 @@ const PASSTHROUGH = new Set([
   'terms',
   'sitemap.xml',
   'robots.txt',
+  'llms.txt',
   // Sentry's tunnel route (next.config.ts tunnelRoute)
   'monitoring',
 ]);
+
+// Paths the app served at the top level before every page moved under a city.
+const LEGACY_APP_PATHS = new Set(['map', 'cards', 'event', 'vibe', 'area', 'tonight', 'this-weekend', 'free-events']);
 
 // Dynamic cities cache, refreshed against the backend's /api/cities.
 // Worker-local, hydrated lazily on first unknown-path request.
@@ -109,15 +113,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Truly unknown (e.g. /map, /cards, /tonight, typos) → DEFAULT_CITY prefix.
+  // Old unprefixed app paths (/map, /cards, /event/123, /123) → DEFAULT_CITY
+  // prefix, so bookmarks from before cities existed keep working.
   // 307 (temporary) rather than 308 (permanent) so browsers re-ask the
-  // server next time — important because a slug that's invalid today
-  // (e.g. /mumbai pre-onboarding) might be valid tomorrow once it lands
-  // in the DB-backed city registry. 308 was caching that decision
-  // permanently and breaking newly-activated cities for old visitors.
-  const url = request.nextUrl.clone();
-  url.pathname = `/${DEFAULT_CITY}${pathname}`;
-  return NextResponse.redirect(url, 307);
+  // server next time.
+  if (LEGACY_APP_PATHS.has(firstSegment) || /^\d+$/.test(firstSegment)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${DEFAULT_CITY}${pathname}`;
+    return NextResponse.redirect(url, 307);
+  }
+
+  // Anything else is not a page of ours (a typo, a probe, /wp-admin). Let it
+  // through: the [city] layout sees an unknown city and answers with a real
+  // 404, where the old blanket redirect answered 200 under /dubai/....
+  return NextResponse.next();
 }
 
 export const config = {

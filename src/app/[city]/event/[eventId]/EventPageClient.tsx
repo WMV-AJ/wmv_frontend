@@ -149,15 +149,20 @@ const attrColors: Record<string, { bg: string; text: string }> = {
 
 // ===== Page Component =====
 
-export default function EventDetailPage() {
+interface EventDetailPageProps {
+  /** The event as fetched on the server, so its details are in the first HTML. */
+  initialEvent?: EventRecord | null;
+}
+
+export default function EventDetailPage({ initialEvent = null }: EventDetailPageProps) {
   const params = useParams();
   const router = useRouter();
   const eventId = params.eventId as string;
   const city = (params.city as string) || 'dubai';
 
-  const [event, setEvent] = useState<EventRecord | null>(null);
+  const [event, setEvent] = useState<EventRecord | null>(initialEvent);
   const [related, setRelated] = useState<RelatedEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialEvent);
   const [error, setError] = useState<string | null>(null);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; isVideo: boolean } | null>(null);
   const mainRef = useRef<HTMLElement>(null);
@@ -173,9 +178,11 @@ export default function EventDetailPage() {
   // Fetch event data
   useEffect(() => {
     async function fetchEvent() {
-      setIsLoading(true);
+      // With a server-provided event the page is already showing; this call
+      // only adds the related events and refreshes the record.
+      if (!initialEvent) setIsLoading(true);
       try {
-        const res = await fetch(`/api/event?id=${encodeURIComponent(eventId)}`);
+        const res = await fetch(`/api/event?id=${encodeURIComponent(eventId)}&city=${encodeURIComponent(city)}`);
         if (!res.ok) {
           setError(res.status === 404 ? 'Event not found' : 'Failed to load event');
           return;
