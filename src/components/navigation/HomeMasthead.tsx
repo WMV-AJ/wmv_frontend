@@ -56,10 +56,13 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
         <img
           src="/wmv-logo.gif"
           alt="Where's My Vibe"
+          width={28}
+          height={28}
+          decoding="async"
           onClick={() => router.push(`/${city}`)}
           style={{
             width: 28, height: 28, objectFit: 'cover',
-            borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+            borderRadius: '50%', flexShrink: 0, cursor: 'pointer', background: '#0b0b0b',
           }}
         />
         <div>

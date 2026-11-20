@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
       fallback: [],
     };
   },
+  // Logos and the site mark never change under the same name, so let phones
+  // keep them instead of re-checking each one on every page view.
+  async headers() {
+    const longLived = [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }];
+    return [
+      { source: '/home/sources/:path*', headers: longLived },
+      { source: '/wmv-logo.gif', headers: longLived },
+    ];
+  },
   images: {
     // Built-in Sharp-based optimizer. Images get resized to display size,
     // converted to WebP/AVIF, and cached on disk by Next.
