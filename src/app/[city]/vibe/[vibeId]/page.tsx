@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `/${city}/vibe/${vibeId}` },
-    openGraph: { title, description, url: `/${city}/vibe/${vibeId}`, type: 'website', images: ['/og-image.png'] },
-    twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
+    openGraph: { title, description, url: `/${city}/vibe/${vibeId}`, type: 'website', images: ['/og-image-v2.png'] },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og-image-v2.png'] },
   };
 }
 

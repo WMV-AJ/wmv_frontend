@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .slice(0, 155) || `${eventName} in ${cityName}.`;
 
   const media = Array.isArray(event.media_urls) ? event.media_urls[0] : event.media_url_1;
-  const ogImage = typeof media === 'string' && /\.(jpe?g|png|webp)$/i.test(media) ? media : '/og-image.png';
+  const ogImage = typeof media === 'string' && /\.(jpe?g|png|webp)$/i.test(media) ? media : '/og-image-v2.png';
 
   return {
     title,

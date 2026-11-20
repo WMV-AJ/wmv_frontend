@@ -21,13 +21,13 @@ export async function generateMetadata(): Promise<Metadata> {
       url: '/',
       siteName: "Where's My Vibe",
       type: 'website',
-      images: ['/og-image.png'],
+      images: ['/og-image-v2.png'],
     },
     twitter: {
       card: 'summary_large_image',
       title: "Where's My Vibe — What's actually happening tonight",
       description,
-      images: ['/og-image.png'],
+      images: ['/og-image-v2.png'],
     },
   };
 }
