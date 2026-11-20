@@ -82,7 +82,7 @@ export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCo
               <MapIcon className="w-6 h-6" strokeWidth={1.8} />
               <span className={`${H4_LABEL} wmv-invert-muted`}>Map</span>
             </span>
-            <ArrowUpRight className="w-4 h-4" />
+            <span className="wmv-arrow-ring"><ArrowUpRight className="w-4 h-4 relative" /></span>
           </span>
           <span>
             <span className={number}>{formatCount(venueCount, loading)}</span>
@@ -96,7 +96,7 @@ export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCo
               <ListIcon className="w-6 h-6" strokeWidth={1.8} />
               <span className={`${H4_LABEL} text-silver`}>List</span>
             </span>
-            <ArrowUpRight className="w-4 h-4" />
+            <span className="wmv-arrow-ring"><ArrowUpRight className="w-4 h-4 relative" /></span>
           </span>
           <span>
             <span className={number}>{formatCount(eventCount, loading)}</span>

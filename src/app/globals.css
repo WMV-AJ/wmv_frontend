@@ -396,6 +396,51 @@
   @media (prefers-reduced-motion: reduce) {
     .wmv-kicker-dot { animation: none; }
   }
+
+  /* The ring around the arrows in the home's map and list buttons: the same
+     colour cycle as the label dot, as a glowing outline. The ring is a
+     pseudo-element so the arrow inside keeps the button's own colour. */
+  @keyframes wmv-ring-hue {
+    0.0% { color: #F8991D; }
+    5.88% { color: #EF4782; }
+    11.76% { color: #1FA86E; }
+    17.65% { color: #8552A0; }
+    23.53% { color: #FC4024; }
+    29.41% { color: #3BB3C9; }
+    35.29% { color: #EBDEA6; }
+    41.18% { color: #B07CC6; }
+    47.06% { color: #9F8D32; }
+    52.94% { color: #F57BA6; }
+    58.82% { color: #00859C; }
+    64.71% { color: #FBB450; }
+    70.59% { color: #BBC5AB; }
+    76.47% { color: #2FA372; }
+    82.35% { color: #F09E7D; }
+    88.24% { color: #EBDCC7; }
+    94.12% { color: #F7BFA6; }
+    100% { color: #F8991D; }
+  }
+  .wmv-arrow-ring {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+  }
+  .wmv-arrow-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    color: #F8991D;
+    border: 1.6px solid currentColor;
+    box-shadow: 0 0 10px currentColor, inset 0 0 6px currentColor;
+    animation: wmv-ring-hue 5.1s step-end infinite, wmv-kicker-beat 0.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wmv-arrow-ring::before { animation: none; }
+  }
   @keyframes wmv-pulse-dot {
     0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.15); }
