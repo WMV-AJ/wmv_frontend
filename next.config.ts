@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
       // The 400 is the tell - an allowed host missing a file answers 404.
       { protocol: 'https', hostname: 'highape.blr1.cdn.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'cdn-ip.allevents.in' },
+      // Same failure, found 2026-11-20 in Bangalore's rows: 71 SortMyScene and
+      // 38 District posters were answering 400 from the optimizer.
+      { protocol: 'https', hostname: 'assets.sortmyscene.com' },
+      { protocol: 'https', hostname: 'cdn.district.in' },
+      // BookMyShow posters (109 rows, once /api/venues unwraps their JSON-wrapped URL).
+      { protocol: 'https', hostname: 'assets-in.bmscdn.com' },
       // A chunk of media rows still point at raw Instagram CDN URLs (the
       // scraper hasn't mirrored them to GCS). Without these, the optimizer
       // 400s and the tile shows a broken image.

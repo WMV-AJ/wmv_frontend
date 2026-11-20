@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVenueData } from '@/contexts/VenueDataContext';
 import { useCitiesVersion } from '@/contexts/CitiesProvider';
-import { ALL_CITIES, getCityConfig, isValidCity, type CitySlug } from '@/config/cities.config';
+import { ALL_CITIES, getCityConfig, type CitySlug } from '@/config/cities.config';
 import { getCityDateString } from '@/lib/city-date';
 import { ArrowUpRight } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
@@ -13,28 +13,22 @@ import NavPill from '@/components/navigation/NavPill';
 import { T } from '@/lib/theme/tokens';
 import { HP, homePaletteVars } from '@/components/home/home-palette';
 import { H4_LABEL, TILE_RULE, getCardAccent, accentFromHex } from '@/components/shared/card-style';
-import HomeHero from '@/components/home/HomeHero';
-import HomeSignal from '@/components/home/HomeSignal';
 import { HF } from '@/components/home/home-fonts';
 import { getShortDisplayName } from '@/lib/category-mappings';
 import { getCategoryTagline, getCategoryFallbackImage, getVibeTileGroup } from '@/config/category-copy';
 import { isHomeCityHidden } from '@/config/home-cities';
-import HomeProblem, { type ProblemStory } from '@/components/home/HomeProblem';
-import HomeThisWeek, { type WeekPick } from '@/components/home/HomeThisWeek';
 import HomeVibeTiles, { type VibeTile } from '@/components/home/HomeVibeTiles';
 import HomeMapOrList from '@/components/home/HomeMapOrList';
 import VibeFan, { type VibeFanItem } from '@/components/home/VibeFan';
-import HowItWorks, { type HowStats } from '@/components/home/HowItWorks';
-import CityAtlas from '@/components/home/CityAtlas';
-import { HomeFaq, VenueCta, HomeFooter } from '@/components/home/HomeClosing';
+import type { HowStats } from '@/components/home/HowItWorks';
+import { HomeFooter } from '@/components/home/HomeClosing';
 import {
   HomeSectionHeader,
   CountUp,
   HScrollRail,
   EventTile,
-  DealCard,
   NumberedRow,
-  primaryCategory,
+  RailEndTile,
 } from '@/components/home/HomeParts';
 
 // Type, colour and components follow the map tile / list page system
@@ -62,41 +56,6 @@ function parseTimeHours(s: string): number | null {
   return h + min / 60;
 }
 
-function isLiveNow(
-  eventDate: string | null | undefined,
-  eventTime: string | null | undefined,
-  todayStr: string,
-  dubaiHour: number
-): boolean {
-  if (!eventDate) return false;
-  const d = new Date(eventDate);
-  const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-  if (dateStr !== todayStr) return false;
-  if (!eventTime) return false;
-
-  const t = eventTime.trim().toLowerCase();
-  if (t === 'all day') return true;
-
-  const parts = eventTime.split('-').map(p => p.trim());
-  const startH = parseTimeHours(parts[0] || '');
-  if (startH === null) return false;
-
-  let endH: number;
-  const endPart = parts[1] || '';
-  const eL = endPart.toLowerCase();
-  if (eL.includes('late') || eL.includes('sunrise') || eL.includes('sunset')) {
-    endH = startH + 6;
-  } else {
-    const parsed = parseTimeHours(endPart);
-    if (parsed === null) return dubaiHour >= startH;
-    endH = parsed < startH ? parsed + 24 : parsed;
-  }
-
-  const h = dubaiHour < startH ? dubaiHour + 24 : dubaiHour;
-  return h >= startH && h < endH;
-}
-
-// A still photo for a row (never a video frame), or null.
 function isVideoUrl(url?: string, type?: string): boolean {
   return type === 'video' || /\.(mp4|mov|webm)(\?.*)?$/i.test(url || '');
 }
@@ -133,6 +92,9 @@ function utcDateKey(eventDate: string): string | null {
 }
 
 // ── COMPONENT ─────────────────────────────────────────────────────────
+/** Event rails show this many tiles, then the map / list tile. */
+const RAIL_LIMIT = 8;
+
 export default function CityHome() {
   const router = useRouter();
   const params = useParams();
@@ -211,31 +173,6 @@ export default function CityHome() {
         return (a.venue_id ?? 0) - (b.venue_id ?? 0);
       });
   })();
-
-  // Events running RIGHT NOW (city clock), deduped by event.
-  const happeningNow = (() => {
-    const seen = new Set<string>();
-    return venues
-      .filter(v => isLiveNow(v.event_date, v.event_time, todayStr, dubaiHour))
-      .filter(v => {
-        const k = String(v.event_id ?? v.venue_id);
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      })
-      .sort((a, b) =>
-        (parseTimeHours((a.event_time || '').split('-')[0]?.trim() || '') ?? 99) -
-        (parseTimeHours((b.event_time || '').split('-')[0]?.trim() || '') ?? 99));
-  })();
-
-  // Today's events that carry a deal. NOTE: home rows have `special_offers`
-  // (the `event_offers` rename happens later in the stacked-card adapter).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dealsToday = todayEvents.filter((e: any) => {
-    if (Array.isArray(e.deals) && e.deals.length > 0) return true;
-    const so = e.special_offers ? String(e.special_offers) : '';
-    return !!so && !so.toLowerCase().includes('no special');
-  });
 
   // THIS weekend only (Fri/Sat/Sun of the current week, city-anchored).
   // Once the weekend is underway, only the remaining days show — e.g. on a
@@ -341,42 +278,6 @@ export default function CityHome() {
     return { title: next === tomorrow ? "Tomorrow's vibes" : `${dayName}'s vibes`, ds: next, items: build(next, next), rows: rowsOn(next) };
   }, [venues, todayStr, city]);
 
-  // On this week: the next 7 city days (today + 6). One entry per event per
-  // day — the sum of the list's ?date= counts over those days. Picks: up to
-  // six, spread round-robin across the days, photos and ratings first.
-  const week = useMemo(() => {
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(`${todayStr}T00:00:00Z`);
-      d.setUTCDate(d.getUTCDate() + i);
-      return d.toISOString().slice(0, 10);
-    });
-    const inWeek = new Set(days);
-    const seen = new Set<string>();
-    const byDay = new Map<string, any[]>(); // eslint-disable-line @typescript-eslint/no-explicit-any
-    venues.forEach((v) => {
-      const ds = v.event_date ? utcDateKey(v.event_date) : null;
-      if (!ds || !inWeek.has(ds)) return;
-      const k = `${v.event_id ?? `${v.venue_id}-${v.event_time}`}|${ds}`;
-      if (seen.has(k)) return;
-      seen.add(k);
-      byDay.set(ds, [...(byDay.get(ds) ?? []), v]);
-    });
-    const ranked = days.map((ds) => (byDay.get(ds) ?? []).slice().sort((a, b) =>
-      (photoOf(b) ? 1 : 0) - (photoOf(a) ? 1 : 0) || (b.rating ?? 0) - (a.rating ?? 0)));
-    const picks: WeekPick[] = [];
-    for (let round = 0; picks.length < 6 && round < 6; round++) {
-      days.forEach((ds, i) => {
-        const e = ranked[i][round];
-        if (!e || picks.length >= 6) return;
-        const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow'
-          : new Date(`${ds}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
-        picks.push({ ds, dayLabel: label, event: e });
-      });
-    }
-    picks.sort((a, b) => a.ds.localeCompare(b.ds));
-    return { count: seen.size, picks };
-  }, [venues, todayStr]);
-
   // Pick your vibe: every upcoming event (today on), grouped into tiles by
   // category (getVibeTileGroup), counted the list's way — any category, one
   // per event. Six at most, 10+ events each.
@@ -416,42 +317,7 @@ export default function CityHome() {
       });
   }, [venues, city]);
 
-  // The story in "the plan was in a story": a real event on today, with a photo.
-  const problemStory = useMemo<ProblemStory | null>(() => {
-    const r = todayVenues.find((v) => photoOf(v) && v.event_name) ?? venues.find((v) => photoOf(v) && v.event_name);
-    if (!r) return null;
-    const cat = primaryCategory(r);
-    return {
-      photo: photoOf(r),
-      fallbackImage: getCategoryFallbackImage(cat),
-      venueName: r.name || r.venue || '',
-      eventName: r.event_name,
-      accent: getCardAccent(cat),
-    };
-    // todayVenues is re-derived each render from venues + todayStr
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venues, todayStr]);
-
-  // Events on the city's today, one per event (hero count).
-  const todayEventCount = useMemo(
-    () => new Set(todayVenues.map((r) => String(r.event_id ?? `${r.venue_id}-${r.event_time}`))).size,
-    // todayVenues is re-derived each render from venues + todayStr
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [venues, todayStr],
-  );
-
-  // The city's top event categories by count — colours the hero radar (and,
-  // later on the page, the atlas pins).
-  const topCategories = useMemo(() => {
-    const counts = new Map<string, number>();
-    venues.forEach((v) => {
-      const c = primaryCategory(v);
-      if (c) counts.set(c, (counts.get(c) || 0) + 1);
-    });
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c]) => c);
-  }, [venues]);
-
-  // How it works: live totals from the rows already loaded (no extra fetch).
+  // Totals for the map and list buttons, from the rows already loaded (no extra fetch).
   const howStats = useMemo<HowStats>(() => {
     const venueIds = new Set<string>();
     const eventIds = new Set<string>();
@@ -475,22 +341,12 @@ export default function CityHome() {
   // FAQ, venue call to action and footer carry the brand gold.
   const brandAccent = accentFromHex(T.accent);
 
-  // Section accent for How it works / the atlas: the city's #1 category.
-  const cityAccent = topCategories[0] ? getCardAccent(topCategories[0]) : accentFromHex(T.accent);
-
   // Every live city. ALL_CITIES grows at runtime once /api/cities loads;
   // useCitiesVersion() re-renders the page when it does.
   // Stale cities (NEXT_PUBLIC_HOME_HIDDEN_CITIES) stay out of the home's pickers.
   const cityOptions: Array<[string, string]> = ALL_CITIES
     .filter((slug) => !isHomeCityHidden(slug, city))
     .map((slug) => [slug, getCityConfig(slug).displayName]);
-  const switchCity = (slug: string) => {
-    if (slug === city || !isValidCity(slug)) return;
-    trackEvent('home_city_switch', { from: city, to: slug });
-    try { window.localStorage.setItem('wmv_last_city', slug); } catch { /* ignore */ }
-    router.push(`/${slug}`);
-  };
-
   const cityConfig = getCityConfig(city);
   const cityName = cityConfig.displayName;
   // The city's calendar day, not the viewer's.
@@ -519,9 +375,9 @@ export default function CityHome() {
     router.push(`/${city}/event/${e.event_id}`);
   };
 
-  const goMap = (source: string) => {
+  const goMap = (source: string, query = '') => {
     trackEvent('nav_view_change', { from: 'home', to: 'map', source });
-    router.push(`/${city}/map`);
+    router.push(`/${city}/map${query}`);
   };
   const goList = (source: string, query = '') => {
     trackEvent('nav_view_change', { from: 'home', to: 'cards', source });
@@ -553,16 +409,15 @@ export default function CityHome() {
 
         <HomeMasthead city={city} from="home" />
 
-        <HomeHero
-          cityName={cityName}
-          dateLabel={dateLabel}
-          todayCount={todayEventCount}
+        {/* § Map or list — the two ways in, with live totals */}
+        <HomeMapOrList
+          pinCategories={fan.items.map((i) => i.id)}
           venueCount={howStats.venues}
-          liveCount={happeningNow.length}
+          eventCount={howStats.events}
           loading={loading}
-          onMap={() => goMap('hero_cta')}
-          onList={() => goList('hero_cta')}
-          onWhatsApp={() => trackEvent('whatsapp_bot_click', { city, source: 'hero_cta' })}
+          scrollRoot={mainRef}
+          onMap={() => goMap('home_top')}
+          onList={() => goList('home_top')}
         />
 
         {/* § Today's vibes — the fan, built from today's real categories */}
@@ -577,21 +432,6 @@ export default function CityHome() {
             // The "See N" link navigates itself; the front fan card doesn't.
             if (source === 'fan_card') router.push(item.href);
           }}
-        />
-
-        {/* § The idea — WMV at the centre of its sources */}
-        <HomeSignal
-          countryCode={getCityConfig(city).region}
-          scrollRoot={mainRef}
-        />
-
-        {/* § Pick your vibe — tiles ranked by upcoming count */}
-        <HomeVibeTiles
-          cityName={cityName}
-          tiles={vibeTiles}
-          loading={loading}
-          scrollRoot={mainRef}
-          onPick={(t) => trackEvent('home_category_click', { city, category: t.id, count: t.count, source: 'vibe_tile' })}
         />
 
         {/* § Today in <city> — all of today, not just the evening */}
@@ -616,29 +456,12 @@ export default function CityHome() {
             <>
               <div className="mb-3.5">
                 <HScrollRail>
-                  {todayEvents.slice(0, 12).map((e) => (
+                  {todayEvents.slice(0, RAIL_LIMIT).map((e) => (
                     <EventTile key={e.event_id || e.venue_id} event={e} width="48%" sizes="(max-width: 430px) 48vw, 206px"
                       liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
                       onOpen={() => openEvent(e, 'today_scroller')} />
                   ))}
-                  {(
-                    <button
-                      type="button"
-                      onClick={() => {
-                        trackEvent('nav_view_change', { from: 'home', to: 'cards', source: 'today_see_all' });
-                        router.push(`/${city}/cards?date=today`);
-                      }}
-                      className="flex-shrink-0 flex flex-col justify-between p-4 text-left wmv-invert"
-                      style={{ width: '48%', aspectRatio: '3/4' }}
-                      data-cta="today-see-all"
-                    >
-                      <ArrowUpRight className="w-6 h-6" />
-                      <span>
-                        <span className={`${HF.weekTile} block`}>See all {todayEvents.length}</span>
-                        <span className={`${H4_LABEL} wmv-invert-muted block mt-2`}>on the list</span>
-                      </span>
-                    </button>
-                  )}
+                  <RailEndTile width="48%" onMap={() => goMap('today_rail_end', '?date=today')} onList={() => goList('today_rail_end', '?date=today')} />
                 </HScrollRail>
               </div>
             </>
@@ -678,57 +501,15 @@ export default function CityHome() {
                   </button>
                   <HScrollRail>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {events.map((e: any) => (
+                    {events.slice(0, RAIL_LIMIT).map((e: any) => (
                       <EventTile key={`${e.venue_id}-${ds}`} event={e} width={180} sizes="(max-width: 430px) 40vw, 172px"
                         onOpen={() => openEvent(e, 'weekend_rail')} />
                     ))}
+                    <RailEndTile width={180} onMap={() => goMap('weekend_rail_end', `?date=${ds}`)} onList={() => goList('weekend_rail_end', `?date=${ds}`)} />
                   </HScrollRail>
                 </div>
               ))
             )}
-          </section>
-        )}
-
-        {/* § Good to know + venue call to action (from Home 4) */}
-        <HomeFaq accent={brandAccent} onExpand={(q) => trackEvent('faq_expand', { q, source: 'home' })} />
-        <VenueCta accent={brandAccent} onClick={() => trackEvent('venue_lead_click', { source: 'home_cta' })} />
-
-        {/* § Happening now — live right now, hidden when empty */}
-        {(loading || happeningNow.length > 0) && (
-          <section className="px-[18px] pt-16">
-            <HomeSectionHeader
-              font={HF.live}
-              kicker={<>
-                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: T.live, animation: 'wmv-pulse 1.5s infinite' }} />
-                Live right now
-              </>}
-              label="Happening now"
-              sub="On at this very moment. Go now, not later."
-              count={loading ? '—' : `${happeningNow.length} live`}
-            />
-            <HScrollRail>
-              {loading
-                ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ flex: '0 0 130px', aspectRatio: '3/4', ...skeletonStyle('100%', undefined, { borderRadius: 12 }) }} />
-                ))
-                : happeningNow.map((e) => (
-                  <EventTile key={e.event_id || e.venue_id} event={e} width={130} sizes="140px" live
-                    onOpen={() => openEvent(e, 'happening_now')} />
-                ))}
-            </HScrollRail>
-          </section>
-        )}
-
-        {/* § Today's deals — hidden when empty */}
-        {!loading && dealsToday.length > 0 && (
-          <section className="px-[18px] pt-16">
-            <HomeSectionHeader font={HF.deals} kicker="Offers today" label="Today's deals" sub="Happy hours, set menus and ladies’ nights with a deal attached." count={`${dealsToday.length} offers`} />
-            <HScrollRail>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {dealsToday.map((e: any) => (
-                <DealCard key={e.event_id || e.venue_id} event={e} onOpen={() => openEvent(e, 'deals_rail')} />
-              ))}
-            </HScrollRail>
           </section>
         )}
 
@@ -754,46 +535,13 @@ export default function CityHome() {
             ))}
         </section>
 
-        {/* § How it works — Find / Sort / Go + live stats (from Home 4) */}
-        <HowItWorks
+        {/* § Pick your vibe — tiles ranked by upcoming count */}
+        <HomeVibeTiles
           cityName={cityName}
-          stats={howStats}
-          loading={loading}
-          accent={cityAccent}
-          kicker={{ index: 1, total: 2 }}
-          scrollRoot={mainRef}
-        />
-
-        {/* § Your city — picker + atlas (from Home 4) */}
-        <CityAtlas
-          city={city}
-          cities={cityOptions}
-          accent={cityAccent}
-          pinCategories={topCategories}
-          kicker={{ index: 2, total: 2 }}
-          scrollRoot={mainRef}
-          onChangeCity={switchCity}
-          onMap={() => goMap('city_atlas_map')}
-          onList={() => goList('city_atlas_list')}
-        />
-
-        {/* § From the content plan: problem → relief, this week, map or list
-            (marketing/strategy/HOMEPAGE_CONTENT_PLAN.md) */}
-        <HomeProblem story={problemStory} scrollRoot={mainRef} />
-        <HomeThisWeek
-          cityName={cityName}
-          count={week.count}
-          picks={week.picks}
+          tiles={vibeTiles}
           loading={loading}
           scrollRoot={mainRef}
-          onOpen={(e) => openEvent(e, 'this_week_rail')}
-          onMap={() => goMap('this_week_map')}
-        />
-        <HomeMapOrList
-          pinCategories={fan.items.map((i) => i.id)}
-          scrollRoot={mainRef}
-          onMap={() => goMap('map_or_list')}
-          onList={() => goList('map_or_list')}
+          onPick={(t) => trackEvent('home_category_click', { city, category: t.id, count: t.count, source: 'vibe_tile' })}
         />
 
         <HomeFooter

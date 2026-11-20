@@ -31,6 +31,26 @@ interface VenueResponse {
 // the literal public-IP fallback is for emergency boot only.
 const WMV_API_BASE = (process.env.WMV_API_BASE || 'http://localhost:2300').replace(/\/$/, '');
 
+/**
+ * Some ticketing rows (BookMyShow) store the poster as a JSON string,
+ * `{"url":"https://…"}`, instead of the URL itself. Unwrap those so the
+ * image renders; anything that is not an http(s) URL becomes null.
+ */
+function cleanMediaUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  let url = value.trim();
+  if (url.startsWith('{')) {
+    try {
+      const parsed: unknown = JSON.parse(url);
+      const inner = typeof parsed === 'object' && parsed !== null ? (parsed as { url?: unknown }).url : null;
+      url = typeof inner === 'string' ? inner.trim() : '';
+    } catch {
+      return null;
+    }
+  }
+  return /^https?:\/\//i.test(url) ? url : null;
+}
+
 export async function GET(request: Request) {
   // Multi-city: forward `?city=` to the backend so the venue list is scoped.
   // Falls back to all-cities if omitted (back-compat with old callers).
@@ -206,9 +226,9 @@ async function buildVenues(city: string | null): Promise<Record<string, unknown>
       metadata: record.metadata,
       // Only pass the two media URLs we actually render. Dropping the full
       // arrays saves ~180 KB on the wire per response.
-      media_url_1: mediaUrls[0] ?? record.media_url_1 ?? null,
+      media_url_1: cleanMediaUrl(mediaUrls[0] ?? record.media_url_1),
       media_type_1: mediaTypes[0] ?? record.media_type_1 ?? null,
-      media_url_2: mediaUrls[1] ?? record.media_url_2 ?? null,
+      media_url_2: cleanMediaUrl(mediaUrls[1] ?? record.media_url_2),
       media_type_2: mediaTypes[1] ?? record.media_type_2 ?? null,
       deals: record.deals || null,
       scrape_date: record.scrape_date || null,

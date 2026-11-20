@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useInViewOnce, useCountUp } from './useRevealOnce';
-import { Building2, ChevronRight, Clock, Heart, Star } from 'lucide-react';
+import { ArrowUpRight, Building2, ChevronRight, Clock, Heart, List as ListIcon, Map as MapIcon, Star } from 'lucide-react';
 import EventMedia from '@/components/shared/EventMedia';
 import { getShortDisplayName } from '@/lib/category-mappings';
 import { T } from '@/lib/theme/tokens';
@@ -94,6 +94,38 @@ export function ItalicTail({ text }: { text: string }) {
 // ── Horizontal rail ───────────────────────────────────────────────────
 // Right-edge fade + chevron while there is more to scroll; hides at the end
 // (or when nothing overflows).
+/**
+ * The white tile that closes every event rail: split across the middle into
+ * "View on map" and "View in list" for the same set of events.
+ */
+export function RailEndTile({ width, onMap, onList }: {
+  width: number | string;
+  onMap: () => void;
+  onList: () => void;
+}) {
+  const half = 'flex-1 flex flex-col justify-between p-3.5 text-left transition-opacity active:opacity-70';
+  const title = 'font-tight font-semibold text-[19px] leading-none';
+  return (
+    <div className="flex-shrink-0 flex flex-col wmv-invert snap-start" style={{ width, aspectRatio: '3/4' }} data-cta="rail-end">
+      <button type="button" onClick={onMap} className={half} data-cta="rail-end-map">
+        <MapIcon className="w-5 h-5" />
+        <span className="flex items-end justify-between gap-2">
+          <span className={title}>View on map</span>
+          <ArrowUpRight className="w-4 h-4 flex-shrink-0" />
+        </span>
+      </button>
+      <span aria-hidden className="h-px mx-3.5" style={{ background: 'color-mix(in srgb, var(--wmv-btn-ink) 22%, transparent)' }} />
+      <button type="button" onClick={onList} className={half} data-cta="rail-end-list">
+        <ListIcon className="w-5 h-5" />
+        <span className="flex items-end justify-between gap-2">
+          <span className={title}>View in list</span>
+          <ArrowUpRight className="w-4 h-4 flex-shrink-0" />
+        </span>
+      </button>
+    </div>
+  );
+}
+
 export function HScrollRail({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [showHint, setShowHint] = useState(false);
