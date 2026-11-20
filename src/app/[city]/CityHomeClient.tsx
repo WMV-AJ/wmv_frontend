@@ -8,6 +8,7 @@ import { ALL_CITIES, getCityConfig, type CitySlug } from '@/config/cities.config
 import { getCityDateString } from '@/lib/city-date';
 import { ArrowUpRight } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
+import { useScrollRestore } from '@/hooks/useScrollRestore';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import NavPill from '@/components/navigation/NavPill';
 import { T } from '@/lib/theme/tokens';
@@ -111,6 +112,8 @@ export default function CityHome() {
   // herd behind the intermittent 503s).
   const { allVenues, isLoadingVenues } = useVenueData();
   const loading = isLoadingVenues;
+  // Back from an event, the map or the list lands on the same spot.
+  useScrollRestore(mainRef, !loading);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const venues = useMemo<any[]>(() => {
     // "Upcoming" is anchored to the CITY's calendar day, not the viewer's:

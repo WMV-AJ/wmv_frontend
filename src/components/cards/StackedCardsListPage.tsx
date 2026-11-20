@@ -9,6 +9,7 @@
 //     kills the ~680px phantom scroll gap the negative-margin deck reserves.
 // Pages provide their own header row (use <ListPageHeader>) + the cards.
 import React, { useState, useEffect, useRef } from 'react';
+import { useScrollRestore } from '@/hooks/useScrollRestore';
 import { ArrowLeft } from 'lucide-react';
 import HomeMasthead from '@/components/navigation/HomeMasthead';
 import StackedEventCards, { type EventCardData } from '@/components/events/StackedEventCards';
@@ -104,6 +105,8 @@ export default function StackedCardsListPage({
   // Clip the card stack to the last card's real bottom (kills the phantom gap).
   // Re-runs on expand/collapse + when the card set changes.
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Back from an event lands on the same card.
+  useScrollRestore(scrollRef, !isLoading);
   useEffect(() => {
     const root = scrollRef.current;
     if (!root) return;

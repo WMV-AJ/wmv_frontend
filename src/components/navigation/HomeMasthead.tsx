@@ -30,10 +30,14 @@ interface HomeMastheadProps {
 export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps) {
   const router = useRouter();
   const [q, setQ] = useState('');
-  // Home shows the search as an icon; tapping it opens the field in the bar.
+  // Home shows the search as an icon. It opens the search and filter sheet on
+  // the list, the same sheet the search icons on the map and the list open.
   const iconSearch = from === 'home';
-  const [searchOpen, setSearchOpen] = useState(false);
-  const showField = !iconSearch || searchOpen;
+  const showField = !iconSearch;
+  const openSearch = () => {
+    trackEvent('home_search_open', { city, source: 'masthead' });
+    router.push(`/${city}/cards?date=today&search=1`);
+  };
 
   const submitSearch = (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -71,7 +75,7 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
         {!showField && (
           <button
             type="button"
-            onClick={() => setSearchOpen(true)}
+            onClick={openSearch}
             aria-label="Search events and venues"
             style={{
               width: 34, height: 34, borderRadius: '50%', flexShrink: 0, display: 'grid', placeItems: 'center',
@@ -95,8 +99,6 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
             onChange={(e) => setQ(e.target.value)}
             placeholder="Event, venue, etc"
             aria-label="Search events and venues"
-            autoFocus={iconSearch}
-            onBlur={() => { if (iconSearch && !q.trim()) setSearchOpen(false); }}
             style={{
               flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none',
               color: T.ink, fontFamily: bodyFont, fontSize: 12, fontWeight: 500,

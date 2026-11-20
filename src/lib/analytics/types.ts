@@ -22,6 +22,7 @@ export type AnalyticsEventName =
   | 'vibe_pill_click'
   | 'area_row_click'
   | 'home_search_submit'
+  | 'home_search_open'
   | 'home_category_click'
   | 'home_weekend_day_click'
   | 'home_city_switch'

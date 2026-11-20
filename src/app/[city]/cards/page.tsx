@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useLayoutEffect, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useClientSideVenues } from '@/hooks/useClientSideVenues';
+import { useScrollRestore } from '@/hooks/useScrollRestore';
 import { type HierarchicalFilterState } from '@/types';
 import TopNav from '@/components/navigation/TopNav';
 import NavPill from '@/components/navigation/NavPill';
@@ -83,11 +84,15 @@ function CardsInner() {
 
   const { allVenues, filteredVenues, isLoading } = useClientSideVenues(filters);
 
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  // ?search=1 (the home page's search icon) opens the same search and filter
+  // sheet the search icon on this page and on the map opens.
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(() => searchParams?.get('search') === '1');
   const [navHeight, setNavHeight] = useState(140);
   const [pillsHeight, setPillsHeight] = useState(0);
   const pillsRef = useRef<HTMLDivElement>(null);
   const cardsScrollRef = useRef<HTMLDivElement>(null);
+  // Back from an event lands on the same card.
+  useScrollRestore(cardsScrollRef, !isLoading);
 
   // Re-runs when loading ends: the page returns a loader first, so on the
   // first pass the pills don't exist yet. With [] deps the height stayed 0,
