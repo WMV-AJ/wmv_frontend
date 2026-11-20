@@ -650,21 +650,35 @@ export function logoPose(layout: Layout, t: number): LogoPose {
 }
 
 /** The opening: two rings of dots turning around the logo and the five source shapes bobbing under it. */
-export function drawPrelude(ctx: CanvasRenderingContext2D, layout: Layout, t: number, ambient: number): void {
+export function drawPrelude(ctx: CanvasRenderingContext2D, layout: Layout, fonts: IntroFonts, t: number, ambient: number): void {
   if (t >= LOGO_TIME) return;
   const { cx, cy, mid } = layout;
   const leave = easeInOut(prog(t, 1.0, 1.55));
   const rings = [
-    { count: 14, radius: 102 * mid, speed: 0.9, size: 2.6 },
-    { count: 22, radius: 132 * mid, speed: -0.6, size: 1.9 },
+    { count: 22, radius: 100 * mid, speed: 0.9, size: 2.6 },
+    { count: 34, radius: 130 * mid, speed: -0.6, size: 2 },
+    { count: 46, radius: 160 * mid, speed: 0.38, size: 1.5 },
   ];
+  // The name, above the rings; it fades as the logo rises and the small wordmark takes over.
+  const nameAlpha = prog(t, 0.2, 0.55) * (1 - leave);
+  if (nameAlpha > 0) {
+    ctx.save();
+    ctx.globalAlpha = nameAlpha;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#fff';
+    ctx.font = `700 ${30 * mid}px ${fonts.display}`;
+    setTracking(ctx, '-0.3px');
+    ctx.fillText('Where\u2019s My Vibe', cx, cy - 160 * mid - 34 - leave * 16 + (1 - easeOut(prog(t, 0.2, 0.55))) * 10);
+    ctx.restore();
+  }
   rings.forEach((ring, r) => {
     for (let j = 0; j < ring.count; j++) {
-      const k = prog(t, 0.12 + j * 0.018 + r * 0.1, 0.42 + j * 0.018 + r * 0.1);
+      const k = prog(t, 0.12 + j * 0.01 + r * 0.08, 0.42 + j * 0.01 + r * 0.08);
       if (k <= 0) continue;
       const angle = (j / ring.count) * Math.PI * 2 + ambient * ring.speed + r;
       const radius = ring.radius * (0.7 + 0.3 * easeOut(k)) * (1 + leave * 1.8);
-      glowDot(ctx, cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, ring.size * clamp(easeBack(k), 0, 1.3), PALETTE[(j * 3 + r * 5) % PALETTE.length], 1 - leave, 3.2);
+      glowDot(ctx, cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, ring.size * clamp(easeBack(k), 0, 1.3), PALETTE[(j * 5 + r * 7) % PALETTE.length], 1 - leave, 3.2);
     }
   });
   SOURCES.forEach((source, i) => {

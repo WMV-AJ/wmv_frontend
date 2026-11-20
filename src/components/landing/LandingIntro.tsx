@@ -220,7 +220,7 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
       updateBrand(logoRef.current, wordmarkRef.current, copyRef.current, scene.layout, state.t);
       updateDom(domRefs.current, counterRef.current, labelRef.current, scene.layout, introTime, state.ambient);
       drawIntro(ctx, scene, fonts, introTime, state.ambient);
-      drawPrelude(ctx, scene.layout, state.t, state.ambient);
+      drawPrelude(ctx, scene.layout, fonts, state.t, state.ambient);
     };
 
     measure();
