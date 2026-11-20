@@ -23,10 +23,10 @@ const SCAN_ITEMS: readonly ScanItem[] = [
 function ScanTile({ item }: { item: ScanItem }) {
   if (item.kind === 'logo') {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={`/home/sources/${item.file}.png`} alt="" className={styles.scanTile} width={32} height={32} loading="lazy" />;
+    return <img src={`/home/sources/${item.file}.png`} alt="" className={styles.scanTile} width={46} height={46} loading="lazy" />;
   }
   const Icon = item.kind === 'story' ? CircleDashed : ImageIcon;
-  return <span className={`${styles.scanTile} ${styles.scanGlyph}`}><Icon className="w-4 h-4" strokeWidth={1.8} /></span>;
+  return <span className={`${styles.scanTile} ${styles.scanGlyph}`}><Icon className="w-6 h-6" strokeWidth={1.8} /></span>;
 }
 
 /** The same strip twice over, so the scroll loops without a seam. */
@@ -64,9 +64,6 @@ export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCo
         <div className={`${H4_LABEL} text-silver-dim mt-1`}>{dateLabel}</div>
 
         <h1 id="home-top-title" className={`${HF.hero} text-pale mt-3`}>Every event.<br />One map.</h1>
-        <p className="text-[13px] leading-snug text-silver mt-2">
-          No more &ldquo;so what&rsquo;s the plan?&rdquo; texts.
-        </p>
 
         {/* Dim strip underneath; the bright copy shows only through the scanner window. */}
         <div className="mt-auto pt-4" role="img" aria-label="Scanning Instagram stories, Instagram posts and ticketing platforms">

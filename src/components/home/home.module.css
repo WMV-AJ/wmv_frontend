@@ -500,7 +500,7 @@
 
 .scan {
   position: relative;
-  height: 44px;
+  height: 62px;
   overflow: hidden;
   container-type: inline-size;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
@@ -510,19 +510,19 @@
 .scanTrack {
   position: absolute;
   left: 0;
-  top: 6px;
+  top: 8px;
   display: flex;
-  gap: 8px;
-  padding-right: 8px;
+  gap: 10px;
+  padding-right: 10px;
   width: max-content;
   animation: scanScroll 26s linear infinite;
 }
 
 .scanTile {
-  width: 32px;
-  height: 32px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: 12px;
   object-fit: cover;
   background: #fff;
 }
@@ -548,10 +548,10 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(50cqw - 22px);
-  width: 44px;
+  left: calc(50cqw - 31px);
+  width: 62px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 0 18px rgba(255, 255, 255, 0.22);
   background: var(--wmv-bg);
@@ -559,8 +559,8 @@
 
 /* Line the bright strip up with the dim one behind it (minus the window's border). */
 .scanWindow .scanTrack {
-  left: calc(21px - 50cqw);
-  top: 5px;
+  left: calc(30px - 50cqw);
+  top: 7px;
 }
 
 .scanBeam {
@@ -575,7 +575,7 @@
 }
 
 @keyframes scanScroll { to { transform: translateX(-50%); } }
-@keyframes scanBeam { from { transform: translateX(0); } to { transform: translateX(40px); } }
+@keyframes scanBeam { from { transform: translateX(0); } to { transform: translateX(58px); } }
 
 @media (prefers-reduced-motion: reduce) {
   .scanTrack,
