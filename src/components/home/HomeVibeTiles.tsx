@@ -11,6 +11,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { H4_LABEL, TILE_RULE, type CardAccent } from '@/components/shared/card-style';
 import EventMedia from '@/components/shared/EventMedia';
 import { HF } from './home-fonts';
+import { KickerDot } from './HomeParts';
 import { useRevealOnce } from './useRevealOnce';
 import styles from './home.module.css';
 
@@ -39,7 +40,7 @@ export default function HomeVibeTiles({ cityName, tiles, loading, scrollRoot, on
   return (
     <section className="px-[18px] pt-16" aria-labelledby="home-tiles-title">
       <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
-        <span>Pick your vibe</span>
+        <span className="inline-flex items-center gap-2"><KickerDot />Pick your vibe</span>
         <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
       </div>
       <h2 id="home-tiles-title" className={`${HF.tiles} text-pale mt-5`}>What {cityName} is <em className="italic text-silver">into</em></h2>

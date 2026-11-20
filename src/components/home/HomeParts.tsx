@@ -44,10 +44,15 @@ export function placeLine(e: any, hasOwnTitle: boolean): string {
 // The home's one header pattern (every section): a spaced-caps kicker over a
 // hairline (count on the right), the heading in Instrument Serif with an
 // italic tail, then a sub-line in the body face.
+/** The small dot before a section label; it cycles through the category colours (globals.css). */
+export function KickerDot() {
+  return <span aria-hidden className="wmv-kicker-dot" />;
+}
+
 export function SectionKickerRule({ children, count }: { children: React.ReactNode; count?: React.ReactNode }) {
   return (
     <div className={`${H4_LABEL} flex items-center gap-2.5 text-silver-dim`}>
-      <span className="inline-flex items-center gap-1.5 whitespace-nowrap">{children}</span>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap"><KickerDot />{children}</span>
       <span aria-hidden className="flex-1 h-px" style={{ background: TILE_RULE }} />
       {count != null && <span className="text-silver whitespace-nowrap tabular-nums">{count}</span>}
     </div>

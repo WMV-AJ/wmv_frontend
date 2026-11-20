@@ -357,6 +357,39 @@
   @keyframes wmv-spin {
     to { transform: rotate(360deg); }
   }
+
+  /* Section-label dot on the city home: steps through the category colours
+     (COLOR_HEX_MAP in src/lib/category-mappings.ts) and breathes. */
+  @keyframes wmv-kicker-hue {
+    0.0% { background-color: #F8991D; }
+    8.33% { background-color: #FC4024; }
+    16.67% { background-color: #8552A0; }
+    25.0% { background-color: #1FA86E; }
+    33.33% { background-color: #EF4782; }
+    41.67% { background-color: #9F8D32; }
+    50.0% { background-color: #00859C; }
+    58.33% { background-color: #EBDCC7; }
+    66.67% { background-color: #EBDEA6; }
+    75.0% { background-color: #BBC5AB; }
+    83.33% { background-color: #F09E7D; }
+    91.67% { background-color: #3BB3C9; }
+    100% { background-color: #F8991D; }
+  }
+  @keyframes wmv-kicker-beat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+  }
+  .wmv-kicker-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-color: #F8991D;
+    animation: wmv-kicker-hue 14s linear infinite, wmv-kicker-beat 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wmv-kicker-dot { animation: none; }
+  }
   @keyframes wmv-pulse-dot {
     0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.15); }
