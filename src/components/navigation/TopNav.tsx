@@ -481,21 +481,20 @@ const TopNav: React.FC<TopNavProps> = ({
 
   // --- MOBILE OVERLAY LAYOUT (original) ---
   return (
-    <div ref={mobileNavRef} className="fixed top-1 left-1.5 right-1.5 z-50">
+    // Flush with the top and both sides, like the home masthead: no floating card.
+    <div ref={mobileNavRef} className="fixed top-0 left-0 right-0 z-50">
       <div
-        className="px-3 py-1.5 rounded-2xl relative"
+        className="px-3 pt-2 pb-2 relative"
         style={darkMode ? {
-          background: 'rgba(10, 10, 26, 0.88)',
+          background: 'rgba(10, 10, 26, 0.92)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.10)',
-          boxShadow: '0 2px 20px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255,255,255,0.05) inset',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.10)',
         } : {
           background: 'rgba(255, 255, 255, 0.97)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(0, 0, 0, 0.08)',
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
         }}
       >
         <div className="flex flex-col gap-1.5">
