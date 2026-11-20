@@ -46,6 +46,12 @@ export const T = {
 // `mono` exports pointed at a sans and a proportional face respectively,
 // which is how three dead font names survived in the codebase for months.
 export const displayFont = 'var(--font-roboto), system-ui, -apple-system, "Helvetica Neue", sans-serif';
+/** Bree Serif. Page and section headings. One weight (400); it has no italic. */
+export const headingFont = 'var(--font-heading), Georgia, serif';
+/** Amatic SC. Only for the "Where's My Vibe" name written out. */
+export const wordmarkFont = 'var(--font-wordmark), Impact, "Arial Narrow", sans-serif';
+/** Shared look of the written-out name beside the logo. */
+export const WORDMARK_STYLE = { fontFamily: wordmarkFont, fontWeight: 700, fontSize: 24, letterSpacing: '0.05em', lineHeight: 1 } as const;
 export const bodyFont = 'var(--font-open-sans), system-ui, -apple-system, "Helvetica Neue", sans-serif';
 
 /** Max content width of the phone-frame column used across the app. */

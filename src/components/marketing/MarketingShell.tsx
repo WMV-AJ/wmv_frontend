@@ -10,7 +10,7 @@
 // Interactive bits (CTA clicks with analytics) live in small client islands
 // (see CtaButton.tsx / FaqAccordion).
 import Link from 'next/link';
-import { T, displayFont, bodyFont, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
+import { T, WORDMARK_STYLE, bodyFont, FRAME_MAX_WIDTH } from '@/lib/theme/tokens';
 import { VIBES_DATA } from '@/config/vibes-data';
 import { ALL_CITIES, getCityConfig } from '@/config/cities.config';
 import ThemeToggle from '@/components/navigation/ThemeToggle';
@@ -68,12 +68,8 @@ export default function MarketingShell({ children }: { children: React.ReactNode
             />
             <span
               style={{
-                fontFamily: displayFont,
-                fontWeight: 700,
-                fontSize: 14,
+                ...WORDMARK_STYLE,
                 color: T.ink,
-                letterSpacing: '-0.01em',
-                lineHeight: 1,
               }}
             >
               Where&rsquo;s My Vibe

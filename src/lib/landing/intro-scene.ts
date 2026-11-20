@@ -268,6 +268,8 @@ export interface IntroFonts {
   display: string;
   /** Resolved family for pills and small labels. */
   body: string;
+  /** Resolved family for the name written out in the logo opening. */
+  wordmark: string;
 }
 
 const pillFont = (fonts: IntroFonts, size: number): string => `600 ${size}px ${fonts.body}`;
@@ -667,8 +669,8 @@ export function drawPrelude(ctx: CanvasRenderingContext2D, layout: Layout, fonts
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#fff';
-    ctx.font = `700 ${30 * mid}px ${fonts.display}`;
-    setTracking(ctx, '-0.3px');
+    ctx.font = `700 ${48 * mid}px ${fonts.wordmark}`;
+    setTracking(ctx, '2px');
     ctx.fillText('Where\u2019s My Vibe', cx, cy - 160 * mid - 34 - leave * 16 + (1 - easeOut(prog(t, 0.2, 0.55))) * 10);
     ctx.restore();
   }

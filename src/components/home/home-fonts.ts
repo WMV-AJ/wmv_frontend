@@ -1,13 +1,8 @@
-// City-home headings: one editorial face, Instrument Serif — the first line
-// upright, the second (or the last word of a one-line heading) in italic.
-// Home only; the rest of the app stays on Roboto / Open Sans
-// (src/app/layout.tsx).
+// City-home headings: the site's heading face, Bree Serif (--font-heading,
+// loaded in src/app/layout.tsx). It has no italic, so the emphasised word in a
+// heading is set apart by colour only.
 
-import { Instrument_Serif } from 'next/font/google';
-
-const serif = Instrument_Serif({ weight: '400', style: ['normal', 'italic'], subsets: ['latin'], display: 'swap' });
-
-const H = `${serif.className} font-normal`;
+const H = 'font-[family-name:var(--font-heading)] font-normal [&_em]:not-italic';
 
 /** Full heading classes (face + size) per section. */
 export const HF = {

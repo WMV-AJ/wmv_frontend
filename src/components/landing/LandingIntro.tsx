@@ -5,7 +5,6 @@
 // Timing and drawing live in src/lib/landing/intro-scene.ts; this file owns the
 // DOM, the clock and the sizing.
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { Instrument_Serif } from 'next/font/google';
 import {
   AudioWaveform, Beer, Bike, BookOpen, Brain, Camera, ChefHat, CircleDashed, Coffee, Dices, Disc3, Drum, Dumbbell,
   Flower2, Footprints, Gamepad2, Guitar, Handshake, Headphones, HeartHandshake, Image as ImageIcon, Laugh, Martini,
@@ -13,15 +12,11 @@ import {
   Ticket, Trophy, Tv, Users, Utensils, Waves, Wine, type LucideIcon,
 } from 'lucide-react';
 import { COLOR_HEX_MAP } from '@/lib/category-mappings';
-import { bodyFont, displayFont } from '@/lib/theme/tokens';
+import { WORDMARK_STYLE, bodyFont, displayFont, headingFont } from '@/lib/theme/tokens';
 import {
   BEAT_LENGTH, BEAT_START, BRAND_SIZE, BRAND_X, BRAND_Y, DESIGN_W, LOGO_TIME, RING_RADIUS, ROW_AT, SOURCES, TOTAL, beatAt, buildScene,
   clamp, drawIntro, drawPrelude, easeBack, easeIn, easeOut, logoPose, makeLayout, prog, type IntroFonts, type Layout, type Scene,
 } from '@/lib/landing/intro-scene';
-
-// The one face the intro adds to the site's Roboto / Open Sans pair: an italic
-// serif for the headline. Loaded here so only the landing page downloads it.
-const headlineFont = Instrument_Serif({ weight: '400', style: 'italic', subsets: ['latin'], display: 'swap' });
 
 interface RingItem {
   Icon?: LucideIcon;
@@ -170,7 +165,7 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let scene: Scene | null = null;
-    let fonts: IntroFonts = { display: 'sans-serif', body: 'sans-serif' };
+    let fonts: IntroFonts = { display: 'sans-serif', body: 'sans-serif', wordmark: 'sans-serif' };
     let frame = 0;
     let last: number | null = null;
     let drawnKey = '';
@@ -191,6 +186,7 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
       fonts = {
         display: nameEl ? getComputedStyle(nameEl).fontFamily : 'sans-serif',
         body: sentenceRef.current ? getComputedStyle(sentenceRef.current).fontFamily : 'sans-serif',
+        wordmark: wordmarkRef.current ? getComputedStyle(wordmarkRef.current).fontFamily : 'sans-serif',
       };
       scene = buildScene(ctx, makeLayout(height), fonts);
       sceneVersion += 1;
@@ -255,13 +251,13 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
         />
         <div
           ref={wordmarkRef}
-          style={{ position: 'absolute', left: BRAND_X + BRAND_SIZE / 2 + 10, top: BRAND_Y - 7, fontFamily: displayFont, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1, opacity: 0, zIndex: 6 }}
+          style={{ position: 'absolute', left: BRAND_X + BRAND_SIZE / 2 + 10, top: BRAND_Y - 12, ...WORDMARK_STYLE, opacity: 0, zIndex: 6 }}
         >
           Where&rsquo;s My Vibe
         </div>
 
         <div ref={copyRef} style={{ position: 'absolute', left: 24, right: 24, top: 82, zIndex: 6, opacity: 0 }}>
-          <h1 className={headlineFont.className} style={{ fontStyle: 'italic', fontWeight: 400, fontSize: 47, lineHeight: 1, letterSpacing: '-0.005em', whiteSpace: 'nowrap', margin: 0 }}>
+          <h1 style={{ fontFamily: headingFont, fontWeight: 400, fontSize: 36, lineHeight: 1.05, letterSpacing: '-0.005em', whiteSpace: 'nowrap', margin: 0 }}>
             Discover your plans.
           </h1>
           <p ref={sentenceRef} style={{ fontFamily: bodyFont, fontSize: 14.5, lineHeight: 1.55, fontWeight: 500, color: '#d9dad6', margin: '12px 0 0' }}>

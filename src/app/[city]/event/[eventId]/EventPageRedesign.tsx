@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { getEventCategories } from '@/lib/category-utils';
 import { getCategoryColor, getHexColor, getDisplayName } from '@/lib/category-mappings';
-import { T, displayFont } from '@/lib/theme/tokens';
+import { T, displayFont, headingFont } from '@/lib/theme/tokens';
 import { formatPrice } from '@/config/cities.config';
 import { formatDateLabel, formatTimeClean, isEventHappeningNow } from '@/lib/time-utils';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
@@ -454,7 +454,7 @@ export default function EventPageRedesign({
                   </span>
                 </div>
 
-                <h1 style={{ fontFamily: displayFont, fontWeight: 400, fontSize: 40, lineHeight: 0.96, letterSpacing: '-0.03em', margin: '12px 0 0', color: T.ink }}>
+                <h1 style={{ fontFamily: headingFont, fontWeight: 400, fontSize: 36, lineHeight: 1.02, letterSpacing: '-0.01em', margin: '12px 0 0', color: T.ink }}>
                   {event.event_name}
                 </h1>
 

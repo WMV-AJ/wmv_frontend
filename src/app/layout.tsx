@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Script from "next/script";
-import { Roboto, Open_Sans } from "next/font/google";
+import { Roboto, Open_Sans, Amatic_SC, Bree_Serif } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider, THEME_BOOT_SCRIPT } from "@/contexts/ThemeContext";
@@ -37,6 +37,24 @@ const openSans = Open_Sans({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   fallback: ["system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "sans-serif"],
+});
+
+// Wordmark: the "Where's My Vibe" name wherever it is written out.
+const amatic = Amatic_SC({
+  variable: "--font-wordmark",
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  fallback: ["Impact", "Arial Narrow", "sans-serif"],
+});
+
+// Headings: page and section titles.
+const breeSerif = Bree_Serif({
+  variable: "--font-heading",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  fallback: ["Georgia", "serif"],
 });
 
 export const viewport = {
@@ -125,7 +143,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://tiles.basemaps.cartocdn.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${roboto.variable} ${openSans.variable} antialiased`}
+        className={`${roboto.variable} ${openSans.variable} ${amatic.variable} ${breeSerif.variable} antialiased`}
       >
         {GA_MEASUREMENT_ID && (
           <>

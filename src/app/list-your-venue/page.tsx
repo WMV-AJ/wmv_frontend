@@ -3,7 +3,7 @@ import MarketingShell from '@/components/marketing/MarketingShell';
 import CtaButton from '@/components/marketing/CtaButton';
 import { SourceChips, RadarRings } from '@/components/marketing/visuals';
 import { getActiveCities } from '@/lib/server-data';
-import { T, displayFont, bodyFont } from '@/lib/theme/tokens';
+import { T, headingFont, bodyFont } from '@/lib/theme/tokens';
 
 export const metadata: Metadata = {
   title: "List your venue | Where's My Vibe",
@@ -31,7 +31,7 @@ export default async function ListYourVenuePage() {
     <MarketingShell>
       <div style={{ padding: '32px 18px 8px', position: 'relative', overflow: 'hidden' }}>
         <RadarRings size={260} right={-80} top={-40} />
-        <h1 style={{ fontFamily: displayFont, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
+        <h1 style={{ fontFamily: headingFont, fontWeight: 400, fontSize: 30, lineHeight: 1.15, color: T.ink, margin: '0 0 10px', position: 'relative' }}>
           Your venue is already<br />
           <span style={{ color: T.accentInk, textShadow: `0 0 34px ${T.accent}40` }}>on the radar. Own it.</span>
         </h1>

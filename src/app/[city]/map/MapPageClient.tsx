@@ -134,21 +134,23 @@ function GlowingMarker({
   );
 }
 
-function OfferBanner({
+// The selected event's card on the map: the venue name, then its offer if it
+// has one. One black card under the marker — the white name label that other
+// markers carry is hidden for the selected one (see VenueMarkerItem).
+function SelectedVenueCard({
   venue,
   offer,
 }: {
   venue: Venue;
-  offer: string;
+  offer: string | null;
 }) {
   return (
     <MapPopup
       longitude={venue.lng}
       latitude={venue.lat}
-      // Hangs below the dot. The offset clears the highlighted dot (22px) plus
-      // the venue's own name label, which also sits below it when zoomed in.
+      // Hangs below the dot; the offset clears the highlighted dot (22px).
       anchor="top"
-      offset={30}
+      offset={18}
       closeOnClick={false}
       focusAfterOpen={false}
       className="wmv-dark-popup max-w-[200px] p-0 rounded-xl border-0 shadow-none bg-transparent"
@@ -165,10 +167,13 @@ function OfferBanner({
           boxShadow: '0 4px 20px rgba(0,0,0,0.55)',
         }}
       >
-        <p className="flex items-start gap-1.5 text-[11px] font-semibold leading-snug" style={{ color: '#f5f5f5' }}>
-          <Gift aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-px" style={{ color: 'rgba(255,255,255,0.7)' }} />
-          <span>{offer.trim()}</span>
-        </p>
+        <p className="text-[12.5px] font-bold leading-tight" style={{ color: '#fff' }}>{venue.name}</p>
+        {offer && offer.trim() && (
+          <p className="flex items-start gap-1.5 text-[11px] font-medium leading-snug mt-1" style={{ color: 'rgba(255,255,255,0.78)' }}>
+            <Gift aria-hidden className="w-3.5 h-3.5 flex-shrink-0 mt-px" style={{ color: 'rgba(255,255,255,0.6)' }} />
+            <span>{offer.trim()}</span>
+          </p>
+        )}
       </div>
     </MapPopup>
   );
@@ -493,14 +498,15 @@ const VenueMarkerItem = memo(function VenueMarkerItem({
         />
         {/* Must sit inside MarkerContent: only its portal reaches the
             marker element, so a label outside it never renders. */}
-        {showLabel && (
-          <MarkerLabel position="bottom" className="mt-0.5">
+        {/* Unselected markers: the venue name in white, above the dot. The
+            selected one gets the black card below it instead. */}
+        {showLabel && !isHighlighted && !isActive && (
+          <MarkerLabel position="top" className="mb-0.5">
             <span
               className="text-[10px] font-semibold leading-tight px-1.5 py-0.5 rounded"
               style={{
                 color: '#1a1a1a',
-                backgroundColor: 'rgba(255,255,255,0.85)',
-                textShadow: '0 0 3px rgba(255,255,255,0.8)',
+                backgroundColor: 'rgba(255,255,255,0.92)',
               }}
             >
               {venue.name}
@@ -929,8 +935,8 @@ export default function CityMapPage() {
               );
             })}
 
-            {highlightedVenue && highlightedOffer && (
-              <OfferBanner venue={highlightedVenue} offer={highlightedOffer} />
+            {highlightedVenue && (
+              <SelectedVenueCard venue={highlightedVenue} offer={highlightedOffer} />
             )}
 
             {/* Live "you are here" marker (only inside city bounds).
