@@ -488,7 +488,7 @@ export default function CityHome() {
           ) : todayEvents.length > 0 ? (
             <>
               <div className="mb-3.5">
-                <HScrollRail>
+                <HScrollRail scrollKey="today">
                   {todayEvents.slice(0, RAIL_LIMIT).map((e) => (
                     <EventTile key={e.event_id || e.venue_id} event={e} width="48%" sizes="(max-width: 430px) 48vw, 206px"
                       liked={liked.has(String(e.venue_id))} onLike={() => toggle(String(e.venue_id))}
@@ -532,7 +532,7 @@ export default function CityHome() {
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </span>
                   </button>
-                  <HScrollRail>
+                  <HScrollRail scrollKey={`weekend-${ds}`}>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {events.slice(0, RAIL_LIMIT).map((e: any) => (
                       <EventTile key={`${e.venue_id}-${ds}`} event={e} width={180} sizes="(max-width: 430px) 40vw, 172px"

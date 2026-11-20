@@ -131,7 +131,11 @@ export function RailEndTile({ width, onMap, onList }: {
   );
 }
 
-export function HScrollRail({ children }: { children: React.ReactNode }) {
+export function HScrollRail({ children, scrollKey }: {
+  children: React.ReactNode;
+  /** Names this row so Back can put its sideways position back (useScrollRestore). */
+  scrollKey?: string;
+}) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [showHint, setShowHint] = useState(false);
 
@@ -150,6 +154,7 @@ export function HScrollRail({ children }: { children: React.ReactNode }) {
     <div className="relative">
       <div
         ref={ref}
+        data-scroll-key={scrollKey}
         onScroll={update}
         className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1"
         style={{ scrollbarWidth: 'none' }}

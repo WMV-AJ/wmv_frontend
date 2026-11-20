@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/map';
 import TopNav from '@/components/navigation/TopNav';
 import LoadError from '@/components/shared/LoadError';
+import { useViewState, readViewState, writeViewState, viewStateKey } from '@/hooks/useViewState';
 import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import FilterBottomSheet from '@/components/filters/FilterBottomSheet';
@@ -210,6 +211,28 @@ function SimplifyBasemap() {
     return () => { map.off('styledata', reapply); };
   }, [map, isLoaded, isDarkMode]);
 
+  return null;
+}
+
+interface SavedCamera {
+  center: [number, number];
+  zoom: number;
+}
+
+/** Remembers where the map is looking, so Back returns to the same view. */
+function CameraKeeper() {
+  const { map, isLoaded } = useMap();
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    // The address at mount: a move during navigation must not be saved under the next page.
+    const key = viewStateKey('camera');
+    const onMoveEnd = () => {
+      const c = map.getCenter();
+      writeViewState(key, { center: [c.lng, c.lat], zoom: map.getZoom() } satisfies SavedCamera);
+    };
+    map.on('moveend', onMoveEnd);
+    return () => { map.off('moveend', onMoveEnd); };
+  }, [map, isLoaded]);
   return null;
 }
 
@@ -527,7 +550,8 @@ export default function CityMapPage() {
   const searchParams = useSearchParams();
   const liveLocation = useLiveLocation(city);
 
-  const [filters, setFilters] = useState<HierarchicalFilterState>(() => {
+  // Kept across Back and Forward, so the map comes back on the same date and filters.
+  const [filters, setFilters] = useViewState<HierarchicalFilterState>('filters', () => {
     // Deep-link seeds (initializer-only — the URL seeds state, it is not
     // two-way-bound): ?cat=Club+Night (repeatable), ?area=Dubai+Marina,
     // ?date=today|tomorrow|YYYY-MM-DD, ?vibe=brunch (vibes-data categories).
@@ -582,7 +606,9 @@ export default function CityMapPage() {
   // Card ordering is localized to the map: distance from this center, which
   // follows USER pans/zooms only (card-follow easeTo pans are flagged
   // programmatic and ignored, so the order never shifts mid-swipe).
-  const [sortCenter, setSortCenter] = useState<[number, number]>(() => getMapCenter(city));
+  // Where the map was looking, when this page is reached by Back or Forward.
+  const [savedCamera] = useState<SavedCamera | undefined>(() => readViewState<SavedCamera>('camera'));
+  const [sortCenter, setSortCenter] = useState<[number, number]>(() => savedCamera?.center ?? getMapCenter(city));
   const programmaticPanRef = useRef(false);
 
   const [isReady, setIsReady] = useState(false);
@@ -887,8 +913,8 @@ export default function CityMapPage() {
             // map would otherwise stay pinned at Dubai's center even after
             // CitiesProvider populates Mumbai's real config.
             key={getMapCenter(city).join(',')}
-            center={getMapCenter(city)}
-            zoom={MAPCN_ZOOM}
+            center={savedCamera?.center ?? getMapCenter(city)}
+            zoom={savedCamera?.zoom ?? MAPCN_ZOOM}
             // Free-flowing map (Google-Maps-style): no hard bounds clamp —
             // the old per-city maxBounds rubber-banded every pan, which made
             // it impossible to drag the area hidden behind the bottom cards
@@ -906,6 +932,7 @@ export default function CityMapPage() {
             <MapMoveClassToggler />
             <SimplifyBasemap />
             <ZoomTracker onZoomChange={handleZoomChange} />
+            <CameraKeeper />
             <PanToVenue venue={highlightedVenue} programmaticPanRef={programmaticPanRef} mapPaddingRef={mapPaddingRef} />
             <MapCenterTracker
               programmaticPanRef={programmaticPanRef}

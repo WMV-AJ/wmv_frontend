@@ -17,6 +17,32 @@ if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => { lastHistoryMove = Date.now(); });
 }
 
+/** True while a page mounting now was reached by Back or Forward. */
+export function isHistoryReturn(): boolean {
+  return Date.now() - lastHistoryMove < RETURN_WINDOW_MS;
+}
+
+/** Sideways-scrolling rows inside the page that should be put back too. */
+const RAIL_SELECTOR = '[data-scroll-key]';
+
+function readRails(key: string): Record<string, number> {
+  try {
+    return JSON.parse(window.sessionStorage.getItem(`${STORAGE_PREFIX}${key}:rails`) || '{}') as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+function saveRail(key: string, rail: string, left: number): void {
+  try {
+    const all = readRails(key);
+    all[rail] = Math.round(left);
+    window.sessionStorage.setItem(`${STORAGE_PREFIX}${key}:rails`, JSON.stringify(all));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 function readSaved(key: string): number {
   try {
     return Number(window.sessionStorage.getItem(STORAGE_PREFIX + key)) || 0;
@@ -61,9 +87,17 @@ export function useScrollRestore(ref: RefObject<HTMLElement | null>, ready: bool
         if (keyRef.current && restored.current) save(keyRef.current, el.scrollTop);
       });
     };
+    const onRailScroll = (ev: Event) => {
+      const rail = ev.target instanceof HTMLElement ? ev.target : null;
+      const name = rail?.dataset.scrollKey;
+      if (rail && name && rail !== el && keyRef.current && restored.current) saveRail(keyRef.current, name, rail.scrollLeft);
+    };
     el.addEventListener('scroll', onScroll, { passive: true });
+    // Scroll events do not bubble, so the rows are heard in the capture phase.
+    el.addEventListener('scroll', onRailScroll, { passive: true, capture: true });
     return () => {
       el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('scroll', onRailScroll, { capture: true });
       if (frame) cancelAnimationFrame(frame);
     };
   }, [ref, ready]);
@@ -72,8 +106,17 @@ export function useScrollRestore(ref: RefObject<HTMLElement | null>, ready: bool
   useEffect(() => {
     const el = ref.current;
     if (!ready || restored.current || !el || !keyRef.current) return;
-    const target = Date.now() - lastHistoryMove < RETURN_WINDOW_MS ? readSaved(keyRef.current) : 0;
+    const returning = isHistoryReturn();
+    const target = returning ? readSaved(keyRef.current) : 0;
+    const rails = returning ? readRails(keyRef.current) : {};
+    const applyRails = () => {
+      el.querySelectorAll<HTMLElement>(RAIL_SELECTOR).forEach((rail) => {
+        const left = rails[rail.dataset.scrollKey || ''];
+        if (left && Math.abs(rail.scrollLeft - left) > 1) rail.scrollLeft = left;
+      });
+    };
     if (target <= 0) {
+      applyRails();
       restored.current = true;
       return;
     }
@@ -81,6 +124,7 @@ export function useScrollRestore(ref: RefObject<HTMLElement | null>, ready: bool
     let frame = 0;
     const attempt = () => {
       el.scrollTop = target;
+      applyRails();
       // Images and rails still loading can leave the page too short; keep trying briefly.
       const reached = Math.abs(el.scrollTop - target) < 2;
       if (reached || Date.now() - startedAt > RESTORE_TIMEOUT_MS) {

@@ -7,6 +7,7 @@ import { useScrollRestore } from '@/hooks/useScrollRestore';
 import { type HierarchicalFilterState } from '@/types';
 import TopNav from '@/components/navigation/TopNav';
 import LoadError from '@/components/shared/LoadError';
+import { useViewState } from '@/hooks/useViewState';
 import NavPill from '@/components/navigation/NavPill';
 import CategoryPills from '@/components/filters/CategoryPills';
 import StackedEventCards from '@/components/events/StackedEventCards';
@@ -29,7 +30,8 @@ function CardsInner() {
   const cityConfig = getCityConfig(city);
   const searchParams = useSearchParams();
 
-  const [filters, setFilters] = useState<HierarchicalFilterState>(() => {
+  // Kept across Back and Forward, so the list comes back on the same date and filters.
+  const [filters, setFilters] = useViewState<HierarchicalFilterState>('filters', () => {
     // Deep-link seeds (initializer-only — the URL seeds state, it is not
     // two-way-bound): ?cat=Club+Night (repeatable), ?area=Indiranagar,
     // ?date=today|tomorrow|YYYY-MM-DD|all, ?vibe=brunch, ?q=search text.

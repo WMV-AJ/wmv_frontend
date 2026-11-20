@@ -1,7 +1,8 @@
 'use client';
 
+import MediaLightbox from '@/components/shared/MediaLightbox';
+import { useViewState } from '@/hooks/useViewState';
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics/track';
 import { ShareModal } from '@/components/shared/ShareModal';
@@ -39,7 +40,6 @@ import {
   Share2,
   Ticket,
   Navigation,
-  X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import './StackedEventCards.css';
@@ -520,6 +520,13 @@ const EventCard: React.FC<EventCardProps> = ({
           >
             <Share2 className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-ink)' }} />
           </button>
+          <button
+            className="stacked-card-action-btn"
+            onClick={handleDirectionsClick}
+            aria-label="Directions"
+          >
+            <Navigation className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-green)' }} />
+          </button>
         </div>
         {event.swipe_link_url && (
           <button
@@ -530,56 +537,17 @@ const EventCard: React.FC<EventCardProps> = ({
             <span>Book</span>
           </button>
         )}
-        <button
-          className="stacked-card-directions-btn"
-          onClick={handleDirectionsClick}
-        >
-          <Navigation className="w-4 h-4" style={{ color: 'var(--wmv-green)' }} />
-          <span>Directions</span>
-        </button>
       </div>
 
     </div>
 
     {/* Fullscreen media viewer (thumbnail tap) */}
     {fullscreenMedia && (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center"
-        style={{ background: 'rgba(0, 0, 0, 0.95)' }}
-        onClick={(e) => { e.stopPropagation(); setFullscreenMedia(null); }}
-      >
-        <button
-          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255, 255, 255, 0.15)', top: 'max(16px, env(safe-area-inset-top))' }}
-          onClick={(e) => { e.stopPropagation(); setFullscreenMedia(null); }}
-          aria-label="Close"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
-        <div className="max-w-full max-h-full p-4" onClick={(e) => e.stopPropagation()}>
-          {fullscreenMedia.isVideo ? (
-            <video
-              src={fullscreenMedia.url}
-              className="max-w-full max-h-[85vh] rounded-lg"
-              controls
-              autoPlay
-              loop
-              playsInline
-              poster={`/api/video-thumb?src=${encodeURIComponent(fullscreenMedia.url)}`}
-            />
-          ) : (
-            <Image
-              src={fullscreenMedia.url}
-              alt={event.event_name}
-              width={1080}
-              height={1350}
-              sizes="100vw"
-              className="max-w-full max-h-[85vh] object-contain rounded-lg"
-              style={{ width: 'auto', height: 'auto' }}
-            />
-          )}
-        </div>
-      </div>
+      <MediaLightbox
+        items={[{ url: fullscreenMedia.url, isVideo: fullscreenMedia.isVideo, poster: fullscreenMedia.isVideo ? `/api/video-thumb?src=${encodeURIComponent(fullscreenMedia.url)}` : undefined }]}
+        alt={event.event_name}
+        onClose={() => setFullscreenMedia(null)}
+      />
     )}
 
     <ShareModal
@@ -610,19 +578,29 @@ const LOAD_TRIGGER_MARGIN = '400px'; // start loading next batch 400px before se
 const StackedEventCards: React.FC<StackedEventCardsProps> = ({
   cards,
 }) => {
-  const [expandedId, setExpandedId] = useState<string | null>(
-    cards.length > 0 ? cards[cards.length - 1].event.id : null
-  );
+  // Both are kept across Back and Forward, so the list returns with the same
+  // card open and the same number of cards loaded.
+  const [expandedId, setExpandedId] = useViewState<string | null>('expandedCard', null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
+  const [visibleCount, setVisibleCount] = useViewState<number>('visibleCards', INITIAL_BATCH);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  // Start over when the set of cards changes (a new date or filter), but not
+  // on the first pass: that would wipe what was just restored.
+  const cardSet = cards.map((c) => c.event.id).join('|');
+  const lastCardSet = useRef<string | null>(null);
   useEffect(() => {
+    if (lastCardSet.current === null) {
+      lastCardSet.current = cardSet;
+      return;
+    }
+    if (lastCardSet.current === cardSet) return;
+    lastCardSet.current = cardSet;
     setExpandedId(null);
     setContentHeight(0);
     setVisibleCount(INITIAL_BATCH);
-  }, [cards]);
+  }, [cardSet, setExpandedId, setVisibleCount]);
 
   useEffect(() => {
     if (visibleCount >= cards.length) return;

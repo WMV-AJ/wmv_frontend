@@ -9,9 +9,10 @@
 // background; a 401 clears the token (AuthContext) and the redirect follows.
 // A network failure keeps the token, so a flaky connection never logs
 // anyone out.
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getAuthToken, useAuth } from '@/contexts/AuthContext';
-import { markEntry } from '@/lib/nav-back';
+import { usePathname } from 'next/navigation';
+import { noteNavigation } from '@/lib/nav-back';
 
 /** Only same-site, root-relative paths may be used as a return target. */
 export function safeNextPath(raw: string | null): string | null {
@@ -30,13 +31,17 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
   const { user, loading } = useAuth();
   const [blocked, setBlocked] = useState(false);
 
+  // Count page changes inside the site, for the event page's back arrow.
+  const pathname = usePathname();
+  const firstPath = useRef(true);
+  useEffect(() => {
+    if (firstPath.current) firstPath.current = false;
+    else noteNavigation();
+  }, [pathname]);
+
   // Before first paint: no token means no session, so cover the page and leave.
   useBrowserLayoutEffect(() => {
-    if (getAuthToken()) {
-      // Signed in: this is where the visit starts, for the event page's back arrow.
-      markEntry();
-      return;
-    }
+    if (getAuthToken()) return;
     setBlocked(true);
     goToSignIn();
   }, []);

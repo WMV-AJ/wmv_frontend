@@ -119,9 +119,8 @@
 
 .stacked-card-footer {
   display: flex;
-  /* Wrap instead of overflowing: with Book + Directions + 3 round buttons
-     the row can exceed the card width on narrow phones. */
-  flex-wrap: wrap;
+  /* Always one row: four round icons on the left, Book on the right. */
+  flex-wrap: nowrap;
   max-width: 100%;
   box-sizing: border-box;
   gap: 8px;
@@ -136,8 +135,7 @@
 }
 
 .stacked-card.expanded .stacked-card-footer {
-  /* Tall enough for a wrapped second row. */
-  max-height: 140px;
+  max-height: 72px;
   opacity: 1;
   padding-top: 12px;
   margin-top: 12px;
@@ -147,7 +145,8 @@
 .stacked-card-action-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .stacked-card-action-btn {
@@ -165,8 +164,8 @@
   flex-shrink: 0;
 }
 
-.stacked-card-book-btn,
-.stacked-card-directions-btn {
+.stacked-card-book-btn {
+  margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,8 +182,7 @@
   flex-shrink: 0;
 }
 
-.stacked-card-book-btn span,
-.stacked-card-directions-btn span {
+.stacked-card-book-btn span {
   font-size: 13px;
   font-weight: 600;
   color: var(--wmv-ink);
@@ -192,8 +190,7 @@
 }
 
 .stacked-card-action-btn:active { transform: scale(0.9); }
-.stacked-card-book-btn:active,
-.stacked-card-directions-btn:active { transform: scale(0.95); }
+.stacked-card-book-btn:active { transform: scale(0.95); }
 
 /* ===========================================
    RESPONSIVE

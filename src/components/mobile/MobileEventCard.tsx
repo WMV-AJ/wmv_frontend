@@ -23,8 +23,6 @@ import {
   MapPin,
   Globe,
   Tag,
-  ChevronLeft,
-  ChevronRight,
   Sun,
   Sunset,
   Moon,
@@ -109,6 +107,7 @@ interface MobileEventCardProps {
 
 import Image from 'next/image';
 import { PLACEHOLDER_IMAGE } from '@/lib/media-placeholder';
+import MediaLightbox from '@/components/shared/MediaLightbox';
 import EventMedia, { videoThumbUrl } from '@/components/shared/EventMedia';
 import { displayFont } from '@/lib/theme/tokens';
 import { getShortDisplayName } from '@/lib/category-mappings';
@@ -676,9 +675,9 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
             borderTop: '1px solid rgba(0, 0, 0, 0.08)',
           }}
         >
-          {/* Icon buttons left, Get Directions right */}
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
+          {/* One row: round icons on the left (directions last), Book on the right */}
+          <div className="flex items-center justify-between w-full gap-2 flex-nowrap">
+            <div className="flex items-center gap-2 min-w-0">
               {venue.venue_instagram && (
                 <button
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
@@ -704,117 +703,42 @@ const MobileEventCard: React.FC<MobileEventCardProps> = ({
               >
                 <Share2 className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-ink)' }} />
               </button>
+              <button
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+                style={{ background: 'var(--wmv-action-bg)', boxShadow: '0 2px 8px var(--wmv-shadow)' }}
+                onClick={handleDirectionsClick}
+                aria-label="Directions"
+              >
+                <Navigation className="w-[18px] h-[18px]" style={{ color: 'var(--wmv-green)' }} />
+              </button>
             </div>
 
-            {/* Book + Directions pill buttons */}
-            <div className="flex items-center gap-2">
-              {event.swipe_link_url && (
-                <button
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
-                  style={{
-                    background: 'var(--wmv-action-bg)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
-                    color: 'var(--wmv-ink)',
-                  }}
-                  onClick={handleBookClick}
-                >
-                  <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
-                  <span>Book</span>
-                </button>
-              )}
+            {/* Book, always on the right */}
+            {event.swipe_link_url && (
               <button
-                className="flex items-center justify-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 px-5 h-10 rounded-full text-[13px] font-semibold transition-all active:scale-95 flex-shrink-0 whitespace-nowrap"
                 style={{
                   background: 'var(--wmv-action-bg)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
                   color: 'var(--wmv-ink)',
                 }}
-                onClick={handleDirectionsClick}
+                onClick={handleBookClick}
               >
-                <Navigation className="w-4 h-4" style={{ color: 'var(--wmv-green)' }} />
-                <span>Directions</span>
+                <Ticket className="w-4 h-4" style={{ color: '#E1306C' }} />
+                <span>Book</span>
               </button>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Fullscreen Media Viewer */}
         {fullscreenMediaIdx !== null && (
-          <div
-            className="fixed inset-0 z-[100] flex items-center justify-center"
-            style={{ background: 'rgba(0, 0, 0, 0.95)' }}
-            onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(null); }}
-          >
-            <button
-              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(255, 255, 255, 0.15)' }}
-              onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx(null); }}
-              aria-label="Close"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
-            {/* Left arrow */}
-            {activeImages.length > 1 && (
-              <button
-                className="absolute left-3 z-10 w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255, 255, 255, 0.15)', top: '50%', transform: 'translateY(-50%)' }}
-                onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx((fullscreenMediaIdx - 1 + activeImages.length) % activeImages.length); }}
-              >
-                <ChevronLeft className="w-5 h-5 text-white" />
-              </button>
-            )}
-            {/* Right arrow */}
-            {activeImages.length > 1 && (
-              <button
-                className="absolute right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255, 255, 255, 0.15)', top: '50%', transform: 'translateY(-50%)' }}
-                onClick={(e) => { e.stopPropagation(); setFullscreenMediaIdx((fullscreenMediaIdx + 1) % activeImages.length); }}
-              >
-                <ChevronRight className="w-5 h-5 text-white" />
-              </button>
-            )}
-            <div className="max-w-full max-h-full p-4" onClick={(e) => e.stopPropagation()}>
-              {failedMediaIdx.has(fullscreenMediaIdx) ? (
-                <Image
-                  src={PLACEHOLDER_IMAGE}
-                  alt={`${venue.venue_name} ${fullscreenMediaIdx + 1}`}
-                  width={1080}
-                  height={1350}
-                  sizes="100vw"
-                  className="max-w-full max-h-[85vh] object-contain rounded-lg"
-                  style={{ width: 'auto', height: 'auto' }}
-                />
-              ) : activeMediaTypes[fullscreenMediaIdx] ? (
-                <video
-                  src={activeImages[fullscreenMediaIdx]}
-                  className="max-w-full max-h-[85vh] rounded-lg"
-                  controls
-                  autoPlay
-                  loop
-                  playsInline
-                  poster={videoThumbUrl(activeImages[fullscreenMediaIdx], siblingImage)}
-                  onError={() => markMediaFailed(fullscreenMediaIdx)}
-                />
-              ) : (
-                <Image
-                  src={activeImages[fullscreenMediaIdx]}
-                  alt={`${venue.venue_name} ${fullscreenMediaIdx + 1}`}
-                  width={1080}
-                  height={1350}
-                  sizes="100vw"
-                  className="max-w-full max-h-[85vh] object-contain rounded-lg"
-                  style={{ width: 'auto', height: 'auto' }}
-                  onError={() => markMediaFailed(fullscreenMediaIdx)}
-                />
-              )}
-            </div>
-            {/* Counter */}
-            {activeImages.length > 1 && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 text-sm">
-                {fullscreenMediaIdx + 1} / {activeImages.length}
-              </div>
-            )}
-          </div>
+          <MediaLightbox
+            items={activeImages.map((url, i) => ({ url, isVideo: !!activeMediaTypes[i], poster: activeMediaTypes[i] ? videoThumbUrl(url, siblingImage) : undefined }))}
+            startIndex={fullscreenMediaIdx}
+            alt={venue.venue_name}
+            onClose={() => setFullscreenMediaIdx(null)}
+          />
         )}
       </div>
       <ShareModal
