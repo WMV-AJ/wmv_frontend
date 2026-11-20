@@ -4,11 +4,10 @@
 // and a strip of the sources being scanned. Right: the two ways in, the map
 // with its venue count and the list with its event count.
 
-import { ArrowUpRight, ChevronDown, CircleDashed, Image as ImageIcon, List as ListIcon, Map as MapIcon } from 'lucide-react';
+import { ArrowUpRight, CircleDashed, Image as ImageIcon, List as ListIcon, Map as MapIcon } from 'lucide-react';
 import { T } from '@/lib/theme/tokens';
 import { H4_LABEL } from '@/components/shared/card-style';
 import { HF } from './home-fonts';
-import { KickerDot } from './HomeParts';
 import styles from './home.module.css';
 
 type ScanItem = { kind: 'logo'; file: string } | { kind: 'story' } | { kind: 'post' };
@@ -47,11 +46,9 @@ export interface DayCount {
   onClick: () => void;
 }
 
-export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCount, loading, onMap, onList, dayCounts, onScrollCue }: {
+export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCount, loading, onMap, onList, dayCounts }: {
   /** Today, tomorrow and this weekend, each opening the list for that day. */
   dayCounts: DayCount[];
-  /** Scrolls down to the category section. */
-  onScrollCue: () => void;
   cityName: string;
   /** e.g. "Friday 20 Nov" — in the city's calendar. */
   dateLabel: string;
@@ -66,10 +63,9 @@ export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCo
   const button = 'flex flex-col justify-between text-left p-4 min-h-[150px] h-full transition-transform active:scale-[0.98]';
   const number = 'block font-tight font-semibold text-[32px] leading-none tabular-nums';
   return (
-    // Fills the phone screen under the masthead; the bottom padding clears the floating nav.
     <section
-      className="px-[18px] pt-5 pb-[88px] grid gap-x-3.5 gap-y-4 items-stretch box-border"
-      style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 0.82fr)', gridTemplateRows: 'minmax(0, 1fr) auto', minHeight: 'calc(100dvh - 62px)' }}
+      className="px-[18px] pt-5 grid gap-3.5 items-stretch"
+      style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 0.82fr)' }}
       aria-labelledby="home-top-title"
     >
       <div className="flex flex-col min-w-0">
@@ -134,13 +130,6 @@ export default function HomeMapOrList({ cityName, dateLabel, venueCount, eventCo
           </span>
         </button>
       </div>
-
-      <button type="button" onClick={onScrollCue} data-cta="home-scroll-cue"
-        className={`${H4_LABEL} col-span-2 inline-flex items-center justify-center gap-2 py-2 text-silver transition-opacity active:opacity-70`}>
-        <KickerDot />
-        Pick a category
-        <ChevronDown className="w-4 h-4" style={{ animation: 'wmv-pulse 1.5s infinite' }} />
-      </button>
     </section>
   );
 }
