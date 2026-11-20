@@ -1,16 +1,13 @@
 'use client';
 
 // Gate for the landing intro animation:
-//   - first visit → play the intro once, then mark seen
-//   - returning visit / prefers-reduced-motion → render the settled final
-//     frame statically (Stage initialTime = TOTAL, zero animation work)
+//   - every load plays the intro (logo opening, then the animation)
+//   - prefers-reduced-motion renders the settled final frame at once
 //
-// Decided in useLayoutEffect: the Stage SSRs at scale 0 (invisible), so a
-// one-frame decision after hydration causes no visible flash and avoids the
-// localStorage-in-initial-render hydration mismatch.
+// Decided in useLayoutEffect: the intro renders nothing while 'pending', so a
+// one-frame decision after hydration causes no visible flash and no
+// hydration mismatch.
 import { useLayoutEffect, useState } from 'react';
-
-const SEEN_KEY = 'wmv_intro_v3';
 
 export type IntroState = 'pending' | 'playing' | 'done';
 
@@ -21,24 +18,11 @@ export function useIntroGate(): {
   const [state, setState] = useState<IntroState>('pending');
 
   useLayoutEffect(() => {
-    try {
-      const seen = window.localStorage.getItem(SEEN_KEY);
-      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      setState(seen || reducedMotion ? 'done' : 'playing');
-    } catch {
-      // Storage unavailable (private mode etc.) — just play it.
-      setState('playing');
-    }
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setState(reducedMotion ? 'done' : 'playing');
   }, []);
 
-  const markDone = () => {
-    try {
-      window.localStorage.setItem(SEEN_KEY, String(Date.now()));
-    } catch {
-      /* non-fatal */
-    }
-    setState('done');
-  };
+  const markDone = () => setState('done');
 
   return { state, markDone };
 }

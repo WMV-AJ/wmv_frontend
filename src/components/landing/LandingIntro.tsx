@@ -15,8 +15,8 @@ import {
 import { COLOR_HEX_MAP } from '@/lib/category-mappings';
 import { bodyFont, displayFont } from '@/lib/theme/tokens';
 import {
-  BEAT_LENGTH, BEAT_START, DESIGN_W, RING_RADIUS, ROW_AT, SOURCES, TOTAL, beatAt, buildScene, clamp, drawIntro,
-  easeBack, easeIn, easeOut, makeLayout, prog, type IntroFonts, type Layout, type Scene,
+  BEAT_LENGTH, BEAT_START, BRAND_SIZE, BRAND_X, BRAND_Y, DESIGN_W, LOGO_TIME, RING_RADIUS, ROW_AT, SOURCES, TOTAL, beatAt, buildScene,
+  clamp, drawIntro, drawPrelude, easeBack, easeIn, easeOut, logoPose, makeLayout, prog, type IntroFonts, type Layout, type Scene,
 } from '@/lib/landing/intro-scene';
 
 // The one face the intro adds to the site's Roboto / Open Sans pair: an italic
@@ -58,6 +58,8 @@ const RINGS: readonly RingItem[][] = [
 const GLYPHS: readonly LucideIcon[] = [CircleDashed, ImageIcon, Ticket, Users, Bike];
 
 const MAX_STAGE_WIDTH = 480;
+/** The logo opening plus the intro proper. */
+const FULL_TIME = LOGO_TIME + TOTAL;
 const SAT_SIZE = 38;
 
 export type IntroMode = 'pending' | 'playing' | 'done';
@@ -121,6 +123,22 @@ function updateDom(refs: Refs, counter: HTMLDivElement | null, label: HTMLDivEle
   }
 }
 
+/** The logo grows in the middle, then rises into the top bar as the copy fades in. */
+function updateBrand(logo: HTMLImageElement | null, wordmark: HTMLDivElement | null, copy: HTMLDivElement | null, layout: Layout, t: number): void {
+  const pose = logoPose(layout, t);
+  if (logo) {
+    logo.style.width = `${pose.size}px`;
+    logo.style.height = `${pose.size}px`;
+    logo.style.transform = `translate(${pose.x - pose.size / 2}px, ${pose.y - pose.size / 2}px)`;
+    logo.style.opacity = '1';
+  }
+  if (wordmark) wordmark.style.opacity = String(pose.wordmark);
+  if (copy) {
+    copy.style.opacity = String(pose.copy);
+    copy.style.transform = `translateY(${(1 - easeOut(pose.copy)) * 14}px)`;
+  }
+}
+
 export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(function LandingIntro({ mode, onComplete }, ref) {
   const hostRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -128,6 +146,9 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
   const labelRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLDivElement>(null);
   const sentenceRef = useRef<HTMLParagraphElement>(null);
+  const logoRef = useRef<HTMLImageElement>(null);
+  const wordmarkRef = useRef<HTMLDivElement>(null);
+  const copyRef = useRef<HTMLDivElement>(null);
   const domRefs = useRef<Refs>({ glyphs: [], names: [], sats: RINGS.map(() => []) });
   const clock = useRef({ t: 0, ambient: 0, completed: false });
   const modeRef = useRef<IntroMode>(mode);
@@ -136,7 +157,7 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
   onCompleteRef.current = onComplete;
 
   useImperativeHandle(ref, () => ({
-    skipToEnd: () => { clock.current.t = TOTAL; },
+    skipToEnd: () => { clock.current.t = FULL_TIME; },
     getTime: () => clock.current.t,
   }), []);
 
@@ -181,21 +202,25 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
       last = now;
       const state = clock.current;
       const current = modeRef.current;
-      if (current === 'done') state.t = TOTAL;
-      else if (current === 'playing') state.t = Math.min(TOTAL, state.t + dt);
-      if (current === 'playing' && state.t >= TOTAL && !state.completed) {
+      if (current === 'done') state.t = FULL_TIME;
+      else if (current === 'playing') state.t = Math.min(FULL_TIME, state.t + dt);
+      if (current === 'playing' && state.t >= FULL_TIME && !state.completed) {
         state.completed = true;
         onCompleteRef.current?.();
       }
       if (!reducedMotion && current !== 'pending') state.ambient += dt;
       if (!scene || current === 'pending') return;
       // At rest only the markers breathe, so a third of the frames is plenty.
-      const ambientKey = state.t >= TOTAL ? Math.floor(state.ambient * 20) : state.ambient;
+      const ambientKey = state.t >= FULL_TIME ? Math.floor(state.ambient * 20) : state.ambient;
       const key = `${state.t}|${ambientKey}|${sceneVersion}`;
       if (key === drawnKey) return;
       drawnKey = key;
-      updateDom(domRefs.current, counterRef.current, labelRef.current, scene.layout, state.t, state.ambient);
-      drawIntro(ctx, scene, fonts, state.t, state.ambient);
+      // The intro proper starts once the logo has gone up into the top bar.
+      const introTime = state.t - LOGO_TIME;
+      updateBrand(logoRef.current, wordmarkRef.current, copyRef.current, scene.layout, state.t);
+      updateDom(domRefs.current, counterRef.current, labelRef.current, scene.layout, introTime, state.ambient);
+      drawIntro(ctx, scene, fonts, introTime, state.ambient);
+      drawPrelude(ctx, scene.layout, state.t, state.ambient);
     };
 
     measure();
@@ -218,13 +243,24 @@ export const LandingIntro = forwardRef<LandingIntroHandle, LandingIntroProps>(fu
           transformOrigin: 'top center', color: '#fff',
         }}
       >
-        <div style={{ position: 'absolute', left: 24, top: 'max(34px, calc(env(safe-area-inset-top) + 14px))', display: 'flex', alignItems: 'center', gap: 10, zIndex: 6 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/wmv-logo.gif" alt="" width={28} height={28} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ fontFamily: displayFont, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1 }}>Where&rsquo;s My Vibe</div>
+        {/* The logo, wordmark and copy start hidden; the clock places them on its first frame. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={logoRef}
+          src="/wmv-logo.gif"
+          alt=""
+          width={BRAND_SIZE}
+          height={BRAND_SIZE}
+          style={{ position: 'absolute', left: 0, top: 0, width: BRAND_SIZE, height: BRAND_SIZE, borderRadius: '50%', objectFit: 'cover', opacity: 0, zIndex: 7, willChange: 'transform, width, height' }}
+        />
+        <div
+          ref={wordmarkRef}
+          style={{ position: 'absolute', left: BRAND_X + BRAND_SIZE / 2 + 10, top: BRAND_Y - 7, fontFamily: displayFont, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1, opacity: 0, zIndex: 6 }}
+        >
+          Where&rsquo;s My Vibe
         </div>
 
-        <div style={{ position: 'absolute', left: 24, right: 24, top: 82, zIndex: 6 }}>
+        <div ref={copyRef} style={{ position: 'absolute', left: 24, right: 24, top: 82, zIndex: 6, opacity: 0 }}>
           <h1 className={headlineFont.className} style={{ fontStyle: 'italic', fontWeight: 400, fontSize: 47, lineHeight: 1, letterSpacing: '-0.005em', whiteSpace: 'nowrap', margin: 0 }}>
             Discover your plans.
           </h1>

@@ -13,6 +13,12 @@
 import { COLOR_HEX_MAP } from '@/lib/category-mappings';
 
 export const TOTAL = 8.4;
+/** The logo opening that runs before the intro proper. */
+export const LOGO_TIME = 1.7;
+/** Where the small logo rests in the top bar (its centre, in design px). */
+export const BRAND_X = 38;
+export const BRAND_Y = 48;
+export const BRAND_SIZE = 28;
 export const DESIGN_W = 430;
 
 export const BEAT_START = 0.2;
@@ -616,6 +622,61 @@ function drawPills(ctx: CanvasRenderingContext2D, scene: Scene, fonts: IntroFont
     if (k <= 0) return;
     const eased = easeOut(k);
     drawPill(ctx, fonts, pill, lerp(layout.cx, pill.x, eased), lerp(layout.cy, pill.y, eased), clamp(easeBack(k), 0, 1.08), Math.min(1, k * 2.5), layout.pillScale);
+  });
+}
+
+export interface LogoPose {
+  x: number;
+  y: number;
+  size: number;
+  /** Opacity of the wordmark beside the small logo. */
+  wordmark: number;
+  /** Opacity of the headline block. */
+  copy: number;
+}
+
+/** Where the logo is at `t` seconds into the opening: big in the middle, then up into the top bar. */
+export function logoPose(layout: Layout, t: number): LogoPose {
+  const arrive = clamp(easeBack(prog(t, 0, 0.42)), 0, 1.08);
+  const rise = easeInOut(prog(t, 1.05, 1.6));
+  return {
+    x: lerp(layout.cx, BRAND_X, rise),
+    y: lerp(layout.cy, BRAND_Y, rise),
+    size: lerp(132 * layout.mid * arrive, BRAND_SIZE, rise),
+    wordmark: prog(t, 1.45, LOGO_TIME),
+    copy: prog(t, 1.3, LOGO_TIME),
+  };
+}
+
+/** The opening: two rings of dots turning around the logo and the five source shapes bobbing under it. */
+export function drawPrelude(ctx: CanvasRenderingContext2D, layout: Layout, t: number, ambient: number): void {
+  if (t >= LOGO_TIME) return;
+  const { cx, cy, mid } = layout;
+  const leave = easeInOut(prog(t, 1.0, 1.55));
+  const rings = [
+    { count: 14, radius: 102 * mid, speed: 0.9, size: 2.6 },
+    { count: 22, radius: 132 * mid, speed: -0.6, size: 1.9 },
+  ];
+  rings.forEach((ring, r) => {
+    for (let j = 0; j < ring.count; j++) {
+      const k = prog(t, 0.12 + j * 0.018 + r * 0.1, 0.42 + j * 0.018 + r * 0.1);
+      if (k <= 0) continue;
+      const angle = (j / ring.count) * Math.PI * 2 + ambient * ring.speed + r;
+      const radius = ring.radius * (0.7 + 0.3 * easeOut(k)) * (1 + leave * 1.8);
+      glowDot(ctx, cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, ring.size * clamp(easeBack(k), 0, 1.3), PALETTE[(j * 3 + r * 5) % PALETTE.length], 1 - leave, 3.2);
+    }
+  });
+  SOURCES.forEach((source, i) => {
+    const k = prog(t, 0.3 + i * 0.07, 0.62 + i * 0.07);
+    if (k <= 0) return;
+    const restX = cx + (i - (SOURCES.length - 1) / 2) * 42 * mid;
+    const restY = cy + 186 * mid + Math.sin(ambient * 3.2 + i * 1.3) * 5;
+    // On the way out the shapes fall into the centre, where the first big shape then appears.
+    const radius = 11 * mid * clamp(easeBack(k), 0, 1.15) * (1 - leave);
+    if (radius <= 0.3) return;
+    shapePath(ctx, lerp(restX, cx, leave), lerp(restY, cy, leave), radius, OUTLINES[i], null, 0, Math.sin(ambient * 1.4 + i) * 0.35);
+    ctx.fillStyle = source.color;
+    ctx.fill();
   });
 }
 
