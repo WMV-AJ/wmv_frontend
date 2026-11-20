@@ -10,7 +10,7 @@ import { Search } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics/track';
 import AuthCornerWidget from '@/components/auth/AuthCornerWidget';
 import ThemeToggle from './ThemeToggle';
-import { WORDMARK_STYLE, bodyFont } from '@/lib/theme/tokens';
+import { WORDMARK_STYLE, bodyFont, displayFont } from '@/lib/theme/tokens';
 
 // Site theme tokens (globals.css — light by default, .dark for dark).
 const T = {
@@ -56,7 +56,10 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
         />
         <div>
           <div style={{
-            ...WORDMARK_STYLE, color: T.ink,
+            ...(from === 'home'
+              ? WORDMARK_STYLE
+              : { fontFamily: displayFont, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1 }),
+            color: T.ink,
           }}>Where&rsquo;s My Vibe</div>
         </div>
       </div>
