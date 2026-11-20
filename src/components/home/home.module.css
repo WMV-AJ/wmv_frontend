@@ -496,65 +496,90 @@
 
 [data-in='1'] .mlRow { opacity: 1; transform: none; }
 
-/* ── Home top: the five sources circling the logo ───────────────── */
+/* ── Home top: the sources scrolling through a scanner ──────────── */
 
-.srcOrbitWrap {
+.scan {
   position: relative;
-  width: 112px;
-  height: 124px;
-  flex-shrink: 0;
+  height: 44px;
+  overflow: hidden;
+  container-type: inline-size;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
 }
 
-.srcOrbit {
+.scanTrack {
   position: absolute;
   left: 0;
-  bottom: 0;
-  width: 112px;
-  height: 112px;
-  animation: srcSpin 22s linear infinite;
+  top: 6px;
+  display: flex;
+  gap: 8px;
+  padding-right: 8px;
+  width: max-content;
+  animation: scanScroll 26s linear infinite;
 }
 
-/* Each item is turned to its angle, pushed out to the ring, then turned back
-   so the icon stays upright; the icon also counter-spins against the ring. */
-.srcOrbitItem {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0;
-  height: 0;
-  transform: rotate(var(--a)) translateY(-42px) rotate(calc(var(--a) * -1));
+.scanTile {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  object-fit: cover;
+  background: #fff;
 }
 
-.srcOrbitIcon {
-  position: absolute;
-  left: -14px;
-  top: -14px;
-  width: 28px;
-  height: 28px;
+.scanGlyph {
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  border: 1.2px solid;
-  background: var(--wmv-bg);
-  animation: srcSpinBack 22s linear infinite;
+  background: #0b0b0b;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.srcOrbitCore {
+/* The strip as it waits its turn: grey and faint. */
+.scanDim {
   position: absolute;
-  left: 41px;
-  bottom: 41px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
+  inset: 0;
+  opacity: 0.32;
+  filter: grayscale(1);
 }
 
-@keyframes srcSpin { to { transform: rotate(360deg); } }
-@keyframes srcSpinBack { to { transform: rotate(-360deg); } }
+/* The window in the middle: the same strip, in colour, clipped to one tile. */
+.scanWindow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50cqw - 22px);
+  width: 44px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.22);
+  background: var(--wmv-bg);
+}
+
+/* Line the bright strip up with the dim one behind it (minus the window's border). */
+.scanWindow .scanTrack {
+  left: calc(21px - 50cqw);
+  top: 5px;
+}
+
+.scanBeam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.7);
+  animation: scanBeam 1.3s ease-in-out infinite alternate;
+}
+
+@keyframes scanScroll { to { transform: translateX(-50%); } }
+@keyframes scanBeam { from { transform: translateX(0); } to { transform: translateX(40px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .srcOrbit,
-  .srcOrbitIcon { animation: none; }
+  .scanTrack,
+  .scanBeam { animation: none; }
 }
 
 /* ── Source visual A: orbit ─────────────────────────────────────── */
