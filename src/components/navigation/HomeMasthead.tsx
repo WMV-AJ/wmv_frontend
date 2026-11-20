@@ -30,6 +30,10 @@ interface HomeMastheadProps {
 export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps) {
   const router = useRouter();
   const [q, setQ] = useState('');
+  // Home shows the search as an icon; tapping it opens the field in the bar.
+  const iconSearch = from === 'home';
+  const [searchOpen, setSearchOpen] = useState(false);
+  const showField = !iconSearch || searchOpen;
 
   const submitSearch = (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -63,8 +67,21 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
           }}>Where&rsquo;s My Vibe</div>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, marginLeft: 12 }}>
-        <form
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flex: 1, minWidth: 0, marginLeft: 12 }}>
+        {!showField && (
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search events and venues"
+            style={{
+              width: 34, height: 34, borderRadius: '50%', flexShrink: 0, display: 'grid', placeItems: 'center',
+              border: `1px solid ${T.line}`, background: T.surface, color: T.ink, cursor: 'pointer',
+            }}
+          >
+            <Search style={{ width: 15, height: 15 }} />
+          </button>
+        )}
+        {showField && <form
           onSubmit={submitSearch}
           style={{
             flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 7,
@@ -78,12 +95,14 @@ export default function HomeMasthead({ city, from = 'home' }: HomeMastheadProps)
             onChange={(e) => setQ(e.target.value)}
             placeholder="Event, venue, etc"
             aria-label="Search events and venues"
+            autoFocus={iconSearch}
+            onBlur={() => { if (iconSearch && !q.trim()) setSearchOpen(false); }}
             style={{
               flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none',
               color: T.ink, fontFamily: bodyFont, fontSize: 12, fontWeight: 500,
             }}
           />
-        </form>
+        </form>}
         <ThemeToggle />
         {/* Auth state: real avatar when signed in, sign-in icon otherwise. */}
         <AuthCornerWidget />

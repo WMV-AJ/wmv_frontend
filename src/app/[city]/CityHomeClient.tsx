@@ -411,11 +411,11 @@ export default function CityHome() {
 
         {/* § Map or list — the two ways in, with live totals */}
         <HomeMapOrList
-          pinCategories={fan.items.map((i) => i.id)}
+          cityName={cityName}
+          dateLabel={dateLabel}
           venueCount={howStats.venues}
           eventCount={howStats.events}
           loading={loading}
-          scrollRoot={mainRef}
           onMap={() => goMap('home_top')}
           onList={() => goList('home_top')}
         />

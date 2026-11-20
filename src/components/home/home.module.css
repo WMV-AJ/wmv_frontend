@@ -496,6 +496,67 @@
 
 [data-in='1'] .mlRow { opacity: 1; transform: none; }
 
+/* ── Home top: the five sources circling the logo ───────────────── */
+
+.srcOrbitWrap {
+  position: relative;
+  width: 112px;
+  height: 124px;
+  flex-shrink: 0;
+}
+
+.srcOrbit {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 112px;
+  height: 112px;
+  animation: srcSpin 22s linear infinite;
+}
+
+/* Each item is turned to its angle, pushed out to the ring, then turned back
+   so the icon stays upright; the icon also counter-spins against the ring. */
+.srcOrbitItem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--a)) translateY(-42px) rotate(calc(var(--a) * -1));
+}
+
+.srcOrbitIcon {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.2px solid;
+  background: var(--wmv-bg);
+  animation: srcSpinBack 22s linear infinite;
+}
+
+.srcOrbitCore {
+  position: absolute;
+  left: 41px;
+  bottom: 41px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@keyframes srcSpin { to { transform: rotate(360deg); } }
+@keyframes srcSpinBack { to { transform: rotate(-360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .srcOrbit,
+  .srcOrbitIcon { animation: none; }
+}
+
 /* ── Source visual A: orbit ─────────────────────────────────────── */
 
 .orbit {
