@@ -1,5 +1,6 @@
 'use client';
 
+import { matchesSearch } from '@/lib/search-text';
 import { useMemo } from 'react';
 import type { Venue, HierarchicalFilterState, FilterState } from '@/types';
 import { getEventCategories } from '@/lib/category-utils';
@@ -190,29 +191,10 @@ export function useClientSideVenues(filters: HierarchicalFilterState): UseClient
         console.log('🎯 FILTER - Venue included (date match):', venue.name, 'Date:', venueDateKey);
       }
 
-      // Apply search query. API rows carry `name` (venue_name is the DB-shaped
-      // alias) — matching only venue_name silently matched nothing for /api/venues
-      // data. Also match the event name so "brunch"-style queries work.
-      if (flatFilters.searchQuery && flatFilters.searchQuery.trim()) {
-        const query = flatFilters.searchQuery.toLowerCase();
-        const venueName = (venue.venue_name || venue.name || '').toLowerCase();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const eventName = String((venue as any).event_name || '').toLowerCase();
-        const venueCategory = venue.category?.toLowerCase() || venue.venue_category?.toLowerCase() || '';
-        // Area too. Without it, searching the busiest neighbourhood in the city
-        // returned almost nothing: "koramangala" gave 2 results on 24 Aug,
-        // because it was matched against venue names only and no venue happens
-        // to be called that. A place name is the most natural thing to type.
-        const area = String(venue.area || venue.venue_area || '').toLowerCase();
-
-        if (
-          !venueName.includes(query) &&
-          !eventName.includes(query) &&
-          !venueCategory.includes(query) &&
-          !area.includes(query)
-        ) {
-          return false;
-        }
+      // Search looks at every detail on the row (src/lib/search-text.ts), and
+      // every word typed has to appear somewhere, in any order.
+      if (flatFilters.searchQuery && flatFilters.searchQuery.trim() && !matchesSearch(venue, flatFilters.searchQuery)) {
+        return false;
       }
 
       // ===== NEW: Event Category Filtering =====
