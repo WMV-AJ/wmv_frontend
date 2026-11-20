@@ -14,7 +14,10 @@ const RESTORE_TIMEOUT_MS = 2500;
 
 let lastHistoryMove = 0;
 if (typeof window !== 'undefined') {
-  window.addEventListener('popstate', () => { lastHistoryMove = Date.now(); });
+  // Capture phase: this must run before the router's own popstate handler,
+  // which can rebuild the page at once. A page reading isHistoryReturn() while
+  // it mounts would otherwise still see the old value.
+  window.addEventListener('popstate', () => { lastHistoryMove = Date.now(); }, { capture: true });
 }
 
 /** True while a page mounting now was reached by Back or Forward. */
