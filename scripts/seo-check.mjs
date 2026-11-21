@@ -11,6 +11,13 @@
 const BASE = (process.argv[2] || 'https://wheresmyvibe.com').replace(/\/$/, '');
 const CANONICAL_HOST = 'https://wheresmyvibe.com';
 const CRAWLER_UA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+// AI crawlers and ordinary browsers: neither is on Next's built-in crawler list.
+const HEAD_CHECK_AGENTS = {
+  GPTBot: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)',
+  PerplexityBot: 'Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
+  ClaudeBot: 'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)',
+  browser: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+};
 const CITIES = ['dubai', 'bangalore', 'mumbai', 'delhi'];
 const SITEMAP_SAMPLE = 12;
 
@@ -26,8 +33,8 @@ function check(ok, label, detail = '') {
   }
 }
 
-async function get(path) {
-  const response = await fetch(`${BASE}${path}`, { redirect: 'manual', headers: { 'user-agent': CRAWLER_UA } });
+async function get(path, userAgent = CRAWLER_UA) {
+  const response = await fetch(`${BASE}${path}`, { redirect: 'manual', headers: { 'user-agent': userAgent } });
   const body = response.status >= 300 && response.status < 400 ? '' : await response.text();
   return { status: response.status, location: response.headers.get('location'), body };
 }
@@ -150,6 +157,15 @@ async function main() {
   check(llms.status === 200 && llms.body.startsWith("# Where's My Vibe"), '/llms.txt is served as text', `status ${llms.status}`);
   const legacy = await get('/map');
   check(legacy.status === 307 && (legacy.location || '').endsWith('/dubai/map'), '/map still redirects to /dubai/map', `status ${legacy.status}`);
+
+  for (const [name, userAgent] of Object.entries(HEAD_CHECK_AGENTS)) {
+    for (const path of ['/dubai/tonight', '/dubai/vibe/brunch', '/about']) {
+      const { body } = await get(path, userAgent);
+      const head = body.slice(0, Math.max(body.indexOf('</head>'), 0));
+      const complete = head.includes('<title') && head.includes('name="description"') && head.includes('rel="canonical"');
+      check(complete, `${path} has title, description and canonical in <head> for ${name}`);
+    }
+  }
 
   for (const city of CITIES) await checkCity(city);
   await checkSitemap();

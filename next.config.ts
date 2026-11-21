@@ -72,6 +72,12 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 828, 1080],
   },
   output: 'standalone',
+  // Put <title>, the meta description and the canonical link in <head> for
+  // every visitor. By default Next streams them into <body> unless the user
+  // agent is on its built-in crawler list, and that list leaves out the AI
+  // crawlers (GPTBot, OAI-SearchBot, PerplexityBot, ClaudeBot), which do not
+  // run JavaScript and so never see the tags moved back into place.
+  htmlLimitedBots: /.*/,
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
