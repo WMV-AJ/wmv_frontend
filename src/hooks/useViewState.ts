@@ -46,11 +46,11 @@ export function writeViewState(key: string | null, value: unknown): void {
  * @returns the state, its setter, and whether it was restored from a return visit
  */
 export function useViewState<T>(name: string, initial: T | (() => T)): [T, Dispatch<SetStateAction<T>>, boolean] {
-  // The address at mount: a change saved while navigating away must not land on the next page.
   const keyRef = useRef<string | null>(null);
   const restoredRef = useRef(false);
   const [value, setValue] = useState<T>(() => {
-    keyRef.current = viewStateKey(name);
+    // Reading here is safe: on Back and Forward the address has already
+    // changed before the page renders, and on any other visit nothing is read.
     const saved = readViewState<T>(name);
     if (saved !== undefined) {
       restoredRef.current = true;
@@ -58,6 +58,15 @@ export function useViewState<T>(name: string, initial: T | (() => T)): [T, Dispa
     }
     return typeof initial === 'function' ? (initial as () => T)() : initial;
   });
+
+  // The key for saving is taken after mount, not during the first render. On
+  // a move inside the site the page renders before the address changes, so a
+  // key read during render would be the previous page's, and this page's
+  // state would overwrite that page's. From here on it stays fixed, so a
+  // change made while navigating away cannot land on the next page either.
+  useEffect(() => {
+    keyRef.current = viewStateKey(name);
+  }, [name]);
 
   useEffect(() => {
     writeViewState(keyRef.current, value);
