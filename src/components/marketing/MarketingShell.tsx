@@ -130,6 +130,9 @@ function MarketingFooter() {
         ))}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
+        <Link href="/about" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
+          About
+        </Link>
         <Link href="/how-it-works" style={{ color: T.inkFaint, fontSize: 12, textDecoration: 'none' }}>
           How it works
         </Link>

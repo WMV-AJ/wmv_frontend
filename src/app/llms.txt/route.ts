@@ -35,6 +35,7 @@ export async function GET(): Promise<Response> {
     `- {city} is one of: ${cities.map((c) => c.slug).join(', ')}`,
     '',
     '## About',
+    `- [About Where's My Vibe](${BASE}/about): what it is, who runs it and how to send corrections`,
     `- [How it works](${BASE}/how-it-works): where the data comes from and how often it is refreshed`,
     `- [FAQ](${BASE}/faq)`,
     `- [List your venue](${BASE}/list-your-venue)`,

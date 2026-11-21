@@ -125,6 +125,10 @@ export function buildOrganizationSchema(): Record<string, unknown> {
         name: "Where's My Vibe",
         url: BASE,
         logo: `${BASE}/logo.png`,
+        description:
+          "Where's My Vibe is a free website that maps what is on tonight in Dubai, Bangalore, Mumbai and Delhi by reading what venues post publicly each day.",
+        founder: { '@type': 'Person', name: 'Arpit Jhamb' },
+        sameAs: ['https://www.instagram.com/wheres.my.vibe/'],
       },
       {
         '@type': 'WebSite',

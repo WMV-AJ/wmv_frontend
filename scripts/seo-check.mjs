@@ -38,7 +38,7 @@ function visibleText(html) {
   return body
     .replace(/<(script|style|template)\b[\s\S]*?<\/\1>/g, ' ')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&#x27;|&#39;|&rsquo;/g, "'")
+    .replace(/&#x27;|&#39;|&rsquo;|\u2019/g, "'")
     .replace(/&amp;/g, '&')
     .replace(/&[a-z#0-9]+;/gi, ' ')
     .replace(/\s+/g, ' ')
@@ -137,6 +137,10 @@ async function main() {
   await checkPage('/', { minText: 200, types: ['Organization', 'WebSite'] });
   await checkPage('/faq', { minText: 800, types: ['FAQPage'] });
   await checkPage('/how-it-works', { minText: 800 });
+  await checkPage('/about', { minText: 800, types: ['Organization'], mustInclude: ["Where's My Vibe is a free website"] });
+  await checkPage('/compare/wmv-vs-platinumlist', { minText: 1200, types: ['FAQPage'], mustInclude: ['Platinumlist'] });
+  await checkPage('/compare/bookmyshow-alternative', { minText: 1200, types: ['FAQPage'] });
+  await checkStatus('/compare/not-a-comparison', 404);
   await checkPage('/privacy', { minText: 800 });
   await checkPage('/data-deletion', { minText: 300 });
   await checkStatus('/not-a-city', 404);

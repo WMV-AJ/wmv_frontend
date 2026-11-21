@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { VIBES_DATA, matchesVibe } from '@/config/vibes-data';
 import { getActiveCities, getCityEvents, getCityServerConfig } from '@/lib/server-data';
 import { slugifyArea } from '@/lib/areas';
+import { COMPARISONS } from '@/content/compare';
 import { cityToday, onDates, THIN_PAGE_MIN_EVENTS, toSeoEvents, upcoming, weekendDates } from '@/lib/seo-events';
 
 // Re-generate at most hourly; event and area sets change through the day.
@@ -25,6 +26,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/how-it-works`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/list-your-venue`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    ...COMPARISONS.map((page): Entry => ({
+      url: `${BASE}/compare/${page.slug}`,
+      lastModified: new Date(page.checkedOn),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    })),
     { url: `${BASE}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${BASE}/data-deletion`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
     { url: `${BASE}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },

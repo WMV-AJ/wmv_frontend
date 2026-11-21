@@ -33,6 +33,8 @@ const PASSTHROUGH = new Set([
   'home4',
   'faq',
   'list-your-venue',
+  'about',
+  'compare',
   'privacy',
   'data-deletion',
   'terms',
