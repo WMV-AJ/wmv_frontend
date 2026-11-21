@@ -3,7 +3,7 @@
 export const LEGAL = {
   /** Who runs the service, as named on the pages. */
   operator: "Where's My Vibe",
-  contactEmail: 'hello@wheresmyvibe.com',
+  contactEmail: 'jhamb285@gmail.com',
   /** Shown as "Last updated" on both pages. Change it whenever the wording changes. */
   lastUpdated: '21 November 2026',
   /** How long a deletion request takes, in days. */

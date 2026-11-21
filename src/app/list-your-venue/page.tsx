@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/list-your-venue' },
 };
 
-const CONTACT_EMAIL = 'hello@wheresmyvibe.com';
+const CONTACT_EMAIL = 'jhamb285@gmail.com';
 
 function Label({ children }: { children: React.ReactNode }) {
   return (

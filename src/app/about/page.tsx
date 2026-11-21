@@ -6,6 +6,7 @@ import Link from 'next/link';
 import MarketingShell from '@/components/marketing/MarketingShell';
 import JsonLd from '@/components/seo/JsonLd';
 import { COMPARISONS } from '@/content/compare';
+import { LEGAL } from '@/content/legal';
 import { getActiveCities, getCityEvents, getCityServerConfig } from '@/lib/server-data';
 import { buildOrganizationSchema } from '@/lib/seo-schema';
 import { cityToday, onDates, toSeoEvents, upcoming } from '@/lib/seo-events';
@@ -103,7 +104,8 @@ export default async function AboutPage() {
 
         <h2 style={h2Style}>Contact and corrections</h2>
         <p style={bodyStyle}>
-          To report a wrong listing, ask a question or correct something on this site, message{' '}
+          To report a wrong listing, ask a question or correct something on this site, email{' '}
+          <a href={`mailto:${LEGAL.contactEmail}`} style={linkStyle}>{LEGAL.contactEmail}</a> or message{' '}
           <a href="https://www.instagram.com/wheres.my.vibe/" rel="noopener" style={linkStyle}>@wheres.my.vibe</a> on
           Instagram. Venues can ask to be added on the{' '}
           <Link href="/list-your-venue" style={linkStyle}>list your venue</Link> page.
