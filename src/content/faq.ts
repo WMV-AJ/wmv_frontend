@@ -47,6 +47,6 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     category: 'Privacy',
     q: 'What do you track about me?',
-    a: 'Only anonymous usage analytics, and only after you accept the cookie banner. No third-party advertising, and rejecting analytics changes nothing about the product.',
+    a: 'Only anonymous usage analytics. We count visits without storing anything on your device, and we only keep an ID in your browser to recognise return visits if you accept the banner. No third-party advertising, and rejecting changes nothing about the product.',
   },
 ];

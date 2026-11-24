@@ -5,9 +5,12 @@
  *   1. GA4 via window.gtag (loaded by app/layout.tsx)
  *   2. The first-party backend at POST {NEXT_PUBLIC_BACKEND_URL}/api/analytics/track
  *
- * Both destinations are gated on the consent state in localStorage. Until the
- * user accepts the cookie banner, every call is a no-op (anonymous_id is still
- * generated so we have continuity across the consent boundary).
+ * Consent decides how a visitor is identified, not whether a visit is counted:
+ *   - Accepted: a random browser ID and visit ID are kept in the browser's
+ *     storage and sent with every event, and GA4 runs if it is configured.
+ *   - Not accepted (undecided or rejected): nothing is written to storage and
+ *     GA4 never fires. The backend still receives the event, marked
+ *     'cookieless', and gives the visitor an ID that lasts one day.
  *
  * All public functions are SSR-safe — they early-return if window is undefined.
  */
@@ -33,6 +36,8 @@ const SESSION_ID_KEY = 'wmv_session_id';
 const UTM_KEY = 'wmv_utm';
 const CONSENT_KEY = 'analytics_consent';
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 min idle
+/** Sent as anonymous_id and session_id when the visitor has no stored ID. Must match the backend. */
+const COOKIELESS_MARKER = 'cookieless';
 
 let cachedUserId: string | null = null;
 
@@ -115,6 +120,18 @@ interface UtmSnapshot {
   utm_content?: string;
 }
 
+/** Campaign tags on the link the visitor followed, read from the current URL. */
+function utmFromUrl(): UtmSnapshot {
+  if (!isBrowser()) return {};
+  const params = new URLSearchParams(window.location.search);
+  const snapshot: UtmSnapshot = {};
+  (['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const).forEach((k) => {
+    const v = params.get(k);
+    if (v) snapshot[k] = v;
+  });
+  return snapshot;
+}
+
 /**
  * Capture UTM params from the current URL on first load and persist them for
  * the session (sessionStorage). Subsequent navigations within the same session
@@ -130,12 +147,7 @@ function captureUtm(): UtmSnapshot {
       // fall through
     }
   }
-  const params = new URLSearchParams(window.location.search);
-  const snapshot: UtmSnapshot = {};
-  (['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const).forEach((k) => {
-    const v = params.get(k);
-    if (v) snapshot[k] = v;
-  });
+  const snapshot = utmFromUrl();
   if (Object.keys(snapshot).length > 0) {
     window.sessionStorage.setItem(UTM_KEY, JSON.stringify(snapshot));
   }
@@ -180,7 +192,10 @@ function buildPayload(
   pathOverride?: string,
   titleOverride?: string,
 ): TrackPayload {
-  const utm = captureUtm();
+  // Without consent nothing may be written to the browser's storage, so the
+  // stored IDs and the saved campaign tags are only used once it is granted.
+  const consented = getConsentStatus() === 'granted';
+  const utm = consented ? captureUtm() : utmFromUrl();
   const lang = typeof navigator !== 'undefined' ? navigator.language : undefined;
   const tz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined;
   const screen_size =
@@ -190,13 +205,17 @@ function buildPayload(
 
   const aiSource = isBrowser() ? aiSourceFromReferrer(document.referrer) : null;
 
+  // Some events carry the account ID as a property; it is not sent without consent.
+  const sentProperties: AnalyticsProperties = { ...properties };
+  if (!consented) delete sentProperties.user_id;
+
   return {
     event_name: name,
-    user_id: cachedUserId,
-    anonymous_id: getOrCreateAnonymousId(),
-    session_id: getOrCreateSessionId(),
+    user_id: consented ? cachedUserId : null,
+    anonymous_id: consented ? getOrCreateAnonymousId() : COOKIELESS_MARKER,
+    session_id: consented ? getOrCreateSessionId() : COOKIELESS_MARKER,
     // ai_source rides in properties so the backend schema needs no change.
-    properties: aiSource ? { ...properties, ai_source: aiSource } : properties,
+    properties: aiSource ? { ...sentProperties, ai_source: aiSource } : sentProperties,
     page_path: pathOverride ?? (isBrowser() ? window.location.pathname : undefined),
     page_title: titleOverride ?? (isBrowser() ? document.title : undefined),
     referrer: isBrowser() ? document.referrer || undefined : undefined,
@@ -235,8 +254,14 @@ function postToBackend(payload: TrackPayload): void {
   });
 }
 
+/** Browsers driven by automation (tests, some crawlers) are never counted. */
+function isAutomated(): boolean {
+  return typeof navigator !== 'undefined' && navigator.webdriver === true;
+}
+
 function fireGtag(name: AnalyticsEventName, payload: TrackPayload): void {
   if (!isBrowser() || typeof window.gtag !== 'function') return;
+  if (getConsentStatus() !== 'granted') return;
   window.gtag('event', name, {
     ...payload.properties,
     page_location: typeof window !== 'undefined' ? window.location.href : undefined,
@@ -247,32 +272,36 @@ function fireGtag(name: AnalyticsEventName, payload: TrackPayload): void {
 }
 
 export function trackEvent(name: AnalyticsEventName, properties: AnalyticsProperties = {}): void {
-  if (!isBrowser()) return;
-  if (getConsentStatus() !== 'granted') return;
+  if (!isBrowser() || isAutomated()) return;
   const payload = buildPayload(name, properties);
   fireGtag(name, payload);
   postToBackend(payload);
 }
 
-export function trackPageView(path?: string, title?: string): void {
-  if (!isBrowser()) return;
-  if (getConsentStatus() !== 'granted') return;
+/**
+ * Record a page view. `gaOnly` sends it to GA4 alone: the cookie banner uses
+ * it on Accept, when our own table already holds this page view from before
+ * the visitor answered but GA4, which waits for consent, does not.
+ */
+export function trackPageView(path?: string, title?: string, options: { gaOnly?: boolean } = {}): void {
+  if (!isBrowser() || isAutomated()) return;
   const payload = buildPayload('page_view', {}, path, title);
   // Send GA4 page_view via gtag config (so referrer/title pick up automatically),
   // plus a custom event so it lands in our first-party table.
-  if (typeof window.gtag === 'function') {
+  if (typeof window.gtag === 'function' && getConsentStatus() === 'granted') {
     window.gtag('event', 'page_view', {
       page_path: payload.page_path,
       page_title: payload.page_title,
       page_location: window.location.href,
     });
   }
-  postToBackend(payload);
+  if (!options.gaOnly) postToBackend(payload);
 }
 
-/** Initialise IDs + UTM capture on first call. Idempotent. */
+/** Initialise IDs + UTM capture on first call. Idempotent. Does nothing until analytics is accepted. */
 export function initAnalytics(): void {
   if (!isBrowser()) return;
+  if (getConsentStatus() !== 'granted') return;
   getOrCreateAnonymousId();
   getOrCreateSessionId();
   captureUtm();

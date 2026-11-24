@@ -43,15 +43,20 @@ export default function PrivacyPage() {
 
       <LegalSection title="Usage information">
         <LegalText>
-          The site asks whether you accept analytics. Until you accept, we record no usage information. If you accept, we record how the site is used so that we can improve it:
+          We record how the site is used so that we can improve it and see how many people visit:
         </LegalText>
         <LegalList items={[
           'the pages you open, the events and venues you view, and the searches and filters you use',
-          'a random identifier for your browser and one for each visit, and your account identifier when you are signed in',
           'the page you came from and any campaign tags in the link you followed',
           'your browser, operating system, device type, screen size, language and time zone',
           'your country, and a scrambled form of your IP address that changes every day. We do not store the IP address itself.',
         ]} />
+        <LegalText>
+          To count visitors without storing anything on your device, our server gives each visit an identifier worked out from your IP address and browser. It changes every day, so it cannot be used to recognise you from one day to the next.
+        </LegalText>
+        <LegalText>
+          The site also asks whether you accept analytics. If you accept, we keep a random identifier for your browser and one for each visit in your browser&rsquo;s storage, and record your account identifier when you are signed in, so that we can recognise return visits. If you do not accept, none of these are stored or recorded.
+        </LegalText>
         <LegalText>
           If you accept analytics, the site may also load Google Analytics, which collects similar usage information for us and sets its own cookies.
         </LegalText>
@@ -74,7 +79,7 @@ export default function PrivacyPage() {
         <LegalList items={[
           'your sign-in token, so that you stay signed in',
           'your answer to the analytics question',
-          'the random browser and visit identifiers described above, and campaign tags from the link you followed',
+          'if you accept analytics, the random browser and visit identifiers described above, and campaign tags from the link you followed',
           'the city you last viewed and your theme',
           'the events you save. Saved events stay on your device and are not sent to us.',
           'whether you turned on your location on the map',

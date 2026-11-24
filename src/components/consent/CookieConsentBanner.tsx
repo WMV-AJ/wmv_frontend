@@ -10,9 +10,11 @@ import {
 } from '@/lib/analytics/track';
 
 /**
- * Sticky bottom banner that gates analytics firing.
- *   - On Accept: persists 'granted', fires consent_given + a deferred page_view
- *     for the current path so the first hit isn't lost.
+ * Sticky bottom banner asking whether we may keep an ID in this browser.
+ * Visits are counted either way (see lib/analytics/track.ts); the answer
+ * decides whether the visitor is recognised on later days.
+ *   - On Accept: persists 'granted' and fires consent_given, which the backend
+ *     uses to move this visit's earlier events onto the new stored ID.
  *   - On Reject: persists 'denied', updates GA4 consent mode.
  *   - Hides automatically once any choice is recorded.
  */
@@ -28,12 +30,11 @@ export default function CookieConsentBanner() {
   const handleAccept = () => {
     setConsentStatus('granted');
     setVisible(false);
-    // Now that consent is granted, the very first page_view from
-    // AnalyticsProvider has already been a no-op — re-fire one for the
-    // current path so the entry hit is captured.
+    // Our own table already has this page view from before the answer. GA4
+    // only starts now, so it alone gets the current page again.
     if (typeof window !== 'undefined') {
       trackEvent('consent_given', {});
-      trackPageView(window.location.pathname, document.title);
+      trackPageView(window.location.pathname, document.title, { gaOnly: true });
     }
   };
 
@@ -61,10 +62,10 @@ export default function CookieConsentBanner() {
           <Cookie className="w-5 h-5 text-amber-300" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold mb-1">We use cookies for analytics</p>
+          <p className="text-sm font-semibold mb-1">Can we remember this browser?</p>
           <p className="text-xs leading-relaxed" style={{ color: 'var(--wmv-ink-muted)' }}>
-            We collect anonymous usage data to improve the experience. No third-party advertising.
-            You can change this any time.
+            We count visits anonymously and store nothing on your device to do it. If you accept,
+            we save a random ID here so we can recognise return visits. No third-party advertising.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <button
