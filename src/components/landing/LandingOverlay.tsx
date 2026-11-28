@@ -1,8 +1,11 @@
 'use client';
 
-// The bottom row of the landing page: [city ▾] [Continue with Google], there
-// from the first frame. Sign-in is required to enter a city, so a signed-out
-// visitor gets no way past this row; a signed-in one gets [city ▾] [Enter →].
+// The bottom row of the landing page, there from the first frame.
+//
+// Sign-in is optional. A signed-out visitor gets
+//   [Sign in with Google] [city ▾] [→]
+// where the arrow enters the chosen city without an account. A signed-in one
+// gets [city ▾] [Enter →].
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
@@ -33,6 +36,25 @@ const PRIMARY_PILL: React.CSSProperties = {
   letterSpacing: '-0.01em',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
+  boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)',
+};
+
+/** The round arrow that enters the city without signing in. */
+const GUEST_ARROW: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  width: 44,
+  height: 44,
+  padding: 0,
+  borderRadius: 9999,
+  background: 'rgba(255,255,255,0.14)',
+  border: '1px solid rgba(255,255,255,0.6)',
+  color: '#fff',
+  cursor: 'pointer',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
   boxShadow: '0 8px 24px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)',
 };
 
@@ -67,7 +89,7 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
   };
 
   return (
-    <button type="button" onClick={handle} disabled={loading} style={{ ...PRIMARY_PILL, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+    <button type="button" onClick={handle} disabled={loading} style={{ ...PRIMARY_PILL, padding: '0 14px', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
       {loading ? (
         <span
           style={{
@@ -83,7 +105,8 @@ function GoogleSignInPill({ returnTo }: { returnTo: string }) {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          <span>Continue with Google</span>
+          {/* Short label: this pill shares one row with the city and the arrow. */}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Sign in with Google</span>
         </>
       )}
     </button>
@@ -173,8 +196,13 @@ export function LandingOverlay({ hideUserMenu = false }: LandingOverlayProps = {
   const isAuthed = !resolving && !!user;
   const destination = nextPath ?? `/${city}`;
 
+  const enterAsGuest = () => {
+    trackEvent('guest_entered', { city });
+    router.push(destination);
+  };
+
   let note: string | null = null;
-  if (!resolving && !isAuthed && inApp) note = 'Google sign-in does not work inside this app. Open Where’s My Vibe in your browser to continue.';
+  if (!resolving && !isAuthed && inApp) note = 'Google sign-in does not work inside this app. Tap the arrow to browse without signing in, or open Where’s My Vibe in your browser.';
   else if (!resolving && !isAuthed && signInFailed) note = 'Sign-in did not complete. Please try again.';
 
   return (
@@ -213,10 +241,24 @@ export function LandingOverlay({ hideUserMenu = false }: LandingOverlayProps = {
       >
         {note && <p role="status" style={NOTE}>{note}</p>}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
+          {/* Signed out: sign-in first, then the city, then the arrow that
+              enters without an account. In-app browsers cannot do Google
+              sign-in, so there the row is just the city and the arrow. */}
+          {!resolving && !isAuthed && !inApp && <GoogleSignInPill returnTo={destination} />}
           <CityPicker value={city} onChange={pickCity} />
           {/* Reserve the button's space while auth resolves so the row does not jump. */}
-          {resolving && <span aria-hidden style={{ ...PRIMARY_PILL, width: 190, opacity: 0.25, boxShadow: 'none' }} />}
-          {!resolving && !isAuthed && (inApp ? <OpenInBrowser /> : <GoogleSignInPill returnTo={destination} />)}
+          {resolving && <span aria-hidden style={{ ...PRIMARY_PILL, width: 150, opacity: 0.25, boxShadow: 'none' }} />}
+          {!resolving && !isAuthed && (
+            <button
+              type="button"
+              onClick={enterAsGuest}
+              aria-label={`Enter ${cityName} without signing in`}
+              title={`Enter ${cityName} without signing in`}
+              style={GUEST_ARROW}
+            >
+              <ArrowRight size={20} strokeWidth={2.5} />
+            </button>
+          )}
           {isAuthed && (
             <button type="button" onClick={() => router.push(destination)} style={PRIMARY_PILL}>
               <span>{nextPath ? 'Continue' : `Enter ${cityName}`}</span>
@@ -224,6 +266,7 @@ export function LandingOverlay({ hideUserMenu = false }: LandingOverlayProps = {
             </button>
           )}
         </div>
+        {!resolving && !isAuthed && inApp && <OpenInBrowser />}
         <nav aria-label="About Where's My Vibe" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px 18px' }}>
           {FOOTER_LINKS.map(([label, href]) => (
             <a

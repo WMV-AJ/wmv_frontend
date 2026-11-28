@@ -14,6 +14,7 @@ export type AnalyticsEventName =
   | 'search_performed'
   | 'nav_view_change'
   | 'login_started'
+  | 'guest_entered'
   | 'login_completed'
   | 'logout'
   | 'consent_given'
